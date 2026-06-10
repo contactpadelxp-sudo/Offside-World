@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { FadeIn } from "@/components/motion";
+import { FrameImage } from "@/components/frame-image";
 import { validateBelgianPhone } from "@/lib/phone";
 import { formules, options, type Formule, type Option } from "@/data/formules";
 import { salles, timeSlots, isSlotBooked } from "@/data/salles";
@@ -36,6 +37,13 @@ const STEPS: { key: Step; label: string }[] = [
 ];
 
 const DATES = ["2026-06-14", "2026-06-15", "2026-06-21"];
+
+/* Image de chaque formule (fichiers dans public/images/) */
+const FORMULE_IMAGES: Record<string, string> = {
+  classique: "anniv",
+  "bubble-foot": "anniv1",
+  premium: "anniv2",
+};
 
 function formatDate(d: string) {
   return new Date(d + "T00:00:00").toLocaleDateString("fr-BE", {
@@ -132,8 +140,9 @@ export function AnniversaireFlow({ onBack }: { onBack: () => void }) {
                   }`}
                 >
                   <CardContent className="p-5">
-                    <div className="aspect-video rounded-xl bg-gradient-to-br from-field/20 to-kick/20 flex items-center justify-center mb-4">
+                    <div className="relative aspect-video rounded-xl bg-gradient-to-br from-field/20 to-kick/20 flex items-center justify-center mb-4 overflow-hidden">
                       <CircleDot className="size-10 text-field/60" />
+                      <FrameImage base={FORMULE_IMAGES[f.id] ?? "anniv"} alt={`Formule ${f.name}`} className="absolute inset-0 h-full w-full object-cover" />
                     </div>
                     <h3 className="text-lg font-bold">{f.name}</h3>
                     <p className="mt-1 text-sm text-muted-foreground line-clamp-2">{f.description}</p>
