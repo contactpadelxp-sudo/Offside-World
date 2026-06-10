@@ -43,22 +43,12 @@ export function Header() {
             animate={{ y: 0, opacity: 1, scale: 1 }}
             exit={{ y: -60, opacity: 0, scale: 0.95 }}
             transition={{ duration: 0.4, ease: [0.4, 0, 0.2, 1] }}
-            className="flex justify-center pt-3 pointer-events-none"
+            className="flex justify-center pt-3 px-4 pointer-events-none"
           >
-            <nav className="pointer-events-auto flex items-center gap-1 h-12 rounded-full bg-white/90 backdrop-blur-2xl shadow-[0_2px_24px_rgba(0,0,0,0.06)] border border-black/[0.04] px-1.5">
-              {/* Logo compact */}
-              <Link href="/" className="flex items-center gap-1.5 pl-2 pr-1 shrink-0">
-                <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-field to-field-dark text-white font-bold text-[9px]">
-                  OW
-                </div>
-              </Link>
-
-              {/* Separator */}
-              <div className="h-5 w-px bg-black/[0.06] mx-1 hidden md:block" />
-
-              {/* Nav links */}
-              <div className="hidden md:flex items-center gap-0.5">
-                {navLinks.map((link) => (
+            <nav className="pointer-events-auto relative w-full max-w-3xl flex items-center justify-center gap-1 h-12 rounded-full bg-white/90 backdrop-blur-2xl shadow-[0_2px_24px_rgba(0,0,0,0.06)] border border-black/[0.04] px-4">
+              {/* Left nav */}
+              <div className="hidden md:flex items-center gap-0.5 flex-1 justify-end">
+                {navLinksLeft.map((link) => (
                   <Link
                     key={link.href}
                     href={link.href}
@@ -69,20 +59,37 @@ export function Header() {
                 ))}
               </div>
 
-              {/* Separator */}
-              <div className="h-5 w-px bg-black/[0.06] mx-1 hidden md:block" />
-
-              {/* CTA */}
-              <Link
-                href="/reservation"
-                className="inline-flex items-center gap-1.5 text-white font-semibold bg-gradient-to-r from-field to-field-dark px-4 h-8 rounded-full text-[12px] hover:shadow-md hover:shadow-field/20 transition-shadow duration-300"
-              >
-                <Zap className="size-3" />
-                Réserver
+              {/* Logo central */}
+              <Link href="/" className="shrink-0 mx-3 text-base font-bold tracking-tight font-[family-name:var(--font-heading)]">
+                Offside <span className="text-gradient-field">World</span>
               </Link>
 
+              {/* Right nav */}
+              <div className="hidden md:flex items-center gap-0.5 flex-1 justify-start">
+                {navLinksRight.map((link) =>
+                  link.cta ? (
+                    <Link
+                      key={link.href}
+                      href={link.href}
+                      className="inline-flex items-center gap-1.5 text-white font-semibold bg-gradient-to-r from-field to-field-dark px-4 h-8 rounded-full text-[12px] ml-1 hover:shadow-md hover:shadow-field/20 transition-shadow duration-300"
+                    >
+                      <Zap className="size-3" />
+                      Réserver
+                    </Link>
+                  ) : (
+                    <Link
+                      key={link.href}
+                      href={link.href}
+                      className="px-3 py-1.5 text-[12px] font-medium text-foreground/60 hover:text-foreground rounded-full hover:bg-black/[0.04] transition-colors duration-200"
+                    >
+                      {link.label}
+                    </Link>
+                  )
+                )}
+              </div>
+
               {/* Mobile burger */}
-              <div className="md:hidden">
+              <div className="md:hidden absolute right-3">
                 <MobileMenu open={open} setOpen={setOpen} />
               </div>
             </nav>
@@ -113,17 +120,8 @@ export function Header() {
               </nav>
 
               {/* Logo central */}
-              <Link href="/" className="flex items-center gap-2.5 group shrink-0 mx-4 lg:mx-6">
-                <motion.div
-                  whileHover={{ rotate: [0, -6, 6, 0] }}
-                  transition={{ duration: 0.4 }}
-                  className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-field to-field-dark text-white font-bold text-xs shadow-md shadow-field/15"
-                >
-                  OW
-                </motion.div>
-                <span className="text-lg lg:text-xl font-bold tracking-tight font-[family-name:var(--font-heading)]">
-                  Offside <span className="text-gradient-field">World</span>
-                </span>
+              <Link href="/" className="shrink-0 mx-4 lg:mx-6 text-lg lg:text-xl font-bold tracking-tight font-[family-name:var(--font-heading)]">
+                Offside <span className="text-gradient-field">World</span>
               </Link>
 
               {/* Right nav */}
