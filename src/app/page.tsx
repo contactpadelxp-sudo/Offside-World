@@ -23,7 +23,7 @@ export default function Home() {
   return (
     <>
       {/* ══════ HERO ══════ */}
-      <section className="relative text-white min-h-[100vh] flex items-center justify-center overflow-hidden bg-[#030a00]">
+      <section className="relative min-h-[100vh] flex items-center justify-center overflow-hidden bg-white">
         {/* MagicRings background */}
         <div className="absolute inset-0 z-0">
           <MagicRings
@@ -52,12 +52,12 @@ export default function Home() {
         </div>
         <div className="grain" style={{ position: "absolute", inset: 0, pointerEvents: "none", zIndex: 1 }} />
 
-        {/* Dark overlay radial pour lisibilité au centre */}
-        <div className="absolute inset-0 z-[1] bg-radial-[ellipse_at_center] from-[#030a00]/70 via-[#030a00]/40 to-transparent" />
+        {/* Overlay radial blanc pour lisibilité au centre */}
+        <div className="absolute inset-0 z-[1] bg-radial-[ellipse_at_center] from-white/80 via-white/50 to-transparent" />
 
         <div className="relative z-10 mx-auto max-w-5xl px-4 lg:px-8 pt-28 pb-20 md:pt-36 md:pb-28 w-full text-center">
           {/* Headline central */}
-          <h1 className="font-[family-name:var(--font-heading)] text-[clamp(2rem,5.5vw,4.5rem)] font-bold tracking-tight leading-[1.05] drop-shadow-[0_2px_20px_rgba(0,0,0,0.7)]">
+          <h1 className="font-[family-name:var(--font-heading)] text-[clamp(2rem,5.5vw,4.5rem)] font-bold tracking-tight leading-[1.05] text-foreground">
             <FadeIn delay={0.1} className="block whitespace-nowrap">
               <span>Le complexe où les</span>
             </FadeIn>
@@ -73,9 +73,9 @@ export default function Home() {
           </h1>
 
           <FadeIn delay={0.9}>
-            <p className="mt-6 text-lg md:text-xl text-white/50 max-w-xl mx-auto leading-relaxed drop-shadow-[0_1px_8px_rgba(0,0,0,0.5)]">
+            <p className="mt-6 text-lg md:text-xl text-muted-foreground max-w-xl mx-auto leading-relaxed">
               Organiser l&apos;anniversaire de votre enfant n&apos;a jamais été{" "}
-              <span className="text-white/80 font-semibold">aussi simple.</span>
+              <span className="text-foreground font-semibold">aussi simple.</span>
             </p>
           </FadeIn>
 
@@ -90,7 +90,7 @@ export default function Home() {
               </Link>
               <Link
                 href="#activites"
-                className="btn-glass-outline inline-flex items-center gap-2 text-white text-lg px-8 h-14 rounded-2xl"
+                className="btn-outline-light inline-flex items-center gap-2 text-lg px-8 h-14 rounded-2xl"
               >
                 Découvrir
               </Link>
@@ -106,10 +106,10 @@ export default function Home() {
                 { value: 98, suffix: "%", label: "clients satisfaits" },
               ].map((stat) => (
                 <div key={stat.label} className="text-center">
-                  <p className="text-3xl md:text-4xl font-bold font-[family-name:var(--font-heading)] drop-shadow-[0_1px_8px_rgba(0,0,0,0.5)]">
+                  <p className="text-3xl md:text-4xl font-bold font-[family-name:var(--font-heading)] text-foreground">
                     <CountUp target={stat.value} suffix={stat.suffix} />
                   </p>
-                  <p className="text-xs md:text-sm text-white/40 mt-1">{stat.label}</p>
+                  <p className="text-xs md:text-sm text-muted-foreground mt-1">{stat.label}</p>
                 </div>
               ))}
             </div>
@@ -118,16 +118,16 @@ export default function Home() {
 
         {/* Scroll hint */}
         <FadeIn delay={1.5} className="absolute bottom-8 left-1/2 -translate-x-1/2 z-10">
-          <div className="flex flex-col items-center gap-2 text-white/30">
+          <div className="flex flex-col items-center gap-2 text-muted-foreground/60">
             <span className="text-[11px] tracking-widest uppercase">Scroll</span>
-            <div className="h-8 w-px bg-gradient-to-b from-white/30 to-transparent animate-pulse" />
+            <div className="h-8 w-px bg-gradient-to-b from-foreground/30 to-transparent animate-pulse" />
           </div>
         </FadeIn>
       </section>
 
       {/* ── Smooth transition hero → content ── */}
       <div className="relative h-32 -mt-1">
-        <div className="absolute inset-0 bg-gradient-to-b from-[#030a00] to-background" />
+        <div className="absolute inset-0 bg-gradient-to-b from-white to-background" />
       </div>
 
       {/* ══════ MARQUEE ══════ */}
