@@ -6,7 +6,7 @@ import { buttonVariants } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { FadeIn, Confetti } from "@/components/motion";
-import { Home, Plus, Mail, QrCode, Lightbulb, ArrowRight, CheckCircle2 } from "lucide-react";
+import { Home, Plus, Mail, QrCode, Lightbulb, ArrowRight } from "lucide-react";
 import { motion } from "framer-motion";
 
 const typeLabels: Record<string, string> = {
@@ -53,6 +53,7 @@ export function ConfirmationContent() {
   const total = params.get("total") || "0";
   const formule = params.get("formule");
   const enfant = params.get("enfant");
+  const reference = params.get("ref") ?? "OW-DEMO";
   const isFoot = type === "foot";
 
   return (
@@ -94,7 +95,7 @@ export function ConfirmationContent() {
               )}
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Référence</span>
-                <span className="font-mono font-semibold">OW-{Date.now().toString(36).toUpperCase()}</span>
+                <span className="font-mono font-semibold">{reference}</span>
               </div>
               <div className="border-t pt-3 flex justify-between text-lg">
                 <span className="font-bold">Total payé</span>

@@ -9,11 +9,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { FadeIn } from "@/components/motion";
+import { SummaryBar, TrustRow } from "@/components/reservation/funnel-ui";
 import { validateBelgianPhone } from "@/lib/phone";
 import { libreSlots, type LibreSlot } from "@/data/libre";
-import { ArrowLeft, ArrowRight, Lock, ShieldCheck, AlertCircle, Users, Calendar } from "lucide-react";
+import { ArrowLeft, ArrowRight, Lock, ShieldCheck, AlertCircle, Users, Calendar, Flame } from "lucide-react";
 
-type Step = "creneau" | "recap" | "paiement";
+type Step = "creneau" | "paiement";
 const DATES = [...new Set(libreSlots.map((s) => s.date))];
 
 function formatDate(d: string) {
@@ -44,7 +45,7 @@ export function LibreFlow({ onBack }: { onBack: () => void }) {
   };
 
   return (
-    <div>
+    <div className="pb-24">
       <h1 className="text-2xl font-bold font-[family-name:var(--font-heading)] md:text-3xl flex items-center gap-2">
         <Calendar className="size-7 text-field" /> Entrée libre
       </h1>
@@ -72,9 +73,17 @@ export function LibreFlow({ onBack }: { onBack: () => void }) {
                       <p className="font-bold">{slot.start} – {slot.end}</p>
                       <p className="text-sm text-muted-foreground">{slot.price}€ / personne</p>
                     </div>
-                    <Badge variant={slot.spotsLeft > 5 ? "secondary" : slot.spotsLeft > 0 ? "outline" : "destructive"} className="flex items-center gap-1">
-                      <Users className="size-3" /> {slot.spotsLeft > 0 ? `${slot.spotsLeft} places` : "Complet"}
-                    </Badge>
+                    {slot.spotsLeft === 0 ? (
+                      <Badge variant="destructive">Complet</Badge>
+                    ) : slot.spotsLeft <= 5 ? (
+                      <Badge className="bg-kick/10 text-kick border-0 flex items-center gap-1">
+                        <Flame className="size-3" /> Plus que {slot.spotsLeft} places
+                      </Badge>
+                    ) : (
+                      <Badge variant="secondary" className="flex items-center gap-1">
+                        <Users className="size-3" /> {slot.spotsLeft} places
+                      </Badge>
+                    )}
                   </CardContent>
                 </Card>
               </button>
@@ -88,47 +97,28 @@ export function LibreFlow({ onBack }: { onBack: () => void }) {
           )}
           <div className="mt-8 flex justify-between">
             <Button variant="ghost" onClick={onBack} className="gap-1.5"><ArrowLeft className="size-4" /> Retour</Button>
-            <Button onClick={() => setStep("recap")} disabled={!selectedSlot} className="btn-glass-field text-white border-0 gap-1.5">Continuer <ArrowRight className="size-4" /></Button>
-          </div>
-        </FadeIn>
-      )}
-
-      {step === "recap" && selectedSlot && (
-        <FadeIn className="mt-6">
-          <h2 className="text-xl font-bold font-[family-name:var(--font-heading)]">Récapitulatif</h2>
-          <Card className="mt-4 border-2">
-            <CardContent className="p-6 space-y-3">
-              <div className="flex justify-between"><span className="text-muted-foreground">Date</span><span className="font-semibold">{formatDate(selectedDate)}</span></div>
-              <div className="flex justify-between"><span className="text-muted-foreground">Créneau</span><span className="font-semibold">{selectedSlot.start} – {selectedSlot.end}</span></div>
-              <div className="flex justify-between"><span className="text-muted-foreground">Personnes</span><span className="font-semibold">{nbPersons}</span></div>
-              <div className="border-t pt-3 flex justify-between text-lg"><span className="font-bold">Total</span><span className="font-bold text-field">{total}€</span></div>
-            </CardContent>
-          </Card>
-          <div className="mt-6 space-y-4 max-w-md">
-            <h3 className="font-bold">Vos coordonnées</h3>
-            <p className="text-xs text-muted-foreground"><a href="/confidentialite" className="underline">Politique de confidentialité</a></p>
-            <div><Label>Nom</Label><Input value={name} onChange={(e) => setName(e.target.value)} /></div>
-            <div><Label>Email</Label><Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} /></div>
-            <div>
-              <Label>Téléphone</Label>
-              <Input type="tel" value={phone} onChange={(e) => handlePhoneChange(e.target.value)} placeholder="0470 12 34 56" className={phoneError ? "border-destructive" : ""} />
-              {phoneError && <p className="mt-1 text-sm text-destructive flex items-center gap-1"><AlertCircle className="size-3.5" /> {phoneError}</p>}
-            </div>
-          </div>
-          <div className="mt-8 flex justify-between">
-            <Button variant="ghost" onClick={() => setStep("creneau")} className="gap-1.5"><ArrowLeft className="size-4" /> Retour</Button>
-            <Button onClick={() => setStep("paiement")} disabled={!name || !email || !isPhoneValid} className="btn-glass-field text-white border-0 gap-1.5">Continuer <ArrowRight className="size-4" /></Button>
+            <Button onClick={() => setStep("paiement")} disabled={!selectedSlot} className="btn-glass-field text-white border-0 gap-1.5">Continuer <ArrowRight className="size-4" /></Button>
           </div>
         </FadeIn>
       )}
 
       {step === "paiement" && selectedSlot && (
         <FadeIn className="mt-6">
-          <h2 className="text-xl font-bold font-[family-name:var(--font-heading)] flex items-center gap-2"><Lock className="size-5 text-field" /> Paiement</h2>
-          <Card className="mt-4 border-2">
-            <CardContent className="p-6">
-              <div className="flex justify-between text-lg mb-6"><span className="font-bold">Total</span><span className="font-bold text-field">{total}€</span></div>
-              <div className="space-y-4 mb-6">
+          <h2 className="text-xl font-bold font-[family-name:var(--font-heading)] flex items-center gap-2">
+            <Lock className="size-5 text-field" /> Récapitulatif & paiement
+          </h2>
+          <div className="mt-4 grid gap-6 lg:grid-cols-[1fr_minmax(20rem,24rem)] items-start">
+            <div className="space-y-4 max-w-md">
+              <h3 className="font-bold">Vos coordonnées</h3>
+              <p className="text-xs text-muted-foreground"><a href="/confidentialite" className="underline">Politique de confidentialité</a></p>
+              <div><Label>Nom</Label><Input value={name} onChange={(e) => setName(e.target.value)} /></div>
+              <div><Label>Email</Label><Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} /></div>
+              <div>
+                <Label>Téléphone</Label>
+                <Input type="tel" value={phone} onChange={(e) => handlePhoneChange(e.target.value)} placeholder="0470 12 34 56" className={phoneError ? "border-destructive" : ""} />
+                {phoneError && <p className="mt-1 text-sm text-destructive flex items-center gap-1"><AlertCircle className="size-3.5" /> {phoneError}</p>}
+              </div>
+              <div className="space-y-4 pt-2">
                 <div className="flex items-start gap-3">
                   <Checkbox id="cgv" checked={acceptCGV} onCheckedChange={(v) => setAcceptCGV(v === true)} />
                   <Label htmlFor="cgv" className="text-sm">J&apos;accepte les <a href="/cgv" target="_blank" className="underline text-field">CGV</a> et la <a href="/confidentialite" target="_blank" className="underline text-field">Politique de confidentialité</a>. <span className="text-destructive">*</span></Label>
@@ -138,16 +128,34 @@ export function LibreFlow({ onBack }: { onBack: () => void }) {
                   <Label htmlFor="nl" className="text-sm text-muted-foreground">Recevoir les offres par email (facultatif).</Label>
                 </div>
               </div>
-              <button onClick={() => router.push(`/confirmation?type=libre&total=${total}`)} disabled={!acceptCGV}
-                className="btn-glass-paypal w-full h-14 text-white text-lg rounded-2xl font-semibold disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center justify-center gap-2">
-                <Lock className="size-5" /> Payer avec PayPal (démo)
-              </button>
-              <p className="mt-3 text-xs text-center text-muted-foreground flex items-center justify-center gap-1"><ShieldCheck className="size-3.5" /> Paiement sécurisé — Aucune donnée de carte stockée.</p>
-            </CardContent>
-          </Card>
-          <div className="mt-4"><Button variant="ghost" onClick={() => setStep("recap")} className="gap-1.5"><ArrowLeft className="size-4" /> Retour</Button></div>
+            </div>
+
+            <Card className="border-2 lg:sticky lg:top-24">
+              <CardContent className="p-6 space-y-3">
+                <h3 className="font-bold font-[family-name:var(--font-heading)] mb-2">Votre réservation</h3>
+                <div className="flex justify-between text-sm"><span className="text-muted-foreground">Date</span><span className="font-semibold">{formatDate(selectedDate)}</span></div>
+                <div className="flex justify-between text-sm"><span className="text-muted-foreground">Créneau</span><span className="font-semibold">{selectedSlot.start} – {selectedSlot.end}</span></div>
+                <div className="flex justify-between text-sm"><span className="text-muted-foreground">Personnes</span><span className="font-semibold">{nbPersons} × {selectedSlot.price}€</span></div>
+                <div className="border-t pt-3 flex justify-between text-lg"><span className="font-bold">Total</span><span className="font-bold text-field">{total}€</span></div>
+                <button onClick={() => router.push(`/confirmation?type=libre&total=${total}&ref=OW-${Date.now().toString(36).toUpperCase()}`)} disabled={!acceptCGV || !name || !email || !isPhoneValid}
+                  className="btn-glass-paypal w-full h-14 text-white text-lg rounded-2xl font-semibold disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center justify-center gap-2 mt-2">
+                  <Lock className="size-5" /> Payer avec PayPal (démo)
+                </button>
+                <p className="text-xs text-center text-muted-foreground flex items-center justify-center gap-1"><ShieldCheck className="size-3.5" /> Aucune donnée de carte stockée.</p>
+                <TrustRow className="justify-center pt-1" />
+              </CardContent>
+            </Card>
+          </div>
+          <div className="mt-6"><Button variant="ghost" onClick={() => setStep("creneau")} className="gap-1.5"><ArrowLeft className="size-4" /> Retour</Button></div>
         </FadeIn>
       )}
+
+      <SummaryBar
+        visible={Boolean(selectedSlot) && step === "creneau"}
+        label="Entrée libre"
+        detail={selectedSlot ? `${formatDate(selectedDate)} · ${selectedSlot.start} · ${nbPersons} pers.` : undefined}
+        total={total}
+      />
     </div>
   );
 }

@@ -2,7 +2,7 @@
 
 import { motion, useMotionValue, useSpring, useTransform, useInView } from "framer-motion";
 import type { HTMLMotionProps } from "framer-motion";
-import { useRef, useEffect, useState, type ReactNode, type MouseEvent } from "react";
+import { useRef, useEffect, type ReactNode, type MouseEvent } from "react";
 
 /* ═══ FADE IN ═══ */
 export function FadeIn({
@@ -247,15 +247,22 @@ export function WaveDivider({ fill = "#ffffff", flip = false, className }: { fil
 }
 
 /* ═══ CONFETTI ═══ */
+/* Pseudo-aléatoire déterministe pour rester pur au render */
+function seededRandom(i: number, salt: number) {
+  const x = Math.sin(i * 127.1 + salt * 311.7) * 43758.5453;
+  return x - Math.floor(x);
+}
+
 export function Confetti() {
   const colors = ["#10b956", "#ff6b2c", "#3b82f6", "#a855f7", "#f59e0b", "#ec4899"];
   const pieces = Array.from({ length: 40 }, (_, i) => ({
     id: i,
     color: colors[i % colors.length],
-    left: `${Math.random() * 100}%`,
-    delay: `${Math.random() * 2}s`,
-    duration: `${2 + Math.random() * 2}s`,
-    size: `${6 + Math.random() * 8}px`,
+    left: `${seededRandom(i, 1) * 100}%`,
+    delay: `${seededRandom(i, 2) * 2}s`,
+    duration: `${2 + seededRandom(i, 3) * 2}s`,
+    size: `${6 + seededRandom(i, 4) * 8}px`,
+    round: seededRandom(i, 5) > 0.5,
   }));
 
   return (
@@ -271,7 +278,7 @@ export function Confetti() {
             height: p.size,
             animationDelay: p.delay,
             animationDuration: p.duration,
-            borderRadius: Math.random() > 0.5 ? "50%" : "2px",
+            borderRadius: p.round ? "50%" : "2px",
           }}
         />
       ))}

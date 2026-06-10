@@ -166,12 +166,31 @@
   position: absolute;
   width: 400px; height: 400px;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(59,130,246,0.5) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(255,107,44,0.4) 0%, transparent 70%);
   filter: blur(80px);
   top: 50%; left: 50%;
   transform: translate(-50%, -50%);
   animation: aurora3 12s ease-in-out infinite;
   opacity: 0.4;
+}
+
+/* ── Hero festif clair ── */
+.hero-festive {
+  background:
+    radial-gradient(ellipse 80% 50% at 20% 0%, rgba(16,185,86,0.10), transparent 60%),
+    radial-gradient(ellipse 70% 50% at 85% 10%, rgba(255,107,44,0.12), transparent 60%),
+    radial-gradient(ellipse 60% 40% at 50% 100%, rgba(16,185,86,0.06), transparent 70%),
+    linear-gradient(180deg, #fffdfb 0%, #fdfcfa 100%);
+}
+.field-pattern-dark {
+  position: absolute;
+  inset: 0;
+  opacity: 0.05;
+  background-image: url("data:image/svg+xml,%3Csvg width='200' height='200' xmlns='http://www.w3.org/2000/svg'%3E%3Cg stroke='%230d9648' stroke-width='1' fill='none'%3E%3Crect x='10' y='10' width='180' height='180' rx='4'/%3E%3Cline x1='100' y1='10' x2='100' y2='190'/%3E%3Ccircle cx='100' cy='100' r='30'/%3E%3Ccircle cx='100' cy='100' r='2' fill='%230d9648'/%3E%3Crect x='10' y='60' width='30' height='80' rx='2'/%3E%3Crect x='160' y='60' width='30' height='80' rx='2'/%3E%3C/g%3E%3C/svg%3E");
+  background-size: 200px 200px;
+  pointer-events: none;
+  -webkit-mask-image: linear-gradient(180deg, black 0%, transparent 85%);
+  mask-image: linear-gradient(180deg, black 0%, transparent 85%);
 }
 
 /* ── Grain texture ── */
@@ -269,27 +288,30 @@
 .btn-glass-paypal:hover { transform: translateY(-3px) scale(1.02); box-shadow: 0 16px 48px rgba(0,112,186,0.45); }
 .btn-glass-paypal:active { transform: translateY(0) scale(0.98); }
 
-.btn-glass-violet {
-  position: relative; overflow: hidden; border-radius: 1rem; font-weight: 700;
-  transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
-  background: linear-gradient(135deg, #7c3aed, #a78bfa);
-  border: 1px solid rgba(255,255,255,0.2);
-  box-shadow: 0 8px 32px rgba(124,58,237,0.35), inset 0 1px 0 rgba(255,255,255,0.3);
-}
-.btn-glass-violet:hover { transform: translateY(-3px) scale(1.02); box-shadow: 0 16px 48px rgba(124,58,237,0.45); }
-.btn-glass-violet:active { transform: translateY(0) scale(0.98); }
-
 /* Shimmer on glass buttons */
 .btn-glass::before, .btn-glass-kick::before, .btn-glass-field::before,
-.btn-glass-outline::before, .btn-glass-paypal::before, .btn-glass-violet::before {
+.btn-glass-outline::before, .btn-glass-paypal::before {
   content: ""; position: absolute; top: 0; left: -100%; width: 100%; height: 100%;
   background: linear-gradient(90deg, transparent, rgba(255,255,255,0.25), transparent);
   transition: left 0.6s ease;
 }
 .btn-glass:hover::before, .btn-glass-kick:hover::before, .btn-glass-field:hover::before,
-.btn-glass-outline:hover::before, .btn-glass-paypal:hover::before, .btn-glass-violet:hover::before {
+.btn-glass-outline:hover::before, .btn-glass-paypal:hover::before {
   left: 100%;
 }
+
+/* ── Outline button pour fond clair ── */
+.btn-outline-light {
+  position: relative; overflow: hidden; border-radius: 1rem; font-weight: 600;
+  transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+  background: rgba(255,255,255,0.7);
+  backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+  border: 1.5px solid rgba(13,150,72,0.25);
+  color: var(--color-field-dark);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.04);
+}
+.btn-outline-light:hover { transform: translateY(-3px) scale(1.02); background: rgba(16,185,86,0.08); border-color: rgba(13,150,72,0.45); box-shadow: 0 12px 40px rgba(16,185,86,0.12); }
+.btn-outline-light:active { transform: translateY(0) scale(0.98); }
 
 /* ── Animated gradient border ── */
 @keyframes gradient-rotate {
@@ -312,7 +334,7 @@
   inset: 0;
   border-radius: inherit;
   padding: 2px;
-  background: conic-gradient(from var(--gradient-angle), #10b956, #ff6b2c, #3b82f6, #a855f7, #10b956);
+  background: conic-gradient(from var(--gradient-angle), #10b956, #6ee7a0, #ff6b2c, #ff9a5c, #10b956);
   animation: gradient-rotate 4s linear infinite;
   -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
   mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);

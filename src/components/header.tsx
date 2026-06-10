@@ -10,13 +10,13 @@ import { motion, AnimatePresence } from "framer-motion";
 
 const navLinksLeft = [
   { label: "Accueil", href: "/" },
-  { label: "Anniversaires", href: "/reservation?activite=anniversaire" },
-  { label: "Entrées libres", href: "/reservation?activite=libre" },
+  { label: "Anniversaires", href: "/#formules" },
+  { label: "Activités", href: "/#activites" },
 ];
 
 const navLinksRight = [
-  { label: "Foot", href: "/reservation?activite=foot" },
-  { label: "Team Building", href: "/reservation?activite=team-building" },
+  { label: "Avis", href: "/#avis" },
+  { label: "FAQ", href: "/#faq" },
   { label: "Réserver", href: "/reservation", cta: true },
 ];
 
@@ -62,7 +62,7 @@ export function Header() {
                   <Link
                     key={link.href}
                     href={link.href}
-                    className="px-3 py-1.5 text-[12px] font-medium text-foreground/60 hover:text-foreground rounded-full hover:bg-black/[0.04] transition-colors duration-200"
+                    className="px-3 py-1.5 text-[12px] font-medium text-foreground/75 hover:text-foreground rounded-full hover:bg-black/[0.04] transition-colors duration-200"
                   >
                     {link.label}
                   </Link>
@@ -104,7 +104,7 @@ export function Header() {
                   <Link
                     key={link.href}
                     href={link.href}
-                    className="relative px-3 py-2 text-[13px] font-medium text-foreground/50 hover:text-foreground rounded-xl hover:bg-black/[0.03] transition-all duration-200 group"
+                    className="relative px-3 py-2 text-[13px] font-medium text-foreground/70 hover:text-foreground rounded-xl hover:bg-black/[0.03] transition-all duration-200 group"
                   >
                     {link.label}
                     <span className="absolute bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-field scale-0 group-hover:scale-100 transition-transform duration-200" />
@@ -141,7 +141,7 @@ export function Header() {
                     <Link
                       key={link.href}
                       href={link.href}
-                      className="relative px-3 py-2 text-[13px] font-medium text-foreground/50 hover:text-foreground rounded-xl hover:bg-black/[0.03] transition-all duration-200 group"
+                      className="relative px-3 py-2 text-[13px] font-medium text-foreground/70 hover:text-foreground rounded-xl hover:bg-black/[0.03] transition-all duration-200 group"
                     >
                       {link.label}
                       <span className="absolute bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-field scale-0 group-hover:scale-100 transition-transform duration-200" />

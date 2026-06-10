@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { ActivityChoice } from "./steps/activity-choice";
 import { AnniversaireFlow } from "./steps/anniversaire-flow";
@@ -19,14 +19,19 @@ const stepLabels: Record<string, string> = {
 
 export function ReservationFlow() {
   const searchParams = useSearchParams();
-  const [activity, setActivity] = useState<Activity>(null);
+  const formuleParam = searchParams.get("formule") ?? undefined;
 
-  useEffect(() => {
-    const a = searchParams.get("activite");
-    if (a && ["anniversaire", "libre", "foot", "team-building"].includes(a)) {
-      setActivity(a as Activity);
-    }
-  }, [searchParams]);
+  const a = searchParams.get("activite");
+  const paramActivity: Activity =
+    a && ["anniversaire", "libre", "foot", "team-building"].includes(a) ? (a as Activity) : null;
+
+  const [activity, setActivity] = useState<Activity>(paramActivity);
+  // Resynchronise l'activité quand l'URL change (pattern React "adjust state on prop change")
+  const [lastParamActivity, setLastParamActivity] = useState<Activity>(paramActivity);
+  if (paramActivity !== lastParamActivity) {
+    setLastParamActivity(paramActivity);
+    if (paramActivity) setActivity(paramActivity);
+  }
 
   return (
     <div className="mx-auto max-w-4xl px-4 pt-24 pb-8 md:pt-28 md:pb-12">
@@ -47,7 +52,7 @@ export function ReservationFlow() {
         <ActivityChoice onSelect={setActivity} />
       )}
       {activity === "anniversaire" && (
-        <AnniversaireFlow onBack={() => setActivity(null)} />
+        <AnniversaireFlow onBack={() => setActivity(null)} initialFormuleId={formuleParam} />
       )}
       {activity === "libre" && (
         <LibreFlow onBack={() => setActivity(null)} />

@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { FadeIn } from "@/components/motion";
+import { SummaryBar, TrustRow } from "@/components/reservation/funnel-ui";
 import { validateBelgianPhone } from "@/lib/phone";
 import { formules, options, type Formule, type Option } from "@/data/formules";
 import { salles, timeSlots, isSlotBooked } from "@/data/salles";
@@ -20,21 +21,18 @@ import {
   Lock,
   Calendar,
   Users,
-  Sparkles,
   Gift,
-  PartyPopper,
   AlertCircle,
   ShieldCheck,
+  Flame,
 } from "lucide-react";
 
-type Step = "formule" | "enfants" | "options" | "creneau" | "recap" | "paiement";
+type Step = "formule" | "details" | "creneau" | "paiement";
 
 const STEPS: { key: Step; label: string }[] = [
   { key: "formule", label: "Formule" },
-  { key: "enfants", label: "Enfants" },
-  { key: "options", label: "Options" },
+  { key: "details", label: "Détails" },
   { key: "creneau", label: "Créneau" },
-  { key: "recap", label: "Récap" },
   { key: "paiement", label: "Paiement" },
 ];
 
@@ -48,10 +46,17 @@ function formatDate(d: string) {
   });
 }
 
-export function AnniversaireFlow({ onBack }: { onBack: () => void }) {
+export function AnniversaireFlow({
+  onBack,
+  initialFormuleId,
+}: {
+  onBack: () => void;
+  initialFormuleId?: string;
+}) {
   const router = useRouter();
-  const [step, setStep] = useState<Step>("formule");
-  const [selectedFormule, setSelectedFormule] = useState<Formule | null>(null);
+  const initialFormule = formules.find((f) => f.id === initialFormuleId) ?? null;
+  const [step, setStep] = useState<Step>(initialFormule ? "details" : "formule");
+  const [selectedFormule, setSelectedFormule] = useState<Formule | null>(initialFormule);
   const [childCount, setChildCount] = useState(10);
   const [childName, setChildName] = useState("");
   const [childAge, setChildAge] = useState("");
@@ -90,8 +95,23 @@ export function AnniversaireFlow({ onBack }: { onBack: () => void }) {
   const stepIndex = STEPS.findIndex((s) => s.key === step);
   const isPhoneValid = parentPhone && validateBelgianPhone(parentPhone).valid;
 
+  const freeSlotsForDate = (date: string) =>
+    salles.reduce(
+      (count, salle) =>
+        count + timeSlots.filter((slot) => !isSlotBooked(salle.id, date, slot.id)).length,
+      0
+    );
+
+  const summaryDetail = [
+    `${childCount} enfants`,
+    selectedSlot && `${formatDate(selectedDate)} · ${timeSlots.find((s) => s.id === selectedSlot)?.start}`,
+    selectedOptions.length > 0 && `${selectedOptions.length} option${selectedOptions.length > 1 ? "s" : ""}`,
+  ]
+    .filter(Boolean)
+    .join(" · ");
+
   return (
-    <div>
+    <div className="pb-24">
       {/* Progress bar */}
       <div className="mb-10">
         <div className="flex items-center justify-between mb-3">
@@ -138,7 +158,12 @@ export function AnniversaireFlow({ onBack }: { onBack: () => void }) {
                     <div className="aspect-video rounded-xl bg-gradient-to-br from-field/20 to-kick/20 flex items-center justify-center mb-4">
                       <CircleDot className="size-10 text-field/60" />
                     </div>
-                    <h3 className="text-lg font-bold">{f.name}</h3>
+                    <div className="flex items-center gap-2">
+                      <h3 className="text-lg font-bold">{f.name}</h3>
+                      {f.id === "bubble-foot" && (
+                        <Badge className="bg-kick/10 text-kick border-0">Populaire</Badge>
+                      )}
+                    </div>
                     <p className="mt-1 text-sm text-muted-foreground line-clamp-2">{f.description}</p>
                     <p className="mt-3 text-2xl font-bold font-[family-name:var(--font-heading)] text-field">
                       {f.pricePerChild}€<span className="text-sm font-normal text-muted-foreground">/enfant</span>
@@ -161,88 +186,83 @@ export function AnniversaireFlow({ onBack }: { onBack: () => void }) {
           </div>
           <div className="mt-8 flex justify-between">
             <Button variant="ghost" onClick={onBack} className="gap-1.5"><ArrowLeft className="size-4" /> Retour</Button>
-            <Button onClick={() => setStep("enfants")} disabled={!selectedFormule} className="btn-glass-field text-white border-0 gap-1.5">
+            <Button onClick={() => setStep("details")} disabled={!selectedFormule} className="btn-glass-field text-white border-0 gap-1.5">
               Continuer <ArrowRight className="size-4" />
             </Button>
           </div>
         </FadeIn>
       )}
 
-      {/* STEP 2: Enfants */}
-      {step === "enfants" && selectedFormule && (
+      {/* STEP 2: Détails (enfant + options) */}
+      {step === "details" && selectedFormule && (
         <FadeIn>
           <h2 className="text-2xl font-bold font-[family-name:var(--font-heading)] flex items-center gap-2">
-            <Users className="size-6 text-field" /> Informations enfant
+            <Users className="size-6 text-field" /> Personnalisez la fête
           </h2>
           <p className="mt-1 text-muted-foreground">
+            Formule <strong>{selectedFormule.name}</strong> —{" "}
+            <button onClick={() => setStep("formule")} className="underline hover:text-foreground">changer</button>.
             Seules les informations minimales sont collectées.{" "}
             <a href="/confidentialite" className="underline">Politique de confidentialité</a>
           </p>
-          <div className="mt-6 max-w-md space-y-4">
-            <div>
-              <Label htmlFor="childName">Prénom de l&apos;enfant fêté</Label>
-              <Input id="childName" value={childName} onChange={(e) => setChildName(e.target.value)} placeholder="Ex. : Lucas" maxLength={50} />
+
+          <div className="mt-6 grid gap-8 md:grid-cols-2">
+            <div className="space-y-4">
+              <h3 className="font-bold font-[family-name:var(--font-heading)]">L&apos;enfant fêté</h3>
+              <div>
+                <Label htmlFor="childName">Prénom de l&apos;enfant fêté</Label>
+                <Input id="childName" value={childName} onChange={(e) => setChildName(e.target.value)} placeholder="Ex. : Lucas" maxLength={50} />
+              </div>
+              <div>
+                <Label htmlFor="childAge">Âge</Label>
+                <Input id="childAge" type="number" min={4} max={17} value={childAge} onChange={(e) => setChildAge(e.target.value)} placeholder="Ex. : 9" />
+              </div>
+              <div>
+                <Label htmlFor="childCount">Nombre d&apos;enfants invités</Label>
+                <Input id="childCount" type="number" min={selectedFormule.minChildren} max={selectedFormule.maxChildren} value={childCount} onChange={(e) => setChildCount(Number(e.target.value))} />
+                <p className="mt-1 text-xs text-muted-foreground">Min. {selectedFormule.minChildren} — Max. {selectedFormule.maxChildren} enfants</p>
+              </div>
             </div>
-            <div>
-              <Label htmlFor="childAge">Âge</Label>
-              <Input id="childAge" type="number" min={4} max={17} value={childAge} onChange={(e) => setChildAge(e.target.value)} placeholder="Ex. : 9" />
-            </div>
-            <div>
-              <Label htmlFor="childCount">Nombre d&apos;enfants invités</Label>
-              <Input id="childCount" type="number" min={selectedFormule.minChildren} max={selectedFormule.maxChildren} value={childCount} onChange={(e) => setChildCount(Number(e.target.value))} />
-              <p className="mt-1 text-xs text-muted-foreground">Min. {selectedFormule.minChildren} — Max. {selectedFormule.maxChildren} enfants</p>
+
+            <div className="space-y-3">
+              <h3 className="font-bold font-[family-name:var(--font-heading)]">Options en plus (facultatif)</h3>
+              {options.map((opt: Option) => {
+                const isIncluded = selectedFormule.id === "premium" && ["deco", "gateau", "boissons", "photo"].includes(opt.id);
+                return (
+                  <button key={opt.id} onClick={() => !isIncluded && toggleOption(opt.id)} disabled={isIncluded} className="w-full text-left">
+                    <Card className={`border-2 transition-all duration-300 ${
+                      isIncluded ? "opacity-50 border-muted" : selectedOptions.includes(opt.id) ? "border-field ring-2 ring-field/20" : "hover:border-field/40"
+                    }`}>
+                      <CardContent className="flex items-center justify-between p-3.5">
+                        <div className="flex items-center gap-3">
+                          <div className={`flex h-9 w-9 items-center justify-center rounded-xl shrink-0 ${selectedOptions.includes(opt.id) ? "bg-field/10 text-field" : "bg-muted text-muted-foreground"}`}>
+                            <Gift className="size-4" />
+                          </div>
+                          <div>
+                            <p className="font-semibold text-sm">{opt.label}</p>
+                            {opt.description && <p className="text-xs text-muted-foreground">{opt.description}</p>}
+                            {isIncluded && <Badge variant="secondary" className="mt-1">Inclus dans Premium</Badge>}
+                          </div>
+                        </div>
+                        <p className="font-bold text-field whitespace-nowrap ml-3 text-sm">+{opt.price}€</p>
+                      </CardContent>
+                    </Card>
+                  </button>
+                );
+              })}
             </div>
           </div>
+
           <div className="mt-8 flex justify-between">
             <Button variant="ghost" onClick={() => setStep("formule")} className="gap-1.5"><ArrowLeft className="size-4" /> Retour</Button>
-            <Button onClick={() => setStep("options")} disabled={!childName || !childAge || childCount < selectedFormule.minChildren} className="btn-glass-field text-white border-0 gap-1.5">
+            <Button onClick={() => setStep("creneau")} disabled={!childName || !childAge || childCount < selectedFormule.minChildren} className="btn-glass-field text-white border-0 gap-1.5">
               Continuer <ArrowRight className="size-4" />
             </Button>
           </div>
         </FadeIn>
       )}
 
-      {/* STEP 3: Options */}
-      {step === "options" && (
-        <FadeIn>
-          <h2 className="text-2xl font-bold font-[family-name:var(--font-heading)] flex items-center gap-2">
-            <Sparkles className="size-6 text-kick" /> Options supplémentaires
-          </h2>
-          <p className="mt-1 text-muted-foreground">Personnalisez l&apos;anniversaire avec nos extras.</p>
-          <div className="mt-6 space-y-3">
-            {options.map((opt: Option) => {
-              const isIncluded = selectedFormule?.id === "premium" && ["deco", "gateau", "boissons", "photo"].includes(opt.id);
-              return (
-                <button key={opt.id} onClick={() => !isIncluded && toggleOption(opt.id)} disabled={isIncluded} className="w-full text-left">
-                  <Card className={`border-2 transition-all duration-300 ${
-                    isIncluded ? "opacity-50 border-muted" : selectedOptions.includes(opt.id) ? "border-field ring-2 ring-field/20" : "hover:border-field/40 card-hover"
-                  }`}>
-                    <CardContent className="flex items-center justify-between p-4">
-                      <div className="flex items-center gap-3">
-                        <div className={`flex h-10 w-10 items-center justify-center rounded-xl ${selectedOptions.includes(opt.id) ? "bg-field/10 text-field" : "bg-muted text-muted-foreground"}`}>
-                          <Gift className="size-5" />
-                        </div>
-                        <div>
-                          <p className="font-semibold">{opt.label}</p>
-                          {opt.description && <p className="text-sm text-muted-foreground">{opt.description}</p>}
-                          {isIncluded && <Badge variant="secondary" className="mt-1">Inclus dans Premium</Badge>}
-                        </div>
-                      </div>
-                      <p className="text-lg font-bold text-field whitespace-nowrap ml-4">+{opt.price}€</p>
-                    </CardContent>
-                  </Card>
-                </button>
-              );
-            })}
-          </div>
-          <div className="mt-8 flex justify-between">
-            <Button variant="ghost" onClick={() => setStep("enfants")} className="gap-1.5"><ArrowLeft className="size-4" /> Retour</Button>
-            <Button onClick={() => setStep("creneau")} className="btn-glass-field text-white border-0 gap-1.5">Continuer <ArrowRight className="size-4" /></Button>
-          </div>
-        </FadeIn>
-      )}
-
-      {/* STEP 4: Créneau + Salle */}
+      {/* STEP 3: Créneau + Salle */}
       {step === "creneau" && (
         <FadeIn>
           <h2 className="text-2xl font-bold font-[family-name:var(--font-heading)] flex items-center gap-2">
@@ -253,15 +273,23 @@ export function AnniversaireFlow({ onBack }: { onBack: () => void }) {
           <div className="mt-6">
             <Label>Date</Label>
             <div className="mt-2 flex gap-2 flex-wrap">
-              {DATES.map((d) => (
-                <button key={d} onClick={() => { setSelectedDate(d); setSelectedSalle(""); setSelectedSlot(""); }}
-                  className={`rounded-xl border-2 px-4 py-2.5 text-sm font-medium transition-all duration-300 ${
-                    selectedDate === d ? "border-field bg-field/10 text-field-dark" : "border-muted hover:border-field/40"
-                  }`}
-                >
-                  {formatDate(d)}
-                </button>
-              ))}
+              {DATES.map((d) => {
+                const free = freeSlotsForDate(d);
+                return (
+                  <button key={d} onClick={() => { setSelectedDate(d); setSelectedSalle(""); setSelectedSlot(""); }}
+                    className={`rounded-xl border-2 px-4 py-2.5 text-sm font-medium transition-all duration-300 ${
+                      selectedDate === d ? "border-field bg-field/10 text-field-dark" : "border-muted hover:border-field/40"
+                    }`}
+                  >
+                    <span className="block">{formatDate(d)}</span>
+                    {free <= 8 && (
+                      <span className="mt-0.5 flex items-center justify-center gap-1 text-[11px] font-semibold text-kick">
+                        <Flame className="size-3" /> Plus que {free} créneaux
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
             </div>
           </div>
 
@@ -301,80 +329,41 @@ export function AnniversaireFlow({ onBack }: { onBack: () => void }) {
           </div>
 
           <div className="mt-8 flex justify-between">
-            <Button variant="ghost" onClick={() => setStep("options")} className="gap-1.5"><ArrowLeft className="size-4" /> Retour</Button>
-            <Button onClick={() => setStep("recap")} disabled={!selectedSalle || !selectedSlot} className="btn-glass-field text-white border-0 gap-1.5">
+            <Button variant="ghost" onClick={() => setStep("details")} className="gap-1.5"><ArrowLeft className="size-4" /> Retour</Button>
+            <Button onClick={() => setStep("paiement")} disabled={!selectedSalle || !selectedSlot} className="btn-glass-field text-white border-0 gap-1.5">
               Continuer <ArrowRight className="size-4" />
             </Button>
           </div>
         </FadeIn>
       )}
 
-      {/* STEP 5: Récap */}
-      {step === "recap" && selectedFormule && (
-        <FadeIn>
-          <h2 className="text-2xl font-bold font-[family-name:var(--font-heading)] flex items-center gap-2">
-            <PartyPopper className="size-6 text-kick" /> Récapitulatif
-          </h2>
-          <Card className="mt-6 border-2">
-            <CardContent className="p-6 space-y-4">
-              <div className="flex justify-between"><span className="text-muted-foreground">Formule</span><span className="font-semibold">{selectedFormule.name}</span></div>
-              <div className="flex justify-between"><span className="text-muted-foreground">Enfant fêté</span><span className="font-semibold">{childName} ({childAge} ans)</span></div>
-              <div className="flex justify-between"><span className="text-muted-foreground">Nombre d&apos;enfants</span><span className="font-semibold">{childCount}</span></div>
-              <div className="flex justify-between"><span className="text-muted-foreground">Date</span><span className="font-semibold">{formatDate(selectedDate)}</span></div>
-              <div className="flex justify-between"><span className="text-muted-foreground">Salle</span><span className="font-semibold">{salles.find((s) => s.id === selectedSalle)?.name}</span></div>
-              <div className="flex justify-between"><span className="text-muted-foreground">Horaire</span><span className="font-semibold">{timeSlots.find((s) => s.id === selectedSlot)?.start} – {timeSlots.find((s) => s.id === selectedSlot)?.end}</span></div>
-              {selectedOptions.length > 0 && (
-                <div className="flex justify-between"><span className="text-muted-foreground">Options</span><span className="font-semibold text-right">{options.filter((o) => selectedOptions.includes(o.id)).map((o) => o.label).join(", ")}</span></div>
-              )}
-              <div className="border-t pt-4 flex justify-between text-lg">
-                <span className="font-bold">Total</span>
-                <span className="font-bold text-field">{totalPrice}€</span>
-              </div>
-            </CardContent>
-          </Card>
-
-          <div className="mt-6 space-y-4 max-w-md">
-            <h3 className="font-bold">Vos coordonnées</h3>
-            <p className="text-xs text-muted-foreground">
-              Ces données sont utilisées uniquement pour la gestion de votre réservation.{" "}
-              <a href="/confidentialite" className="underline">Politique de confidentialité</a>
-            </p>
-            <div><Label htmlFor="parentName">Nom complet</Label><Input id="parentName" value={parentName} onChange={(e) => setParentName(e.target.value)} placeholder="Jean Dupont" /></div>
-            <div><Label htmlFor="parentEmail">Email</Label><Input id="parentEmail" type="email" value={parentEmail} onChange={(e) => setParentEmail(e.target.value)} placeholder="jean@email.com" /></div>
-            <div>
-              <Label htmlFor="parentPhone">Téléphone</Label>
-              <Input id="parentPhone" type="tel" value={parentPhone} onChange={(e) => handlePhoneChange(e.target.value)} placeholder="0470 12 34 56" className={phoneError ? "border-destructive" : ""} />
-              {phoneError && (
-                <p className="mt-1 text-sm text-destructive flex items-center gap-1">
-                  <AlertCircle className="size-3.5" /> {phoneError}
-                </p>
-              )}
-            </div>
-          </div>
-
-          <div className="mt-8 flex justify-between">
-            <Button variant="ghost" onClick={() => setStep("creneau")} className="gap-1.5"><ArrowLeft className="size-4" /> Retour</Button>
-            <Button onClick={() => setStep("paiement")} disabled={!parentName || !parentEmail || !isPhoneValid} className="btn-glass-field text-white border-0 gap-1.5">
-              Continuer <ArrowRight className="size-4" />
-            </Button>
-          </div>
-        </FadeIn>
-      )}
-
-      {/* STEP 6: Paiement */}
+      {/* STEP 4: Récap + coordonnées + paiement */}
       {step === "paiement" && selectedFormule && (
         <FadeIn>
           <h2 className="text-2xl font-bold font-[family-name:var(--font-heading)] flex items-center gap-2">
-            <Lock className="size-6 text-field" /> Paiement
+            <Lock className="size-6 text-field" /> Récapitulatif & paiement
           </h2>
-          <Card className="mt-6 border-2">
-            <CardContent className="p-6">
-              <div className="flex justify-between text-lg mb-6">
-                <span className="font-bold">Total à payer</span>
-                <span className="font-bold text-field">{totalPrice}€</span>
+
+          <div className="mt-6 grid gap-6 lg:grid-cols-[1fr_minmax(20rem,24rem)] items-start">
+            <div className="space-y-4 max-w-md">
+              <h3 className="font-bold">Vos coordonnées</h3>
+              <p className="text-xs text-muted-foreground">
+                Ces données sont utilisées uniquement pour la gestion de votre réservation.{" "}
+                <a href="/confidentialite" className="underline">Politique de confidentialité</a>
+              </p>
+              <div><Label htmlFor="parentName">Nom complet</Label><Input id="parentName" value={parentName} onChange={(e) => setParentName(e.target.value)} placeholder="Jean Dupont" /></div>
+              <div><Label htmlFor="parentEmail">Email</Label><Input id="parentEmail" type="email" value={parentEmail} onChange={(e) => setParentEmail(e.target.value)} placeholder="jean@email.com" /></div>
+              <div>
+                <Label htmlFor="parentPhone">Téléphone</Label>
+                <Input id="parentPhone" type="tel" value={parentPhone} onChange={(e) => handlePhoneChange(e.target.value)} placeholder="0470 12 34 56" className={phoneError ? "border-destructive" : ""} />
+                {phoneError && (
+                  <p className="mt-1 text-sm text-destructive flex items-center gap-1">
+                    <AlertCircle className="size-3.5" /> {phoneError}
+                  </p>
+                )}
               </div>
 
-              <div className="space-y-4 mb-6">
+              <div className="space-y-4 pt-2">
                 <div className="flex items-start gap-3">
                   <Checkbox id="acceptCGV" checked={acceptCGV} onCheckedChange={(v) => setAcceptCGV(v === true)} />
                   <Label htmlFor="acceptCGV" className="text-sm leading-relaxed">
@@ -388,25 +377,52 @@ export function AnniversaireFlow({ onBack }: { onBack: () => void }) {
                   </Label>
                 </div>
               </div>
+            </div>
 
-              <button
-                onClick={() => router.push(`/confirmation?type=anniversaire&formule=${selectedFormule.name}&enfant=${childName}&total=${totalPrice}`)}
-                disabled={!acceptCGV}
-                className="btn-glass-paypal w-full h-14 text-white text-lg rounded-2xl font-semibold disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center justify-center gap-2"
-              >
-                <Lock className="size-5" /> Payer avec PayPal (démo)
-              </button>
-              <p className="mt-3 text-xs text-center text-muted-foreground flex items-center justify-center gap-1">
-                <ShieldCheck className="size-3.5" /> Paiement sécurisé — Aucune donnée de carte stockée.
-              </p>
-            </CardContent>
-          </Card>
-          <div className="mt-4">
-            <Button variant="ghost" onClick={() => setStep("recap")} className="gap-1.5"><ArrowLeft className="size-4" /> Retour</Button>
+            <Card className="border-2 lg:sticky lg:top-24">
+              <CardContent className="p-6 space-y-3">
+                <h3 className="font-bold font-[family-name:var(--font-heading)] mb-2">Votre réservation</h3>
+                <div className="flex justify-between text-sm"><span className="text-muted-foreground">Formule</span><span className="font-semibold">{selectedFormule.name}</span></div>
+                <div className="flex justify-between text-sm"><span className="text-muted-foreground">Enfant fêté</span><span className="font-semibold">{childName} ({childAge} ans)</span></div>
+                <div className="flex justify-between text-sm"><span className="text-muted-foreground">Enfants</span><span className="font-semibold">{childCount} × {selectedFormule.pricePerChild}€</span></div>
+                <div className="flex justify-between text-sm"><span className="text-muted-foreground">Date</span><span className="font-semibold">{formatDate(selectedDate)}</span></div>
+                <div className="flex justify-between text-sm"><span className="text-muted-foreground">Salle</span><span className="font-semibold">{salles.find((s) => s.id === selectedSalle)?.name}</span></div>
+                <div className="flex justify-between text-sm"><span className="text-muted-foreground">Horaire</span><span className="font-semibold">{timeSlots.find((s) => s.id === selectedSlot)?.start} – {timeSlots.find((s) => s.id === selectedSlot)?.end}</span></div>
+                {options.filter((o) => selectedOptions.includes(o.id)).map((o) => (
+                  <div key={o.id} className="flex justify-between text-sm"><span className="text-muted-foreground">{o.label}</span><span className="font-semibold">+{o.price}€</span></div>
+                ))}
+                <div className="border-t pt-3 flex justify-between text-lg">
+                  <span className="font-bold">Total</span>
+                  <span className="font-bold text-field">{totalPrice}€</span>
+                </div>
+
+                <button
+                  onClick={() => router.push(`/confirmation?type=anniversaire&formule=${selectedFormule.name}&enfant=${childName}&total=${totalPrice}&ref=OW-${Date.now().toString(36).toUpperCase()}`)}
+                  disabled={!acceptCGV || !parentName || !parentEmail || !isPhoneValid}
+                  className="btn-glass-paypal w-full h-14 text-white text-lg rounded-2xl font-semibold disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center justify-center gap-2 mt-2"
+                >
+                  <Lock className="size-5" /> Payer avec PayPal (démo)
+                </button>
+                <p className="text-xs text-center text-muted-foreground flex items-center justify-center gap-1">
+                  <ShieldCheck className="size-3.5" /> Aucune donnée de carte stockée.
+                </p>
+                <TrustRow className="justify-center pt-1" />
+              </CardContent>
+            </Card>
+          </div>
+
+          <div className="mt-6">
+            <Button variant="ghost" onClick={() => setStep("creneau")} className="gap-1.5"><ArrowLeft className="size-4" /> Retour</Button>
           </div>
         </FadeIn>
       )}
+
+      <SummaryBar
+        visible={Boolean(selectedFormule) && step !== "paiement" && step !== "formule"}
+        label={`Anniversaire ${selectedFormule?.name ?? ""}`}
+        detail={summaryDetail}
+        total={totalPrice}
+      />
     </div>
   );
 }
-

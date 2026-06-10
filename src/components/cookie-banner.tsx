@@ -34,10 +34,10 @@ export function CookieBanner() {
   const [marketing, setMarketing] = useState(false);
 
   useEffect(() => {
-    const stored = getStoredConsent();
-    if (!stored) {
-      setVisible(true);
-    }
+    if (getStoredConsent()) return;
+    // setState différé dans un callback pour éviter un re-render en cascade au mount
+    const t = setTimeout(() => setVisible(true), 0);
+    return () => clearTimeout(t);
   }, []);
 
   const save = useCallback(
