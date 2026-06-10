@@ -117,7 +117,7 @@ export default function Home() {
 
           {/* Stats — espacées */}
           <FadeIn delay={1.3}>
-            <div className="mt-14 flex justify-center gap-16 md:gap-24">
+            <div className="mt-12 flex justify-center gap-16 md:gap-24">
               {[
                 { value: 2000, suffix: "+", label: "fêtes organisées" },
                 { value: 3, suffix: "", label: "salles privatisées" },
@@ -130,6 +130,13 @@ export default function Home() {
                   <p className="text-xs md:text-sm text-muted-foreground mt-1">{stat.label}</p>
                 </div>
               ))}
+            </div>
+          </FadeIn>
+
+          {/* Cadre d'aperçu du complexe (photo à venir) */}
+          <FadeIn delay={1.5}>
+            <div className="mt-12 mx-auto w-full max-w-3xl aspect-[16/9] rounded-3xl border-2 border-dashed border-field/30 bg-white/40 backdrop-blur-sm shadow-xl shadow-field/5 flex items-center justify-center">
+              <span className="text-sm text-muted-foreground/70 tracking-wide">Aperçu du complexe — photo à venir</span>
             </div>
           </FadeIn>
         </div>
