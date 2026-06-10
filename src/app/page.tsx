@@ -7,6 +7,7 @@ import {
   FadeIn, FadeInView, StaggerContainer, StaggerItem, PulseGlow,
   MagneticButton, CountUp, Marquee, Tilt3D, WaveDivider,
 } from "@/components/motion";
+import { FrameImage } from "@/components/frame-image";
 import {
   Building2, Star, MapPin, Baby, ShieldCheck,
   Sparkles, ArrowRight, Users, Clock, Zap, PartyPopper,
@@ -133,10 +134,11 @@ export default function Home() {
             </div>
           </FadeIn>
 
-          {/* Cadre d'aperçu du complexe (photo à venir) */}
+          {/* Cadre d'aperçu du complexe */}
           <FadeIn delay={1.5}>
-            <div className="mt-12 mx-auto w-full max-w-3xl aspect-[16/9] rounded-3xl border-2 border-dashed border-field/30 bg-white/40 backdrop-blur-sm shadow-xl shadow-field/5 flex items-center justify-center">
+            <div className="relative mt-12 mx-auto w-full max-w-3xl aspect-[16/9] overflow-hidden rounded-3xl border-2 border-dashed border-field/30 bg-white/40 backdrop-blur-sm shadow-xl shadow-field/5 flex items-center justify-center">
               <span className="text-sm text-muted-foreground/70 tracking-wide">Aperçu du complexe — photo à venir</span>
+              <FrameImage base="accueil" alt="Le complexe Offside World" className="absolute inset-0 h-full w-full object-cover" />
             </div>
           </FadeIn>
         </div>
