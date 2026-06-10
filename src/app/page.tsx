@@ -7,12 +7,13 @@ import {
   MagneticButton, TextReveal, CountUp, Marquee, Tilt3D, WaveDivider,
 } from "@/components/motion";
 import {
-  Cake, CircleDot, Trophy, Building2, Star, MapPin, Baby, ShieldCheck,
-  Sparkles, ArrowRight, Users, Clock, Zap, PartyPopper, ChevronRight,
+  CircleDot, Building2, Star, MapPin, Baby, ShieldCheck,
+  Sparkles, ArrowRight, Users, Clock, Zap, PartyPopper,
   Quote,
 } from "lucide-react";
 
 const MagicRings = dynamic(() => import("@/components/magic-rings"), { ssr: false });
+const ActivitesStack = dynamic(() => import("@/components/activites-stack"), { ssr: false });
 
 const marqueeItems = [
   "ANNIVERSAIRES", "BUBBLE FOOT", "TERRAIN PRIVÉ", "TEAM BUILDING",
@@ -125,13 +126,11 @@ export default function Home() {
         </FadeIn>
       </section>
 
-      {/* ── Smooth transition hero → content ── */}
-      <div className="relative h-12 -mt-1">
-        <div className="absolute inset-0 bg-gradient-to-b from-white to-background" />
-      </div>
+      {/* ── Vague de transition hero → marquee ── */}
+      <WaveDivider fill="#eef3f0" className="-mt-1 relative z-10" />
 
       {/* ══════ MARQUEE ══════ */}
-      <section className="py-5 overflow-hidden">
+      <section className="py-5 overflow-hidden bg-[#eef3f0]">
         <Marquee speed={25} className="text-muted-foreground/50 font-[family-name:var(--font-heading)] text-2xl md:text-3xl font-bold">
           <div className="flex items-center gap-8 px-4">
             {marqueeItems.map((item, i) => (
@@ -143,6 +142,9 @@ export default function Home() {
           </div>
         </Marquee>
       </section>
+
+      {/* ── Vague de sortie marquee → activités ── */}
+      <WaveDivider fill="#eef3f0" flip />
 
       {/* ══════ ACTIVITÉS ══════ */}
       <section id="activites" className="mx-auto max-w-6xl px-4 lg:px-8 py-12 md:py-16">
@@ -157,91 +159,10 @@ export default function Home() {
           </div>
         </FadeInView>
 
-        {/* ── Anniversaires — hero card pleine largeur ── */}
-        <FadeInView>
-          <Tilt3D intensity={6}>
-            <Link href="/reservation?activite=anniversaire" className="block">
-              <div className="gradient-border">
-                <div className="relative rounded-[0.9rem] overflow-hidden bg-gradient-to-br from-kick/8 via-white to-orange-50 p-8 md:p-10 group">
-                  <div className="absolute top-0 right-0 w-72 h-72 bg-gradient-to-bl from-kick/10 to-transparent rounded-bl-[6rem]" />
-                  <div className="absolute bottom-0 left-0 w-48 h-48 bg-gradient-to-tr from-field/5 to-transparent rounded-tr-[4rem]" />
-                  <div className="relative z-10 flex flex-col md:flex-row md:items-center gap-6 md:gap-10">
-                    <div className="inline-flex items-center justify-center rounded-2xl bg-kick/10 p-4 text-kick shrink-0 self-start group-hover:scale-110 group-hover:rotate-3 transition-all duration-500">
-                      <Cake className="size-10" />
-                    </div>
-                    <div className="flex-1">
-                      <h3 className="font-[family-name:var(--font-heading)] text-2xl md:text-3xl font-bold">
-                        Anniversaires
-                      </h3>
-                      <p className="mt-2 text-muted-foreground max-w-lg">
-                        Foot, Bubble Foot, goûter privatisé et fous rires garantis.
-                        La formule parfaite pour un anniversaire inoubliable.
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-2 text-kick font-semibold text-lg shrink-0 group-hover:gap-4 transition-all duration-300">
-                      Réserver <ArrowRight className="size-5" />
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </Link>
-          </Tilt3D>
-        </FadeInView>
-
-        {/* ── 3 cartes côte à côte ── */}
-        <StaggerContainer className="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-5" staggerDelay={0.1}>
-          {([
-            {
-              href: "/reservation?activite=libre",
-              icon: CircleDot,
-              title: "Entrées libres",
-              desc: "Sessions ouvertes à tous, ambiance garantie.",
-              gradient: "from-field/8 via-white to-emerald-50",
-              border: "border-field/10 hover:border-field/30",
-              iconBg: "bg-field/10 text-field",
-              accent: "text-field",
-            },
-            {
-              href: "/reservation?activite=foot",
-              icon: Trophy,
-              title: "Location de terrain",
-              desc: "Terrain privé avec éclairage, ballon et vestiaires.",
-              gradient: "from-blue-50/60 via-white to-indigo-50/60",
-              border: "border-blue-100 hover:border-blue-300",
-              iconBg: "bg-blue-50 text-blue-600",
-              accent: "text-blue-600",
-            },
-            {
-              href: "/reservation?activite=team-building",
-              icon: Building2,
-              title: "Team Building",
-              desc: "Événements sportifs de 10 à 40 personnes.",
-              gradient: "from-violet-50/60 via-white to-purple-50/60",
-              border: "border-violet-100 hover:border-violet-300",
-              iconBg: "bg-violet-50 text-violet-600",
-              accent: "text-violet-600",
-            },
-          ] as const).map((card) => (
-            <StaggerItem key={card.href}>
-              <Tilt3D className="h-full">
-                <Link href={card.href} className="block h-full">
-                  <div className={`relative h-full rounded-2xl overflow-hidden bg-gradient-to-br ${card.gradient} p-6 border ${card.border} transition-all duration-500 flex flex-col justify-between group card-hover min-h-[220px]`}>
-                    <div>
-                      <div className={`inline-flex items-center justify-center rounded-xl p-2.5 ${card.iconBg} mb-4 group-hover:scale-110 group-hover:rotate-3 transition-all duration-500`}>
-                        <card.icon className="size-6" />
-                      </div>
-                      <h3 className="font-[family-name:var(--font-heading)] text-lg font-bold">{card.title}</h3>
-                      <p className="mt-1.5 text-sm text-muted-foreground">{card.desc}</p>
-                    </div>
-                    <div className={`flex items-center gap-1.5 ${card.accent} font-semibold text-sm mt-4 group-hover:gap-3 transition-all duration-300`}>
-                      Réserver <ChevronRight className="size-4" />
-                    </div>
-                  </div>
-                </Link>
-              </Tilt3D>
-            </StaggerItem>
-          ))}
-        </StaggerContainer>
+        {/* ── ScrollStack des 3 activités (ReactBits) ── */}
+        <div className="h-screen">
+          <ActivitesStack />
+        </div>
       </section>
 
       {/* ── Vague de transition → team building ── */}
