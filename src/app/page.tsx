@@ -4,7 +4,7 @@ import Link from "next/link";
 import dynamic from "next/dynamic";
 import {
   FadeIn, FadeInView, StaggerContainer, StaggerItem, Float, PulseGlow,
-  MagneticButton, TextReveal, CountUp, Marquee, Tilt3D,
+  MagneticButton, TextReveal, CountUp, Marquee, Tilt3D, WaveDivider,
 } from "@/components/motion";
 import {
   Cake, CircleDot, Trophy, Building2, Star, MapPin, Baby, ShieldCheck,
@@ -244,11 +244,11 @@ export default function Home() {
         </StaggerContainer>
       </section>
 
-      {/* ── Smooth gradient transition → team building ── */}
-      <div className="h-12 bg-gradient-to-b from-background to-[#f5f7f6]" />
+      {/* ── Vague de transition → team building ── */}
+      <WaveDivider fill="#eef3f0" />
 
       {/* ══════ TEAM BUILDING ══════ */}
-      <section className="bg-[#f5f7f6] grain relative">
+      <section className="bg-[#eef3f0] grain relative">
         <div className="mx-auto max-w-7xl px-4 lg:px-8 py-12 md:py-16">
           <div className="grid items-center gap-14 lg:grid-cols-2">
             <FadeInView>
@@ -306,8 +306,8 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── Smooth gradient transition ── */}
-      <div className="h-12 bg-gradient-to-b from-[#f5f7f6] to-background" />
+      {/* ── Vague de transition → réassurance ── */}
+      <WaveDivider fill="#eef3f0" flip />
 
       {/* ══════ RÉASSURANCE ══════ */}
       <section className="mx-auto max-w-7xl px-4 lg:px-8 py-10 md:py-12">
@@ -357,8 +357,8 @@ export default function Home() {
         </FadeInView>
       </section>
 
-      {/* ── Smooth gradient transition → CTA ── */}
-      <div className="h-16 bg-gradient-to-b from-background via-[#0a3d1e]/60 to-[#062e16]" />
+      {/* ── Vague de transition → CTA ── */}
+      <WaveDivider fill="#062e16" />
 
       {/* ══════ CTA FINAL ══════ */}
       <section className="aurora-bg text-white relative overflow-hidden">
