@@ -22,7 +22,7 @@ import {
   Calendar,
   Users,
   Sparkles,
-  Gift,
+
   AlertCircle,
   ShieldCheck,
 } from "lucide-react";
@@ -43,6 +43,15 @@ const FORMULE_IMAGES: Record<string, string> = {
   classique: "anniv",
   "bubble-foot": "anniv1",
   premium: "anniv2",
+};
+
+/* Image de chaque option (fichiers dans public/images/) */
+const OPTION_IMAGES: Record<string, string> = {
+  deco: "deco",
+  gateau: "gateau",
+  boissons: "boissons",
+  photo: "photos",
+  pinata: "pinata",
 };
 
 function formatDate(d: string) {
@@ -217,8 +226,8 @@ export function AnniversaireFlow({ onBack }: { onBack: () => void }) {
                   }`}>
                     <CardContent className="flex items-center justify-between p-4">
                       <div className="flex items-center gap-3">
-                        <div className={`flex h-10 w-10 items-center justify-center rounded-xl ${selectedOptions.includes(opt.id) ? "bg-field/10 text-field" : "bg-muted text-muted-foreground"}`}>
-                          <Gift className="size-5" />
+                        <div className="relative h-14 w-20 shrink-0 overflow-hidden rounded-xl bg-field/5">
+                          <FrameImage base={OPTION_IMAGES[opt.id] ?? opt.id} alt={opt.label} className="absolute inset-0 h-full w-full object-cover" />
                         </div>
                         <div>
                           <p className="font-semibold">{opt.label}</p>
