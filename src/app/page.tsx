@@ -149,7 +149,7 @@ export default function Home() {
       {/* ══════ ACTIVITÉS ══════ */}
       <section id="activites" className="mx-auto max-w-6xl px-4 lg:px-8 py-12 md:py-16">
         <FadeInView>
-          <div className="text-center max-w-2xl mx-auto mb-10">
+          <div className="text-center max-w-2xl mx-auto mb-2">
             <span className="inline-flex items-center gap-2 rounded-full bg-field/10 px-4 py-1.5 text-sm font-semibold text-field-dark mb-4">
               <PartyPopper className="size-4" /> Nos activités
             </span>
@@ -160,9 +160,7 @@ export default function Home() {
         </FadeInView>
 
         {/* ── ScrollStack des 3 activités (ReactBits) ── */}
-        <div className="h-screen">
-          <ActivitesStack />
-        </div>
+        <ActivitesStack />
       </section>
 
       {/* ── Vague de transition → team building ── */}

@@ -1,20 +1,10 @@
 .scroll-stack-scroller {
   position: relative;
   width: 100%;
-  height: 100%;
-  overflow-y: auto;
-  overflow-x: visible;
-  overscroll-behavior: contain;
-  -webkit-overflow-scrolling: touch;
-  scroll-behavior: smooth;
-  -webkit-transform: translateZ(0);
-  transform: translateZ(0);
-  will-change: scroll-position;
 }
 
 .scroll-stack-inner {
-  padding: 20vh 5rem 50rem;
-  min-height: 100vh;
+  padding: 0.5rem 0 16rem;
 }
 
 .scroll-stack-card-wrapper {
