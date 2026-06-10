@@ -46,7 +46,7 @@ export function TeamBuildingFlow({ onBack }: { onBack: () => void }) {
   return (
     <div>
       <h1 className="text-2xl font-bold font-[family-name:var(--font-heading)] md:text-3xl flex items-center gap-2">
-        <Building2 className="size-7 text-violet-600" /> Team Building
+        <Building2 className="size-7 text-field" /> Team Building
       </h1>
       <p className="mt-1 text-sm text-muted-foreground flex items-center gap-1.5">
         <Calendar className="size-4" /> Disponible les <strong>lundi, mardi, jeudi et samedi à partir de 18h</strong>.
@@ -59,12 +59,12 @@ export function TeamBuildingFlow({ onBack }: { onBack: () => void }) {
             {teamBuildingPackages.map((pkg) => (
               <button key={pkg.id} onClick={() => setSelectedPkg(pkg)} className="text-left">
                 <Card className={`h-full border-2 transition-all duration-300 card-hover ${
-                  selectedPkg?.id === pkg.id ? "border-violet-500 ring-2 ring-violet-500/20" : "hover:border-violet-400/40"
+                  selectedPkg?.id === pkg.id ? "border-field ring-2 ring-field/20" : "hover:border-field/40"
                 }`}>
                   <CardContent className="p-5">
                     <h3 className="text-lg font-bold">{pkg.name}</h3>
                     <p className="mt-1 text-sm text-muted-foreground">{pkg.description}</p>
-                    <p className="mt-3 text-2xl font-bold font-[family-name:var(--font-heading)] text-violet-600">
+                    <p className="mt-3 text-2xl font-bold font-[family-name:var(--font-heading)] text-field">
                       {pkg.pricePerPerson}€<span className="text-sm font-normal text-muted-foreground">/pers.</span>
                     </p>
                     <p className="text-xs text-muted-foreground flex items-center gap-1">
@@ -73,7 +73,7 @@ export function TeamBuildingFlow({ onBack }: { onBack: () => void }) {
                     <ul className="mt-3 space-y-1">
                       {pkg.includes.map((inc) => (
                         <li key={inc} className="flex items-start gap-1.5 text-xs text-muted-foreground">
-                          <Check className="size-3 text-violet-500 mt-0.5 shrink-0" />{inc}
+                          <Check className="size-3 text-field mt-0.5 shrink-0" />{inc}
                         </li>
                       ))}
                     </ul>
@@ -91,7 +91,7 @@ export function TeamBuildingFlow({ onBack }: { onBack: () => void }) {
           )}
           <div className="mt-8 flex justify-between">
             <Button variant="ghost" onClick={onBack} className="gap-1.5"><ArrowLeft className="size-4" /> Retour</Button>
-            <Button onClick={() => setStep("creneau")} disabled={!selectedPkg || nbPeople < (selectedPkg?.minPeople ?? 0)} className="btn-glass-violet text-white border-0 gap-1.5">
+            <Button onClick={() => setStep("creneau")} disabled={!selectedPkg || nbPeople < (selectedPkg?.minPeople ?? 0)} className="btn-glass-field text-white border-0 gap-1.5">
               Continuer <ArrowRight className="size-4" />
             </Button>
           </div>
@@ -105,7 +105,7 @@ export function TeamBuildingFlow({ onBack }: { onBack: () => void }) {
             {teamBuildingSlots.map((slot) => (
               <button key={slot.id} onClick={() => slot.available && setSelectedSlot(slot)} disabled={!slot.available} className="text-left">
                 <Card className={`border-2 transition-all duration-300 ${
-                  !slot.available ? "opacity-50 cursor-not-allowed" : selectedSlot?.id === slot.id ? "border-violet-500 ring-2 ring-violet-500/20" : "hover:border-violet-400/40 card-hover"
+                  !slot.available ? "opacity-50 cursor-not-allowed" : selectedSlot?.id === slot.id ? "border-field ring-2 ring-field/20" : "hover:border-field/40 card-hover"
                 }`}>
                   <CardContent className="p-4 flex items-center justify-between">
                     <div>
@@ -120,7 +120,7 @@ export function TeamBuildingFlow({ onBack }: { onBack: () => void }) {
           </div>
           <div className="mt-8 flex justify-between">
             <Button variant="ghost" onClick={() => setStep("formule")} className="gap-1.5"><ArrowLeft className="size-4" /> Retour</Button>
-            <Button onClick={() => setStep("recap")} disabled={!selectedSlot} className="btn-glass-violet text-white border-0 gap-1.5">Continuer <ArrowRight className="size-4" /></Button>
+            <Button onClick={() => setStep("recap")} disabled={!selectedSlot} className="btn-glass-field text-white border-0 gap-1.5">Continuer <ArrowRight className="size-4" /></Button>
           </div>
         </FadeIn>
       )}
@@ -134,7 +134,7 @@ export function TeamBuildingFlow({ onBack }: { onBack: () => void }) {
               <div className="flex justify-between"><span className="text-muted-foreground">Participants</span><span className="font-semibold">{nbPeople}</span></div>
               <div className="flex justify-between"><span className="text-muted-foreground">Date</span><span className="font-semibold capitalize">{selectedSlot.dayOfWeek} {formatDate(selectedSlot.date)}</span></div>
               <div className="flex justify-between"><span className="text-muted-foreground">Horaire</span><span className="font-semibold">{selectedSlot.start} – {selectedSlot.end}</span></div>
-              <div className="border-t pt-3 flex justify-between text-lg"><span className="font-bold">Total</span><span className="font-bold text-violet-600">{total}€</span></div>
+              <div className="border-t pt-3 flex justify-between text-lg"><span className="font-bold">Total</span><span className="font-bold text-field">{total}€</span></div>
             </CardContent>
           </Card>
           <div className="mt-6 space-y-4 max-w-md">
@@ -155,7 +155,7 @@ export function TeamBuildingFlow({ onBack }: { onBack: () => void }) {
           </div>
           <div className="mt-8 flex justify-between">
             <Button variant="ghost" onClick={() => setStep("creneau")} className="gap-1.5"><ArrowLeft className="size-4" /> Retour</Button>
-            <Button onClick={() => setStep("paiement")} disabled={!companyName || !contactName || !email || !isPhoneValid} className="btn-glass-violet text-white border-0 gap-1.5">
+            <Button onClick={() => setStep("paiement")} disabled={!companyName || !contactName || !email || !isPhoneValid} className="btn-glass-field text-white border-0 gap-1.5">
               Continuer <ArrowRight className="size-4" />
             </Button>
           </div>
@@ -164,14 +164,14 @@ export function TeamBuildingFlow({ onBack }: { onBack: () => void }) {
 
       {step === "paiement" && (
         <FadeIn className="mt-6">
-          <h2 className="text-xl font-bold font-[family-name:var(--font-heading)] flex items-center gap-2"><Lock className="size-5 text-violet-600" /> Paiement</h2>
+          <h2 className="text-xl font-bold font-[family-name:var(--font-heading)] flex items-center gap-2"><Lock className="size-5 text-field" /> Paiement</h2>
           <Card className="mt-4 border-2">
             <CardContent className="p-6">
-              <div className="flex justify-between text-lg mb-6"><span className="font-bold">Total</span><span className="font-bold text-violet-600">{total}€</span></div>
+              <div className="flex justify-between text-lg mb-6"><span className="font-bold">Total</span><span className="font-bold text-field">{total}€</span></div>
               <div className="space-y-4 mb-6">
                 <div className="flex items-start gap-3">
                   <Checkbox id="cgv" checked={acceptCGV} onCheckedChange={(v) => setAcceptCGV(v === true)} />
-                  <Label htmlFor="cgv" className="text-sm">J&apos;accepte les <a href="/cgv" target="_blank" className="underline text-violet-600">CGV</a> et la <a href="/confidentialite" target="_blank" className="underline text-violet-600">Politique de confidentialité</a>. <span className="text-destructive">*</span></Label>
+                  <Label htmlFor="cgv" className="text-sm">J&apos;accepte les <a href="/cgv" target="_blank" className="underline text-field">CGV</a> et la <a href="/confidentialite" target="_blank" className="underline text-field">Politique de confidentialité</a>. <span className="text-destructive">*</span></Label>
                 </div>
                 <div className="flex items-start gap-3">
                   <Checkbox id="nl" checked={acceptNewsletter} onCheckedChange={(v) => setAcceptNewsletter(v === true)} />

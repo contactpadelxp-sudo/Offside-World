@@ -170,7 +170,7 @@ export default function Home() {
         <div className="mx-auto max-w-7xl px-4 lg:px-8 py-12 md:py-16">
           <div className="grid items-center gap-14 lg:grid-cols-2">
             <FadeInView>
-              <span className="inline-flex items-center gap-2 rounded-full bg-violet-100 px-4 py-1.5 text-sm font-semibold text-violet-700 mb-4">
+              <span className="inline-flex items-center gap-2 rounded-full bg-field/10 px-4 py-1.5 text-sm font-semibold text-field-dark mb-4">
                 <Building2 className="size-4" /> Entreprises
               </span>
               <h2 className="font-[family-name:var(--font-heading)] text-3xl md:text-5xl font-bold leading-tight">
@@ -208,7 +208,7 @@ export default function Home() {
             <FadeInView delay={0.2}>
               <div className="relative">
                 <Tilt3D intensity={8}>
-                  <div className="aspect-[4/3] rounded-3xl bg-gradient-to-br from-field/20 via-kick/10 to-violet-200/30 flex items-center justify-center overflow-hidden border border-field/10 shadow-xl shadow-field/5">
+                  <div className="aspect-[4/3] rounded-3xl bg-gradient-to-br from-field/20 via-white to-field/10 flex items-center justify-center overflow-hidden border border-field/10 shadow-xl shadow-field/5">
                     <Float>
                       <div className="flex items-center gap-6 opacity-30">
                         <Building2 className="size-20 text-field" />
@@ -236,10 +236,10 @@ export default function Home() {
         </FadeInView>
         <StaggerContainer className="grid grid-cols-2 gap-5 md:grid-cols-4" staggerDelay={0.1}>
           {[
-            { icon: Star, title: "4.8/5", subtitle: "sur Google (200+ avis)", color: "bg-yellow-50 text-yellow-500 border-yellow-200" },
-            { icon: MapPin, title: "Facile d'accès", subtitle: "Parking gratuit", color: "bg-blue-50 text-blue-500 border-blue-200" },
+            { icon: Star, title: "4.8/5", subtitle: "sur Google (200+ avis)", color: "bg-field/10 text-field border-field/20" },
+            { icon: MapPin, title: "Facile d'accès", subtitle: "Parking gratuit", color: "bg-white text-field-dark border-field/15" },
             { icon: Baby, title: "Dès 6 ans", subtitle: "Encadrement adapté", color: "bg-kick/10 text-kick border-kick/20" },
-            { icon: ShieldCheck, title: "100% sécurisé", subtitle: "Paiement via PayPal", color: "bg-field/10 text-field border-field/20" },
+            { icon: ShieldCheck, title: "100% sécurisé", subtitle: "Paiement via PayPal", color: "bg-field/5 text-field border-field/20" },
           ].map((item) => (
             <StaggerItem key={item.title}>
               <div className={`text-center p-6 rounded-2xl border ${item.color} group hover:shadow-lg transition-all duration-500`}>
@@ -266,7 +266,7 @@ export default function Home() {
             <div className="mt-6 flex items-center justify-center gap-2">
               <div className="flex">
                 {[...Array(5)].map((_, i) => (
-                  <Star key={i} className="size-4 fill-yellow-400 text-yellow-400" />
+                  <Star key={i} className="size-4 fill-field text-field" />
                 ))}
               </div>
               <span className="text-sm text-muted-foreground">— Sophie D., Google</span>

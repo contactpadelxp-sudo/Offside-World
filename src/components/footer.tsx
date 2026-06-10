@@ -10,7 +10,7 @@ export function Footer() {
       {/* Gradient top border */}
       <div className="h-1 bg-gradient-to-r from-field via-kick to-field" />
 
-      <div className="bg-[#0a0f1a] text-white grain">
+      <div className="bg-[#07130b] text-white grain">
         <div className="mx-auto max-w-7xl px-4 lg:px-8 py-16">
           <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-4">
             {/* Brand */}

@@ -46,12 +46,12 @@
   --radius-2xl: calc(var(--radius) * 1.8);
   --radius-3xl: calc(var(--radius) * 2.2);
   --radius-4xl: calc(var(--radius) * 2.6);
-  /* ── Offside World — 2 couleurs principales ──
+  /* ── Offside World — palette vert & blanc ──
      Pour changer le thème : modifiez juste ces 4 valeurs + les gradients plus bas */
   --color-field: #10b956;       /* COULEUR PRIMAIRE */
   --color-field-dark: #0d9648;  /* COULEUR PRIMAIRE foncée */
-  --color-kick: #ff6b2c;        /* COULEUR ACCENT */
-  --color-kick-dark: #e55a1b;   /* COULEUR ACCENT foncée */
+  --color-kick: #0a7a3c;        /* ACCENT = vert profond */
+  --color-kick-dark: #075c2d;   /* ACCENT foncé */
 }
 
 :root {
@@ -107,7 +107,7 @@
 
 /* ── Gradient text (uses brand colors — update vars above to retheme) ── */
 .text-gradient-kick {
-  background: linear-gradient(135deg, var(--color-kick), #ff9a5c);
+  background: linear-gradient(135deg, var(--color-kick), #34d399);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -157,7 +157,7 @@
 }
 .aurora-bg::after {
   width: 500px; height: 500px;
-  background: radial-gradient(circle, #ff6b2c 0%, transparent 70%);
+  background: radial-gradient(circle, #34d399 0%, transparent 70%);
   bottom: -20%; right: -10%;
   animation: aurora2 10s ease-in-out infinite;
 }
@@ -166,7 +166,7 @@
   position: absolute;
   width: 400px; height: 400px;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(59,130,246,0.5) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(255,255,255,0.35) 0%, transparent 70%);
   filter: blur(80px);
   top: 50%; left: 50%;
   transform: translate(-50%, -50%);
@@ -231,11 +231,11 @@
 .btn-glass-kick {
   position: relative; overflow: hidden; border-radius: 1rem; font-weight: 700;
   transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
-  background: linear-gradient(135deg, #ff6b2c, #ff8f5a);
+  background: linear-gradient(135deg, #0a7a3c, #10b956);
   border: 1px solid rgba(255,255,255,0.25);
-  box-shadow: 0 8px 32px rgba(255,107,44,0.35), inset 0 1px 0 rgba(255,255,255,0.3);
+  box-shadow: 0 8px 32px rgba(10,122,60,0.35), inset 0 1px 0 rgba(255,255,255,0.3);
 }
-.btn-glass-kick:hover { transform: translateY(-3px) scale(1.02); box-shadow: 0 16px 48px rgba(255,107,44,0.45), inset 0 1px 0 rgba(255,255,255,0.4); }
+.btn-glass-kick:hover { transform: translateY(-3px) scale(1.02); box-shadow: 0 16px 48px rgba(10,122,60,0.45), inset 0 1px 0 rgba(255,255,255,0.4); }
 .btn-glass-kick:active { transform: translateY(0) scale(0.98); }
 
 .btn-glass-field {
@@ -282,25 +282,15 @@
 .btn-glass-paypal:hover { transform: translateY(-3px) scale(1.02); box-shadow: 0 16px 48px rgba(0,112,186,0.45); }
 .btn-glass-paypal:active { transform: translateY(0) scale(0.98); }
 
-.btn-glass-violet {
-  position: relative; overflow: hidden; border-radius: 1rem; font-weight: 700;
-  transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
-  background: linear-gradient(135deg, #7c3aed, #a78bfa);
-  border: 1px solid rgba(255,255,255,0.2);
-  box-shadow: 0 8px 32px rgba(124,58,237,0.35), inset 0 1px 0 rgba(255,255,255,0.3);
-}
-.btn-glass-violet:hover { transform: translateY(-3px) scale(1.02); box-shadow: 0 16px 48px rgba(124,58,237,0.45); }
-.btn-glass-violet:active { transform: translateY(0) scale(0.98); }
-
 /* Shimmer on glass buttons */
 .btn-glass::before, .btn-glass-kick::before, .btn-glass-field::before,
-.btn-glass-outline::before, .btn-glass-paypal::before, .btn-glass-violet::before {
+.btn-glass-outline::before, .btn-glass-paypal::before {
   content: ""; position: absolute; top: 0; left: -100%; width: 100%; height: 100%;
   background: linear-gradient(90deg, transparent, rgba(255,255,255,0.25), transparent);
   transition: left 0.6s ease;
 }
 .btn-glass:hover::before, .btn-glass-kick:hover::before, .btn-glass-field:hover::before,
-.btn-glass-outline:hover::before, .btn-glass-paypal:hover::before, .btn-glass-violet:hover::before {
+.btn-glass-outline:hover::before, .btn-glass-paypal:hover::before {
   left: 100%;
 }
 
@@ -325,7 +315,7 @@
   inset: 0;
   border-radius: inherit;
   padding: 2px;
-  background: conic-gradient(from var(--gradient-angle), #10b956, #ff6b2c, #3b82f6, #a855f7, #10b956);
+  background: conic-gradient(from var(--gradient-angle), #10b956, #6ee7a0, #ffffff, #0a7a3c, #10b956);
   animation: gradient-rotate 4s linear infinite;
   -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
   mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
