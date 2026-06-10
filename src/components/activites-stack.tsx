@@ -36,7 +36,7 @@ const cards = [
 
 export default function ActivitesStack() {
   return (
-    <ScrollStack useWindowScroll itemDistance={20}>
+    <ScrollStack useWindowScroll>
       {cards.map((card) => (
         <ScrollStackItem key={card.href} itemClassName={card.itemClassName}>
           <div className="flex h-full flex-col justify-between">

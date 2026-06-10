@@ -93,8 +93,15 @@ const ScrollStack = ({
   const getElementOffset = useCallback(
     (element: HTMLElement) => {
       if (useWindowScroll) {
-        const rect = element.getBoundingClientRect();
-        return rect.top + window.scrollY;
+        // offsetTop cumulé : position layout stable, insensible aux transforms
+        // (getBoundingClientRect inclurait le translateY en cours → dérive du pin)
+        let top = 0;
+        let el: HTMLElement | null = element;
+        while (el) {
+          top += el.offsetTop;
+          el = el.offsetParent as HTMLElement | null;
+        }
+        return top;
       } else {
         return element.offsetTop;
       }
