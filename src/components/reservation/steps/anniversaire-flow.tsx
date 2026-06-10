@@ -47,7 +47,7 @@ const FORMULE_IMAGES: Record<string, string> = {
 
 /* Image de chaque option (fichiers dans public/images/) */
 const OPTION_IMAGES: Record<string, string> = {
-  deco: "deco",
+  deco: "déco",
   gateau: "gateau",
   boissons: "boissons",
   photo: "photos",
