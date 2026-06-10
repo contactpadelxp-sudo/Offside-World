@@ -134,6 +134,15 @@ export default function ActivitesStack({ children }: { children?: React.ReactNod
     <div ref={wrapperRef} className="relative">
       {/* Panneau épinglé : toute la section se fige pendant l'empilement */}
       <div className="sticky top-0 h-screen overflow-hidden flex flex-col justify-start pt-24 md:pt-28">
+        {/* Décor graphique de fond (rond central, points, halos) */}
+        <div aria-hidden className="pointer-events-none absolute inset-0">
+          <div className="absolute -right-48 top-16 w-[30rem] h-[30rem] rounded-full border-2 border-field/10" />
+          <div className="absolute -right-28 top-36 w-72 h-72 rounded-full border-2 border-field/10" />
+          <div className="absolute -right-8 top-56 w-32 h-32 rounded-full bg-field/5" />
+          <div className="absolute left-6 md:left-12 top-32 w-44 h-44 dot-grid fade-mask-radial" />
+          <div className="absolute -left-28 bottom-12 w-80 h-80 rounded-full bg-field/10 blur-3xl" />
+          <div className="absolute -left-16 -top-16 w-56 h-56 rounded-full border-2 border-dashed border-field/15" />
+        </div>
         {children}
         <div ref={areaRef} className="relative mx-auto w-full max-w-6xl px-4 lg:px-8 mt-4">
           {cards.map((card, i) => (

@@ -166,8 +166,15 @@ export default function Home() {
       <WaveDivider fill="#eef3f0" />
 
       {/* ══════ TEAM BUILDING ══════ */}
-      <section className="bg-[#eef3f0] grain relative">
-        <div className="mx-auto max-w-7xl px-4 lg:px-8 py-12 md:py-16">
+      <section className="bg-[#eef3f0] grain relative overflow-hidden">
+        {/* Décor : demi rond central + points + halo */}
+        <div aria-hidden className="pointer-events-none absolute inset-0">
+          <div className="absolute -left-40 top-1/2 -translate-y-1/2 w-96 h-96 rounded-full border-2 border-field/15" />
+          <div className="absolute -left-40 top-1/2 -translate-y-1/2 w-64 h-64 rounded-full border-2 border-field/10" />
+          <div className="absolute right-10 bottom-8 w-44 h-44 dot-grid fade-mask-radial" />
+          <div className="absolute -right-24 -top-24 w-80 h-80 rounded-full bg-field/10 blur-3xl" />
+        </div>
+        <div className="relative mx-auto max-w-7xl px-4 lg:px-8 py-12 md:py-16">
           <div className="grid items-center gap-14 lg:grid-cols-2">
             <FadeInView>
               <span className="inline-flex items-center gap-2 rounded-full bg-field/10 px-4 py-1.5 text-sm font-semibold text-field-dark mb-4">
@@ -228,7 +235,14 @@ export default function Home() {
       <WaveDivider fill="#eef3f0" flip />
 
       {/* ══════ RÉASSURANCE ══════ */}
-      <section className="mx-auto max-w-7xl px-4 lg:px-8 py-10 md:py-12">
+      <section className="relative overflow-hidden">
+        {/* Décor : lignes de terrain + halos latéraux */}
+        <div aria-hidden className="pointer-events-none absolute inset-0">
+          <div className="field-pattern-green" />
+          <div className="absolute -left-24 top-1/3 w-72 h-72 rounded-full bg-field/5 blur-3xl" />
+          <div className="absolute -right-24 bottom-0 w-72 h-72 rounded-full bg-field/5 blur-3xl" />
+        </div>
+        <div className="relative mx-auto max-w-7xl px-4 lg:px-8 py-10 md:py-12">
         <FadeInView>
           <h2 className="text-center font-[family-name:var(--font-heading)] text-3xl md:text-4xl font-bold mb-10">
             Pourquoi <span className="text-gradient-field">Offside World</span> ?
@@ -252,10 +266,18 @@ export default function Home() {
             </StaggerItem>
           ))}
         </StaggerContainer>
+        </div>
       </section>
 
       {/* ══════ TESTIMONIAL ══════ */}
-      <section className="mx-auto max-w-3xl px-4 lg:px-8 pt-4 pb-12">
+      <section className="relative overflow-hidden">
+        {/* Décor : anneaux en coin + points */}
+        <div aria-hidden className="pointer-events-none absolute inset-0">
+          <div className="absolute -right-20 -top-20 w-64 h-64 rounded-full border-2 border-dashed border-field/15" />
+          <div className="absolute -right-10 -top-10 w-40 h-40 rounded-full border-2 border-field/10" />
+          <div className="absolute left-6 bottom-0 w-36 h-36 dot-grid fade-mask-radial" />
+        </div>
+        <div className="relative mx-auto max-w-3xl px-4 lg:px-8 pt-4 pb-12">
         <FadeInView>
           <div className="relative rounded-3xl bg-gradient-to-br from-field/5 to-kick/5 border border-field/10 p-8 md:p-12 text-center">
             <Quote className="size-10 text-field/40 mx-auto mb-4" />
@@ -273,6 +295,7 @@ export default function Home() {
             </div>
           </div>
         </FadeInView>
+        </div>
       </section>
 
       {/* ── Vague de transition → CTA ── */}
