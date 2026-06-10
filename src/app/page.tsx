@@ -10,8 +10,26 @@ import { formules } from "@/data/formules";
 import {
   Cake, CircleDot, Trophy, Building2, Star, MapPin, Baby, ShieldCheck,
   Sparkles, ArrowRight, Users, Clock, Zap, PartyPopper, ChevronRight,
-  Quote, Check, Crown,
+  Quote, Check, Crown, CalendarCheck, ListChecks,
 } from "lucide-react";
+
+const etapes = [
+  {
+    icon: ListChecks,
+    title: "Choisissez votre formule",
+    desc: "Classique, Bubble Foot ou Premium — selon l'âge des enfants, le budget et l'effet « waouh » recherché.",
+  },
+  {
+    icon: CalendarCheck,
+    title: "Réservez votre créneau",
+    desc: "Date, salle et horaire en ligne en 2 minutes, avec paiement 100% sécurisé. Confirmation immédiate.",
+  },
+  {
+    icon: PartyPopper,
+    title: "Profitez, on s'occupe de tout",
+    desc: "Animateur, terrain privatisé, goûter et déco sont prêts. Vous n'avez plus qu'à amener les enfants.",
+  },
+];
 
 const MagicRings = dynamic(() => import("@/components/magic-rings"), { ssr: false });
 
@@ -189,11 +207,6 @@ export default function Home() {
                         Foot, Bubble Foot, goûter privatisé et fous rires garantis.
                         La formule parfaite pour un anniversaire inoubliable.
                       </p>
-                      <p className="mt-3 inline-flex items-baseline gap-1.5 font-semibold">
-                        <span className="text-sm text-muted-foreground">à partir de</span>
-                        <span className="text-2xl font-bold font-[family-name:var(--font-heading)] text-kick">18€</span>
-                        <span className="text-sm text-muted-foreground">/enfant</span>
-                      </p>
                     </div>
                     <div className="flex items-center gap-2 text-kick font-semibold text-lg shrink-0 group-hover:gap-4 transition-all duration-300">
                       Voir les formules <ArrowRight className="size-5" />
@@ -354,8 +367,66 @@ export default function Home() {
         </FadeInView>
       </section>
 
-      {/* ── Smooth gradient transition → team building ── */}
+      {/* ── Smooth gradient transition → étapes ── */}
       <div className="h-20 bg-gradient-to-b from-background to-[#f5f7f6]" />
+
+      {/* ══════ TROIS ÉTAPES POUR UN ANNIVERSAIRE RÉUSSI ══════ */}
+      <section id="etapes" className="bg-[#f5f7f6] grain relative scroll-mt-24">
+        <div className="mx-auto max-w-6xl px-4 lg:px-8 py-20 md:py-28">
+          <FadeInView>
+            <div className="text-center max-w-2xl mx-auto mb-16">
+              <span className="inline-flex items-center gap-2 rounded-full bg-field/10 px-4 py-1.5 text-sm font-semibold text-field-dark mb-4">
+                <Sparkles className="size-4" /> Simple comme bonjour
+              </span>
+              <h2 className="font-[family-name:var(--font-heading)] text-3xl md:text-5xl font-bold">
+                Trois étapes pour un <span className="text-gradient-field">anniversaire réussi</span>
+              </h2>
+              <p className="mt-4 text-muted-foreground text-lg">
+                De la réservation au gâteau, on a tout pensé pour vous simplifier la vie.
+              </p>
+            </div>
+          </FadeInView>
+
+          <StaggerContainer className="grid gap-6 md:grid-cols-3 relative" staggerDelay={0.18}>
+            {/* Ligne pointillée reliant les étapes (desktop) */}
+            <div className="hidden md:block absolute top-12 left-[16.6%] right-[16.6%] h-px border-t-2 border-dashed border-field/25" />
+
+            {etapes.map((etape, i) => (
+              <StaggerItem key={etape.title} className="relative">
+                <div className="relative h-full rounded-3xl bg-white p-7 border border-field/10 card-hover text-center">
+                  {/* Pastille numérotée animée */}
+                  <Float duration={3 + i * 0.4} className="mx-auto w-fit">
+                    <div className="relative flex h-20 w-20 items-center justify-center rounded-2xl bg-gradient-to-br from-field to-field-dark text-white shadow-lg shadow-field/25">
+                      <etape.icon className="size-9" />
+                      <span className="absolute -top-2 -right-2 flex h-7 w-7 items-center justify-center rounded-full bg-kick text-white text-sm font-bold font-[family-name:var(--font-heading)] shadow-md">
+                        {i + 1}
+                      </span>
+                    </div>
+                  </Float>
+                  <h3 className="mt-6 text-lg font-bold font-[family-name:var(--font-heading)]">{etape.title}</h3>
+                  <p className="mt-2 text-sm text-muted-foreground leading-relaxed">{etape.desc}</p>
+                </div>
+              </StaggerItem>
+            ))}
+          </StaggerContainer>
+
+          <FadeInView delay={0.2}>
+            <div className="mt-12 text-center">
+              <MagneticButton className="inline-block">
+                <Link
+                  href="/reservation?activite=anniversaire"
+                  className="btn-glass-field inline-flex items-center gap-2 text-white px-8 h-14 rounded-2xl text-lg"
+                >
+                  <Cake className="size-5" /> Réserver l&apos;anniversaire <ArrowRight className="size-5" />
+                </Link>
+              </MagneticButton>
+            </div>
+          </FadeInView>
+        </div>
+      </section>
+
+      {/* ── Smooth gradient transition → team building ── */}
+      <div className="h-20 bg-[#f5f7f6]" />
 
       {/* ══════ TEAM BUILDING ══════ */}
       <section className="bg-[#f5f7f6] grain relative">
