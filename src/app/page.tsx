@@ -207,11 +207,12 @@ export default function Home() {
                 <Building2 className="size-4" /> Entreprises
               </span>
               <h2 className="font-[family-name:var(--font-heading)] text-3xl md:text-5xl font-bold leading-tight">
-                Team Building<br /><span className="text-gradient-field">sportif</span>
+                Vous êtes une <span className="text-gradient-field">entreprise&nbsp;?</span>
               </h2>
               <p className="mt-5 text-muted-foreground leading-relaxed text-lg">
-                Tournoi de foot, Bubble Foot entre collègues, cocktail dînatoire…
-                On organise tout. Disponible les <strong>lundi, mardi, jeudi et samedi dès 18h</strong>.
+                Venez vivre un team building sportif qui soude vos équipes :
+                tournoi de foot, Bubble Foot entre collègues, cocktail dînatoire…
+                On organise tout de A à Z. Disponible les <strong>lundi, mardi, jeudi et samedi dès 18h</strong>.
               </p>
               <div className="mt-8 grid grid-cols-2 gap-4">
                 {[
