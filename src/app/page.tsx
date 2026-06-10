@@ -6,10 +6,11 @@ import {
   FadeIn, FadeInView, StaggerContainer, StaggerItem, Float, PulseGlow,
   MagneticButton, TextReveal, CountUp, Marquee, Tilt3D,
 } from "@/components/motion";
+import { formules } from "@/data/formules";
 import {
   Cake, CircleDot, Trophy, Building2, Star, MapPin, Baby, ShieldCheck,
   Sparkles, ArrowRight, Users, Clock, Zap, PartyPopper, ChevronRight,
-  Quote,
+  Quote, Check, Crown,
 } from "lucide-react";
 
 const MagicRings = dynamic(() => import("@/components/magic-rings"), { ssr: false });
@@ -18,6 +19,13 @@ const marqueeItems = [
   "ANNIVERSAIRES", "BUBBLE FOOT", "TERRAIN PRIVÉ", "TEAM BUILDING",
   "FOUS RIRES", "FOOT INDOOR", "GOÛTER", "FUN",
 ];
+
+// Icône + accroche par formule anniversaire (les prix viennent de @/data/formules)
+const formuleMeta: Record<string, { icon: typeof Cake; tagline: string; badge?: string }> = {
+  classique: { icon: CircleDot, tagline: "L'essentiel pour un anniversaire foot réussi." },
+  "bubble-foot": { icon: PartyPopper, tagline: "Le foot dans des bulles géantes : fous rires garantis.", badge: "Le plus demandé" },
+  premium: { icon: Crown, tagline: "Tout inclus : déco, gâteau, boissons et photos." },
+};
 
 export default function Home() {
   return (
@@ -89,10 +97,10 @@ export default function Home() {
                 Réserver maintenant
               </Link>
               <Link
-                href="#activites"
+                href="#formules"
                 className="btn-glass-outline inline-flex items-center gap-2 text-white text-lg px-8 h-14 rounded-2xl"
               >
-                Découvrir
+                Voir les formules & prix
               </Link>
             </div>
           </FadeIn>
@@ -154,6 +162,10 @@ export default function Home() {
             <h2 className="font-[family-name:var(--font-heading)] text-3xl md:text-5xl font-bold">
               Trois univers, <span className="text-gradient-field">un seul complexe</span>
             </h2>
+            <p className="mt-4 text-muted-foreground text-lg">
+              Anniversaires, entrées libres, location de terrain ou team building —
+              choisissez votre activité et réservez votre créneau en ligne en 2 minutes.
+            </p>
           </div>
         </FadeInView>
 
@@ -177,9 +189,14 @@ export default function Home() {
                         Foot, Bubble Foot, goûter privatisé et fous rires garantis.
                         La formule parfaite pour un anniversaire inoubliable.
                       </p>
+                      <p className="mt-3 inline-flex items-baseline gap-1.5 font-semibold">
+                        <span className="text-sm text-muted-foreground">à partir de</span>
+                        <span className="text-2xl font-bold font-[family-name:var(--font-heading)] text-kick">18€</span>
+                        <span className="text-sm text-muted-foreground">/enfant</span>
+                      </p>
                     </div>
                     <div className="flex items-center gap-2 text-kick font-semibold text-lg shrink-0 group-hover:gap-4 transition-all duration-300">
-                      Réserver <ArrowRight className="size-5" />
+                      Voir les formules <ArrowRight className="size-5" />
                     </div>
                   </div>
                 </div>
@@ -195,7 +212,9 @@ export default function Home() {
               href: "/reservation?activite=libre",
               icon: CircleDot,
               title: "Entrées libres",
-              desc: "Sessions ouvertes à tous, ambiance garantie.",
+              desc: "Sessions ouvertes à tous, sans réservation de groupe.",
+              price: "8€",
+              priceUnit: "/personne",
               gradient: "from-field/8 via-white to-emerald-50",
               border: "border-field/10 hover:border-field/30",
               iconBg: "bg-field/10 text-field",
@@ -205,7 +224,9 @@ export default function Home() {
               href: "/reservation?activite=foot",
               icon: Trophy,
               title: "Location de terrain",
-              desc: "Terrain privé avec éclairage, ballon et vestiaires.",
+              desc: "Terrain privé entre amis : éclairage, ballon et vestiaires inclus.",
+              price: "40€",
+              priceUnit: "/heure",
               gradient: "from-blue-50/60 via-white to-indigo-50/60",
               border: "border-blue-100 hover:border-blue-300",
               iconBg: "bg-blue-50 text-blue-600",
@@ -215,7 +236,9 @@ export default function Home() {
               href: "/reservation?activite=team-building",
               icon: Building2,
               title: "Team Building",
-              desc: "Événements sportifs de 10 à 40 personnes.",
+              desc: "Événements d'entreprise sportifs de 10 à 40 personnes.",
+              price: "20€",
+              priceUnit: "/personne",
               gradient: "from-violet-50/60 via-white to-purple-50/60",
               border: "border-violet-100 hover:border-violet-300",
               iconBg: "bg-violet-50 text-violet-600",
@@ -225,7 +248,7 @@ export default function Home() {
             <StaggerItem key={card.href}>
               <Tilt3D className="h-full">
                 <Link href={card.href} className="block h-full">
-                  <div className={`relative h-full rounded-2xl overflow-hidden bg-gradient-to-br ${card.gradient} p-6 border ${card.border} transition-all duration-500 flex flex-col justify-between group card-hover min-h-[220px]`}>
+                  <div className={`relative h-full rounded-2xl overflow-hidden bg-gradient-to-br ${card.gradient} p-6 border ${card.border} transition-all duration-500 flex flex-col justify-between group card-hover min-h-[240px]`}>
                     <div>
                       <div className={`inline-flex items-center justify-center rounded-xl p-2.5 ${card.iconBg} mb-4 group-hover:scale-110 group-hover:rotate-3 transition-all duration-500`}>
                         <card.icon className="size-6" />
@@ -233,8 +256,15 @@ export default function Home() {
                       <h3 className="font-[family-name:var(--font-heading)] text-lg font-bold">{card.title}</h3>
                       <p className="mt-1.5 text-sm text-muted-foreground">{card.desc}</p>
                     </div>
-                    <div className={`flex items-center gap-1.5 ${card.accent} font-semibold text-sm mt-4 group-hover:gap-3 transition-all duration-300`}>
-                      Réserver <ChevronRight className="size-4" />
+                    <div className="mt-4">
+                      <p className="flex items-baseline gap-1">
+                        <span className="text-xs text-muted-foreground">dès</span>
+                        <span className={`text-xl font-bold font-[family-name:var(--font-heading)] ${card.accent}`}>{card.price}</span>
+                        <span className="text-xs text-muted-foreground">{card.priceUnit}</span>
+                      </p>
+                      <div className={`flex items-center gap-1.5 ${card.accent} font-semibold text-sm mt-2 group-hover:gap-3 transition-all duration-300`}>
+                        Réserver <ChevronRight className="size-4" />
+                      </div>
                     </div>
                   </div>
                 </Link>
@@ -242,6 +272,86 @@ export default function Home() {
             </StaggerItem>
           ))}
         </StaggerContainer>
+      </section>
+
+      {/* ══════ FORMULES & TARIFS ANNIVERSAIRE ══════ */}
+      <section id="formules" className="mx-auto max-w-6xl px-4 lg:px-8 pb-20 md:pb-24 scroll-mt-24">
+        <FadeInView>
+          <div className="text-center max-w-2xl mx-auto mb-12">
+            <span className="inline-flex items-center gap-2 rounded-full bg-kick/10 px-4 py-1.5 text-sm font-semibold text-kick-dark mb-4">
+              <Cake className="size-4" /> Formules anniversaire
+            </span>
+            <h2 className="font-[family-name:var(--font-heading)] text-3xl md:text-5xl font-bold">
+              Des prix clairs, <span className="text-gradient-kick">tout inclus</span>
+            </h2>
+            <p className="mt-4 text-muted-foreground text-lg">
+              Salle privatisée, animateur et espace goûter compris dans chaque formule.
+              Le prix affiché est par enfant — vous n&apos;avez plus qu&apos;à les amener.
+            </p>
+          </div>
+        </FadeInView>
+
+        <StaggerContainer className="grid gap-6 md:grid-cols-3 items-stretch" staggerDelay={0.12}>
+          {formules.map((f) => {
+            const meta = formuleMeta[f.id];
+            const isPopular = Boolean(meta?.badge);
+            return (
+              <StaggerItem key={f.id} className="h-full">
+                <div
+                  className={`relative h-full flex flex-col rounded-3xl bg-white p-7 transition-all duration-500 card-hover ${
+                    isPopular
+                      ? "border-2 border-kick shadow-xl shadow-kick/10 md:-mt-3 md:mb-3"
+                      : "border border-field/15"
+                  }`}
+                >
+                  {isPopular && (
+                    <span className="absolute -top-3.5 left-1/2 -translate-x-1/2 rounded-full bg-gradient-to-r from-kick to-kick-dark text-white text-xs font-bold px-4 py-1.5 shadow-lg shadow-kick/20 whitespace-nowrap">
+                      ⭐ {meta.badge}
+                    </span>
+                  )}
+                  <div className={`inline-flex items-center justify-center rounded-2xl p-3 self-start ${isPopular ? "bg-kick/10 text-kick" : "bg-field/10 text-field"}`}>
+                    {meta && <meta.icon className="size-7" />}
+                  </div>
+                  <h3 className="mt-4 text-xl font-bold font-[family-name:var(--font-heading)]">{f.name}</h3>
+                  <p className="mt-1.5 text-sm text-muted-foreground leading-relaxed">{meta?.tagline ?? f.description}</p>
+                  <p className="mt-5">
+                    <span className={`text-4xl font-bold font-[family-name:var(--font-heading)] ${isPopular ? "text-kick" : "text-field"}`}>
+                      {f.pricePerChild}€
+                    </span>
+                    <span className="text-muted-foreground text-sm"> /enfant</span>
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {f.durationMinutes / 60}h • {f.minChildren} à {f.maxChildren} enfants
+                  </p>
+                  <ul className="mt-5 space-y-2 flex-1">
+                    {f.includes.map((inc) => (
+                      <li key={inc} className="flex items-start gap-2 text-sm">
+                        <Check className={`size-4 mt-0.5 shrink-0 ${isPopular ? "text-kick" : "text-field"}`} />
+                        {inc}
+                      </li>
+                    ))}
+                  </ul>
+                  <Link
+                    href="/reservation?activite=anniversaire"
+                    className={`mt-7 inline-flex items-center justify-center gap-2 h-12 rounded-2xl font-semibold text-white ${
+                      isPopular ? "btn-glass-kick" : "btn-glass-field"
+                    }`}
+                  >
+                    Réserver cette formule <ArrowRight className="size-4" />
+                  </Link>
+                </div>
+              </StaggerItem>
+            );
+          })}
+        </StaggerContainer>
+
+        <FadeInView delay={0.2}>
+          <p className="mt-10 text-center text-sm text-muted-foreground flex flex-wrap items-center justify-center gap-x-6 gap-y-2">
+            <span className="flex items-center gap-1.5"><ShieldCheck className="size-4 text-field" /> Paiement sécurisé</span>
+            <span className="flex items-center gap-1.5"><Users className="size-4 text-field" /> Encadrement par un animateur</span>
+            <span className="flex items-center gap-1.5"><Sparkles className="size-4 text-field" /> Options déco, gâteau, photos…</span>
+          </p>
+        </FadeInView>
       </section>
 
       {/* ── Smooth gradient transition → team building ── */}
@@ -260,12 +370,13 @@ export default function Home() {
               </h2>
               <p className="mt-5 text-muted-foreground leading-relaxed text-lg">
                 Tournoi de foot, Bubble Foot entre collègues, cocktail dînatoire…
-                On organise tout. Disponible les <strong>lundi, mardi, jeudi et samedi dès 18h</strong>.
+                On organise tout, <strong>dès 20€/personne</strong>. Disponible les
+                <strong> lundi, mardi, jeudi et samedi dès 18h</strong>.
               </p>
               <div className="mt-8 grid grid-cols-2 gap-4">
                 {[
                   { icon: Users, label: "10 à 40 personnes" },
-                  { icon: Sparkles, label: "3 formules" },
+                  { icon: Sparkles, label: "3 formules dès 20€/pers." },
                   { icon: Building2, label: "Salle privatisée" },
                   { icon: Zap, label: "Devis sur mesure" },
                 ].map((item) => (
