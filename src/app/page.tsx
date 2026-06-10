@@ -3,11 +3,11 @@
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import {
-  FadeIn, FadeInView, StaggerContainer, StaggerItem, Float, PulseGlow,
-  MagneticButton, TextReveal, CountUp, Marquee, Tilt3D, WaveDivider,
+  FadeIn, FadeInView, StaggerContainer, StaggerItem, PulseGlow,
+  MagneticButton, CountUp, Marquee, Tilt3D, WaveDivider,
 } from "@/components/motion";
 import {
-  CircleDot, Building2, Star, MapPin, Baby, ShieldCheck,
+  Building2, Star, MapPin, Baby, ShieldCheck,
   Sparkles, ArrowRight, Users, Clock, Zap, PartyPopper,
   Quote,
 } from "lucide-react";
@@ -215,14 +215,14 @@ export default function Home() {
             <FadeInView delay={0.2}>
               <div className="relative">
                 <Tilt3D intensity={8}>
-                  <div className="aspect-[4/3] rounded-3xl bg-gradient-to-br from-field/20 via-white to-field/10 flex items-center justify-center overflow-hidden border border-field/10 shadow-xl shadow-field/5">
-                    <Float>
-                      <div className="flex items-center gap-6 opacity-30">
-                        <Building2 className="size-20 text-field" />
-                        <CircleDot className="size-20 text-kick" />
-                      </div>
-                    </Float>
-                    <span className="absolute bottom-5 right-5 text-xs text-muted-foreground bg-white/60 rounded-full px-3 py-1">[Photo à ajouter]</span>
+                  <div className="aspect-[4/3] rounded-3xl bg-gradient-to-br from-field/20 via-white to-field/10 overflow-hidden border border-field/10 shadow-xl shadow-field/5">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src="/images/offside-foot-indoor.jpg"
+                      alt="Team building sportif à Offside World — foot indoor entre collègues"
+                      className="h-full w-full object-cover"
+                      onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
+                    />
                   </div>
                 </Tilt3D>
               </div>

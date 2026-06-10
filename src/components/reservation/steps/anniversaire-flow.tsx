@@ -22,19 +22,16 @@ import {
   Users,
   Sparkles,
   Gift,
-  PartyPopper,
   AlertCircle,
   ShieldCheck,
 } from "lucide-react";
 
-type Step = "formule" | "enfants" | "options" | "creneau" | "recap" | "paiement";
+type Step = "formule" | "details" | "creneau" | "paiement";
 
 const STEPS: { key: Step; label: string }[] = [
   { key: "formule", label: "Formule" },
-  { key: "enfants", label: "Enfants" },
-  { key: "options", label: "Options" },
+  { key: "details", label: "Détails" },
   { key: "creneau", label: "Créneau" },
-  { key: "recap", label: "Récap" },
   { key: "paiement", label: "Paiement" },
 ];
 
@@ -161,23 +158,25 @@ export function AnniversaireFlow({ onBack }: { onBack: () => void }) {
           </div>
           <div className="mt-8 flex justify-between">
             <Button variant="ghost" onClick={onBack} className="gap-1.5"><ArrowLeft className="size-4" /> Retour</Button>
-            <Button onClick={() => setStep("enfants")} disabled={!selectedFormule} className="btn-glass-field text-white border-0 gap-1.5">
+            <Button onClick={() => setStep("details")} disabled={!selectedFormule} className="btn-glass-field text-white border-0 gap-1.5">
               Continuer <ArrowRight className="size-4" />
             </Button>
           </div>
         </FadeIn>
       )}
 
-      {/* STEP 2: Enfants */}
-      {step === "enfants" && selectedFormule && (
+      {/* STEP 2: Détails (enfant + options) */}
+      {step === "details" && selectedFormule && (
         <FadeIn>
           <h2 className="text-2xl font-bold font-[family-name:var(--font-heading)] flex items-center gap-2">
-            <Users className="size-6 text-field" /> Informations enfant
+            <Users className="size-6 text-field" /> Détails de l&apos;anniversaire
           </h2>
           <p className="mt-1 text-muted-foreground">
-            Seules les informations minimales sont collectées.{" "}
+            Quelques infos sur l&apos;enfant fêté, puis personnalisez avec nos extras.{" "}
             <a href="/confidentialite" className="underline">Politique de confidentialité</a>
           </p>
+
+          {/* Infos enfant */}
           <div className="mt-6 max-w-md space-y-4">
             <div>
               <Label htmlFor="childName">Prénom de l&apos;enfant fêté</Label>
@@ -193,25 +192,15 @@ export function AnniversaireFlow({ onBack }: { onBack: () => void }) {
               <p className="mt-1 text-xs text-muted-foreground">Min. {selectedFormule.minChildren} — Max. {selectedFormule.maxChildren} enfants</p>
             </div>
           </div>
-          <div className="mt-8 flex justify-between">
-            <Button variant="ghost" onClick={() => setStep("formule")} className="gap-1.5"><ArrowLeft className="size-4" /> Retour</Button>
-            <Button onClick={() => setStep("options")} disabled={!childName || !childAge || childCount < selectedFormule.minChildren} className="btn-glass-field text-white border-0 gap-1.5">
-              Continuer <ArrowRight className="size-4" />
-            </Button>
-          </div>
-        </FadeIn>
-      )}
 
-      {/* STEP 3: Options */}
-      {step === "options" && (
-        <FadeIn>
-          <h2 className="text-2xl font-bold font-[family-name:var(--font-heading)] flex items-center gap-2">
-            <Sparkles className="size-6 text-kick" /> Options supplémentaires
-          </h2>
-          <p className="mt-1 text-muted-foreground">Personnalisez l&apos;anniversaire avec nos extras.</p>
-          <div className="mt-6 space-y-3">
+          {/* Options */}
+          <h3 className="mt-8 text-lg font-bold font-[family-name:var(--font-heading)] flex items-center gap-2">
+            <Sparkles className="size-5 text-kick" /> Options supplémentaires
+          </h3>
+          <p className="mt-1 text-sm text-muted-foreground">Facultatif — ajoutez ce qui vous fait plaisir.</p>
+          <div className="mt-4 space-y-3">
             {options.map((opt: Option) => {
-              const isIncluded = selectedFormule?.id === "premium" && ["deco", "gateau", "boissons", "photo"].includes(opt.id);
+              const isIncluded = selectedFormule.id === "premium" && ["deco", "gateau", "boissons", "photo"].includes(opt.id);
               return (
                 <button key={opt.id} onClick={() => !isIncluded && toggleOption(opt.id)} disabled={isIncluded} className="w-full text-left">
                   <Card className={`border-2 transition-all duration-300 ${
@@ -235,14 +224,17 @@ export function AnniversaireFlow({ onBack }: { onBack: () => void }) {
               );
             })}
           </div>
+
           <div className="mt-8 flex justify-between">
-            <Button variant="ghost" onClick={() => setStep("enfants")} className="gap-1.5"><ArrowLeft className="size-4" /> Retour</Button>
-            <Button onClick={() => setStep("creneau")} className="btn-glass-field text-white border-0 gap-1.5">Continuer <ArrowRight className="size-4" /></Button>
+            <Button variant="ghost" onClick={() => setStep("formule")} className="gap-1.5"><ArrowLeft className="size-4" /> Retour</Button>
+            <Button onClick={() => setStep("creneau")} disabled={!childName || !childAge || childCount < selectedFormule.minChildren} className="btn-glass-field text-white border-0 gap-1.5">
+              Continuer <ArrowRight className="size-4" />
+            </Button>
           </div>
         </FadeIn>
       )}
 
-      {/* STEP 4: Créneau + Salle */}
+      {/* STEP 3: Créneau + Salle */}
       {step === "creneau" && (
         <FadeIn>
           <h2 className="text-2xl font-bold font-[family-name:var(--font-heading)] flex items-center gap-2">
@@ -301,20 +293,22 @@ export function AnniversaireFlow({ onBack }: { onBack: () => void }) {
           </div>
 
           <div className="mt-8 flex justify-between">
-            <Button variant="ghost" onClick={() => setStep("options")} className="gap-1.5"><ArrowLeft className="size-4" /> Retour</Button>
-            <Button onClick={() => setStep("recap")} disabled={!selectedSalle || !selectedSlot} className="btn-glass-field text-white border-0 gap-1.5">
+            <Button variant="ghost" onClick={() => setStep("details")} className="gap-1.5"><ArrowLeft className="size-4" /> Retour</Button>
+            <Button onClick={() => setStep("paiement")} disabled={!selectedSalle || !selectedSlot} className="btn-glass-field text-white border-0 gap-1.5">
               Continuer <ArrowRight className="size-4" />
             </Button>
           </div>
         </FadeIn>
       )}
 
-      {/* STEP 5: Récap */}
-      {step === "recap" && selectedFormule && (
+      {/* STEP 4: Récap + coordonnées + paiement */}
+      {step === "paiement" && selectedFormule && (
         <FadeIn>
           <h2 className="text-2xl font-bold font-[family-name:var(--font-heading)] flex items-center gap-2">
-            <PartyPopper className="size-6 text-kick" /> Récapitulatif
+            <Lock className="size-6 text-field" /> Récapitulatif &amp; paiement
           </h2>
+
+          {/* Récap */}
           <Card className="mt-6 border-2">
             <CardContent className="p-6 space-y-4">
               <div className="flex justify-between"><span className="text-muted-foreground">Formule</span><span className="font-semibold">{selectedFormule.name}</span></div>
@@ -333,6 +327,7 @@ export function AnniversaireFlow({ onBack }: { onBack: () => void }) {
             </CardContent>
           </Card>
 
+          {/* Coordonnées */}
           <div className="mt-6 space-y-4 max-w-md">
             <h3 className="font-bold">Vos coordonnées</h3>
             <p className="text-xs text-muted-foreground">
@@ -352,21 +347,7 @@ export function AnniversaireFlow({ onBack }: { onBack: () => void }) {
             </div>
           </div>
 
-          <div className="mt-8 flex justify-between">
-            <Button variant="ghost" onClick={() => setStep("creneau")} className="gap-1.5"><ArrowLeft className="size-4" /> Retour</Button>
-            <Button onClick={() => setStep("paiement")} disabled={!parentName || !parentEmail || !isPhoneValid} className="btn-glass-field text-white border-0 gap-1.5">
-              Continuer <ArrowRight className="size-4" />
-            </Button>
-          </div>
-        </FadeIn>
-      )}
-
-      {/* STEP 6: Paiement */}
-      {step === "paiement" && selectedFormule && (
-        <FadeIn>
-          <h2 className="text-2xl font-bold font-[family-name:var(--font-heading)] flex items-center gap-2">
-            <Lock className="size-6 text-field" /> Paiement
-          </h2>
+          {/* Paiement */}
           <Card className="mt-6 border-2">
             <CardContent className="p-6">
               <div className="flex justify-between text-lg mb-6">
@@ -391,7 +372,7 @@ export function AnniversaireFlow({ onBack }: { onBack: () => void }) {
 
               <button
                 onClick={() => router.push(`/confirmation?type=anniversaire&formule=${selectedFormule.name}&enfant=${childName}&total=${totalPrice}`)}
-                disabled={!acceptCGV}
+                disabled={!acceptCGV || !parentName || !parentEmail || !isPhoneValid}
                 className="btn-glass-paypal w-full h-14 text-white text-lg rounded-2xl font-semibold disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center justify-center gap-2"
               >
                 <Lock className="size-5" /> Payer avec PayPal (démo)
@@ -401,12 +382,12 @@ export function AnniversaireFlow({ onBack }: { onBack: () => void }) {
               </p>
             </CardContent>
           </Card>
+
           <div className="mt-4">
-            <Button variant="ghost" onClick={() => setStep("recap")} className="gap-1.5"><ArrowLeft className="size-4" /> Retour</Button>
+            <Button variant="ghost" onClick={() => setStep("creneau")} className="gap-1.5"><ArrowLeft className="size-4" /> Retour</Button>
           </div>
         </FadeIn>
       )}
     </div>
   );
 }
-
