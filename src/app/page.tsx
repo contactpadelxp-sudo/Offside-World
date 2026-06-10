@@ -23,7 +23,7 @@ export default function Home() {
   return (
     <>
       {/* ══════ HERO ══════ */}
-      <section className="relative min-h-[100vh] flex items-center justify-center overflow-hidden bg-white">
+      <section className="relative min-h-[88vh] flex items-center justify-center overflow-hidden bg-white">
         {/* MagicRings background */}
         <div className="absolute inset-0 z-0">
           <MagicRings
@@ -55,7 +55,7 @@ export default function Home() {
         {/* Overlay radial blanc pour lisibilité au centre */}
         <div className="absolute inset-0 z-[1] bg-radial-[ellipse_at_center] from-white/80 via-white/50 to-transparent" />
 
-        <div className="relative z-10 mx-auto max-w-5xl px-4 lg:px-8 pt-28 pb-20 md:pt-36 md:pb-28 w-full text-center">
+        <div className="relative z-10 mx-auto max-w-5xl px-4 lg:px-8 pt-28 pb-14 md:pt-32 md:pb-16 w-full text-center">
           {/* Headline central */}
           <h1 className="font-[family-name:var(--font-heading)] text-[clamp(2rem,5.5vw,4.5rem)] font-bold tracking-tight leading-[1.05] text-foreground">
             <FadeIn delay={0.1} className="block whitespace-nowrap">
@@ -99,7 +99,7 @@ export default function Home() {
 
           {/* Stats — espacées */}
           <FadeIn delay={1.3}>
-            <div className="mt-20 flex justify-center gap-16 md:gap-24">
+            <div className="mt-14 flex justify-center gap-16 md:gap-24">
               {[
                 { value: 2000, suffix: "+", label: "fêtes organisées" },
                 { value: 3, suffix: "", label: "salles privatisées" },
@@ -126,12 +126,12 @@ export default function Home() {
       </section>
 
       {/* ── Smooth transition hero → content ── */}
-      <div className="relative h-32 -mt-1">
+      <div className="relative h-12 -mt-1">
         <div className="absolute inset-0 bg-gradient-to-b from-white to-background" />
       </div>
 
       {/* ══════ MARQUEE ══════ */}
-      <section className="py-8 overflow-hidden">
+      <section className="py-5 overflow-hidden">
         <Marquee speed={25} className="text-muted-foreground/50 font-[family-name:var(--font-heading)] text-2xl md:text-3xl font-bold">
           <div className="flex items-center gap-8 px-4">
             {marqueeItems.map((item, i) => (
@@ -145,9 +145,9 @@ export default function Home() {
       </section>
 
       {/* ══════ ACTIVITÉS ══════ */}
-      <section id="activites" className="mx-auto max-w-6xl px-4 lg:px-8 py-20 md:py-28">
+      <section id="activites" className="mx-auto max-w-6xl px-4 lg:px-8 py-12 md:py-16">
         <FadeInView>
-          <div className="text-center max-w-2xl mx-auto mb-16">
+          <div className="text-center max-w-2xl mx-auto mb-10">
             <span className="inline-flex items-center gap-2 rounded-full bg-field/10 px-4 py-1.5 text-sm font-semibold text-field-dark mb-4">
               <PartyPopper className="size-4" /> Nos activités
             </span>
@@ -245,11 +245,11 @@ export default function Home() {
       </section>
 
       {/* ── Smooth gradient transition → team building ── */}
-      <div className="h-20 bg-gradient-to-b from-background to-[#f5f7f6]" />
+      <div className="h-12 bg-gradient-to-b from-background to-[#f5f7f6]" />
 
       {/* ══════ TEAM BUILDING ══════ */}
       <section className="bg-[#f5f7f6] grain relative">
-        <div className="mx-auto max-w-7xl px-4 lg:px-8 py-20 md:py-28">
+        <div className="mx-auto max-w-7xl px-4 lg:px-8 py-12 md:py-16">
           <div className="grid items-center gap-14 lg:grid-cols-2">
             <FadeInView>
               <span className="inline-flex items-center gap-2 rounded-full bg-violet-100 px-4 py-1.5 text-sm font-semibold text-violet-700 mb-4">
@@ -307,12 +307,12 @@ export default function Home() {
       </section>
 
       {/* ── Smooth gradient transition ── */}
-      <div className="h-20 bg-gradient-to-b from-[#f5f7f6] to-background" />
+      <div className="h-12 bg-gradient-to-b from-[#f5f7f6] to-background" />
 
       {/* ══════ RÉASSURANCE ══════ */}
-      <section className="mx-auto max-w-7xl px-4 lg:px-8 py-16">
+      <section className="mx-auto max-w-7xl px-4 lg:px-8 py-10 md:py-12">
         <FadeInView>
-          <h2 className="text-center font-[family-name:var(--font-heading)] text-3xl md:text-4xl font-bold mb-14">
+          <h2 className="text-center font-[family-name:var(--font-heading)] text-3xl md:text-4xl font-bold mb-10">
             Pourquoi <span className="text-gradient-field">Offside World</span> ?
           </h2>
         </FadeInView>
@@ -337,7 +337,7 @@ export default function Home() {
       </section>
 
       {/* ══════ TESTIMONIAL ══════ */}
-      <section className="mx-auto max-w-3xl px-4 lg:px-8 pb-20">
+      <section className="mx-auto max-w-3xl px-4 lg:px-8 pt-4 pb-12">
         <FadeInView>
           <div className="relative rounded-3xl bg-gradient-to-br from-field/5 to-kick/5 border border-field/10 p-8 md:p-12 text-center">
             <Quote className="size-10 text-field/40 mx-auto mb-4" />
@@ -358,13 +358,13 @@ export default function Home() {
       </section>
 
       {/* ── Smooth gradient transition → CTA ── */}
-      <div className="h-20 bg-gradient-to-b from-background to-[#062e16]" />
+      <div className="h-16 bg-gradient-to-b from-background via-[#0a3d1e]/60 to-[#062e16]" />
 
       {/* ══════ CTA FINAL ══════ */}
       <section className="aurora-bg text-white relative overflow-hidden">
         <div className="field-pattern" />
         <div className="aurora-orb-3" />
-        <div className="relative z-10 mx-auto max-w-3xl px-4 lg:px-8 py-20 md:py-28 text-center">
+        <div className="relative z-10 mx-auto max-w-3xl px-4 lg:px-8 py-14 md:py-20 text-center">
           <FadeInView>
             <div className="glass mx-auto flex h-16 w-16 items-center justify-center rounded-2xl mb-8">
               <Clock className="size-8" />
