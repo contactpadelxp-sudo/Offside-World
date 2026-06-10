@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import dynamic from "next/dynamic";
+import { useState } from "react";
 import {
   FadeIn, FadeInView, StaggerContainer, StaggerItem, PulseGlow,
   MagneticButton, CountUp, Marquee, Tilt3D, WaveDivider,
@@ -13,6 +14,22 @@ import {
 } from "lucide-react";
 
 const MagicRings = dynamic(() => import("@/components/magic-rings"), { ssr: false });
+
+/* Image Team Building — essaie plusieurs extensions, repli sur le dégradé si aucune ne charge */
+function TeamBuildingImage() {
+  const exts = ["avif", "png", "jpg", "jpeg", "webp"];
+  const [i, setI] = useState(0);
+  if (i >= exts.length) return null;
+  return (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      src={`/images/offside-foot-indoor.${exts[i]}`}
+      alt="Team building sportif à Offside World — foot indoor entre collègues"
+      className="h-full w-full object-cover"
+      onError={() => setI((n) => n + 1)}
+    />
+  );
+}
 const ActivitesStack = dynamic(() => import("@/components/activites-stack"), { ssr: false });
 
 const marqueeItems = [
@@ -216,13 +233,7 @@ export default function Home() {
               <div className="relative">
                 <Tilt3D intensity={8}>
                   <div className="aspect-[4/3] rounded-3xl bg-gradient-to-br from-field/20 via-white to-field/10 overflow-hidden border border-field/10 shadow-xl shadow-field/5">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src="/images/Offside Foot Indoor.avif"
-                      alt="Team building sportif à Offside World — foot indoor entre collègues"
-                      className="h-full w-full object-cover"
-                      onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
-                    />
+                    <TeamBuildingImage />
                   </div>
                 </Tilt3D>
               </div>
