@@ -10,28 +10,11 @@ import { formules } from "@/data/formules";
 import {
   Cake, CircleDot, Trophy, Building2, Star, MapPin, Baby, ShieldCheck,
   Sparkles, ArrowRight, Users, Clock, Zap, PartyPopper, ChevronRight,
-  Quote, Check, Crown, CalendarCheck, ListChecks,
+  Quote, Check, Crown,
 } from "lucide-react";
 
-const etapes = [
-  {
-    icon: ListChecks,
-    title: "Choisissez votre formule",
-    desc: "Classique, Bubble Foot ou Premium — selon l'âge des enfants, le budget et l'effet « waouh » recherché.",
-  },
-  {
-    icon: CalendarCheck,
-    title: "Réservez votre créneau",
-    desc: "Date, salle et horaire en ligne en 2 minutes, avec paiement 100% sécurisé. Confirmation immédiate.",
-  },
-  {
-    icon: PartyPopper,
-    title: "Profitez, on s'occupe de tout",
-    desc: "Animateur, terrain privatisé, goûter et déco sont prêts. Vous n'avez plus qu'à amener les enfants.",
-  },
-];
-
 const MagicRings = dynamic(() => import("@/components/magic-rings"), { ssr: false });
+const EtapesStack = dynamic(() => import("@/components/etapes-stack"), { ssr: false });
 
 const marqueeItems = [
   "ANNIVERSAIRES", "BUBBLE FOOT", "TERRAIN PRIVÉ", "TEAM BUILDING",
@@ -387,31 +370,10 @@ export default function Home() {
             </div>
           </FadeInView>
 
-          <StaggerContainer className="grid gap-6 md:grid-cols-3 relative" staggerDelay={0.18}>
-            {/* Ligne pointillée reliant les étapes (desktop) */}
-            <div className="hidden md:block absolute top-12 left-[16.6%] right-[16.6%] h-px border-t-2 border-dashed border-field/25" />
-
-            {etapes.map((etape, i) => (
-              <StaggerItem key={etape.title} className="relative">
-                <div className="relative h-full rounded-3xl bg-white p-7 border border-field/10 card-hover text-center">
-                  {/* Pastille numérotée animée */}
-                  <Float duration={3 + i * 0.4} className="mx-auto w-fit">
-                    <div className="relative flex h-20 w-20 items-center justify-center rounded-2xl bg-gradient-to-br from-field to-field-dark text-white shadow-lg shadow-field/25">
-                      <etape.icon className="size-9" />
-                      <span className="absolute -top-2 -right-2 flex h-7 w-7 items-center justify-center rounded-full bg-kick text-white text-sm font-bold font-[family-name:var(--font-heading)] shadow-md">
-                        {i + 1}
-                      </span>
-                    </div>
-                  </Float>
-                  <h3 className="mt-6 text-lg font-bold font-[family-name:var(--font-heading)]">{etape.title}</h3>
-                  <p className="mt-2 text-sm text-muted-foreground leading-relaxed">{etape.desc}</p>
-                </div>
-              </StaggerItem>
-            ))}
-          </StaggerContainer>
+          <EtapesStack />
 
           <FadeInView delay={0.2}>
-            <div className="mt-12 text-center">
+            <div className="mt-4 text-center">
               <MagneticButton className="inline-block">
                 <Link
                   href="/reservation?activite=anniversaire"
