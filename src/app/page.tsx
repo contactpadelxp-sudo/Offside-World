@@ -17,7 +17,7 @@ const MagicRings = dynamic(() => import("@/components/magic-rings"), { ssr: fals
 
 /* Image Team Building — essaie plusieurs extensions, repli sur le dégradé si aucune ne charge */
 function TeamBuildingImage() {
-  const exts = ["avif", "png", "jpg", "jpeg", "webp"];
+  const exts = ["png", "avif", "jpg", "jpeg", "webp"];
   const [i, setI] = useState(0);
   if (i >= exts.length) return null;
   return (
