@@ -168,24 +168,24 @@ export default function ActivitesStack({ children }: { children?: React.ReactNod
                 transform: i > 0 ? "translate3d(0, 120vh, 0)" : undefined,
               }}
             >
-              <div className="flex h-full items-stretch gap-6 md:gap-8">
+              <div className="flex h-full items-stretch gap-4 md:gap-8">
                 <div className="flex h-full flex-1 flex-col justify-between min-w-0">
-                  <div className="flex items-start gap-6">
-                    <div className={`flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl ${card.badgeClass}`}>
-                      <card.icon className="size-8" />
+                  <div className="flex items-start gap-4 md:gap-6">
+                    <div className={`flex h-12 w-12 md:h-16 md:w-16 shrink-0 items-center justify-center rounded-xl md:rounded-2xl ${card.badgeClass}`}>
+                      <card.icon className="size-6 md:size-8" />
                     </div>
                     <div>
-                      <h2 className="text-2xl md:text-3xl font-bold font-[family-name:var(--font-heading)]">
+                      <h2 className="text-xl sm:text-2xl md:text-3xl font-bold font-[family-name:var(--font-heading)]">
                         {card.title}
                       </h2>
-                      <p className="mt-3 text-base md:text-lg opacity-90 leading-relaxed max-w-xl">
+                      <p className="mt-2 md:mt-3 text-sm sm:text-base md:text-lg opacity-90 leading-relaxed max-w-xl">
                         {card.desc}
                       </p>
                     </div>
                   </div>
                   <Link
                     href={card.href}
-                    className={`inline-flex items-center gap-2 font-semibold text-lg ${card.ctaClass} hover:gap-4 transition-all duration-300 self-start`}
+                    className={`inline-flex items-center gap-2 font-semibold text-base md:text-lg ${card.ctaClass} hover:gap-4 transition-all duration-300 self-start`}
                   >
                     Réserver <ArrowRight className="size-5" />
                   </Link>

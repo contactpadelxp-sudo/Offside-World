@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import dynamic from "next/dynamic";
-import { useState } from "react";
 import {
   FadeIn, FadeInView, StaggerContainer, StaggerItem, PulseGlow,
   MagneticButton, CountUp, Marquee, Tilt3D, WaveDivider,
@@ -16,21 +15,6 @@ import {
 
 const MagicRings = dynamic(() => import("@/components/magic-rings"), { ssr: false });
 
-/* Image Team Building — essaie plusieurs extensions, repli sur le dégradé si aucune ne charge */
-function TeamBuildingImage() {
-  const exts = ["png", "avif", "jpg", "jpeg", "webp"];
-  const [i, setI] = useState(0);
-  if (i >= exts.length) return null;
-  return (
-    // eslint-disable-next-line @next/next/no-img-element
-    <img
-      src={`/images/offside-foot-indoor.${exts[i]}`}
-      alt="Team building sportif à Offside World — foot indoor entre collègues"
-      className="h-full w-full object-cover"
-      onError={() => setI((n) => n + 1)}
-    />
-  );
-}
 const ActivitesStack = dynamic(() => import("@/components/activites-stack"), { ssr: false });
 
 const marqueeItems = [
@@ -77,15 +61,15 @@ export default function Home() {
         <div className="relative z-10 mx-auto max-w-5xl px-4 lg:px-8 pt-28 pb-14 md:pt-32 md:pb-16 w-full text-center">
           {/* Headline central */}
           <h1 className="font-[family-name:var(--font-heading)] text-[clamp(2rem,5.5vw,4.5rem)] font-bold tracking-tight leading-[1.05] text-foreground">
-            <FadeIn delay={0.1} className="block whitespace-nowrap">
+            <FadeIn delay={0.1} className="block md:whitespace-nowrap">
               <span>Le complexe où les</span>
             </FadeIn>
-            <FadeIn delay={0.3} className="block whitespace-nowrap">
+            <FadeIn delay={0.3} className="block md:whitespace-nowrap">
               <span>enfants </span>
               <span className="text-gradient-field">s&apos;éclatent</span>
               <span> et</span>
             </FadeIn>
-            <FadeIn delay={0.5} className="block whitespace-nowrap">
+            <FadeIn delay={0.5} className="block md:whitespace-nowrap">
               <span>les parents </span>
               <span className="text-gradient-field">soufflent.</span>
             </FadeIn>
@@ -100,16 +84,16 @@ export default function Home() {
 
           {/* CTAs */}
           <FadeIn delay={1.1}>
-            <div className="mt-10 flex flex-wrap justify-center gap-4">
+            <div className="mt-10 flex flex-col sm:flex-row sm:flex-wrap justify-center gap-4 px-2">
               <Link
                 href="/reservation"
-                className="btn-glass-field inline-flex items-center gap-2 text-white text-lg px-8 h-14 rounded-2xl"
+                className="btn-glass-field inline-flex items-center justify-center gap-2 text-white text-lg px-8 h-14 rounded-2xl"
               >
                 Réserver maintenant
               </Link>
               <Link
                 href="#activites"
-                className="btn-outline-light inline-flex items-center gap-2 text-lg px-8 h-14 rounded-2xl"
+                className="btn-outline-light inline-flex items-center justify-center gap-2 text-lg px-8 h-14 rounded-2xl"
               >
                 Découvrir
               </Link>
@@ -118,7 +102,7 @@ export default function Home() {
 
           {/* Stats — espacées */}
           <FadeIn delay={1.3}>
-            <div className="mt-12 flex justify-center gap-16 md:gap-24">
+            <div className="mt-12 flex flex-wrap justify-center gap-x-8 gap-y-6 sm:gap-x-16 md:gap-x-24">
               {[
                 { value: 2000, suffix: "+", label: "fêtes organisées" },
                 { value: 3, suffix: "", label: "salles privatisées" },
@@ -243,7 +227,7 @@ export default function Home() {
               <div className="relative">
                 <Tilt3D intensity={8}>
                   <div className="aspect-[4/3] rounded-3xl bg-gradient-to-br from-field/20 via-white to-field/10 overflow-hidden border border-field/10 shadow-xl shadow-field/5">
-                    <TeamBuildingImage />
+                    <FrameImage base="offside-foot-indoor" alt="Team building sportif à Offside World — foot indoor entre collègues" className="h-full w-full object-cover" />
                   </div>
                 </Tilt3D>
               </div>
