@@ -218,7 +218,7 @@ export default function Home() {
                   <div className="aspect-[4/3] rounded-3xl bg-gradient-to-br from-field/20 via-white to-field/10 overflow-hidden border border-field/10 shadow-xl shadow-field/5">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
-                      src="/images/offside-foot-indoor.jpg"
+                      src="/images/image offside foot indoor.png"
                       alt="Team building sportif à Offside World — foot indoor entre collègues"
                       className="h-full w-full object-cover"
                       onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
