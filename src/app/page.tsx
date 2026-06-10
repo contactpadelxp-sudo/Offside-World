@@ -146,21 +146,20 @@ export default function Home() {
       {/* ── Vague de sortie marquee → activités ── */}
       <WaveDivider fill="#eef3f0" flip />
 
-      {/* ══════ ACTIVITÉS ══════ */}
-      <section id="activites" className="mx-auto max-w-6xl px-4 lg:px-8 py-12 md:py-16">
-        <FadeInView>
-          <div className="text-center max-w-2xl mx-auto mb-2">
-            <span className="inline-flex items-center gap-2 rounded-full bg-field/10 px-4 py-1.5 text-sm font-semibold text-field-dark mb-4">
-              <PartyPopper className="size-4" /> Nos activités
-            </span>
-            <h2 className="font-[family-name:var(--font-heading)] text-3xl md:text-5xl font-bold">
-              Trois univers, <span className="text-gradient-field">un seul complexe</span>
-            </h2>
-          </div>
-        </FadeInView>
-
-        {/* ── ScrollStack des 3 activités (ReactBits) ── */}
-        <ActivitesStack />
+      {/* ══════ ACTIVITÉS — section épinglée pendant l'empilement ══════ */}
+      <section id="activites">
+        <ActivitesStack>
+          <FadeInView>
+            <div className="text-center max-w-2xl mx-auto px-4">
+              <span className="inline-flex items-center gap-2 rounded-full bg-field/10 px-4 py-1.5 text-sm font-semibold text-field-dark mb-4">
+                <PartyPopper className="size-4" /> Nos activités
+              </span>
+              <h2 className="font-[family-name:var(--font-heading)] text-3xl md:text-5xl font-bold">
+                Trois univers, <span className="text-gradient-field">un seul complexe</span>
+              </h2>
+            </div>
+          </FadeInView>
+        </ActivitesStack>
       </section>
 
       {/* ── Vague de transition → team building ── */}
