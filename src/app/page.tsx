@@ -122,7 +122,7 @@ export default function Home() {
           <FadeIn delay={1.5}>
             <div className="relative mt-12 mx-auto w-full max-w-3xl aspect-[16/9] overflow-hidden rounded-3xl border-2 border-dashed border-field/30 bg-white/40 backdrop-blur-sm shadow-xl shadow-field/5 flex items-center justify-center">
               <span className="text-sm text-muted-foreground/70 tracking-wide">Aperçu du complexe — photo à venir</span>
-              <Photo src="/images/offside-foot-indoor.png" alt="Le complexe Offside World — foot indoor" sizes="(max-width: 768px) 100vw, 768px" className="object-cover" preload />
+              <Photo src="/images/offside-foot-indoor.jpg" alt="Le complexe Offside World — foot indoor" sizes="(max-width: 768px) 100vw, 768px" className="object-cover" preload />
             </div>
           </FadeIn>
         </div>
@@ -227,7 +227,7 @@ export default function Home() {
               <div className="relative">
                 <Tilt3D intensity={8}>
                   <div className="relative aspect-[4/3] rounded-3xl bg-gradient-to-br from-field/20 via-white to-field/10 overflow-hidden border border-field/10 shadow-xl shadow-field/5">
-                    <Photo src="/images/offside-foot-indoor.png" alt="Team building sportif à Offside World — foot indoor entre collègues" sizes="(max-width: 1024px) 100vw, 600px" className="object-cover" />
+                    <Photo src="/images/offside-foot-indoor.jpg" alt="Team building sportif à Offside World — foot indoor entre collègues" sizes="(max-width: 1024px) 100vw, 600px" className="object-cover" />
                   </div>
                 </Tilt3D>
               </div>
