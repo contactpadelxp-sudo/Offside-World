@@ -4,7 +4,7 @@ import { useEffect, useRef } from "react";
 import Link from "next/link";
 import Lenis from "lenis";
 import { Cake, CircleDot, Trophy, ArrowRight } from "lucide-react";
-import { FrameImage } from "@/components/frame-image";
+import { Photo } from "@/components/photo";
 import "./scroll-stack.css";
 
 const cards = [
@@ -17,7 +17,7 @@ const cards = [
     badgeClass: "bg-white/20 text-white",
     ctaClass: "text-white",
     frameClass: "border-white/30 bg-white/10",
-    imgBase: "foot",
+    img: "/images/foot.jpeg",
   },
   {
     href: "/reservation?activite=libre",
@@ -28,7 +28,7 @@ const cards = [
     badgeClass: "bg-white/20 text-white",
     ctaClass: "text-white",
     frameClass: "border-white/30 bg-white/10",
-    imgBase: "foot2",
+    img: "/images/foot2.avif",
   },
   {
     href: "/reservation?activite=foot",
@@ -39,7 +39,7 @@ const cards = [
     badgeClass: "bg-field/10 text-field",
     ctaClass: "text-field",
     frameClass: "border-field/25 bg-field/5",
-    imgBase: "foot3",
+    img: "/images/foot3.jpeg",
   },
 ];
 
@@ -192,7 +192,7 @@ export default function ActivitesStack({ children }: { children?: React.ReactNod
                 </div>
                 {/* Cadre photo (même taille pour les 3 cartes) */}
                 <div className={`relative hidden md:block h-full w-64 lg:w-80 shrink-0 overflow-hidden rounded-2xl border-2 border-dashed ${card.frameClass}`}>
-                  <FrameImage base={card.imgBase} alt={card.title} className="absolute inset-0 h-full w-full object-cover" />
+                  <Photo src={card.img} alt={card.title} sizes="(max-width: 1024px) 40vw, 320px" className="object-cover" />
                 </div>
               </div>
             </div>

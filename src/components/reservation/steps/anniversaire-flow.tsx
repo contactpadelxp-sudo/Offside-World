@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { FadeIn } from "@/components/motion";
-import { FrameImage } from "@/components/frame-image";
+import { Photo } from "@/components/photo";
 import { validateBelgianPhone } from "@/lib/phone";
 import { formules, options, type Formule, type Option } from "@/data/formules";
 import { salles, timeSlots, isSlotBooked } from "@/data/salles";
@@ -38,20 +38,20 @@ const STEPS: { key: Step; label: string }[] = [
 
 const DATES = ["2026-06-14", "2026-06-15", "2026-06-21"];
 
-/* Image de chaque formule (fichiers dans public/images/) */
+/* Image de chaque formule (chemins exacts dans public/images/) */
 const FORMULE_IMAGES: Record<string, string> = {
-  classique: "anniv",
-  "bubble-foot": "anniv1",
-  premium: "anniv2",
+  classique: "/images/anniv.jpg",
+  "bubble-foot": "/images/anniv1.jpg",
+  premium: "/images/anniv2.webp",
 };
 
-/* Image de chaque option (fichiers dans public/images/) */
+/* Image de chaque option (chemins exacts dans public/images/) */
 const OPTION_IMAGES: Record<string, string> = {
-  deco: "déco",
-  gateau: "gateau",
-  boissons: "boissons",
-  photo: "photos",
-  pinata: "pinata",
+  deco: "/images/deco.jpeg",
+  gateau: "/images/gateau.jpeg",
+  boissons: "/images/boissons.webp",
+  photo: "/images/photos.jpeg",
+  pinata: "/images/pinata.webp",
 };
 
 function formatDate(d: string) {
@@ -151,7 +151,7 @@ export function AnniversaireFlow({ onBack }: { onBack: () => void }) {
                   <CardContent className="p-5">
                     <div className="relative aspect-video rounded-xl bg-gradient-to-br from-field/20 to-kick/20 flex items-center justify-center mb-4 overflow-hidden">
                       <CircleDot className="size-10 text-field/60" />
-                      <FrameImage base={FORMULE_IMAGES[f.id] ?? "anniv"} alt={`Formule ${f.name}`} className="absolute inset-0 h-full w-full object-cover" />
+                      <Photo src={FORMULE_IMAGES[f.id] ?? "/images/anniv.jpg"} alt={`Formule ${f.name}`} sizes="(max-width: 768px) 100vw, 360px" className="object-cover" />
                     </div>
                     <h3 className="text-lg font-bold">{f.name}</h3>
                     <p className="mt-1 text-sm text-muted-foreground line-clamp-2">{f.description}</p>
@@ -227,7 +227,7 @@ export function AnniversaireFlow({ onBack }: { onBack: () => void }) {
                     <CardContent className="flex items-center justify-between p-4">
                       <div className="flex items-center gap-3">
                         <div className="relative h-14 w-20 shrink-0 overflow-hidden rounded-xl bg-field/5">
-                          <FrameImage base={OPTION_IMAGES[opt.id] ?? opt.id} alt={opt.label} className="absolute inset-0 h-full w-full object-cover" />
+                          {OPTION_IMAGES[opt.id] && <Photo src={OPTION_IMAGES[opt.id]} alt={opt.label} sizes="80px" className="object-cover" />}
                         </div>
                         <div>
                           <p className="font-semibold">{opt.label}</p>
