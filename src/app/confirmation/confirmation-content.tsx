@@ -1,12 +1,14 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { buttonVariants } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { FadeIn, Confetti } from "@/components/motion";
-import { Home, Plus, Mail, QrCode, Lightbulb, ArrowRight, CheckCircle2 } from "lucide-react";
+import { loadReservation, type ReservationSummary } from "@/lib/reservation";
+import { Home, Plus, Mail, QrCode, Lightbulb, ArrowRight } from "lucide-react";
 import { motion } from "framer-motion";
 
 const typeLabels: Record<string, string> = {
@@ -49,10 +51,19 @@ function AnimatedCheck() {
 
 export function ConfirmationContent() {
   const params = useSearchParams();
-  const type = params.get("type") || "anniversaire";
-  const total = params.get("total") || "0";
-  const formule = params.get("formule");
-  const enfant = params.get("enfant");
+  const ref = params.get("ref") || "";
+  const [data, setData] = useState<ReservationSummary | null>(null);
+
+  // Le récap est lu côté client depuis sessionStorage (aucune donnée perso dans l'URL)
+  useEffect(() => {
+    setData(loadReservation(ref));
+  }, [ref]);
+
+  const type = data?.type || "anniversaire";
+  const total = String(data?.total ?? 0);
+  const formule = data?.formule ?? null;
+  const enfant = data?.enfant ?? null;
+  const reference = data?.ref || ref || "OW-XXXXXX";
   const isFoot = type === "foot";
 
   return (
@@ -94,7 +105,7 @@ export function ConfirmationContent() {
               )}
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Référence</span>
-                <span className="font-mono font-semibold">OW-{Date.now().toString(36).toUpperCase()}</span>
+                <span className="font-mono font-semibold">{reference}</span>
               </div>
               <div className="border-t pt-3 flex justify-between text-lg">
                 <span className="font-bold">Total payé</span>

@@ -10,7 +10,9 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { FadeIn } from "@/components/motion";
 import { Photo } from "@/components/photo";
-import { validateBelgianPhone } from "@/lib/phone";
+import { PhoneField } from "@/components/reservation/phone-field";
+import { isValidEmail } from "@/lib/validation";
+import { saveReservation } from "@/lib/reservation";
 import { formules, options, type Formule, type Option } from "@/data/formules";
 import { salles, timeSlots, isSlotBooked } from "@/data/salles";
 import {
@@ -75,8 +77,8 @@ export function AnniversaireFlow({ onBack }: { onBack: () => void }) {
   const [selectedSlot, setSelectedSlot] = useState("");
   const [parentName, setParentName] = useState("");
   const [parentEmail, setParentEmail] = useState("");
-  const [parentPhone, setParentPhone] = useState("");
-  const [phoneError, setPhoneError] = useState("");
+  const [emailTouched, setEmailTouched] = useState(false);
+  const [phoneValid, setPhoneValid] = useState(false);
   const [acceptCGV, setAcceptCGV] = useState(false);
   const [acceptNewsletter, setAcceptNewsletter] = useState(false);
 
@@ -86,23 +88,13 @@ export function AnniversaireFlow({ onBack }: { onBack: () => void }) {
     );
   };
 
-  const handlePhoneChange = (value: string) => {
-    setParentPhone(value);
-    if (value) {
-      const result = validateBelgianPhone(value);
-      setPhoneError(result.valid ? "" : (result.error ?? ""));
-    } else {
-      setPhoneError("");
-    }
-  };
-
   const totalPrice = selectedFormule
     ? selectedFormule.pricePerChild * childCount +
       options.filter((o) => selectedOptions.includes(o.id)).reduce((sum, o) => sum + o.price, 0)
     : 0;
 
   const stepIndex = STEPS.findIndex((s) => s.key === step);
-  const isPhoneValid = parentPhone && validateBelgianPhone(parentPhone).valid;
+  const emailValid = isValidEmail(parentEmail);
 
   return (
     <div>
@@ -353,16 +345,16 @@ export function AnniversaireFlow({ onBack }: { onBack: () => void }) {
               <a href="/confidentialite" className="underline">Politique de confidentialité</a>
             </p>
             <div><Label htmlFor="parentName">Nom complet</Label><Input id="parentName" value={parentName} onChange={(e) => setParentName(e.target.value)} placeholder="Jean Dupont" /></div>
-            <div><Label htmlFor="parentEmail">Email</Label><Input id="parentEmail" type="email" value={parentEmail} onChange={(e) => setParentEmail(e.target.value)} placeholder="jean@email.com" /></div>
             <div>
-              <Label htmlFor="parentPhone">Téléphone</Label>
-              <Input id="parentPhone" type="tel" value={parentPhone} onChange={(e) => handlePhoneChange(e.target.value)} placeholder="0470 12 34 56" className={phoneError ? "border-destructive" : ""} />
-              {phoneError && (
+              <Label htmlFor="parentEmail">Email</Label>
+              <Input id="parentEmail" type="email" value={parentEmail} onChange={(e) => setParentEmail(e.target.value)} onBlur={() => setEmailTouched(true)} placeholder="jean@email.com" className={emailTouched && parentEmail && !emailValid ? "border-destructive" : ""} />
+              {emailTouched && parentEmail && !emailValid && (
                 <p className="mt-1 text-sm text-destructive flex items-center gap-1">
-                  <AlertCircle className="size-3.5" /> {phoneError}
+                  <AlertCircle className="size-3.5" /> Adresse email invalide.
                 </p>
               )}
             </div>
+            <PhoneField onChange={(_, valid) => setPhoneValid(valid)} />
           </div>
 
           {/* Paiement */}
@@ -377,7 +369,7 @@ export function AnniversaireFlow({ onBack }: { onBack: () => void }) {
                 <div className="flex items-start gap-3">
                   <Checkbox id="acceptCGV" checked={acceptCGV} onCheckedChange={(v) => setAcceptCGV(v === true)} />
                   <Label htmlFor="acceptCGV" className="text-sm leading-relaxed">
-                    J&apos;accepte les <a href="/cgv" target="_blank" className="underline text-field">Conditions Générales de Vente</a> et la <a href="/confidentialite" target="_blank" className="underline text-field">Politique de confidentialité</a>. <span className="text-destructive">*</span>
+                    J&apos;accepte les <a href="/cgv" target="_blank" rel="noopener noreferrer" className="underline text-field">Conditions Générales de Vente</a> et la <a href="/confidentialite" target="_blank" rel="noopener noreferrer" className="underline text-field">Politique de confidentialité</a>. <span className="text-destructive">*</span>
                   </Label>
                 </div>
                 <div className="flex items-start gap-3">
@@ -389,8 +381,11 @@ export function AnniversaireFlow({ onBack }: { onBack: () => void }) {
               </div>
 
               <button
-                onClick={() => router.push(`/confirmation?type=anniversaire&formule=${selectedFormule.name}&enfant=${childName}&total=${totalPrice}`)}
-                disabled={!acceptCGV || !parentName || !parentEmail || !isPhoneValid}
+                onClick={() => {
+                  const ref = saveReservation({ type: "anniversaire", total: totalPrice, formule: selectedFormule.name, enfant: childName });
+                  router.push(`/confirmation?ref=${ref}`);
+                }}
+                disabled={!acceptCGV || !parentName || !emailValid || !phoneValid}
                 className="btn-glass-paypal w-full h-14 text-white text-lg rounded-2xl font-semibold disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center justify-center gap-2"
               >
                 <Lock className="size-5" /> Payer avec PayPal (démo)

@@ -9,9 +9,12 @@ interface CookieConsent {
   necessary: boolean;
   analytics: boolean;
   marketing: boolean;
+  date?: number;
 }
 
 const COOKIE_KEY = "offside_cookie_consent";
+// Le consentement doit être renouvelé périodiquement (recommandation ~6 à 13 mois)
+const CONSENT_MAX_AGE_MS = 1000 * 60 * 60 * 24 * 180; // 6 mois
 
 function getStoredConsent(): CookieConsent | null {
   if (typeof window === "undefined") return null;
@@ -23,8 +26,13 @@ function getStoredConsent(): CookieConsent | null {
   }
 }
 
+function isConsentValid(consent: CookieConsent | null): boolean {
+  if (!consent || typeof consent.date !== "number") return false;
+  return Date.now() - consent.date < CONSENT_MAX_AGE_MS;
+}
+
 function storeConsent(consent: CookieConsent) {
-  localStorage.setItem(COOKIE_KEY, JSON.stringify(consent));
+  localStorage.setItem(COOKIE_KEY, JSON.stringify({ ...consent, date: Date.now() }));
 }
 
 export function CookieBanner() {
@@ -34,10 +42,10 @@ export function CookieBanner() {
   const [marketing, setMarketing] = useState(false);
 
   useEffect(() => {
-    const stored = getStoredConsent();
-    if (!stored) {
-      setVisible(true);
-    }
+    // Ré-affiche si aucun consentement OU s'il a expiré
+    if (isConsentValid(getStoredConsent())) return;
+    const t = setTimeout(() => setVisible(true), 0);
+    return () => clearTimeout(t);
   }, []);
 
   const save = useCallback(
@@ -119,22 +127,23 @@ export function CookieBanner() {
               )}
             </AnimatePresence>
 
-            <div className="mt-4 flex flex-wrap gap-2">
-              <Button onClick={acceptAll} className="btn-glass-field text-white border-0 gap-1.5">
+            <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:flex-wrap">
+              {/* Refuser et Accepter ont volontairement le même poids visuel (conformité RGPD/CNIL) */}
+              <Button onClick={acceptAll} className="flex-1 btn-glass-field text-white border-0 gap-1.5">
                 <Check className="size-4" />
                 Tout accepter
               </Button>
-              <Button onClick={refuseAll} variant="outline" className="gap-1.5">
+              <Button onClick={refuseAll} className="flex-1 bg-foreground text-background hover:bg-foreground/90 gap-1.5">
                 <X className="size-4" />
                 Tout refuser
               </Button>
               {!showDetails ? (
-                <Button variant="ghost" onClick={() => setShowDetails(true)} className="gap-1.5">
+                <Button variant="outline" onClick={() => setShowDetails(true)} className="gap-1.5 sm:basis-full sm:flex-none">
                   <Settings className="size-4" />
                   Personnaliser
                 </Button>
               ) : (
-                <Button variant="ghost" onClick={saveChoices} className="gap-1.5">
+                <Button variant="outline" onClick={saveChoices} className="gap-1.5 sm:basis-full sm:flex-none">
                   <Check className="size-4" />
                   Enregistrer mes choix
                 </Button>

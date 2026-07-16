@@ -9,7 +9,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { FadeIn } from "@/components/motion";
-import { validateBelgianPhone } from "@/lib/phone";
+import { PhoneField } from "@/components/reservation/phone-field";
+import { isValidEmail } from "@/lib/validation";
+import { saveReservation } from "@/lib/reservation";
 import { teamBuildingPackages, teamBuildingSlots, type TeamBuildingPackage, type TeamBuildingSlot } from "@/data/team-building";
 import { ArrowLeft, ArrowRight, Lock, ShieldCheck, AlertCircle, Building2, Users, Check, Calendar } from "lucide-react";
 
@@ -28,20 +30,14 @@ export function TeamBuildingFlow({ onBack }: { onBack: () => void }) {
   const [companyName, setCompanyName] = useState("");
   const [contactName, setContactName] = useState("");
   const [email, setEmail] = useState("");
-  const [phone, setPhone] = useState("");
-  const [phoneError, setPhoneError] = useState("");
+  const [emailTouched, setEmailTouched] = useState(false);
+  const [phoneValid, setPhoneValid] = useState(false);
   const [message, setMessage] = useState("");
   const [acceptCGV, setAcceptCGV] = useState(false);
   const [acceptNewsletter, setAcceptNewsletter] = useState(false);
 
   const total = selectedPkg ? selectedPkg.pricePerPerson * nbPeople : 0;
-  const isPhoneValid = phone && validateBelgianPhone(phone).valid;
-
-  const handlePhoneChange = (value: string) => {
-    setPhone(value);
-    if (value) { const r = validateBelgianPhone(value); setPhoneError(r.valid ? "" : (r.error ?? "")); }
-    else setPhoneError("");
-  };
+  const emailValid = isValidEmail(email);
 
   return (
     <div>
@@ -142,12 +138,12 @@ export function TeamBuildingFlow({ onBack }: { onBack: () => void }) {
             <p className="text-xs text-muted-foreground"><a href="/confidentialite" className="underline">Politique de confidentialité</a></p>
             <div><Label>Entreprise</Label><Input value={companyName} onChange={(e) => setCompanyName(e.target.value)} placeholder="TechCorp SA" /></div>
             <div><Label>Nom du contact</Label><Input value={contactName} onChange={(e) => setContactName(e.target.value)} /></div>
-            <div><Label>Email</Label><Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} /></div>
             <div>
-              <Label>Téléphone</Label>
-              <Input type="tel" value={phone} onChange={(e) => handlePhoneChange(e.target.value)} placeholder="0470 12 34 56" className={phoneError ? "border-destructive" : ""} />
-              {phoneError && <p className="mt-1 text-sm text-destructive flex items-center gap-1"><AlertCircle className="size-3.5" /> {phoneError}</p>}
+              <Label>Email</Label>
+              <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} onBlur={() => setEmailTouched(true)} placeholder="contact@entreprise.be" className={emailTouched && email && !emailValid ? "border-destructive" : ""} />
+              {emailTouched && email && !emailValid && <p className="mt-1 text-sm text-destructive flex items-center gap-1"><AlertCircle className="size-3.5" /> Adresse email invalide.</p>}
             </div>
+            <PhoneField onChange={(_, valid) => setPhoneValid(valid)} />
             <div>
               <Label>Message / demande spéciale (facultatif)</Label>
               <textarea className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" value={message} onChange={(e) => setMessage(e.target.value)} />
@@ -155,7 +151,7 @@ export function TeamBuildingFlow({ onBack }: { onBack: () => void }) {
           </div>
           <div className="mt-8 flex justify-between">
             <Button variant="ghost" onClick={() => setStep("creneau")} className="gap-1.5"><ArrowLeft className="size-4" /> Retour</Button>
-            <Button onClick={() => setStep("paiement")} disabled={!companyName || !contactName || !email || !isPhoneValid} className="btn-glass-field text-white border-0 gap-1.5">
+            <Button onClick={() => setStep("paiement")} disabled={!companyName || !contactName || !emailValid || !phoneValid} className="btn-glass-field text-white border-0 gap-1.5">
               Continuer <ArrowRight className="size-4" />
             </Button>
           </div>
@@ -171,14 +167,14 @@ export function TeamBuildingFlow({ onBack }: { onBack: () => void }) {
               <div className="space-y-4 mb-6">
                 <div className="flex items-start gap-3">
                   <Checkbox id="cgv" checked={acceptCGV} onCheckedChange={(v) => setAcceptCGV(v === true)} />
-                  <Label htmlFor="cgv" className="text-sm">J&apos;accepte les <a href="/cgv" target="_blank" className="underline text-field">CGV</a> et la <a href="/confidentialite" target="_blank" className="underline text-field">Politique de confidentialité</a>. <span className="text-destructive">*</span></Label>
+                  <Label htmlFor="cgv" className="text-sm">J&apos;accepte les <a href="/cgv" target="_blank" rel="noopener noreferrer" className="underline text-field">CGV</a> et la <a href="/confidentialite" target="_blank" rel="noopener noreferrer" className="underline text-field">Politique de confidentialité</a>. <span className="text-destructive">*</span></Label>
                 </div>
                 <div className="flex items-start gap-3">
                   <Checkbox id="nl" checked={acceptNewsletter} onCheckedChange={(v) => setAcceptNewsletter(v === true)} />
                   <Label htmlFor="nl" className="text-sm text-muted-foreground">Recevoir les offres par email (facultatif).</Label>
                 </div>
               </div>
-              <button onClick={() => router.push(`/confirmation?type=team-building&total=${total}`)} disabled={!acceptCGV}
+              <button onClick={() => { const ref = saveReservation({ type: "team-building", total, formule: selectedPkg?.name }); router.push(`/confirmation?ref=${ref}`); }} disabled={!acceptCGV}
                 className="btn-glass-paypal w-full h-14 text-white text-lg rounded-2xl font-semibold disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center justify-center gap-2">
                 <Lock className="size-5" /> Payer avec PayPal (démo)
               </button>

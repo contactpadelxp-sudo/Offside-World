@@ -25,7 +25,6 @@ Le site est accessible sur [http://localhost:3000](http://localhost:3000).
 | `/` | Landing page (conversion) |
 | `/reservation` | Tunnel de réservation (4 parcours) |
 | `/confirmation` | Écran de confirmation |
-| `/admin` | Mini back-office (résumé du jour) |
 | `/mentions-legales` | Mentions légales |
 | `/confidentialite` | Politique de confidentialité (RGPD) |
 | `/politique-cookies` | Politique cookies |

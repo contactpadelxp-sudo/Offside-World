@@ -7,6 +7,7 @@ import { Cake, CircleDot, Trophy, Building2, ClipboardList, AlertTriangle, Phone
 export const metadata: Metadata = {
   title: "Back-office — Résumé du jour | Offside World",
   description: "Vue d'ensemble des réservations du lendemain.",
+  robots: { index: false, follow: false, nocache: true },
 };
 
 const typeBadge: Record<string, { label: string; className: string; icon: typeof Cake }> = {
