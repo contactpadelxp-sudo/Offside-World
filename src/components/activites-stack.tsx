@@ -64,9 +64,9 @@ export default function ActivitesStack({ children }: { children?: React.ReactNod
       ctaClass: "text-[#0a0a0b]",
       frameClass: "border-black/25 bg-black/10",
       img: photoBubble,
-      // Photo portrait dans un cadre paysage : on recadre sur le haut, là où
-      // sont les bulles, plutôt que de centrer.
-      imgPosition: "object-top",
+      // Photo portrait dans un cadre paysage : on cadre sur la bande où se
+      // trouvent les bulles, à environ 54 % de la hauteur de l'image.
+      imgPosition: "object-[center_54%]",
     },
   ];
 

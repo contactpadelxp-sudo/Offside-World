@@ -63,6 +63,8 @@ export function ActivityChoice({ onSelect }: { onSelect: (a: Activity) => void }
       title: "Bubble Foot & Team Building",
       description: "Bubble Foot à 23 €/personne, ou privatisation à la demi-journée.",
       img: photoBubble,
+      // Les bulles sont à ~54 % de la hauteur de la photo.
+      imgPosition: "object-[center_54%]",
       tag: "Dès 23 €/pers.",
       accentText: "text-kick",
       accentBadge: "bg-kick/15 text-kick",
@@ -82,7 +84,7 @@ export function ActivityChoice({ onSelect }: { onSelect: (a: Activity) => void }
           <StaggerItem key={act.id} className="h-full">
             <Tilt3D intensity={8} className="h-full">
               <button onClick={() => onSelect(act.id)} className="w-full text-left h-full group">
-                <Card className={`h-full overflow-hidden border-2 transition-all duration-500 cursor-pointer ${act.border} bg-card flex flex-col`}>
+                <Card className={`h-full overflow-hidden border-2 py-0 gap-0 transition-all duration-500 cursor-pointer ${act.border} bg-card flex flex-col`}>
                   {/* Emplacement photo — fondu dans le corps de la carte */}
                   <div className="relative aspect-[4/5] overflow-hidden">
                     {act.img ? (
