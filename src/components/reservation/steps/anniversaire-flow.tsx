@@ -12,6 +12,7 @@ import { Photo } from "@/components/photo";
 import { PhoneField } from "@/components/reservation/phone-field";
 import { isValidEmail } from "@/lib/validation";
 import { saveReservation } from "@/lib/reservation";
+import { useScrollTop } from "@/lib/use-scroll-top";
 import { formules, options, formulePrice, GATEAU_NOTE, type Formule, type Option } from "@/data/formules";
 import { espaces, timeSlots, isSlotBooked } from "@/data/salles";
 import { RESUME_ANNULATION, DELAI_RESERVATION_HEURES } from "@/data/reglement";
@@ -90,6 +91,9 @@ export function AnniversaireFlow({ onBack }: { onBack: () => void }) {
 
   const stepIndex = STEPS.findIndex((s) => s.key === step);
   const emailValid = isValidEmail(parentEmail);
+
+  // Chaque changement d'étape repart du haut de la page.
+  useScrollTop(step);
 
   return (
     <div>

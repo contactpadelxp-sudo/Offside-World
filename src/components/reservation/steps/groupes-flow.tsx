@@ -12,6 +12,7 @@ import { FadeIn } from "@/components/motion";
 import { PhoneField } from "@/components/reservation/phone-field";
 import { isValidEmail } from "@/lib/validation";
 import { saveReservation } from "@/lib/reservation";
+import { useScrollTop } from "@/lib/use-scroll-top";
 import {
   BUBBLE_PRIX_PAR_PERSONNE,
   BUBBLE_MIN_PERSONNES,
@@ -57,6 +58,9 @@ export function GroupesFlow({ onBack }: { onBack: () => void }) {
   const emailValid = isValidEmail(email);
   const isBubble = offre === "bubble";
   const total = isBubble ? bubbleTotal(nbPersonnes) : 0;
+
+  // Chaque changement d'étape repart du haut de la page.
+  useScrollTop(step);
 
   return (
     <div>

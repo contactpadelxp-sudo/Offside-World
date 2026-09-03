@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
+import { useScrollTop } from "@/lib/use-scroll-top";
 import { ActivityChoice } from "./steps/activity-choice";
 import { AnniversaireFlow } from "./steps/anniversaire-flow";
 import { FootFlow } from "./steps/foot-flow";
@@ -20,6 +21,9 @@ const stepLabels: Record<string, string> = {
 export function ReservationFlow() {
   const searchParams = useSearchParams();
   const [activity, setActivity] = useState<Activity>(null);
+
+  // Changer d'activité doit ramener en haut de page.
+  useScrollTop(activity);
 
   useEffect(() => {
     const a = searchParams.get("activite");
