@@ -3,7 +3,7 @@
 import { Card } from "@/components/ui/card";
 import { StaggerContainer, StaggerItem, Tilt3D } from "@/components/motion";
 import { Photo } from "@/components/photo";
-import { Cake, Trophy, Users, ArrowRight, Star } from "lucide-react";
+import { Cake, Trophy, Users, ArrowRight, ImageIcon } from "lucide-react";
 import type { Activity } from "../reservation-flow";
 
 type ActivityCard = {
@@ -11,9 +11,9 @@ type ActivityCard = {
   icon: typeof Cake;
   title: string;
   description: string;
-  img: string;
+  /** Emplacement photo : mettre le chemin de l'image quand elle sera fournie, sinon null → placeholder. */
+  img: string | null;
   tag: string;
-  featured?: boolean;
   accentText: string;
   accentBadge: string;
   iconBg: string;
@@ -25,11 +25,9 @@ const activities: ActivityCard[] = [
     id: "anniversaire" as Activity,
     icon: Cake,
     title: "Anniversaire",
-    description:
-      "Deux formules 100 % foot — Kick-Off et Bubble — pour un anniversaire inoubliable, jusqu'à 10 enfants.",
-    img: "/images/anniv.jpg",
+    description: "Deux formules 100 % foot — Kick-Off et Bubble — jusqu'à 10 enfants.",
+    img: null,
     tag: "Dès 180 €",
-    featured: true,
     accentText: "text-kick",
     accentBadge: "bg-kick/15 text-kick",
     iconBg: "bg-kick/15 text-kick",
@@ -40,7 +38,7 @@ const activities: ActivityCard[] = [
     icon: Trophy,
     title: "Location de terrain",
     description: "Réservez un terrain privé entre amis, via SportFinder.",
-    img: "/images/foot3.jpeg",
+    img: null,
     tag: "Via SportFinder",
     accentText: "text-field",
     accentBadge: "bg-field/15 text-field",
@@ -52,7 +50,7 @@ const activities: ActivityCard[] = [
     icon: Users,
     title: "Bubble Foot & Team Building",
     description: "Bubble Foot à 23 €/personne, ou privatisation à la demi-journée.",
-    img: "/images/foot2.avif",
+    img: null,
     tag: "Dès 23 €/pers.",
     accentText: "text-kick",
     accentBadge: "bg-kick/15 text-kick",
@@ -61,104 +59,59 @@ const activities: ActivityCard[] = [
   },
 ];
 
-function Tag({ children, className }: { children: React.ReactNode; className: string }) {
-  return (
-    <span className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold backdrop-blur-md ${className}`}>
-      {children}
-    </span>
-  );
-}
-
 export function ActivityChoice({ onSelect }: { onSelect: (a: Activity) => void }) {
-  const featured = activities.find((a) => a.featured)!;
-  const others = activities.filter((a) => !a.featured);
-
   return (
     <div>
       <h1 className="font-[family-name:var(--font-heading)] text-3xl md:text-4xl font-bold">Réserver</h1>
       <p className="mt-2 text-muted-foreground">Choisissez votre activité pour commencer.</p>
 
-      <StaggerContainer className="mt-8 space-y-4" staggerDelay={0.1}>
-        {/* ── Carte mise en avant : Anniversaire ── */}
-        <StaggerItem>
-          <Tilt3D intensity={5}>
-            <button onClick={() => onSelect(featured.id)} className="w-full text-left group">
-              <Card className={`overflow-hidden border-2 transition-all duration-500 cursor-pointer ${featured.border} bg-card`}>
-                <div className="grid md:grid-cols-2">
-                  {/* Cadre photo */}
-                  <div className="relative min-h-[220px] md:min-h-[300px] overflow-hidden">
-                    <Photo
-                      src={featured.img}
-                      alt="Anniversaire foot indoor à Offside Foot Indoor"
-                      sizes="(max-width: 768px) 100vw, 520px"
-                      className="object-cover transition-transform duration-700 group-hover:scale-105"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent md:bg-gradient-to-r md:from-transparent md:to-card/90" />
-                    <div className="absolute left-4 top-4 flex items-center gap-2">
-                      <Tag className="bg-kick text-[#0a0a0b]">
-                        <Star className="size-3 mr-1 fill-current" /> Le plus populaire
-                      </Tag>
-                    </div>
-                  </div>
-
-                  {/* Contenu */}
-                  <div className="p-6 md:p-8 flex flex-col justify-center">
-                    <div className="flex items-center gap-3">
-                      <div className={`inline-flex items-center justify-center rounded-xl p-3 ${featured.iconBg} group-hover:scale-110 transition-transform duration-500`}>
-                        <featured.icon className="size-6" />
-                      </div>
-                      <Tag className={featured.accentBadge}>{featured.tag}</Tag>
-                    </div>
-                    <h3 className="mt-4 text-2xl font-bold font-[family-name:var(--font-heading)]">{featured.title}</h3>
-                    <p className="mt-2 text-muted-foreground leading-relaxed">{featured.description}</p>
-                    <span className={`mt-5 inline-flex items-center gap-1.5 font-semibold ${featured.accentText} group-hover:gap-3 transition-all duration-300`}>
-                      Choisir cette activité <ArrowRight className="size-4" />
-                    </span>
-                  </div>
-                </div>
-              </Card>
-            </button>
-          </Tilt3D>
-        </StaggerItem>
-
-        {/* ── Deux cartes secondaires ── */}
-        <div className="grid gap-4 sm:grid-cols-2">
-          {others.map((act) => (
-            <StaggerItem key={act.id}>
-              <Tilt3D intensity={8}>
-                <button onClick={() => onSelect(act.id)} className="w-full text-left h-full group">
-                  <Card className={`h-full overflow-hidden border-2 transition-all duration-500 cursor-pointer ${act.border} bg-card flex flex-col`}>
-                    {/* Cadre photo */}
-                    <div className="relative aspect-[16/10] overflow-hidden">
+      <StaggerContainer className="mt-8 grid gap-5 sm:grid-cols-3" staggerDelay={0.1}>
+        {activities.map((act) => (
+          <StaggerItem key={act.id} className="h-full">
+            <Tilt3D intensity={8} className="h-full">
+              <button onClick={() => onSelect(act.id)} className="w-full text-left h-full group">
+                <Card className={`h-full overflow-hidden border-2 transition-all duration-500 cursor-pointer ${act.border} bg-card flex flex-col`}>
+                  {/* Emplacement photo */}
+                  <div className="relative aspect-[4/3] overflow-hidden">
+                    {act.img ? (
                       <Photo
                         src={act.img}
                         alt={act.title}
                         sizes="(max-width: 640px) 100vw, 360px"
                         className="object-cover transition-transform duration-700 group-hover:scale-105"
                       />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent" />
-                      <div className="absolute left-3 top-3">
-                        <Tag className={`${act.accentBadge} !bg-black/40`}>{act.tag}</Tag>
+                    ) : (
+                      /* Placeholder tant que la photo n'est pas fournie */
+                      <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-gradient-to-br from-field/10 via-card to-kick/10">
+                        <act.icon className="size-10 text-muted-foreground/40" />
+                        <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground/50">
+                          <ImageIcon className="size-3.5" /> Photo à venir
+                        </span>
                       </div>
-                      <div className={`absolute right-3 bottom-3 inline-flex items-center justify-center rounded-xl p-2.5 ${act.iconBg} backdrop-blur-md group-hover:scale-110 transition-transform duration-500`}>
+                    )}
+                    <div className={`absolute left-3 top-3 inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold backdrop-blur-md ${act.accentBadge}`}>
+                      {act.tag}
+                    </div>
+                  </div>
+
+                  {/* Contenu */}
+                  <div className="p-5 flex flex-col flex-1">
+                    <div className="flex items-center gap-2.5">
+                      <div className={`inline-flex items-center justify-center rounded-xl p-2.5 ${act.iconBg} group-hover:scale-110 transition-transform duration-500`}>
                         <act.icon className="size-5" />
                       </div>
+                      <h3 className="text-lg font-bold font-[family-name:var(--font-heading)] leading-tight">{act.title}</h3>
                     </div>
-
-                    {/* Contenu */}
-                    <div className="p-5 flex flex-col flex-1">
-                      <h3 className="text-lg font-bold font-[family-name:var(--font-heading)]">{act.title}</h3>
-                      <p className="mt-1 text-sm text-muted-foreground flex-1">{act.description}</p>
-                      <span className={`mt-4 inline-flex items-center gap-1.5 text-sm font-semibold ${act.accentText} group-hover:gap-2.5 transition-all duration-300`}>
-                        Choisir <ArrowRight className="size-4" />
-                      </span>
-                    </div>
-                  </Card>
-                </button>
-              </Tilt3D>
-            </StaggerItem>
-          ))}
-        </div>
+                    <p className="mt-3 text-sm text-muted-foreground flex-1">{act.description}</p>
+                    <span className={`mt-4 inline-flex items-center gap-1.5 text-sm font-semibold ${act.accentText} group-hover:gap-2.5 transition-all duration-300`}>
+                      Choisir <ArrowRight className="size-4" />
+                    </span>
+                  </div>
+                </Card>
+              </button>
+            </Tilt3D>
+          </StaggerItem>
+        ))}
       </StaggerContainer>
     </div>
   );
