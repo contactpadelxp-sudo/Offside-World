@@ -89,7 +89,9 @@ export function GroupesFlow({ onBack }: { onBack: () => void }) {
       title: "Team Building",
       description: "Privatisation du complexe pour votre équipe, à la demi-journée.",
       img: photoEntree,
-      imgPosition: "object-center",
+      // Cadre paysage sur une photo portrait : on remonte pour garder
+      // l'enseigne entière au-dessus des ballons.
+      imgPosition: "object-[center_20%]",
       tag: "Sur devis",
       detail: "Demi-journée • organisation sur mesure",
       accentText: "text-kick",
@@ -109,7 +111,7 @@ export function GroupesFlow({ onBack }: { onBack: () => void }) {
 
       {/* ÉTAPE 1 — choix de l'offre */}
       {step === "offre" && (
-        <FadeIn className="mt-8">
+        <FadeIn className="mt-6">
           <StaggerContainer className="grid gap-6 sm:grid-cols-2" staggerDelay={0.1}>
             {offres.map((o) => (
               <StaggerItem key={o.id} className="h-full">
@@ -120,7 +122,9 @@ export function GroupesFlow({ onBack }: { onBack: () => void }) {
                   >
                     <Card className={`h-full overflow-hidden border-2 py-0 gap-0 transition-all duration-500 cursor-pointer ${o.border} bg-card flex flex-col`}>
                       {/* Emplacement photo — fondu dans le corps de la carte */}
-                      <div className="relative aspect-[4/5] overflow-hidden">
+                      {/* Cadre portrait sur mobile, plus ramassé dès deux colonnes
+                          pour que les deux cartes tiennent dans l'écran sans défiler. */}
+                      <div className="relative aspect-[4/5] sm:aspect-[4/3] overflow-hidden">
                         {o.img ? (
                           <Photo
                             src={o.img}

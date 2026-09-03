@@ -60,7 +60,7 @@ export function ReservationFlow() {
   }, [selectActivity]);
 
   return (
-    <div className="mx-auto max-w-4xl px-4 pt-28 pb-8 md:pt-32 md:pb-12">
+    <div className="mx-auto max-w-4xl px-4 pt-24 pb-8 md:pt-28 md:pb-12">
       {!activity && <ActivityChoice onSelect={selectActivity} />}
       {activity === "anniversaire" && <AnniversaireFlow onBack={backToChoice} />}
       {activity === "foot" && <FootFlow onBack={backToChoice} />}
