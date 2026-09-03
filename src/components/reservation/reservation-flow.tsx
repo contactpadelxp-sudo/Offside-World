@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
 import { useScrollTop } from "@/lib/use-scroll-top";
+import { RESERVER_RESET_EVENT } from "@/lib/events";
 import { ActivityChoice } from "./steps/activity-choice";
 import { AnniversaireFlow } from "./steps/anniversaire-flow";
 import { FootFlow } from "./steps/foot-flow";
@@ -22,21 +23,53 @@ export function ReservationFlow() {
   const searchParams = useSearchParams();
   const [activity, setActivity] = useState<Activity>(null);
 
-  // Changer d'activité doit ramener en haut de page.
+  // Changer d'activité ramène en haut de page.
   useScrollTop(activity);
 
+  /**
+   * Synchronisation depuis l'URL : gère les liens directs
+   * (/reservation?activite=…) ainsi que les boutons « précédent » et
+   * « suivant » du navigateur.
+   */
   useEffect(() => {
     const a = searchParams.get("activite");
-    if (a && (ACTIVITIES as readonly string[]).includes(a)) {
-      setActivity(a as Activity);
-    }
+    setActivity(a && (ACTIVITIES as readonly string[]).includes(a) ? (a as Activity) : null);
   }, [searchParams]);
+
+  /**
+   * `router.push` ne met pas l'URL à jour quand on RETIRE le paramètre d'une
+   * route prérendue statiquement (l'ajouter fonctionne, pas l'inverse). La doc
+   * Next recommande l'API History native pour un changement de paramètres sur
+   * une même route : elle se synchronise avec `useSearchParams`, et le bouton
+   * « retour » du navigateur continue de fonctionner.
+   */
+  const selectActivity = useCallback((a: Activity) => {
+    setActivity(a);
+    window.history.pushState(null, "", a ? `/reservation?activite=${a}` : "/reservation");
+  }, []);
+
+  const backToChoice = useCallback(() => selectActivity(null), [selectActivity]);
+
+  /**
+   * Clic sur « Réserver » alors qu'on est déjà sur /reservation : la barre de
+   * navigation annule son lien et émet cet événement. On revient au choix des
+   * trois activités en remplaçant l'entrée d'historique courante, pour ne pas
+   * empiler une entrée en double.
+   */
+  useEffect(() => {
+    const reset = () => {
+      setActivity(null);
+      window.history.replaceState(null, "", "/reservation");
+    };
+    window.addEventListener(RESERVER_RESET_EVENT, reset);
+    return () => window.removeEventListener(RESERVER_RESET_EVENT, reset);
+  }, [selectActivity]);
 
   return (
     <div className="mx-auto max-w-4xl px-4 pt-24 pb-8 md:pt-28 md:pb-12">
-      {/* Breadcrumb */}
+      {/* Fil d'Ariane */}
       <nav className="mb-8 flex items-center gap-2 text-sm text-muted-foreground">
-        <button onClick={() => setActivity(null)} className="hover:text-foreground">
+        <button onClick={backToChoice} className="hover:text-foreground">
           Réservation
         </button>
         {activity && (
@@ -47,10 +80,10 @@ export function ReservationFlow() {
         )}
       </nav>
 
-      {!activity && <ActivityChoice onSelect={setActivity} />}
-      {activity === "anniversaire" && <AnniversaireFlow onBack={() => setActivity(null)} />}
-      {activity === "foot" && <FootFlow onBack={() => setActivity(null)} />}
-      {activity === "groupes" && <GroupesFlow onBack={() => setActivity(null)} />}
+      {!activity && <ActivityChoice onSelect={selectActivity} />}
+      {activity === "anniversaire" && <AnniversaireFlow onBack={backToChoice} />}
+      {activity === "foot" && <FootFlow onBack={backToChoice} />}
+      {activity === "groupes" && <GroupesFlow onBack={backToChoice} />}
     </div>
   );
 }

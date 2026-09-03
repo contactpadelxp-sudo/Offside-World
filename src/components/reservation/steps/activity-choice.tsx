@@ -3,12 +3,12 @@
 import { Card } from "@/components/ui/card";
 import { StaggerContainer, StaggerItem, Tilt3D } from "@/components/motion";
 import { Photo } from "@/components/photo";
-import { Cake, Trophy, Users, ArrowRight, ImageIcon } from "lucide-react";
+import { FlecheDroite, Gateau, Groupe, IconType, Trophee, Visuel } from "@/components/icons";
 import type { Activity } from "../reservation-flow";
 
 type ActivityCard = {
   id: Activity;
-  icon: typeof Cake;
+  icon: IconType;
   title: string;
   description: string;
   /** Emplacement photo : mettre le chemin de l'image quand elle sera fournie, sinon null → placeholder. */
@@ -25,7 +25,7 @@ type ActivityCard = {
 const activities: ActivityCard[] = [
   {
     id: "anniversaire" as Activity,
-    icon: Cake,
+    icon: Gateau,
     title: "Anniversaire",
     description: "Deux formules 100 % foot — Kick-Off et Bubble — jusqu'à 10 enfants.",
     img: null,
@@ -38,7 +38,7 @@ const activities: ActivityCard[] = [
   },
   {
     id: "foot" as Activity,
-    icon: Trophy,
+    icon: Trophee,
     title: "Location de terrain",
     description: "Réservez un terrain privé entre amis, via SportFinder.",
     img: null,
@@ -51,7 +51,7 @@ const activities: ActivityCard[] = [
   },
   {
     id: "groupes" as Activity,
-    icon: Users,
+    icon: Groupe,
     title: "Bubble Foot & Team Building",
     description: "Bubble Foot à 23 €/personne, ou privatisation à la demi-journée.",
     img: null,
@@ -93,7 +93,7 @@ export function ActivityChoice({ onSelect }: { onSelect: (a: Activity) => void }
                         <div aria-hidden className={`absolute left-1/2 top-[46%] -translate-x-1/2 -translate-y-1/2 size-44 rounded-full blur-3xl ${act.glow}`} />
                         <act.icon className="relative size-12 text-foreground/25" />
                         <span className="relative inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground/60">
-                          <ImageIcon className="size-3.5" /> Photo à venir
+                          <Visuel className="size-3.5" /> Photo à venir
                         </span>
                       </div>
                     )}
@@ -114,7 +114,7 @@ export function ActivityChoice({ onSelect }: { onSelect: (a: Activity) => void }
                     </div>
                     <p className="mt-3 text-[15px] leading-relaxed text-muted-foreground flex-1">{act.description}</p>
                     <span className={`mt-5 inline-flex items-center gap-1.5 text-sm font-semibold ${act.accentText} group-hover:gap-2.5 transition-all duration-300`}>
-                      Choisir <ArrowRight className="size-4" />
+                      Choisir <FlecheDroite className="size-4" />
                     </span>
                   </div>
                 </Card>

@@ -16,20 +16,7 @@ import { useScrollTop } from "@/lib/use-scroll-top";
 import { formules, options, formulePrice, GATEAU_NOTE, type Formule, type Option } from "@/data/formules";
 import { espaces, timeSlots, isSlotBooked } from "@/data/salles";
 import { RESUME_ANNULATION, DELAI_RESERVATION_HEURES } from "@/data/reglement";
-import {
-  ArrowLeft,
-  ArrowRight,
-  Check,
-  CircleDot,
-  Lock,
-  Calendar,
-  Users,
-  Sparkles,
-  Cake,
-  Info,
-  AlertCircle,
-  ShieldCheck,
-} from "lucide-react";
+import { AlerteCercle, Ballon, Bouclier, Cadenas, Calendrier, Coche, FlecheDroite, FlecheGauche, Gateau, Groupe, Info } from "@/components/icons";
 
 type Step = "formule" | "details" | "creneau" | "paiement";
 
@@ -111,7 +98,7 @@ export function AnniversaireFlow({ onBack }: { onBack: () => void }) {
                     : "bg-muted text-muted-foreground"
                 }`}
               >
-                {i < stepIndex ? <Check className="size-4" /> : i + 1}
+                {i < stepIndex ? <Coche className="size-4" /> : i + 1}
               </div>
               <span className={`text-[10px] whitespace-nowrap hidden sm:block ${i === stepIndex ? "font-bold text-foreground" : "text-muted-foreground"}`}>
                 {s.label}
@@ -143,7 +130,7 @@ export function AnniversaireFlow({ onBack }: { onBack: () => void }) {
                 >
                   <CardContent className="p-5">
                     <div className="relative aspect-video rounded-xl bg-gradient-to-br from-field/20 to-kick/20 flex items-center justify-center mb-4 overflow-hidden">
-                      <CircleDot className="size-10 text-field/60" />
+                      <Ballon className="size-10 text-field/60" />
                       <Photo src={f.image} alt={`Formule ${f.name}`} sizes="(max-width: 640px) 100vw, 420px" className="object-cover" />
                     </div>
                     <h3 className="text-lg font-bold">{f.name}</h3>
@@ -158,12 +145,12 @@ export function AnniversaireFlow({ onBack }: { onBack: () => void }) {
                     <ul className="mt-3 space-y-1">
                       {f.includes.map((inc) => (
                         <li key={inc} className="flex items-start gap-1.5 text-xs text-muted-foreground">
-                          <Check className="size-3 text-field mt-0.5 shrink-0" />{inc}
+                          <Coche className="size-3 text-field mt-0.5 shrink-0" />{inc}
                         </li>
                       ))}
                     </ul>
                     <p className="mt-3 text-xs text-muted-foreground flex items-start gap-1.5">
-                      <Cake className="size-3.5 mt-0.5 shrink-0 text-kick" /> {GATEAU_NOTE}
+                      <Gateau className="size-3.5 mt-0.5 shrink-0 text-kick" /> {GATEAU_NOTE}
                     </p>
                   </CardContent>
                 </Card>
@@ -171,9 +158,9 @@ export function AnniversaireFlow({ onBack }: { onBack: () => void }) {
             ))}
           </div>
           <div className="mt-8 flex justify-between">
-            <Button variant="ghost" onClick={onBack} className="gap-1.5"><ArrowLeft className="size-4" /> Retour</Button>
+            <Button variant="ghost" onClick={onBack} className="gap-1.5"><FlecheGauche className="size-4" /> Retour</Button>
             <Button onClick={() => setStep("details")} disabled={!selectedFormule} className="btn-glass-field text-[#0a0a0b] border-0 gap-1.5">
-              Continuer <ArrowRight className="size-4" />
+              Continuer <FlecheDroite className="size-4" />
             </Button>
           </div>
         </FadeIn>
@@ -183,7 +170,7 @@ export function AnniversaireFlow({ onBack }: { onBack: () => void }) {
       {step === "details" && selectedFormule && (
         <FadeIn>
           <h2 className="text-2xl font-bold font-[family-name:var(--font-heading)] flex items-center gap-2">
-            <Users className="size-6 text-field" /> Détails de l&apos;anniversaire
+            <Groupe className="size-6 text-field" /> Détails de l&apos;anniversaire
           </h2>
           <p className="mt-1 text-muted-foreground">
             Quelques infos sur l&apos;enfant fêté, puis personnalisez avec nos extras.{" "}
@@ -241,7 +228,7 @@ export function AnniversaireFlow({ onBack }: { onBack: () => void }) {
 
           {/* Options */}
           <h3 className="mt-8 text-lg font-bold font-[family-name:var(--font-heading)] flex items-center gap-2">
-            <Sparkles className="size-5 text-kick" /> Options supplémentaires
+            Options supplémentaires
           </h3>
           <p className="mt-1 text-sm text-muted-foreground">
             Facultatif — la décoration, les boissons et la vaisselle sont déjà comprises dans votre formule.
@@ -270,9 +257,9 @@ export function AnniversaireFlow({ onBack }: { onBack: () => void }) {
           </div>
 
           <div className="mt-8 flex justify-between">
-            <Button variant="ghost" onClick={() => setStep("formule")} className="gap-1.5"><ArrowLeft className="size-4" /> Retour</Button>
+            <Button variant="ghost" onClick={() => setStep("formule")} className="gap-1.5"><FlecheGauche className="size-4" /> Retour</Button>
             <Button onClick={() => setStep("creneau")} disabled={!childName || !childAge} className="btn-glass-field text-[#0a0a0b] border-0 gap-1.5">
-              Continuer <ArrowRight className="size-4" />
+              Continuer <FlecheDroite className="size-4" />
             </Button>
           </div>
         </FadeIn>
@@ -282,7 +269,7 @@ export function AnniversaireFlow({ onBack }: { onBack: () => void }) {
       {step === "creneau" && (
         <FadeIn>
           <h2 className="text-2xl font-bold font-[family-name:var(--font-heading)] flex items-center gap-2">
-            <Calendar className="size-6 text-field" /> Choisissez votre créneau
+            <Calendrier className="size-6 text-field" /> Choisissez votre créneau
           </h2>
           <p className="mt-1 text-muted-foreground">
             Réservation possible jusqu&apos;à {DELAI_RESERVATION_HEURES} heure avant le début, même à la dernière minute.
@@ -311,7 +298,7 @@ export function AnniversaireFlow({ onBack }: { onBack: () => void }) {
                     <div>
                       <h3 className="font-bold">{espace.name}</h3>
                       <p className="text-sm text-muted-foreground">{espace.description}</p>
-                      <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1"><Users className="size-3" /> Capacité : {espace.capacity} enfants</p>
+                      <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1"><Groupe className="size-3" /> Capacité : {espace.capacity} enfants</p>
                     </div>
                   </div>
                   <div className="mt-3 flex flex-wrap gap-2">
@@ -339,9 +326,9 @@ export function AnniversaireFlow({ onBack }: { onBack: () => void }) {
           </div>
 
           <div className="mt-8 flex justify-between">
-            <Button variant="ghost" onClick={() => setStep("details")} className="gap-1.5"><ArrowLeft className="size-4" /> Retour</Button>
+            <Button variant="ghost" onClick={() => setStep("details")} className="gap-1.5"><FlecheGauche className="size-4" /> Retour</Button>
             <Button onClick={() => setStep("paiement")} disabled={!selectedEspace || !selectedSlot} className="btn-glass-field text-[#0a0a0b] border-0 gap-1.5">
-              Continuer <ArrowRight className="size-4" />
+              Continuer <FlecheDroite className="size-4" />
             </Button>
           </div>
         </FadeIn>
@@ -351,7 +338,7 @@ export function AnniversaireFlow({ onBack }: { onBack: () => void }) {
       {step === "paiement" && selectedFormule && (
         <FadeIn>
           <h2 className="text-2xl font-bold font-[family-name:var(--font-heading)] flex items-center gap-2">
-            <Lock className="size-6 text-field" /> Récapitulatif &amp; paiement
+            <Cadenas className="size-6 text-field" /> Récapitulatif &amp; paiement
           </h2>
 
           {/* Récap */}
@@ -371,7 +358,7 @@ export function AnniversaireFlow({ onBack }: { onBack: () => void }) {
                 <span className="font-bold text-field">{totalPrice}€</span>
               </div>
               <p className="text-xs text-muted-foreground flex items-start gap-1.5">
-                <Cake className="size-3.5 mt-0.5 shrink-0 text-kick" /> {GATEAU_NOTE}
+                <Gateau className="size-3.5 mt-0.5 shrink-0 text-kick" /> {GATEAU_NOTE}
               </p>
             </CardContent>
           </Card>
@@ -395,7 +382,7 @@ export function AnniversaireFlow({ onBack }: { onBack: () => void }) {
               <Input id="parentEmail" type="email" value={parentEmail} onChange={(e) => setParentEmail(e.target.value)} onBlur={() => setEmailTouched(true)} placeholder="jean@email.com" className={emailTouched && parentEmail && !emailValid ? "border-destructive" : ""} />
               {emailTouched && parentEmail && !emailValid && (
                 <p className="mt-1 text-sm text-destructive flex items-center gap-1">
-                  <AlertCircle className="size-3.5" /> Adresse email invalide.
+                  <AlerteCercle className="size-3.5" /> Adresse email invalide.
                 </p>
               )}
             </div>
@@ -433,16 +420,16 @@ export function AnniversaireFlow({ onBack }: { onBack: () => void }) {
                 disabled={!acceptCGV || !parentName || !emailValid || !phoneValid}
                 className="btn-glass-field w-full h-14 text-[#0a0a0b] text-lg rounded-2xl font-semibold disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center justify-center gap-2"
               >
-                <Lock className="size-5" /> Payer ma réservation (démo)
+                <Cadenas className="size-5" /> Payer ma réservation (démo)
               </button>
               <p className="mt-3 text-xs text-center text-muted-foreground flex items-center justify-center gap-1">
-                <ShieldCheck className="size-3.5" /> Paiement par carte et Bancontact — bientôt disponible.
+                <Bouclier className="size-3.5" /> Paiement par carte et Bancontact — bientôt disponible.
               </p>
             </CardContent>
           </Card>
 
           <div className="mt-4">
-            <Button variant="ghost" onClick={() => setStep("creneau")} className="gap-1.5"><ArrowLeft className="size-4" /> Retour</Button>
+            <Button variant="ghost" onClick={() => setStep("creneau")} className="gap-1.5"><FlecheGauche className="size-4" /> Retour</Button>
           </div>
         </FadeIn>
       )}

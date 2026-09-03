@@ -8,7 +8,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { FadeIn, Confetti } from "@/components/motion";
 import { loadReservation, type ReservationSummary } from "@/lib/reservation";
-import { Home, Plus, Mail, QrCode, Lightbulb, ArrowRight } from "lucide-react";
+import { Ampoule, Enveloppe, FlecheDroite, Maison, Plus, QrCode } from "@/components/icons";
 import { motion } from "framer-motion";
 
 const typeLabels: Record<string, string> = {
@@ -121,7 +121,7 @@ export function ConfirmationContent() {
             <Card className="mt-6 border-dashed border-2">
               <CardContent className="p-6">
                 <h2 className="font-bold text-lg mb-4 flex items-center gap-2 font-[family-name:var(--font-heading)]">
-                  <Mail className="size-5 text-field" /> Aperçu de l&apos;email (simulé)
+                  <Enveloppe className="size-5 text-field" /> Aperçu de l&apos;email (simulé)
                 </h2>
                 <div className="rounded-2xl bg-muted p-5 space-y-3 text-sm">
                   <p><strong>Objet :</strong> Votre réservation Offside Foot Indoor — Confirmation</p>
@@ -136,11 +136,11 @@ export function ConfirmationContent() {
                   </div>
                   <div className="rounded-xl bg-field/10 p-4 text-sm">
                     <p className="font-semibold text-field flex items-center gap-1.5">
-                      <Lightbulb className="size-4" /> Consignes :
+                      <Ampoule className="size-4" /> Consignes :
                     </p>
                     <ul className="mt-2 space-y-1 text-muted-foreground">
                       {["Lumières allumées automatiquement", "Ballon fourni à l'accueil", "Vestiaires et chasubles à disposition", "Arrivez 10 min avant"].map((c) => (
-                        <li key={c} className="flex items-center gap-1.5"><ArrowRight className="size-3 shrink-0" /> {c}</li>
+                        <li key={c} className="flex items-center gap-1.5"><FlecheDroite className="size-3 shrink-0" /> {c}</li>
                       ))}
                     </ul>
                   </div>
@@ -154,7 +154,7 @@ export function ConfirmationContent() {
         <FadeIn delay={1.2}>
           <div className="mt-10 flex flex-col gap-3 sm:flex-row sm:justify-center">
             <Link href="/" className="btn-glass-field inline-flex items-center justify-center gap-2 text-[#0a0a0b] px-6 h-12 rounded-2xl">
-              <Home className="size-4" /> Retour à l&apos;accueil
+              <Maison className="size-4" /> Retour à l&apos;accueil
             </Link>
             <Link href="/reservation" className={cn(buttonVariants({ variant: "outline" }), "gap-2 h-12 rounded-2xl")}>
               <Plus className="size-4" /> Nouvelle réservation

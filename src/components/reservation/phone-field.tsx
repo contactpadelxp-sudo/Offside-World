@@ -4,7 +4,7 @@ import { useState } from "react";
 import { AsYouType, isValidPhoneNumber, type CountryCode } from "libphonenumber-js";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { AlertCircle } from "lucide-react";
+import { AlerteCercle } from "@/components/icons";
 
 /** Pays proposés (Belgique par défaut, puis voisins/fréquents). */
 const COUNTRIES: { code: CountryCode; name: string; flag: string; dial: string; example: string }[] = [
@@ -103,7 +103,7 @@ export function PhoneField({
       </div>
       {showError && (
         <p className="mt-1 text-sm text-destructive flex items-center gap-1">
-          <AlertCircle className="size-3.5" /> Numéro {current.name.toLowerCase()} invalide. Ex. : {current.example}
+          <AlerteCercle className="size-3.5" /> Numéro {current.name.toLowerCase()} invalide. Ex. : {current.example}
         </p>
       )}
     </div>

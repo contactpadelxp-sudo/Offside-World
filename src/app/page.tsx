@@ -7,11 +7,7 @@ import {
   MagneticButton, CountUp, Marquee, Tilt3D, WaveDivider,
 } from "@/components/motion";
 import { Photo } from "@/components/photo";
-import {
-  Building2, Star, MapPin, Baby, ShieldCheck,
-  Sparkles, ArrowRight, Users, Clock, Zap, PartyPopper,
-  Quote, Check, Cake, CreditCard,
-} from "lucide-react";
+import { Ballon, Batiment, Bouclier, Carte, Coche, Document, Enfant, Epingle, Etoile, FlecheDroite, Gateau, Groupe, Horloge } from "@/components/icons";
 import { formules, GATEAU_NOTE, MAX_CHILDREN } from "@/data/formules";
 import { RESUME_ANNULATION, DELAI_RESERVATION_HEURES, ANNIVERSAIRES_SIMULTANES } from "@/data/reglement";
 
@@ -24,7 +20,7 @@ const marqueeItems = [
   "FOUS RIRES", "FOOT INDOOR", "GOÛTER", "FUN",
 ];
 
-export default function Home() {
+export default function Maison() {
   return (
     <>
       {/* ══════ HERO ══════ */}
@@ -148,7 +144,7 @@ export default function Home() {
             {marqueeItems.map((item, i) => (
               <span key={i} className="flex items-center gap-4 whitespace-nowrap">
                 {item}
-                <Sparkles className="size-5 text-kick/50" />
+                <Ballon className="size-4 text-kick/50" />
               </span>
             ))}
           </div>
@@ -164,7 +160,7 @@ export default function Home() {
           <FadeInView>
             <div className="text-center max-w-2xl mx-auto px-4">
               <span className="inline-flex items-center gap-2 rounded-full bg-field/10 px-4 py-1.5 text-sm font-semibold text-field mb-4">
-                <PartyPopper className="size-4" /> Nos activités
+                <Ballon className="size-4" /> Nos activités
               </span>
               <h2 className="font-[family-name:var(--font-heading)] text-3xl md:text-5xl font-bold">
                 Trois univers, <span className="text-gradient-field">un seul complexe</span>
@@ -189,7 +185,7 @@ export default function Home() {
           <FadeInView>
             <div className="text-center max-w-2xl mx-auto">
               <span className="inline-flex items-center gap-2 rounded-full bg-kick/10 px-4 py-1.5 text-sm font-semibold text-kick mb-4">
-                <Cake className="size-4" /> Les anniversaires Offside
+                <Gateau className="size-4" /> Les anniversaires Offside
               </span>
               <h2 className="font-[family-name:var(--font-heading)] text-3xl md:text-5xl font-bold leading-tight">
                 2 formules, 2 façons de <span className="text-gradient-field">fêter son anniversaire</span>
@@ -222,14 +218,14 @@ export default function Home() {
                     <ul className="mt-5 space-y-2 flex-1">
                       {f.includes.map((inc) => (
                         <li key={inc} className="flex items-start gap-2 text-sm text-muted-foreground">
-                          <Check className="size-4 text-field mt-0.5 shrink-0" />
+                          <Coche className="size-4 text-field mt-0.5 shrink-0" />
                           {inc}
                         </li>
                       ))}
                     </ul>
 
                     <p className="mt-5 text-xs text-muted-foreground flex items-start gap-1.5">
-                      <Cake className="size-3.5 mt-0.5 shrink-0 text-kick" /> {GATEAU_NOTE}
+                      <Gateau className="size-3.5 mt-0.5 shrink-0 text-kick" /> {GATEAU_NOTE}
                     </p>
 
                     <MagneticButton className="inline-block mt-6">
@@ -237,7 +233,7 @@ export default function Home() {
                         href={`/reservation?activite=anniversaire`}
                         className="btn-glass-field inline-flex items-center gap-2 text-[#0a0a0b] px-6 h-12 rounded-2xl font-semibold"
                       >
-                        Réserver la formule {f.name} <ArrowRight className="size-4" />
+                        Réserver la formule {f.name} <FlecheDroite className="size-4" />
                       </Link>
                     </MagneticButton>
                   </div>
@@ -249,14 +245,14 @@ export default function Home() {
           <FadeInView delay={0.2}>
             <div className="mt-8 grid gap-3 sm:grid-cols-2">
               <div className="flex items-start gap-3 rounded-xl border border-white/10 bg-white/[0.04] p-4">
-                <Clock className="size-5 text-field shrink-0 mt-0.5" />
+                <Horloge className="size-5 text-field shrink-0 mt-0.5" />
                 <p className="text-sm text-muted-foreground">
                   <strong className="text-foreground">Même à la dernière minute :</strong> réservez
                   jusqu&apos;à {DELAI_RESERVATION_HEURES} heure avant le début.
                 </p>
               </div>
               <div className="flex items-start gap-3 rounded-xl border border-white/10 bg-white/[0.04] p-4">
-                <ShieldCheck className="size-5 text-field shrink-0 mt-0.5" />
+                <Bouclier className="size-5 text-field shrink-0 mt-0.5" />
                 <p className="text-sm text-muted-foreground">
                   <strong className="text-foreground">Annulation :</strong> {RESUME_ANNULATION}
                 </p>
@@ -282,7 +278,7 @@ export default function Home() {
           <div className="grid items-center gap-14 lg:grid-cols-2">
             <FadeInView>
               <span className="inline-flex items-center gap-2 rounded-full bg-field/10 px-4 py-1.5 text-sm font-semibold text-field mb-4">
-                <Building2 className="size-4" /> Entreprises
+                <Batiment className="size-4" /> Entreprises
               </span>
               <h2 className="font-[family-name:var(--font-heading)] text-3xl md:text-5xl font-bold leading-tight">
                 Vous êtes une <span className="text-gradient-field">entreprise&nbsp;?</span>
@@ -294,10 +290,10 @@ export default function Home() {
               </p>
               <div className="mt-8 grid grid-cols-2 gap-4">
                 {[
-                  { icon: Users, label: "10 à 40 personnes" },
-                  { icon: Clock, label: "À la demi-journée" },
-                  { icon: Building2, label: "Terrain privatisé" },
-                  { icon: Zap, label: "Devis sur mesure" },
+                  { icon: Groupe, label: "10 à 40 personnes" },
+                  { icon: Horloge, label: "À la demi-journée" },
+                  { icon: Batiment, label: "Terrain privatisé" },
+                  { icon: Document, label: "Devis sur mesure" },
                 ].map((item) => (
                   <div key={item.label} className="flex items-center gap-3 p-3 rounded-xl bg-white/[0.04] border border-white/10">
                     <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-field/10 text-field shrink-0">
@@ -312,7 +308,7 @@ export default function Home() {
                   href="/reservation?activite=groupes"
                   className="btn-glass-field inline-flex items-center gap-2 text-[#0a0a0b] px-7 h-13 rounded-2xl text-base"
                 >
-                  Organiser mon événement <ArrowRight className="size-5" />
+                  Organiser mon événement <FlecheDroite className="size-5" />
                 </Link>
               </MagneticButton>
             </FadeInView>
@@ -349,10 +345,10 @@ export default function Home() {
         </FadeInView>
         <StaggerContainer className="grid grid-cols-2 gap-5 md:grid-cols-4" staggerDelay={0.1}>
           {[
-            { icon: Star, title: "4.8/5", subtitle: "sur Google (200+ avis)", color: "bg-white/[0.04] text-field border-white/10" },
-            { icon: MapPin, title: "Facile d'accès", subtitle: "Parking gratuit", color: "bg-white/[0.04] text-field border-white/10" },
-            { icon: Baby, title: "Dès 6 ans", subtitle: "Encadrement adapté", color: "bg-white/[0.04] text-kick border-white/10" },
-            { icon: CreditCard, title: "Réservation flexible", subtitle: `Jusqu’à ${DELAI_RESERVATION_HEURES}h avant`, color: "bg-white/[0.04] text-field border-white/10" },
+            { icon: Etoile, title: "4.8/5", subtitle: "sur Google (200+ avis)", color: "bg-white/[0.04] text-field border-white/10" },
+            { icon: Epingle, title: "Facile d'accès", subtitle: "Parking gratuit", color: "bg-white/[0.04] text-field border-white/10" },
+            { icon: Enfant, title: "Dès 6 ans", subtitle: "Encadrement adapté", color: "bg-white/[0.04] text-kick border-white/10" },
+            { icon: Carte, title: "Réservation flexible", subtitle: `Jusqu’à ${DELAI_RESERVATION_HEURES}h avant`, color: "bg-white/[0.04] text-field border-white/10" },
           ].map((item) => (
             <StaggerItem key={item.title}>
               <div className={`text-center p-6 rounded-2xl border ${item.color} group hover:shadow-lg transition-all duration-500`}>
@@ -379,7 +375,7 @@ export default function Home() {
         <div className="relative mx-auto max-w-3xl px-4 lg:px-8 pt-4 pb-12">
         <FadeInView>
           <div className="relative rounded-3xl bg-gradient-to-br from-field/5 to-kick/5 border border-field/10 p-8 md:p-12 text-center">
-            <Quote className="size-10 text-field/40 mx-auto mb-4" />
+            <span aria-hidden className="block font-[family-name:var(--font-heading)] text-6xl leading-none text-field/30 mb-2">&laquo;</span>
             <blockquote className="text-lg md:text-xl font-medium leading-relaxed text-foreground/80 italic">
               &ldquo;L&apos;anniversaire de Léa était juste parfait ! Les enfants se sont éclatés
               avec le Bubble Foot, l&apos;équipe est super pro. On reviendra sans hésiter.&rdquo;
@@ -387,7 +383,7 @@ export default function Home() {
             <div className="mt-6 flex items-center justify-center gap-2">
               <div className="flex">
                 {[...Array(5)].map((_, i) => (
-                  <Star key={i} className="size-4 fill-field text-field" />
+                  <Etoile key={i} className="size-4 fill-field text-field" />
                 ))}
               </div>
               <span className="text-sm text-muted-foreground">— Sophie D., Google</span>
@@ -407,7 +403,7 @@ export default function Home() {
         <div className="relative z-10 mx-auto max-w-3xl px-4 lg:px-8 py-14 md:py-20 text-center">
           <FadeInView>
             <div className="glass mx-auto flex h-16 w-16 items-center justify-center rounded-2xl mb-8">
-              <Clock className="size-8" />
+              <Horloge className="size-8" />
             </div>
             <h2 className="font-[family-name:var(--font-heading)] text-3xl md:text-5xl font-bold">
               Prêt à réserver ?
@@ -421,9 +417,8 @@ export default function Home() {
                   href="/reservation"
                   className="btn-glass-kick inline-flex items-center gap-2.5 text-[#0a0a0b] text-lg px-10 h-14 rounded-2xl"
                 >
-                  <Zap className="size-5" />
                   C&apos;est parti !
-                  <ArrowRight className="size-5" />
+                  <FlecheDroite className="size-5" />
                 </Link>
               </PulseGlow>
             </MagneticButton>

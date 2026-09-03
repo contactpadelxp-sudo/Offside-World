@@ -25,10 +25,7 @@ import {
   type DemiJournee,
 } from "@/data/bubble-team";
 import { RESUME_ANNULATION } from "@/data/reglement";
-import {
-  ArrowLeft, ArrowRight, Lock, ShieldCheck, AlertCircle, Users, Check,
-  Building2, CircleDot, Info, FileText, Clock,
-} from "lucide-react";
+import { AlerteCercle, Ballon, Batiment, Bouclier, Cadenas, Coche, Document, FlecheDroite, FlecheGauche, Groupe, Horloge, Info } from "@/components/icons";
 
 type Offre = "bubble" | "team-building";
 type Step = "offre" | "creneau" | "recap";
@@ -65,7 +62,7 @@ export function GroupesFlow({ onBack }: { onBack: () => void }) {
   return (
     <div>
       <h1 className="text-2xl font-bold font-[family-name:var(--font-heading)] md:text-3xl flex items-center gap-2">
-        <Users className="size-7 text-field" /> Bubble Foot &amp; Team Building
+        <Groupe className="size-7 text-field" /> Bubble Foot &amp; Team Building
       </h1>
       <p className="mt-1 text-muted-foreground">Entre amis, entre collègues ou en équipe.</p>
 
@@ -77,7 +74,7 @@ export function GroupesFlow({ onBack }: { onBack: () => void }) {
               <Card className="h-full border-2 hover:border-field transition-all duration-300 card-hover">
                 <CardContent className="p-6">
                   <div className="inline-flex items-center justify-center rounded-xl bg-field/10 p-3 text-field">
-                    <CircleDot className="size-6" />
+                    <Ballon className="size-6" />
                   </div>
                   <h2 className="mt-3 text-lg font-bold">Bubble Foot</h2>
                   <p className="mt-1 text-sm text-muted-foreground">
@@ -98,7 +95,7 @@ export function GroupesFlow({ onBack }: { onBack: () => void }) {
               <Card className="h-full border-2 hover:border-field transition-all duration-300 card-hover">
                 <CardContent className="p-6">
                   <div className="inline-flex items-center justify-center rounded-xl bg-kick/10 p-3 text-kick">
-                    <Building2 className="size-6" />
+                    <Batiment className="size-6" />
                   </div>
                   <h2 className="mt-3 text-lg font-bold">Team Building</h2>
                   <p className="mt-1 text-sm text-muted-foreground">
@@ -111,7 +108,7 @@ export function GroupesFlow({ onBack }: { onBack: () => void }) {
                   <ul className="mt-3 space-y-1">
                     {TEAM_BUILDING_INCLUS.slice(0, 3).map((inc) => (
                       <li key={inc} className="flex items-start gap-1.5 text-xs text-muted-foreground">
-                        <Check className="size-3 text-kick mt-0.5 shrink-0" />{inc}
+                        <Coche className="size-3 text-kick mt-0.5 shrink-0" />{inc}
                       </li>
                     ))}
                   </ul>
@@ -120,7 +117,7 @@ export function GroupesFlow({ onBack }: { onBack: () => void }) {
             </button>
           </div>
           <div className="mt-8">
-            <Button variant="ghost" onClick={onBack} className="gap-1.5"><ArrowLeft className="size-4" /> Retour</Button>
+            <Button variant="ghost" onClick={onBack} className="gap-1.5"><FlecheGauche className="size-4" /> Retour</Button>
           </div>
         </FadeIn>
       )}
@@ -163,9 +160,9 @@ export function GroupesFlow({ onBack }: { onBack: () => void }) {
           )}
 
           <div className="mt-8 flex justify-between">
-            <Button variant="ghost" onClick={() => setStep("offre")} className="gap-1.5"><ArrowLeft className="size-4" /> Retour</Button>
+            <Button variant="ghost" onClick={() => setStep("offre")} className="gap-1.5"><FlecheGauche className="size-4" /> Retour</Button>
             <Button onClick={() => setStep("recap")} disabled={!bubbleSlot} className="btn-glass-field text-[#0a0a0b] border-0 gap-1.5">
-              Continuer <ArrowRight className="size-4" />
+              Continuer <FlecheDroite className="size-4" />
             </Button>
           </div>
         </FadeIn>
@@ -189,7 +186,7 @@ export function GroupesFlow({ onBack }: { onBack: () => void }) {
                     <div>
                       <p className="font-bold capitalize">{formatDate(dj.date)}</p>
                       <p className="text-sm text-muted-foreground flex items-center gap-1.5">
-                        <Clock className="size-3.5" /> {dj.periode} · {dj.start} – {dj.end}
+                        <Horloge className="size-3.5" /> {dj.periode} · {dj.start} – {dj.end}
                       </p>
                     </div>
                     <Badge variant={dj.available ? "secondary" : "destructive"}>
@@ -206,16 +203,16 @@ export function GroupesFlow({ onBack }: { onBack: () => void }) {
             <ul className="mt-2 grid gap-1.5 sm:grid-cols-2">
               {TEAM_BUILDING_INCLUS.map((inc) => (
                 <li key={inc} className="flex items-start gap-1.5 text-sm text-muted-foreground">
-                  <Check className="size-4 text-kick mt-0.5 shrink-0" />{inc}
+                  <Coche className="size-4 text-kick mt-0.5 shrink-0" />{inc}
                 </li>
               ))}
             </ul>
           </div>
 
           <div className="mt-8 flex justify-between">
-            <Button variant="ghost" onClick={() => setStep("offre")} className="gap-1.5"><ArrowLeft className="size-4" /> Retour</Button>
+            <Button variant="ghost" onClick={() => setStep("offre")} className="gap-1.5"><FlecheGauche className="size-4" /> Retour</Button>
             <Button onClick={() => setStep("recap")} disabled={!demiJournee} className="btn-glass-field text-[#0a0a0b] border-0 gap-1.5">
-              Continuer <ArrowRight className="size-4" />
+              Continuer <FlecheDroite className="size-4" />
             </Button>
           </div>
         </FadeIn>
@@ -225,7 +222,7 @@ export function GroupesFlow({ onBack }: { onBack: () => void }) {
       {step === "recap" && (
         <FadeIn className="mt-6">
           <h2 className="text-xl font-bold font-[family-name:var(--font-heading)] flex items-center gap-2">
-            {isBubble ? <Lock className="size-5 text-field" /> : <FileText className="size-5 text-kick" />}
+            {isBubble ? <Cadenas className="size-5 text-field" /> : <Document className="size-5 text-kick" />}
             {isBubble ? "Récapitulatif & paiement" : "Votre demande de devis"}
           </h2>
 
@@ -293,7 +290,7 @@ export function GroupesFlow({ onBack }: { onBack: () => void }) {
                 className={emailTouched && email && !emailValid ? "border-destructive" : ""} />
               {emailTouched && email && !emailValid && (
                 <p className="mt-1 text-sm text-destructive flex items-center gap-1">
-                  <AlertCircle className="size-3.5" /> Adresse email invalide.
+                  <AlerteCercle className="size-3.5" /> Adresse email invalide.
                 </p>
               )}
             </div>
@@ -335,10 +332,10 @@ export function GroupesFlow({ onBack }: { onBack: () => void }) {
                 disabled={!acceptCGV || !nom || !emailValid || !phoneValid || (!isBubble && !entreprise)}
                 className="btn-glass-field w-full h-14 text-[#0a0a0b] text-lg rounded-2xl font-semibold disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center justify-center gap-2"
               >
-                {isBubble ? (<><Lock className="size-5" /> Payer ma réservation (démo)</>) : (<><FileText className="size-5" /> Demander un devis</>)}
+                {isBubble ? (<><Cadenas className="size-5" /> Payer ma réservation (démo)</>) : (<><Document className="size-5" /> Demander un devis</>)}
               </button>
               <p className="mt-3 text-xs text-center text-muted-foreground flex items-center justify-center gap-1">
-                <ShieldCheck className="size-3.5" />
+                <Bouclier className="size-3.5" />
                 {isBubble
                   ? "Paiement par carte et Bancontact — bientôt disponible."
                   : "Nous vous répondons sous 48 heures ouvrables."}
@@ -347,7 +344,7 @@ export function GroupesFlow({ onBack }: { onBack: () => void }) {
           </Card>
 
           <div className="mt-4">
-            <Button variant="ghost" onClick={() => setStep("creneau")} className="gap-1.5"><ArrowLeft className="size-4" /> Retour</Button>
+            <Button variant="ghost" onClick={() => setStep("creneau")} className="gap-1.5"><FlecheGauche className="size-4" /> Retour</Button>
           </div>
         </FadeIn>
       )}

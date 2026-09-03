@@ -3,14 +3,14 @@
 import { useEffect, useRef } from "react";
 import Link from "next/link";
 import Lenis from "lenis";
-import { Cake, Trophy, Users, ArrowRight } from "lucide-react";
+import { FlecheDroite, Gateau, Groupe, Trophee } from "@/components/icons";
 import { Photo } from "@/components/photo";
 import "./scroll-stack.css";
 
 const cards = [
   {
     href: "/reservation?activite=anniversaire",
-    icon: Cake,
+    icon: Gateau,
     title: "Anniversaires",
     desc: "Deux formules 100 % foot : Kick-Off dès 180 € et Bubble dès 290 €, jusqu'à 10 enfants. Décoration, boissons et vidéo souvenir comprises.",
     itemClassName: "bg-gradient-to-br from-field to-kick text-[#0a0a0b]",
@@ -21,7 +21,7 @@ const cards = [
   },
   {
     href: "/reservation?activite=foot",
-    icon: Trophy,
+    icon: Trophee,
     title: "Location de terrain",
     desc: "Terrain privé avec éclairage, ballon, chasubles et vestiaires. Réservez votre créneau entre amis sur SportFinder.",
     itemClassName: "bg-[#151517] text-foreground border border-white/10",
@@ -32,7 +32,7 @@ const cards = [
   },
   {
     href: "/reservation?activite=groupes",
-    icon: Users,
+    icon: Groupe,
     title: "Bubble Foot & Team Building",
     desc: "Le foot dans des bulles géantes à 23 € par personne, ou la privatisation du complexe à la demi-journée pour votre équipe.",
     itemClassName: "bg-gradient-to-br from-kick to-kick-dark text-[#0a0a0b]",
@@ -187,7 +187,7 @@ export default function ActivitesStack({ children }: { children?: React.ReactNod
                     href={card.href}
                     className={`inline-flex items-center gap-2 font-semibold text-base md:text-lg ${card.ctaClass} hover:gap-4 transition-all duration-300 self-start`}
                   >
-                    Réserver <ArrowRight className="size-5" />
+                    Réserver <FlecheDroite className="size-5" />
                   </Link>
                 </div>
                 {/* Cadre photo (même taille pour les 3 cartes) */}

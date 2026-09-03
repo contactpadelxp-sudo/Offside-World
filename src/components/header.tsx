@@ -1,12 +1,14 @@
 "use client";
 
 import Link from "next/link";
+import { RESERVER_RESET_EVENT } from "@/lib/events";
 import { useState, useEffect } from "react";
+import { usePathname } from "next/navigation";
 import { buttonVariants } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet";
 import { Logo } from "@/components/logo";
 import { cn } from "@/lib/utils";
-import { Menu, Zap } from "lucide-react";
+import { Menu } from "@/components/icons";
 import { motion, AnimatePresence } from "framer-motion";
 
 const navLinksLeft = [
@@ -23,8 +25,20 @@ const navLinksRight = [
 const navLinks = [...navLinksLeft, ...navLinksRight.filter(l => !l.cta)];
 
 export function Header({ logoSrc }: { logoSrc: string | null }) {
+  const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+
+  /**
+   * Sur /reservation, Next considère le lien « Réserver » comme la page
+   * courante et ne navigue pas : on annule le lien et on demande au tunnel de
+   * revenir au choix des trois activités. Ailleurs, le lien fonctionne normalement.
+   */
+  const handleReserver = (e: React.MouseEvent) => {
+    if (pathname !== "/reservation") return;
+    e.preventDefault();
+    window.dispatchEvent(new Event(RESERVER_RESET_EVENT));
+  };
 
   useEffect(() => {
     const handler = () => setScrolled(window.scrollY > 60);
@@ -71,9 +85,9 @@ export function Header({ logoSrc }: { logoSrc: string | null }) {
                     <Link
                       key={link.href}
                       href={link.href}
+                      onClick={handleReserver}
                       className="inline-flex items-center gap-1.5 text-[#0a0a0b] font-semibold bg-gradient-to-r from-field to-field-dark px-4 h-8 rounded-full text-[12px] ml-1 hover:shadow-md hover:shadow-field/20 transition-shadow duration-300"
                     >
-                      <Zap className="size-3" />
                       Réserver
                     </Link>
                   ) : (
@@ -131,6 +145,7 @@ export function Header({ logoSrc }: { logoSrc: string | null }) {
                     <Link
                       key={link.href}
                       href={link.href}
+                      onClick={handleReserver}
                       className="inline-flex items-center gap-1.5 text-[#0a0a0b] font-semibold bg-gradient-to-r from-field to-field-dark px-5 h-9 rounded-xl text-[13px] ml-2 hover:shadow-lg hover:shadow-field/20 transition-shadow duration-300"
                     >
                       Réserver
@@ -193,7 +208,6 @@ function MobileMenu({ open, setOpen }: { open: boolean; setOpen: (v: boolean) =>
             onClick={() => setOpen(false)}
             className="mt-4 inline-flex items-center justify-center gap-2 text-[#0a0a0b] w-full h-12 rounded-2xl font-semibold bg-gradient-to-r from-field to-kick"
           >
-            <Zap className="size-4" />
             Réserver
           </Link>
         </nav>

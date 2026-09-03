@@ -2,7 +2,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { mockReservations } from "@/data/backoffice";
 import type { Metadata } from "next";
-import { Cake, CircleDot, Building2, ClipboardList, AlertTriangle, Phone, Package } from "lucide-react";
+import { AlerteTriangle, Ballon, Batiment, Colis, Gateau, IconType, PressePapier, Telephone } from "@/components/icons";
 
 export const metadata: Metadata = {
   title: "Back-office — Résumé du jour | Offside Foot Indoor",
@@ -10,10 +10,10 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false, nocache: true },
 };
 
-const typeBadge: Record<string, { label: string; className: string; icon: typeof Cake }> = {
-  anniversaire: { label: "Anniversaire", className: "bg-kick/10 text-kick border-kick/30", icon: Cake },
-  bubble: { label: "Bubble Foot", className: "bg-field/10 text-field border-field/30", icon: CircleDot },
-  "team-building": { label: "Team Building", className: "bg-white/10 text-foreground border-white/20", icon: Building2 },
+const typeBadge: Record<string, { label: string; className: string; icon: IconType }> = {
+  anniversaire: { label: "Anniversaire", className: "bg-kick/10 text-kick border-kick/30", icon: Gateau },
+  bubble: { label: "Bubble Foot", className: "bg-field/10 text-field border-field/30", icon: Ballon },
+  "team-building": { label: "Team Building", className: "bg-white/10 text-foreground border-white/20", icon: Batiment },
 };
 
 export default function AdminPage() {
@@ -25,7 +25,7 @@ export default function AdminPage() {
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold md:text-3xl flex items-center gap-2">
-            <ClipboardList className="size-7 text-field" /> Résumé du jour
+            <PressePapier className="size-7 text-field" /> Résumé du jour
           </h1>
           <p className="text-muted-foreground">
             Réservations pour demain — <strong>vendredi 4 septembre 2026</strong>
@@ -92,11 +92,11 @@ export default function AdminPage() {
                 {/* Prep details */}
                 <div className="mt-4 rounded-xl bg-muted p-3">
                   <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2 flex items-center gap-1.5">
-                    <Package className="size-3.5" /> À préparer
+                    <Colis className="size-3.5" /> À préparer
                   </p>
                   <div className="flex flex-wrap gap-4 text-sm">
                     <div className="flex items-center gap-1.5">
-                      <Phone className="size-3.5 text-muted-foreground" />
+                      <Telephone className="size-3.5 text-muted-foreground" />
                       <span>{res.clientPhone}</span>
                     </div>
                     {res.options.length > 0 && (
@@ -108,7 +108,7 @@ export default function AdminPage() {
                   </div>
                   {res.notes && (
                     <p className="mt-2 text-sm text-kick font-medium flex items-center gap-1.5">
-                      <AlertTriangle className="size-4 shrink-0" /> {res.notes}
+                      <AlerteTriangle className="size-4 shrink-0" /> {res.notes}
                     </p>
                   )}
                 </div>

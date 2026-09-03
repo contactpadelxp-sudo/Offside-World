@@ -6,7 +6,7 @@ import { Logo } from "@/components/logo";
 import {
   NOM_COMMERCIAL, ADRESSE, EMAIL, TELEPHONE, TELEPHONE_TEL,
 } from "@/data/entreprise";
-import { Mail, Cookie, MapPin, Phone, ArrowUpRight } from "lucide-react";
+import { Cookie, Enveloppe, Epingle, FlecheDiagonale, Telephone } from "@/components/icons";
 
 export function Footer({ logoSrc }: { logoSrc: string | null }) {
   return (
@@ -43,7 +43,7 @@ export function Footer({ logoSrc }: { logoSrc: string | null }) {
                   <li key={item.label}>
                     <Link href={item.href} className="text-sm text-white/60 hover:text-white transition-colors duration-300 inline-flex items-center gap-1 group">
                       {item.label}
-                      <ArrowUpRight className="size-3 opacity-0 -translate-y-1 translate-x-1 group-hover:opacity-100 group-hover:translate-y-0 group-hover:translate-x-0 transition-all duration-300" />
+                      <FlecheDiagonale className="size-3 opacity-0 -translate-y-1 translate-x-1 group-hover:opacity-100 group-hover:translate-y-0 group-hover:translate-x-0 transition-all duration-300" />
                     </Link>
                   </li>
                 ))}
@@ -57,18 +57,18 @@ export function Footer({ logoSrc }: { logoSrc: string | null }) {
               </h4>
               <ul className="space-y-2.5 text-sm text-white/60">
                 <li className="flex items-start gap-2.5">
-                  <MapPin className="size-4 text-white/60 shrink-0 mt-0.5" />
+                  <Epingle className="size-4 text-white/60 shrink-0 mt-0.5" />
                   <address className="not-italic">
                     {ADRESSE.rue}<br />
                     {ADRESSE.codePostal} {ADRESSE.ville}, {ADRESSE.pays}
                   </address>
                 </li>
                 <li className="flex items-center gap-2.5">
-                  <Phone className="size-4 text-white/60 shrink-0" />
+                  <Telephone className="size-4 text-white/60 shrink-0" />
                   <a href={`tel:${TELEPHONE_TEL}`} className="hover:text-white transition-colors">{TELEPHONE}</a>
                 </li>
                 <li className="flex items-center gap-2.5">
-                  <Mail className="size-4 text-white/60 shrink-0" />
+                  <Enveloppe className="size-4 text-white/60 shrink-0" />
                   <a href={`mailto:${EMAIL}`} className="hover:text-white transition-colors">{EMAIL}</a>
                 </li>
               </ul>
