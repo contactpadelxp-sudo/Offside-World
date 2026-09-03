@@ -6,8 +6,20 @@
  * vers le compte du complexe.
  */
 
-// TODO remplacer par l'URL exacte du compte Offside Foot Indoor une fois le compte connecté.
-export const SPORTFINDER_URL = "https://sportfinder.be";
+/**
+ * Page de réservation des terrains sur Sport-Finder (URL publique, sans jeton :
+ * elle ne donne accès qu'au calendrier, pas au compte du complexe).
+ *
+ * Lien direct vers la location de terrain. Le « 107 » est l'identifiant du
+ * produit chez Sport-Finder : si le catalogue est réorganisé, c'est la seule
+ * valeur à mettre à jour ici.
+ */
+export const SPORTFINDER_URL =
+  "https://www.sport-finder.com/fr/center/offside-foot-indoor/booking/field_rental/107/book?sport=1";
+
+/** Page publique du complexe, toutes activités confondues. */
+export const SPORTFINDER_CENTRE_URL =
+  "https://www.sport-finder.com/fr/center/offside-foot-indoor";
 
 export const FOOT_INCLUS = [
   "Éclairage du terrain",
