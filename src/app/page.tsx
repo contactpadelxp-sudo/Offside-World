@@ -9,7 +9,7 @@ import {
 import { Photo } from "@/components/photo";
 import { usePhoto } from "@/components/photos-provider";
 import { Ballon, Batiment, Bouclier, Carte, Coche, Document, Enfant, Epingle, Etoile, FlecheDroite, Gateau, Groupe, Horloge } from "@/components/icons";
-import { formules, GATEAU_NOTE, MAX_CHILDREN } from "@/data/formules";
+import { formules, GATEAU_NOTE } from "@/data/formules";
 import { RESUME_ANNULATION, DELAI_RESERVATION_HEURES } from "@/data/reglement";
 
 const MagicRings = dynamic(() => import("@/components/magic-rings"), { ssr: false });
@@ -198,10 +198,6 @@ export default function Home() {
               <h2 className="font-[family-name:var(--font-heading)] text-3xl md:text-5xl font-bold leading-tight">
                 2 formules, 2 façons de <span className="text-gradient-field">fêter son anniversaire</span>
               </h2>
-              <p className="mt-4 text-muted-foreground text-lg">
-                Chaque formule couvre 10 enfants, tout compris. Au-delà, un supplément
-                par enfant s&apos;applique, jusqu&apos;à {MAX_CHILDREN} enfants maximum.
-              </p>
             </div>
           </FadeInView>
 
