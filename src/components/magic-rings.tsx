@@ -223,8 +223,12 @@ export default function MagicRings({
 
       uniforms.uTime.value = t * 0.001 * (p.speed ?? 1);
       uniforms.uAttenuation.value = p.attenuation;
-      (uniforms.uColor.value as THREE.Color).set(p.color!);
-      (uniforms.uColorTwo.value as THREE.Color).set(p.colorTwo!);
+      // Le shader écrit gl_FragColor sans conversion d'espace colorimétrique.
+      // `set()` convertirait le sRGB en linéaire, et la valeur linéaire serait
+      // ensuite affichée telle quelle : #f4b23f virerait à l'orange (#ff7f0e).
+      // On stocke donc les composantes sRGB verbatim.
+      (uniforms.uColor.value as THREE.Color).setStyle(p.color!, THREE.LinearSRGBColorSpace);
+      (uniforms.uColorTwo.value as THREE.Color).setStyle(p.colorTwo!, THREE.LinearSRGBColorSpace);
       uniforms.uLineThickness.value = p.lineThickness;
       uniforms.uBaseRadius.value = p.baseRadius;
       uniforms.uRadiusStep.value = p.radiusStep;

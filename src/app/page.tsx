@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import {
@@ -24,6 +25,20 @@ const marqueeItems = [
 export default function Home() {
   const photoHero = usePhoto("terrain-vide-2");
 
+  /**
+   * Le fond animé doit reprendre EXACTEMENT le jaune de la charte. On lit la
+   * variable CSS `--color-field` plutôt que de recopier sa valeur : si la
+   * couleur de marque change dans globals.css, l'animation suit toute seule.
+   * La valeur littérale ne sert que de repli avant l'hydratation.
+   */
+  const [jauneCharte, setJauneCharte] = useState("#f4b23f");
+  useEffect(() => {
+    const v = getComputedStyle(document.documentElement)
+      .getPropertyValue("--color-field")
+      .trim();
+    if (v) setJauneCharte(v);
+  }, []);
+
   return (
     <>
       {/* ══════ HERO ══════ */}
@@ -31,8 +46,8 @@ export default function Home() {
         {/* MagicRings background */}
         <div className="absolute inset-0 z-0">
           <MagicRings
-            color="#f4b23f"
-            colorTwo="#f9a03f"
+            color={jauneCharte}
+            colorTwo={jauneCharte}
             ringCount={6}
             speed={1}
             attenuation={10}
