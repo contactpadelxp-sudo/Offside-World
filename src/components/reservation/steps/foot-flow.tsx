@@ -1,49 +1,78 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { FadeIn } from "@/components/motion";
+import { Photo } from "@/components/photo";
+import { usePhoto } from "@/components/photos-provider";
 import { SPORTFINDER_URL, FOOT_INCLUS } from "@/data/foot";
-import { Ampoule, Coche, FlecheGauche, Horloge, LienExterne, Trophee } from "@/components/icons";
+import { Ampoule, Coche, FlecheGauche, Horloge, LienExterne, Trophee, Visuel } from "@/components/icons";
 
 export function FootFlow({ onBack }: { onBack: () => void }) {
+  const photo = usePhoto("joueur-ballon");
+
   return (
     <div>
       <h1 className="text-2xl font-bold font-[family-name:var(--font-heading)] md:text-3xl flex items-center gap-2">
-        <Trophee className="size-7 text-field" /> Location de terrain
+        <Trophee className="size-7 text-field" /> Louer un terrain
       </h1>
       <p className="mt-1 text-muted-foreground">Terrain privé entre amis, à l&apos;heure.</p>
 
-      <FadeIn className="mt-6">
-        <Card className="border-2">
-          <CardContent className="p-6">
-            <div className="inline-flex items-center justify-center rounded-xl bg-field/10 p-3 text-field">
-              <LienExterne className="size-6" />
+      <FadeIn className="mt-8">
+        {/* Photo à gauche, contenu à droite : les deux tiennent dans l'écran */}
+        <Card className="overflow-hidden border-2 py-0 gap-0 border-field/20">
+          <div className="grid md:grid-cols-2">
+            <div className="relative min-h-[240px] md:min-h-full overflow-hidden">
+              {photo ? (
+                <Photo
+                  src={photo}
+                  alt="Joueur avec un ballon sur les terrains d'Offside Foot Indoor"
+                  sizes="(max-width: 768px) 100vw, 420px"
+                  className="object-cover object-[center_20%]"
+                />
+              ) : (
+                <div className="absolute inset-0 flex flex-col items-center justify-center gap-3">
+                  <div aria-hidden className="absolute inset-0 dot-grid fade-mask-radial opacity-70" />
+                  <div aria-hidden className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 size-44 rounded-full bg-field/25 blur-3xl" />
+                  <Trophee className="relative size-12 text-foreground/25" />
+                  <span className="relative inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground/60">
+                    <Visuel className="size-3.5" /> Photo à venir
+                  </span>
+                </div>
+              )}
+              {/* Fondu vers le contenu : vertical en pile, horizontal sur deux colonnes */}
+              <div className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-b from-transparent to-card md:hidden" />
+              <div className="pointer-events-none absolute inset-y-0 right-0 w-24 bg-gradient-to-r from-transparent to-card hidden md:block" />
             </div>
-            <h2 className="mt-3 text-lg font-bold">Réservation via SportFinder</h2>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Nos créneaux de terrain sont gérés sur SportFinder : vous y voyez les
-              disponibilités en temps réel et réglez directement en ligne.
-            </p>
 
-            <ul className="mt-5 grid gap-2 sm:grid-cols-2">
-              {FOOT_INCLUS.map((item) => (
-                <li key={item} className="flex items-start gap-1.5 text-sm text-muted-foreground">
-                  <Coche className="size-4 text-field mt-0.5 shrink-0" />
-                  {item}
-                </li>
-              ))}
-            </ul>
+            <div className="p-6 md:p-8 flex flex-col justify-center">
+              <h2 className="text-xl font-bold font-[family-name:var(--font-heading)]">
+                Réservez votre créneau en ligne
+              </h2>
+              <p className="mt-2 text-[15px] leading-relaxed text-muted-foreground">
+                Le planning des terrains est tenu à jour en temps réel. Vous choisissez
+                votre créneau et réglez directement en ligne.
+              </p>
 
-            <a
-              href={SPORTFINDER_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="btn-glass-field mt-6 inline-flex items-center justify-center gap-2 text-[#0a0a0b] h-12 px-6 rounded-2xl font-semibold w-full sm:w-auto"
-            >
-              Voir les créneaux sur SportFinder <LienExterne className="size-4" />
-            </a>
-          </CardContent>
+              <ul className="mt-5 space-y-2">
+                {FOOT_INCLUS.map((item) => (
+                  <li key={item} className="flex items-start gap-2 text-sm text-muted-foreground">
+                    <Coche className="size-4 text-field mt-0.5 shrink-0" />
+                    {item}
+                  </li>
+                ))}
+              </ul>
+
+              <a
+                href={SPORTFINDER_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn-glass-field mt-6 inline-flex items-center justify-center gap-2 text-[#0a0a0b] h-12 px-6 rounded-2xl font-semibold w-full md:w-auto md:self-start"
+              >
+                Voir les créneaux <LienExterne className="size-4" />
+              </a>
+            </div>
+          </div>
         </Card>
 
         <div className="mt-4 grid gap-3 sm:grid-cols-2">

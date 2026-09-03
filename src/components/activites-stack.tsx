@@ -46,7 +46,7 @@ export default function ActivitesStack({ children }: { children?: React.ReactNod
     {
       href: "/reservation?activite=foot",
       icon: Trophee,
-      title: "Location de terrain",
+      title: "Louer un terrain",
       desc: "Terrain privé avec éclairage, ballon, chasubles et vestiaires. Réservez votre créneau entre amis.",
       itemClassName: "bg-[#151517] text-foreground border border-white/10",
       badgeClass: "bg-field/15 text-field",

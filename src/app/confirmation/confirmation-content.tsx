@@ -14,7 +14,7 @@ import { motion } from "framer-motion";
 const typeLabels: Record<string, string> = {
   anniversaire: "Anniversaire",
   bubble: "Bubble Foot",
-  foot: "Location de terrain",
+  foot: "Louer un terrain",
   "team-building": "Team Building",
 };
 

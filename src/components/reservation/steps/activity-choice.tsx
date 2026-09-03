@@ -47,7 +47,7 @@ export function ActivityChoice({ onSelect }: { onSelect: (a: Activity) => void }
     {
       id: "foot" as Activity,
       icon: Trophee,
-      title: "Location de terrain",
+      title: "Louer un terrain",
       description: "Réservez un terrain privé entre amis, via SportFinder.",
       img: photoBallon,
       tag: "Via SportFinder",

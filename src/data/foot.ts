@@ -1,5 +1,5 @@
 /**
- * Location de terrain.
+ * Louer un terrain.
  *
  * Les réservations de terrain sont gérées par SportFinder : le planning, les
  * disponibilités et le paiement se font chez eux. Le site ne fait qu'orienter

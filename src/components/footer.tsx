@@ -37,7 +37,7 @@ export function Footer({ logoSrc }: { logoSrc: string | null }) {
                 {[
                   { label: "Anniversaires", href: "/reservation?activite=anniversaire" },
                   { label: "Bubble Foot", href: "/reservation?activite=groupes" },
-                  { label: "Location de terrain", href: "/reservation?activite=foot" },
+                  { label: "Louer un terrain", href: "/reservation?activite=foot" },
                   { label: "Team Building", href: "/reservation?activite=groupes" },
                 ].map((item) => (
                   <li key={item.label}>
