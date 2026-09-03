@@ -31,7 +31,22 @@ export const espaces: Espace[] = Array.from({ length: ANNIVERSAIRES_SIMULTANES }
   description: "Terrain réservé pour le groupe, espace gâteau et accès aux vestiaires.",
 }));
 
-// Créneaux espacés de 30 min pour permettre le changement entre deux groupes.
+/**
+ * Créneaux ouverts aux anniversaires.
+ *
+ * RÈGLE : la location de terrain est gérée par Sport-Finder, les anniversaires
+ * par ce site. Pour qu'aucune réservation ne se chevauche, les anniversaires
+ * n'occupent que des plages RETIRÉES de la location sur Sport-Finder
+ * (par exemple le mercredi après-midi). L'étanchéité repose donc sur deux
+ * conditions : ces créneaux ici, et le blocage correspondant côté Sport-Finder.
+ *
+ * TODO valeurs provisoires : elles couvrent aujourd'hui toute la journée, ce
+ * qui entrerait en conflit avec la location. À remplacer par les plages
+ * définitives (jours de la semaine + horaires) dès qu'elles seront arrêtées,
+ * en même temps que DATES dans anniversaire-flow.tsx.
+ *
+ * Créneaux espacés de 30 min pour permettre le changement entre deux groupes.
+ */
 export const timeSlots: TimeSlot[] = [
   { id: "10h-12h", start: "10:00", end: "12:00" },
   { id: "12h30-14h30", start: "12:30", end: "14:30" },
