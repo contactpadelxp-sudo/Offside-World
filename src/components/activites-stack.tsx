@@ -3,7 +3,7 @@
 import { useEffect, useRef } from "react";
 import Link from "next/link";
 import Lenis from "lenis";
-import { Cake, CircleDot, Trophy, ArrowRight } from "lucide-react";
+import { Cake, Trophy, Users, ArrowRight } from "lucide-react";
 import { Photo } from "@/components/photo";
 import "./scroll-stack.css";
 
@@ -12,7 +12,7 @@ const cards = [
     href: "/reservation?activite=anniversaire",
     icon: Cake,
     title: "Anniversaires",
-    desc: "Foot, Bubble Foot, goûter privatisé et fous rires garantis. La formule parfaite pour un anniversaire inoubliable.",
+    desc: "Deux formules 100 % foot : Kick-Off dès 180 € et Bubble dès 290 €, jusqu'à 10 enfants. Décoration, boissons et vidéo souvenir comprises.",
     itemClassName: "bg-gradient-to-br from-field to-kick text-[#0a0a0b]",
     badgeClass: "bg-black/15 text-[#0a0a0b]",
     ctaClass: "text-[#0a0a0b]",
@@ -20,26 +20,26 @@ const cards = [
     img: "/images/foot.jpeg",
   },
   {
-    href: "/reservation?activite=libre",
-    icon: CircleDot,
-    title: "Entrées libres",
-    desc: "Sessions ouvertes à tous, ambiance garantie. Venez seul ou entre amis, on s'occupe du reste.",
+    href: "/reservation?activite=foot",
+    icon: Trophy,
+    title: "Location de terrain",
+    desc: "Terrain privé avec éclairage, ballon, chasubles et vestiaires. Réservez votre créneau entre amis sur SportFinder.",
     itemClassName: "bg-[#151517] text-foreground border border-white/10",
     badgeClass: "bg-field/15 text-field",
     ctaClass: "text-field",
     frameClass: "border-field/30 bg-field/5",
-    img: "/images/foot2.avif",
+    img: "/images/foot3.jpeg",
   },
   {
-    href: "/reservation?activite=foot",
-    icon: Trophy,
-    title: "Location de terrain",
-    desc: "Terrain privé avec éclairage, ballon et vestiaires. Réservez votre créneau entre amis.",
+    href: "/reservation?activite=groupes",
+    icon: Users,
+    title: "Bubble Foot & Team Building",
+    desc: "Le foot dans des bulles géantes à 23 € par personne, ou la privatisation du complexe à la demi-journée pour votre équipe.",
     itemClassName: "bg-gradient-to-br from-kick to-kick-dark text-[#0a0a0b]",
     badgeClass: "bg-black/15 text-[#0a0a0b]",
     ctaClass: "text-[#0a0a0b]",
     frameClass: "border-black/25 bg-black/10",
-    img: "/images/foot3.jpeg",
+    img: "/images/foot2.avif",
   },
 ];
 

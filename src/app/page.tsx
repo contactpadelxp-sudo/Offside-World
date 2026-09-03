@@ -10,8 +10,10 @@ import { Photo } from "@/components/photo";
 import {
   Building2, Star, MapPin, Baby, ShieldCheck,
   Sparkles, ArrowRight, Users, Clock, Zap, PartyPopper,
-  Quote,
+  Quote, Check, Cake, CreditCard,
 } from "lucide-react";
+import { formules, GATEAU_NOTE, MAX_CHILDREN } from "@/data/formules";
+import { RESUME_ANNULATION, DELAI_RESERVATION_HEURES, ANNIVERSAIRES_SIMULTANES } from "@/data/reglement";
 
 const MagicRings = dynamic(() => import("@/components/magic-rings"), { ssr: false });
 
@@ -105,7 +107,7 @@ export default function Home() {
             <div className="mt-12 flex flex-wrap justify-center gap-x-8 gap-y-6 sm:gap-x-16 md:gap-x-24">
               {[
                 { value: 2000, suffix: "+", label: "fêtes organisées" },
-                { value: 3, suffix: "", label: "salles privatisées" },
+                { value: ANNIVERSAIRES_SIMULTANES, suffix: "", label: "anniversaires en simultané" },
                 { value: 98, suffix: "%", label: "clients satisfaits" },
               ].map((stat) => (
                 <div key={stat.label} className="text-center">
@@ -172,6 +174,98 @@ export default function Home() {
         </ActivitesStack>
       </section>
 
+      {/* ── Vague de transition → formules ── */}
+      <WaveDivider fill="#121214" />
+
+      {/* ══════ FORMULES ANNIVERSAIRE ══════ */}
+      <section id="formules" className="bg-[#121214] grain relative overflow-hidden">
+        <div aria-hidden className="pointer-events-none absolute inset-0">
+          <div className="absolute -right-32 top-10 w-80 h-80 rounded-full border-2 border-dashed border-field/12" />
+          <div className="absolute left-8 bottom-10 w-40 h-40 dot-grid fade-mask-radial" />
+          <div className="absolute -left-24 top-1/3 w-72 h-72 rounded-full bg-kick/10 blur-3xl" />
+        </div>
+
+        <div className="relative mx-auto max-w-6xl px-4 lg:px-8 py-12 md:py-16">
+          <FadeInView>
+            <div className="text-center max-w-2xl mx-auto">
+              <span className="inline-flex items-center gap-2 rounded-full bg-kick/10 px-4 py-1.5 text-sm font-semibold text-kick mb-4">
+                <Cake className="size-4" /> Les anniversaires Offside
+              </span>
+              <h2 className="font-[family-name:var(--font-heading)] text-3xl md:text-5xl font-bold leading-tight">
+                2 formules, 2 façons de <span className="text-gradient-field">fêter son anniversaire</span>
+              </h2>
+              <p className="mt-4 text-muted-foreground text-lg">
+                Forfait tout compris jusqu&apos;à 10 enfants, jusqu&apos;à {MAX_CHILDREN} au total.
+              </p>
+            </div>
+          </FadeInView>
+
+          <StaggerContainer className="mt-10 grid gap-6 md:grid-cols-2" staggerDelay={0.12}>
+            {formules.map((f) => (
+              <StaggerItem key={f.id} className="h-full">
+                <Tilt3D intensity={6} className="h-full">
+                  <div className="h-full flex flex-col rounded-3xl border border-white/10 bg-white/[0.04] p-7 hover:border-field/40 transition-colors duration-500">
+                    <div className="flex items-baseline justify-between gap-3">
+                      <h3 className="font-[family-name:var(--font-heading)] text-2xl font-bold">{f.name}</h3>
+                      <p className="font-[family-name:var(--font-heading)] text-3xl font-bold text-field whitespace-nowrap">
+                        {f.basePrice}€
+                      </p>
+                    </div>
+                    <p className="mt-1 text-sm font-medium text-kick">{f.tagline}</p>
+                    <p className="mt-3 text-muted-foreground leading-relaxed">{f.description}</p>
+
+                    <p className="mt-4 text-sm text-muted-foreground">
+                      Jusqu&apos;à <strong className="text-foreground">{f.includedChildren} enfants</strong>
+                      {" · "}+{f.extraChildPrice}€ par enfant supplémentaire
+                    </p>
+
+                    <ul className="mt-5 space-y-2 flex-1">
+                      {f.includes.map((inc) => (
+                        <li key={inc} className="flex items-start gap-2 text-sm text-muted-foreground">
+                          <Check className="size-4 text-field mt-0.5 shrink-0" />
+                          {inc}
+                        </li>
+                      ))}
+                    </ul>
+
+                    <p className="mt-5 text-xs text-muted-foreground flex items-start gap-1.5">
+                      <Cake className="size-3.5 mt-0.5 shrink-0 text-kick" /> {GATEAU_NOTE}
+                    </p>
+
+                    <MagneticButton className="inline-block mt-6">
+                      <Link
+                        href={`/reservation?activite=anniversaire`}
+                        className="btn-glass-field inline-flex items-center gap-2 text-[#0a0a0b] px-6 h-12 rounded-2xl font-semibold"
+                      >
+                        Réserver la formule {f.name} <ArrowRight className="size-4" />
+                      </Link>
+                    </MagneticButton>
+                  </div>
+                </Tilt3D>
+              </StaggerItem>
+            ))}
+          </StaggerContainer>
+
+          <FadeInView delay={0.2}>
+            <div className="mt-8 grid gap-3 sm:grid-cols-2">
+              <div className="flex items-start gap-3 rounded-xl border border-white/10 bg-white/[0.04] p-4">
+                <Clock className="size-5 text-field shrink-0 mt-0.5" />
+                <p className="text-sm text-muted-foreground">
+                  <strong className="text-foreground">Même à la dernière minute :</strong> réservez
+                  jusqu&apos;à {DELAI_RESERVATION_HEURES} heure avant le début.
+                </p>
+              </div>
+              <div className="flex items-start gap-3 rounded-xl border border-white/10 bg-white/[0.04] p-4">
+                <ShieldCheck className="size-5 text-field shrink-0 mt-0.5" />
+                <p className="text-sm text-muted-foreground">
+                  <strong className="text-foreground">Annulation :</strong> {RESUME_ANNULATION}
+                </p>
+              </div>
+            </div>
+          </FadeInView>
+        </div>
+      </section>
+
       {/* ── Vague de transition → team building ── */}
       <WaveDivider fill="#121214" />
 
@@ -195,14 +289,14 @@ export default function Home() {
               </h2>
               <p className="mt-5 text-muted-foreground leading-relaxed text-lg">
                 Venez vivre un team building sportif qui soude vos équipes :
-                tournoi de foot, Bubble Foot entre collègues, cocktail dînatoire…
-                On organise tout de A à Z. Disponible les <strong>lundi, mardi, jeudi et samedi dès 18h</strong>.
+                tournoi de foot indoor, Bubble Foot entre collègues, terrain rien que pour vous.
+                On organise tout de A à Z. Privatisation <strong>à la demi-journée</strong>, devis sur mesure.
               </p>
               <div className="mt-8 grid grid-cols-2 gap-4">
                 {[
                   { icon: Users, label: "10 à 40 personnes" },
-                  { icon: Sparkles, label: "3 formules" },
-                  { icon: Building2, label: "Salle privatisée" },
+                  { icon: Clock, label: "À la demi-journée" },
+                  { icon: Building2, label: "Terrain privatisé" },
                   { icon: Zap, label: "Devis sur mesure" },
                 ].map((item) => (
                   <div key={item.label} className="flex items-center gap-3 p-3 rounded-xl bg-white/[0.04] border border-white/10">
@@ -215,7 +309,7 @@ export default function Home() {
               </div>
               <MagneticButton className="inline-block mt-8">
                 <Link
-                  href="/reservation?activite=team-building"
+                  href="/reservation?activite=groupes"
                   className="btn-glass-field inline-flex items-center gap-2 text-[#0a0a0b] px-7 h-13 rounded-2xl text-base"
                 >
                   Organiser mon événement <ArrowRight className="size-5" />
@@ -258,7 +352,7 @@ export default function Home() {
             { icon: Star, title: "4.8/5", subtitle: "sur Google (200+ avis)", color: "bg-white/[0.04] text-field border-white/10" },
             { icon: MapPin, title: "Facile d'accès", subtitle: "Parking gratuit", color: "bg-white/[0.04] text-field border-white/10" },
             { icon: Baby, title: "Dès 6 ans", subtitle: "Encadrement adapté", color: "bg-white/[0.04] text-kick border-white/10" },
-            { icon: ShieldCheck, title: "100% sécurisé", subtitle: "Paiement via PayPal", color: "bg-white/[0.04] text-field border-white/10" },
+            { icon: CreditCard, title: "Réservation flexible", subtitle: `Jusqu’à ${DELAI_RESERVATION_HEURES}h avant`, color: "bg-white/[0.04] text-field border-white/10" },
           ].map((item) => (
             <StaggerItem key={item.title}>
               <div className={`text-center p-6 rounded-2xl border ${item.color} group hover:shadow-lg transition-all duration-500`}>

@@ -24,7 +24,7 @@ export function Footer() {
                 </span>
               </div>
               <p className="mt-4 text-sm text-white/60 leading-relaxed">
-                Votre complexe de foot indoor pour anniversaires, entrées libres,
+                Votre complexe de foot indoor pour anniversaires, Bubble Foot,
                 location de terrain et team building.
               </p>
             </div>
@@ -37,9 +37,9 @@ export function Footer() {
               <ul className="space-y-2.5">
                 {[
                   { label: "Anniversaires", href: "/reservation?activite=anniversaire" },
-                  { label: "Entrées libres", href: "/reservation?activite=libre" },
+                  { label: "Bubble Foot", href: "/reservation?activite=groupes" },
                   { label: "Location de terrain", href: "/reservation?activite=foot" },
-                  { label: "Team Building", href: "/reservation?activite=team-building" },
+                  { label: "Team Building", href: "/reservation?activite=groupes" },
                 ].map((item) => (
                   <li key={item.href}>
                     <Link href={item.href} className="text-sm text-white/60 hover:text-white transition-colors duration-300 inline-flex items-center gap-1 group">

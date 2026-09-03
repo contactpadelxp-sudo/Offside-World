@@ -4,17 +4,17 @@ import { useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import { ActivityChoice } from "./steps/activity-choice";
 import { AnniversaireFlow } from "./steps/anniversaire-flow";
-import { LibreFlow } from "./steps/libre-flow";
 import { FootFlow } from "./steps/foot-flow";
-import { TeamBuildingFlow } from "./steps/team-building-flow";
+import { GroupesFlow } from "./steps/groupes-flow";
 
-export type Activity = "anniversaire" | "libre" | "foot" | "team-building" | null;
+export type Activity = "anniversaire" | "foot" | "groupes" | null;
+
+const ACTIVITIES = ["anniversaire", "foot", "groupes"] as const;
 
 const stepLabels: Record<string, string> = {
   anniversaire: "Anniversaire",
-  libre: "Entrée libre",
-  foot: "Foot",
-  "team-building": "Team Building",
+  foot: "Location de terrain",
+  groupes: "Bubble Foot & Team Building",
 };
 
 export function ReservationFlow() {
@@ -23,7 +23,7 @@ export function ReservationFlow() {
 
   useEffect(() => {
     const a = searchParams.get("activite");
-    if (a && ["anniversaire", "libre", "foot", "team-building"].includes(a)) {
+    if (a && (ACTIVITIES as readonly string[]).includes(a)) {
       setActivity(a as Activity);
     }
   }, [searchParams]);
@@ -43,21 +43,10 @@ export function ReservationFlow() {
         )}
       </nav>
 
-      {!activity && (
-        <ActivityChoice onSelect={setActivity} />
-      )}
-      {activity === "anniversaire" && (
-        <AnniversaireFlow onBack={() => setActivity(null)} />
-      )}
-      {activity === "libre" && (
-        <LibreFlow onBack={() => setActivity(null)} />
-      )}
-      {activity === "foot" && (
-        <FootFlow onBack={() => setActivity(null)} />
-      )}
-      {activity === "team-building" && (
-        <TeamBuildingFlow onBack={() => setActivity(null)} />
-      )}
+      {!activity && <ActivityChoice onSelect={setActivity} />}
+      {activity === "anniversaire" && <AnniversaireFlow onBack={() => setActivity(null)} />}
+      {activity === "foot" && <FootFlow onBack={() => setActivity(null)} />}
+      {activity === "groupes" && <GroupesFlow onBack={() => setActivity(null)} />}
     </div>
   );
 }

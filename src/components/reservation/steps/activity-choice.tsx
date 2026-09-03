@@ -2,7 +2,7 @@
 
 import { Card, CardContent } from "@/components/ui/card";
 import { StaggerContainer, StaggerItem, Tilt3D } from "@/components/motion";
-import { Cake, CircleDot, Trophy, Building2, ArrowRight } from "lucide-react";
+import { Cake, Trophy, Users, ArrowRight } from "lucide-react";
 import type { Activity } from "../reservation-flow";
 
 const activities = [
@@ -10,7 +10,7 @@ const activities = [
     id: "anniversaire" as Activity,
     icon: Cake,
     title: "Anniversaire",
-    description: "Fêtez un anniversaire inoubliable avec foot, Bubble Foot et goûter !",
+    description: "Deux formules 100 % foot, à partir de 180 € jusqu'à 10 enfants.",
     gradient: "from-kick/10 via-[#121214] to-field/5",
     border: "border-kick/20 hover:border-kick/50",
     iconBg: "bg-kick/10 text-kick",
@@ -18,21 +18,10 @@ const activities = [
     span: "md:col-span-2",
   },
   {
-    id: "libre" as Activity,
-    icon: CircleDot,
-    title: "Entrée libre",
-    description: "Rejoignez une session ouverte à tous.",
-    gradient: "from-field/10 via-[#121214] to-field/5",
-    border: "border-field/20 hover:border-field/50",
-    iconBg: "bg-field/10 text-field",
-    accentColor: "text-field",
-    span: "",
-  },
-  {
     id: "foot" as Activity,
     icon: Trophy,
     title: "Location de terrain",
-    description: "Réservez un terrain privé entre amis.",
+    description: "Réservez un terrain privé entre amis, via SportFinder.",
     gradient: "from-field/10 via-[#121214] to-field/5",
     border: "border-field/20 hover:border-field/50",
     iconBg: "bg-field/10 text-field",
@@ -40,10 +29,10 @@ const activities = [
     span: "",
   },
   {
-    id: "team-building" as Activity,
-    icon: Building2,
-    title: "Team Building",
-    description: "Événement sportif pour votre entreprise.",
+    id: "groupes" as Activity,
+    icon: Users,
+    title: "Bubble Foot & Team Building",
+    description: "Bubble Foot à 23 €/personne, ou privatisation à la demi-journée.",
     gradient: "from-kick/5 via-[#121214] to-field/5",
     border: "border-field/20 hover:border-field/50",
     iconBg: "bg-kick/10 text-kick",

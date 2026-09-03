@@ -8,77 +8,94 @@ export interface Option {
 export interface Formule {
   id: string;
   name: string;
+  /** Accroche courte : « Je joue avec mes amis » */
+  tagline: string;
   description: string;
-  pricePerChild: number; // €/enfant
-  minChildren: number;
+  /** Prix forfaitaire, enfants inclus compris */
+  basePrice: number; // €
+  /** Nombre d'enfants couverts par le forfait */
+  includedChildren: number;
+  /** Supplément par enfant au-delà du forfait */
+  extraChildPrice: number; // €
   maxChildren: number;
   durationMinutes: number;
   includes: string[];
-  image: string; // placeholder
+  image: string;
+}
+
+/** Capacité maximale d'un anniversaire, toutes formules confondues. */
+export const MAX_CHILDREN = 20;
+
+/**
+ * Calcule le prix d'un anniversaire : forfait jusqu'à `includedChildren`,
+ * puis supplément par enfant supplémentaire.
+ */
+export function formulePrice(formule: Formule, nbChildren: number): number {
+  const extra = Math.max(0, nbChildren - formule.includedChildren);
+  return formule.basePrice + extra * formule.extraChildPrice;
 }
 
 export const formules: Formule[] = [
   {
-    id: "classique",
-    name: "Classique",
-    description: "L'anniversaire foot indoor par excellence : matchs encadrés, vestiaires privatisés et espace goûter dédié.",
-    pricePerChild: 18,
-    minChildren: 8,
-    maxChildren: 20,
+    id: "kick-off",
+    name: "Kick-Off",
+    tagline: "Je joue avec mes amis",
+    description:
+      "La formule idéale pour profiter d'un anniversaire 100 % foot en toute liberté.",
+    basePrice: 180,
+    includedChildren: 10,
+    extraChildPrice: 10,
+    maxChildren: MAX_CHILDREN,
     durationMinutes: 120,
     includes: [
-      "2h de terrain privatisé",
-      "Encadrement par un animateur",
-      "Vestiaires & chasubles",
-      "Espace goûter privatisé",
-      "Invitation digitale personnalisée",
+      "2 heures de Football Indoor",
+      "Terrain réservé pour le groupe",
+      "Ballons et chasubles à disposition",
+      "Accès aux vestiaires",
+      "Espace réservé pour le gâteau",
+      "Vidéo souvenir de l'anniversaire",
+      "Décoration de l'espace anniversaire",
+      "Assiettes, gobelets et serviettes",
+      "Eau, menthe et grenadine à volonté",
     ],
-    image: "/images/placeholder-classique.jpg",
+    image: "/images/anniv.jpg",
   },
   {
-    id: "bubble-foot",
-    name: "Bubble Foot",
-    description: "Le Bubble Foot, c'est LE truc en plus ! Les enfants jouent au foot dans des bulles géantes : fous rires garantis.",
-    pricePerChild: 25,
-    minChildren: 8,
-    maxChildren: 16,
-    durationMinutes: 150,
+    id: "bubble",
+    name: "Bubble",
+    tagline: "Je veux l'expérience la plus fun",
+    description:
+      "L'anniversaire Offside dans sa version la plus fun ! Une expérience qui mélange Football Indoor et Bubble Foot pour un maximum de rires et de souvenirs.",
+    basePrice: 290,
+    includedChildren: 10,
+    extraChildPrice: 15,
+    maxChildren: MAX_CHILDREN,
+    durationMinutes: 120,
     includes: [
-      "2h30 (dont 45 min Bubble Foot)",
-      "Encadrement par un animateur",
-      "Équipement Bubble Foot fourni",
-      "Vestiaires & chasubles",
-      "Espace goûter privatisé",
-      "Invitation digitale personnalisée",
+      "1 heure de Bubble Foot",
+      "Animateur Bubble dédié",
+      "1 heure de Football Indoor",
+      "Bulles et matériel compris",
+      "Terrain réservé pour le groupe",
+      "Vidéo souvenir de l'anniversaire",
+      "Décoration de l'espace anniversaire",
+      "Assiettes, gobelets et serviettes",
+      "Eau, menthe et grenadine à volonté",
+      "Espace réservé pour le gâteau",
     ],
-    image: "/images/placeholder-bubble.jpg",
-  },
-  {
-    id: "premium",
-    name: "Premium",
-    description: "La formule VIP : tout inclus avec Bubble Foot, décoration, gâteau et boissons pour un anniversaire inoubliable.",
-    pricePerChild: 35,
-    minChildren: 8,
-    maxChildren: 20,
-    durationMinutes: 180,
-    includes: [
-      "3h tout inclus",
-      "Bubble Foot (45 min)",
-      "Encadrement par 2 animateurs",
-      "Décoration thématique",
-      "Gâteau d'anniversaire",
-      "Boissons & goûter",
-      "Vestiaires & chasubles",
-      "Photo de groupe offerte",
-    ],
-    image: "/images/placeholder-premium.jpg",
+    image: "/images/anniv1.jpg",
   },
 ];
 
+/** Mention commune aux deux formules. */
+export const GATEAU_NOTE = "Le gâteau est apporté par les parents.";
+
+/**
+ * Options payantes en supplément.
+ * La décoration, les boissons et la vaisselle sont désormais comprises dans
+ * les deux formules : elles ne sont plus vendues à part.
+ */
 export const options: Option[] = [
-  { id: "deco", label: "Pack décoration", price: 40, description: "Ballons, guirlandes, nappe thématique foot" },
-  { id: "gateau", label: "Gâteau d'anniversaire", price: 35, description: "Gâteau pour 12 parts (saveur au choix)" },
-  { id: "boissons", label: "Pack boissons", price: 25, description: "Jus de fruits, eau, sirop pour tous les enfants" },
   { id: "photo", label: "Pack photo souvenir", price: 20, description: "Photos de groupe + individuelles imprimées" },
   { id: "pinata", label: "Piñata", price: 30, description: "Piñata remplie de bonbons" },
 ];

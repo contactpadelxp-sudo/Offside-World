@@ -49,7 +49,7 @@ export default function CGU() {
       <section className="mt-8 space-y-4">
         <h2 className="text-xl font-bold">5. Liens externes</h2>
         <p className="text-muted-foreground">
-          Le site peut contenir des liens vers des sites tiers (notamment Playtomic et Sport Finder pour la réservation de terrains). BELANTIS n&apos;exerce aucun contrôle sur le contenu de ces sites et décline toute responsabilité quant à leur contenu, leur politique de confidentialité ou leurs pratiques. L&apos;accès à ces sites se fait sous la seule responsabilité de l&apos;utilisateur.
+          Le site peut contenir des liens vers des sites tiers (notamment SportFinder pour la réservation de terrains). BELANTIS n&apos;exerce aucun contrôle sur le contenu de ces sites et décline toute responsabilité quant à leur contenu, leur politique de confidentialité ou leurs pratiques. L&apos;accès à ces sites se fait sous la seule responsabilité de l&apos;utilisateur.
         </p>
       </section>
 

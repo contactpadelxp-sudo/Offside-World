@@ -4,7 +4,6 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -13,8 +12,9 @@ import { Photo } from "@/components/photo";
 import { PhoneField } from "@/components/reservation/phone-field";
 import { isValidEmail } from "@/lib/validation";
 import { saveReservation } from "@/lib/reservation";
-import { formules, options, type Formule, type Option } from "@/data/formules";
-import { salles, timeSlots, isSlotBooked } from "@/data/salles";
+import { formules, options, formulePrice, GATEAU_NOTE, type Formule, type Option } from "@/data/formules";
+import { espaces, timeSlots, isSlotBooked } from "@/data/salles";
+import { RESUME_ANNULATION, DELAI_RESERVATION_HEURES } from "@/data/reglement";
 import {
   ArrowLeft,
   ArrowRight,
@@ -24,7 +24,8 @@ import {
   Calendar,
   Users,
   Sparkles,
-
+  Cake,
+  Info,
   AlertCircle,
   ShieldCheck,
 } from "lucide-react";
@@ -38,20 +39,10 @@ const STEPS: { key: Step; label: string }[] = [
   { key: "paiement", label: "Paiement" },
 ];
 
-const DATES = ["2026-06-14", "2026-06-15", "2026-06-21"];
-
-/* Image de chaque formule (chemins exacts dans public/images/) */
-const FORMULE_IMAGES: Record<string, string> = {
-  classique: "/images/anniv.jpg",
-  "bubble-foot": "/images/anniv1.jpg",
-  premium: "/images/anniv2.webp",
-};
+const DATES = ["2026-09-12", "2026-09-13", "2026-09-19"];
 
 /* Image de chaque option (chemins exacts dans public/images/) */
 const OPTION_IMAGES: Record<string, string> = {
-  deco: "/images/deco.jpeg",
-  gateau: "/images/gateau.jpeg",
-  boissons: "/images/boissons.webp",
   photo: "/images/photos.jpeg",
   pinata: "/images/pinata.webp",
 };
@@ -73,7 +64,7 @@ export function AnniversaireFlow({ onBack }: { onBack: () => void }) {
   const [childAge, setChildAge] = useState("");
   const [selectedOptions, setSelectedOptions] = useState<string[]>([]);
   const [selectedDate, setSelectedDate] = useState(DATES[0]);
-  const [selectedSalle, setSelectedSalle] = useState("");
+  const [selectedEspace, setSelectedEspace] = useState("");
   const [selectedSlot, setSelectedSlot] = useState("");
   const [parentName, setParentName] = useState("");
   const [parentEmail, setParentEmail] = useState("");
@@ -88,9 +79,13 @@ export function AnniversaireFlow({ onBack }: { onBack: () => void }) {
     );
   };
 
-  const totalPrice = selectedFormule
-    ? selectedFormule.pricePerChild * childCount +
-      options.filter((o) => selectedOptions.includes(o.id)).reduce((sum, o) => sum + o.price, 0)
+  const optionsTotal = options
+    .filter((o) => selectedOptions.includes(o.id))
+    .reduce((sum, o) => sum + o.price, 0);
+  const formuleTotal = selectedFormule ? formulePrice(selectedFormule, childCount) : 0;
+  const totalPrice = formuleTotal + (selectedFormule ? optionsTotal : 0);
+  const extraChildren = selectedFormule
+    ? Math.max(0, childCount - selectedFormule.includedChildren)
     : 0;
 
   const stepIndex = STEPS.findIndex((s) => s.key === step);
@@ -121,16 +116,18 @@ export function AnniversaireFlow({ onBack }: { onBack: () => void }) {
           ))}
         </div>
         <div className="h-1.5 bg-muted rounded-full overflow-hidden">
-          <div className="h-full bg-gradient-to-r from-field to-field-dark rounded-full progress-bar" style={{ width: `${((stepIndex) / (STEPS.length - 1)) * 100}%` }} />
+          <div className="h-full bg-gradient-to-r from-field to-kick rounded-full progress-bar" style={{ width: `${((stepIndex) / (STEPS.length - 1)) * 100}%` }} />
         </div>
       </div>
 
       {/* STEP 1: Formule */}
       {step === "formule" && (
         <FadeIn>
-          <h2 className="text-2xl font-bold font-[family-name:var(--font-heading)]">Choisissez votre formule</h2>
+          <h2 className="text-2xl font-bold font-[family-name:var(--font-heading)]">
+            2 formules, 2 façons de fêter son anniversaire
+          </h2>
           <p className="mt-1 text-muted-foreground">Sélectionnez la formule idéale pour l&apos;anniversaire.</p>
-          <div className="mt-6 grid gap-4 md:grid-cols-3">
+          <div className="mt-6 grid gap-4 sm:grid-cols-2">
             {formules.map((f) => (
               <button key={f.id} onClick={() => setSelectedFormule(f)} className="text-left">
                 <Card
@@ -143,24 +140,27 @@ export function AnniversaireFlow({ onBack }: { onBack: () => void }) {
                   <CardContent className="p-5">
                     <div className="relative aspect-video rounded-xl bg-gradient-to-br from-field/20 to-kick/20 flex items-center justify-center mb-4 overflow-hidden">
                       <CircleDot className="size-10 text-field/60" />
-                      <Photo src={FORMULE_IMAGES[f.id] ?? "/images/anniv.jpg"} alt={`Formule ${f.name}`} sizes="(max-width: 768px) 100vw, 360px" className="object-cover" />
+                      <Photo src={f.image} alt={`Formule ${f.name}`} sizes="(max-width: 640px) 100vw, 420px" className="object-cover" />
                     </div>
                     <h3 className="text-lg font-bold">{f.name}</h3>
-                    <p className="mt-1 text-sm text-muted-foreground line-clamp-2">{f.description}</p>
-                    <p className="mt-3 text-2xl font-bold font-[family-name:var(--font-heading)] text-field">
-                      {f.pricePerChild}€<span className="text-sm font-normal text-muted-foreground">/enfant</span>
+                    <p className="text-sm text-field font-medium">{f.tagline}</p>
+                    <p className="mt-2 text-sm text-muted-foreground">{f.description}</p>
+                    <p className="mt-3 text-3xl font-bold font-[family-name:var(--font-heading)] text-field">
+                      {f.basePrice}€
                     </p>
-                    <p className="text-xs text-muted-foreground">{f.durationMinutes} min • {f.minChildren}–{f.maxChildren} enfants</p>
+                    <p className="text-xs text-muted-foreground">
+                      Jusqu&apos;à {f.includedChildren} enfants • +{f.extraChildPrice}€ par enfant supplémentaire
+                    </p>
                     <ul className="mt-3 space-y-1">
-                      {f.includes.slice(0, 4).map((inc) => (
+                      {f.includes.map((inc) => (
                         <li key={inc} className="flex items-start gap-1.5 text-xs text-muted-foreground">
                           <Check className="size-3 text-field mt-0.5 shrink-0" />{inc}
                         </li>
                       ))}
-                      {f.includes.length > 4 && (
-                        <li className="text-xs text-muted-foreground">+ {f.includes.length - 4} inclus</li>
-                      )}
                     </ul>
+                    <p className="mt-3 text-xs text-muted-foreground flex items-start gap-1.5">
+                      <Cake className="size-3.5 mt-0.5 shrink-0 text-kick" /> {GATEAU_NOTE}
+                    </p>
                   </CardContent>
                 </Card>
               </button>
@@ -197,66 +197,98 @@ export function AnniversaireFlow({ onBack }: { onBack: () => void }) {
               <Input id="childAge" type="number" min={4} max={17} value={childAge} onChange={(e) => setChildAge(e.target.value)} placeholder="Ex. : 9" />
             </div>
             <div>
-              <Label htmlFor="childCount">Nombre d&apos;enfants invités</Label>
-              <Input id="childCount" type="number" min={selectedFormule.minChildren} max={selectedFormule.maxChildren} value={childCount} onChange={(e) => setChildCount(Number(e.target.value))} />
-              <p className="mt-1 text-xs text-muted-foreground">Min. {selectedFormule.minChildren} — Max. {selectedFormule.maxChildren} enfants</p>
+              <Label htmlFor="childCount">Nombre d&apos;enfants</Label>
+              <Input id="childCount" type="number" min={1} max={selectedFormule.maxChildren} value={childCount} onChange={(e) => setChildCount(Math.min(selectedFormule.maxChildren, Math.max(1, Number(e.target.value))))} />
+              <p className="mt-1 text-xs text-muted-foreground">
+                Forfait jusqu&apos;à {selectedFormule.includedChildren} enfants — maximum {selectedFormule.maxChildren}.
+              </p>
             </div>
           </div>
+
+          {/* Détail du prix */}
+          <Card className="mt-6 max-w-md border-2 border-field/30">
+            <CardContent className="p-4 space-y-2 text-sm">
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">
+                  Formule {selectedFormule.name} (jusqu&apos;à {selectedFormule.includedChildren} enfants)
+                </span>
+                <span className="font-semibold whitespace-nowrap ml-3">{selectedFormule.basePrice}€</span>
+              </div>
+              {extraChildren > 0 && (
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">
+                    {extraChildren} enfant{extraChildren > 1 ? "s" : ""} supplémentaire{extraChildren > 1 ? "s" : ""} × {selectedFormule.extraChildPrice}€
+                  </span>
+                  <span className="font-semibold whitespace-nowrap ml-3">+{extraChildren * selectedFormule.extraChildPrice}€</span>
+                </div>
+              )}
+              {optionsTotal > 0 && (
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Options</span>
+                  <span className="font-semibold whitespace-nowrap ml-3">+{optionsTotal}€</span>
+                </div>
+              )}
+              <div className="border-t pt-2 flex justify-between text-base">
+                <span className="font-bold">Total</span>
+                <span className="font-bold text-field">{totalPrice}€</span>
+              </div>
+            </CardContent>
+          </Card>
 
           {/* Options */}
           <h3 className="mt-8 text-lg font-bold font-[family-name:var(--font-heading)] flex items-center gap-2">
             <Sparkles className="size-5 text-kick" /> Options supplémentaires
           </h3>
-          <p className="mt-1 text-sm text-muted-foreground">Facultatif — ajoutez ce qui vous fait plaisir.</p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Facultatif — la décoration, les boissons et la vaisselle sont déjà comprises dans votre formule.
+          </p>
           <div className="mt-4 space-y-3">
-            {options.map((opt: Option) => {
-              const isIncluded = selectedFormule.id === "premium" && ["deco", "gateau", "boissons", "photo"].includes(opt.id);
-              return (
-                <button key={opt.id} onClick={() => !isIncluded && toggleOption(opt.id)} disabled={isIncluded} className="w-full text-left">
-                  <Card className={`border-2 transition-all duration-300 ${
-                    isIncluded ? "opacity-50 border-muted" : selectedOptions.includes(opt.id) ? "border-field ring-2 ring-field/20" : "hover:border-field/40 card-hover"
-                  }`}>
-                    <CardContent className="flex items-center justify-between p-4">
-                      <div className="flex items-center gap-3">
-                        <div className="relative h-14 w-20 shrink-0 overflow-hidden rounded-xl bg-field/5">
-                          {OPTION_IMAGES[opt.id] && <Photo src={OPTION_IMAGES[opt.id]} alt={opt.label} sizes="80px" className="object-cover" />}
-                        </div>
-                        <div>
-                          <p className="font-semibold">{opt.label}</p>
-                          {opt.description && <p className="text-sm text-muted-foreground">{opt.description}</p>}
-                          {isIncluded && <Badge variant="secondary" className="mt-1">Inclus dans Premium</Badge>}
-                        </div>
+            {options.map((opt: Option) => (
+              <button key={opt.id} onClick={() => toggleOption(opt.id)} className="w-full text-left">
+                <Card className={`border-2 transition-all duration-300 ${
+                  selectedOptions.includes(opt.id) ? "border-field ring-2 ring-field/20" : "hover:border-field/40 card-hover"
+                }`}>
+                  <CardContent className="flex items-center justify-between p-4">
+                    <div className="flex items-center gap-3">
+                      <div className="relative h-14 w-20 shrink-0 overflow-hidden rounded-xl bg-field/5">
+                        {OPTION_IMAGES[opt.id] && <Photo src={OPTION_IMAGES[opt.id]} alt={opt.label} sizes="80px" className="object-cover" />}
                       </div>
-                      <p className="text-lg font-bold text-field whitespace-nowrap ml-4">+{opt.price}€</p>
-                    </CardContent>
-                  </Card>
-                </button>
-              );
-            })}
+                      <div>
+                        <p className="font-semibold">{opt.label}</p>
+                        {opt.description && <p className="text-sm text-muted-foreground">{opt.description}</p>}
+                      </div>
+                    </div>
+                    <p className="text-lg font-bold text-field whitespace-nowrap ml-4">+{opt.price}€</p>
+                  </CardContent>
+                </Card>
+              </button>
+            ))}
           </div>
 
           <div className="mt-8 flex justify-between">
             <Button variant="ghost" onClick={() => setStep("formule")} className="gap-1.5"><ArrowLeft className="size-4" /> Retour</Button>
-            <Button onClick={() => setStep("creneau")} disabled={!childName || !childAge || childCount < selectedFormule.minChildren} className="btn-glass-field text-[#0a0a0b] border-0 gap-1.5">
+            <Button onClick={() => setStep("creneau")} disabled={!childName || !childAge} className="btn-glass-field text-[#0a0a0b] border-0 gap-1.5">
               Continuer <ArrowRight className="size-4" />
             </Button>
           </div>
         </FadeIn>
       )}
 
-      {/* STEP 3: Créneau + Salle */}
+      {/* STEP 3: Créneau + espace */}
       {step === "creneau" && (
         <FadeIn>
           <h2 className="text-2xl font-bold font-[family-name:var(--font-heading)] flex items-center gap-2">
             <Calendar className="size-6 text-field" /> Choisissez votre créneau
           </h2>
-          <p className="mt-1 text-muted-foreground">Sélectionnez une date, une salle et un horaire.</p>
+          <p className="mt-1 text-muted-foreground">
+            Réservation possible jusqu&apos;à {DELAI_RESERVATION_HEURES} heure avant le début, même à la dernière minute.
+          </p>
 
           <div className="mt-6">
             <Label>Date</Label>
             <div className="mt-2 flex gap-2 flex-wrap">
               {DATES.map((d) => (
-                <button key={d} onClick={() => { setSelectedDate(d); setSelectedSalle(""); setSelectedSlot(""); }}
+                <button key={d} onClick={() => { setSelectedDate(d); setSelectedEspace(""); setSelectedSlot(""); }}
                   className={`rounded-xl border-2 px-4 py-2.5 text-sm font-medium transition-all duration-300 ${
                     selectedDate === d ? "border-field bg-field/10 text-field" : "border-muted hover:border-field/40"
                   }`}
@@ -268,25 +300,25 @@ export function AnniversaireFlow({ onBack }: { onBack: () => void }) {
           </div>
 
           <div className="mt-8 space-y-4">
-            {salles.map((salle) => (
-              <Card key={salle.id} className="overflow-hidden">
+            {espaces.map((espace) => (
+              <Card key={espace.id} className="overflow-hidden">
                 <CardContent className="p-4">
                   <div className="flex items-start justify-between">
                     <div>
-                      <h3 className="font-bold">{salle.name}</h3>
-                      <p className="text-sm text-muted-foreground">{salle.description}</p>
-                      <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1"><Users className="size-3" /> Capacité : {salle.capacity} enfants</p>
+                      <h3 className="font-bold">{espace.name}</h3>
+                      <p className="text-sm text-muted-foreground">{espace.description}</p>
+                      <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1"><Users className="size-3" /> Capacité : {espace.capacity} enfants</p>
                     </div>
                   </div>
                   <div className="mt-3 flex flex-wrap gap-2">
                     {timeSlots.map((slot) => {
-                      const booked = isSlotBooked(salle.id, selectedDate, slot.id);
-                      const isSelected = selectedSalle === salle.id && selectedSlot === slot.id;
+                      const booked = isSlotBooked(espace.id, selectedDate, slot.id);
+                      const isSelected = selectedEspace === espace.id && selectedSlot === slot.id;
                       return (
                         <button key={slot.id} disabled={booked}
-                          onClick={() => { setSelectedSalle(salle.id); setSelectedSlot(slot.id); }}
+                          onClick={() => { setSelectedEspace(espace.id); setSelectedSlot(slot.id); }}
                           className={`rounded-xl border-2 px-3 py-2 text-sm font-medium transition-all duration-300 ${
-                            booked ? "border-red-200 bg-red-50 text-red-400 cursor-not-allowed line-through"
+                            booked ? "border-destructive/30 bg-destructive/10 text-destructive/70 cursor-not-allowed line-through"
                             : isSelected ? "border-field bg-field text-[#0a0a0b] shadow-lg shadow-field/20"
                             : "border-muted hover:border-field/40"
                           }`}
@@ -304,7 +336,7 @@ export function AnniversaireFlow({ onBack }: { onBack: () => void }) {
 
           <div className="mt-8 flex justify-between">
             <Button variant="ghost" onClick={() => setStep("details")} className="gap-1.5"><ArrowLeft className="size-4" /> Retour</Button>
-            <Button onClick={() => setStep("paiement")} disabled={!selectedSalle || !selectedSlot} className="btn-glass-field text-[#0a0a0b] border-0 gap-1.5">
+            <Button onClick={() => setStep("paiement")} disabled={!selectedEspace || !selectedSlot} className="btn-glass-field text-[#0a0a0b] border-0 gap-1.5">
               Continuer <ArrowRight className="size-4" />
             </Button>
           </div>
@@ -325,7 +357,7 @@ export function AnniversaireFlow({ onBack }: { onBack: () => void }) {
               <div className="flex justify-between"><span className="text-muted-foreground">Enfant fêté</span><span className="font-semibold">{childName} ({childAge} ans)</span></div>
               <div className="flex justify-between"><span className="text-muted-foreground">Nombre d&apos;enfants</span><span className="font-semibold">{childCount}</span></div>
               <div className="flex justify-between"><span className="text-muted-foreground">Date</span><span className="font-semibold">{formatDate(selectedDate)}</span></div>
-              <div className="flex justify-between"><span className="text-muted-foreground">Salle</span><span className="font-semibold">{salles.find((s) => s.id === selectedSalle)?.name}</span></div>
+              <div className="flex justify-between"><span className="text-muted-foreground">Espace</span><span className="font-semibold">{espaces.find((s) => s.id === selectedEspace)?.name}</span></div>
               <div className="flex justify-between"><span className="text-muted-foreground">Horaire</span><span className="font-semibold">{timeSlots.find((s) => s.id === selectedSlot)?.start} – {timeSlots.find((s) => s.id === selectedSlot)?.end}</span></div>
               {selectedOptions.length > 0 && (
                 <div className="flex justify-between"><span className="text-muted-foreground">Options</span><span className="font-semibold text-right">{options.filter((o) => selectedOptions.includes(o.id)).map((o) => o.label).join(", ")}</span></div>
@@ -334,8 +366,17 @@ export function AnniversaireFlow({ onBack }: { onBack: () => void }) {
                 <span className="font-bold">Total</span>
                 <span className="font-bold text-field">{totalPrice}€</span>
               </div>
+              <p className="text-xs text-muted-foreground flex items-start gap-1.5">
+                <Cake className="size-3.5 mt-0.5 shrink-0 text-kick" /> {GATEAU_NOTE}
+              </p>
             </CardContent>
           </Card>
+
+          {/* Conditions d'annulation */}
+          <div className="mt-4 rounded-xl border border-field/20 bg-field/5 p-4 text-sm text-muted-foreground flex items-start gap-3">
+            <Info className="size-4 text-field shrink-0 mt-0.5" />
+            <p><strong className="text-foreground">Annulation :</strong> {RESUME_ANNULATION}</p>
+          </div>
 
           {/* Coordonnées */}
           <div className="mt-6 space-y-4 max-w-md">
@@ -386,12 +427,12 @@ export function AnniversaireFlow({ onBack }: { onBack: () => void }) {
                   router.push(`/confirmation?ref=${ref}`);
                 }}
                 disabled={!acceptCGV || !parentName || !emailValid || !phoneValid}
-                className="btn-glass-paypal w-full h-14 text-white text-lg rounded-2xl font-semibold disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center justify-center gap-2"
+                className="btn-glass-field w-full h-14 text-[#0a0a0b] text-lg rounded-2xl font-semibold disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center justify-center gap-2"
               >
-                <Lock className="size-5" /> Payer avec PayPal (démo)
+                <Lock className="size-5" /> Payer ma réservation (démo)
               </button>
               <p className="mt-3 text-xs text-center text-muted-foreground flex items-center justify-center gap-1">
-                <ShieldCheck className="size-3.5" /> Paiement sécurisé — Aucune donnée de carte stockée.
+                <ShieldCheck className="size-3.5" /> Paiement par carte et Bancontact — bientôt disponible.
               </p>
             </CardContent>
           </Card>

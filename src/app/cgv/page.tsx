@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { PALIERS_ANNULATION, DELAI_RESERVATION_HEURES } from "@/data/reglement";
 
 export const metadata: Metadata = {
   title: "Conditions Générales de Vente | Offside World",
@@ -28,18 +29,37 @@ export default function CGV() {
       <section className="mt-8 space-y-4">
         <h2 className="text-xl font-bold">3. Réservation et paiement</h2>
         <p className="text-muted-foreground">
-          La réservation est confirmée après paiement intégral via PayPal. Le Client reçoit un email de confirmation. Le paiement est traité intégralement par PayPal (Europe) S.à r.l. et Cie, S.C.A. — aucune donnée de carte bancaire n&apos;est stockée par BELANTIS.
+          La réservation est confirmée après paiement intégral en ligne. Le Client reçoit un email de confirmation. Le paiement est traité par le prestataire de paiement (carte bancaire et Bancontact) — aucune donnée de carte bancaire n&apos;est stockée par BELANTIS.
+        </p>
+        <p className="text-muted-foreground">
+          Les réservations sont acceptées jusqu&apos;à <strong>{DELAI_RESERVATION_HEURES} heure avant</strong> le début de la prestation, sous réserve de disponibilité.
+        </p>
+        <p className="text-muted-foreground">
+          Les locations de terrain sont réservées et réglées via notre partenaire SportFinder, dont les conditions s&apos;appliquent à ces réservations.
+        </p>
+        <p className="text-muted-foreground">
+          Les prestations de team building font l&apos;objet d&apos;un devis préalable. La réservation devient ferme à l&apos;acceptation écrite du devis par le Client.
         </p>
       </section>
 
       <section className="mt-8 space-y-4">
         <h2 className="text-xl font-bold">4. Politique d&apos;annulation et de remboursement</h2>
-        <p className="text-muted-foreground">[À COMPLÉTER — Exemple de structure :]</p>
+        <p className="text-muted-foreground">
+          Le délai s&apos;apprécie par rapport à l&apos;heure de début de la prestation réservée.
+        </p>
         <ul className="list-disc pl-6 space-y-1 text-muted-foreground">
-          <li>Annulation plus de [X] jours avant la date : remboursement intégral</li>
-          <li>Annulation entre [X] et [Y] jours : remboursement de [X] %</li>
-          <li>Annulation moins de [Y] jours ou no-show : aucun remboursement</li>
+          {PALIERS_ANNULATION.map((palier) => (
+            <li key={palier.label}>{palier.label}</li>
+          ))}
         </ul>
+        <p className="text-muted-foreground">
+          L&apos;absence du Client le jour de la prestation (no-show) est assimilée à une annulation de moins de 48 heures : aucun remboursement n&apos;est dû.
+        </p>
+        <p className="text-muted-foreground">
+          Toute demande d&apos;annulation doit être adressée par email à{" "}
+          <a href="mailto:contact@offsideworld.be" className="underline text-primary">contact@offsideworld.be</a>.
+          Le remboursement est effectué sur le moyen de paiement d&apos;origine.
+        </p>
       </section>
 
       <section className="mt-8 space-y-4 rounded-lg border-2 border-primary/30 bg-primary/5 p-6">
@@ -48,7 +68,7 @@ export default function CGV() {
           Conformément à l&apos;article VI.53, 12° du Code de droit économique belge (transposant l&apos;article 16(l) de la directive 2011/83/UE), <strong>le droit de rétractation ne s&apos;applique pas</strong> aux contrats de fourniture de services de loisirs lorsque le contrat prévoit une date ou une période d&apos;exécution spécifique.
         </p>
         <p className="text-muted-foreground">
-          En réservant une prestation à date déterminée (anniversaire, location de terrain, entrée libre, team building), le Client reconnaît et accepte que le droit de rétractation de 14 jours prévu pour les contrats à distance ne s&apos;applique pas.
+          En réservant une prestation à date déterminée (anniversaire, location de terrain, Bubble Foot, team building), le Client reconnaît et accepte que le droit de rétractation de 14 jours prévu pour les contrats à distance ne s&apos;applique pas.
         </p>
       </section>
 

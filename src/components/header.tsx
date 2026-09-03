@@ -12,12 +12,11 @@ import { motion, AnimatePresence } from "framer-motion";
 const navLinksLeft = [
   { label: "Accueil", href: "/" },
   { label: "Anniversaires", href: "/reservation?activite=anniversaire" },
-  { label: "Entrées libres", href: "/reservation?activite=libre" },
 ];
 
 const navLinksRight = [
-  { label: "Foot", href: "/reservation?activite=foot" },
-  { label: "Team Building", href: "/reservation?activite=team-building" },
+  { label: "Terrain", href: "/reservation?activite=foot" },
+  { label: "Bubble & Team Building", href: "/reservation?activite=groupes" },
   { label: "Réserver", href: "/reservation", cta: true },
 ];
 

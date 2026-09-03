@@ -30,7 +30,7 @@ export default function Confidentialite() {
           <li><strong>Réservation :</strong> nom, prénom, email, téléphone</li>
           <li><strong>Anniversaire :</strong> prénom et âge de l&apos;enfant fêté, nombre d&apos;enfants invités</li>
           <li><strong>Team Building :</strong> nom de l&apos;entreprise, nom du contact, email, téléphone</li>
-          <li><strong>Paiement :</strong> traité intégralement par PayPal — aucune donnée de carte n&apos;est stockée sur nos serveurs</li>
+          <li><strong>Paiement :</strong> traité intégralement par notre prestataire de paiement (carte bancaire et Bancontact) — aucune donnée de carte n&apos;est stockée sur nos serveurs</li>
           <li><strong>Navigation :</strong> cookies (voir <a href="/politique-cookies" className="underline text-primary">Politique cookies</a>)</li>
         </ul>
       </section>
@@ -70,7 +70,8 @@ export default function Confidentialite() {
       <section className="mt-8 space-y-4">
         <h2 className="text-xl font-bold">5. Sous-traitants et destinataires</h2>
         <ul className="list-disc pl-6 space-y-1 text-muted-foreground">
-          <li><strong>PayPal (Europe) S.à r.l. et Cie, S.C.A.</strong> — traitement des paiements</li>
+          <li><strong>[Prestataire de paiement — à compléter]</strong> — traitement des paiements (carte bancaire et Bancontact)</li>
+          <li><strong>SportFinder</strong> — réservation et paiement des locations de terrain</li>
           <li><strong>Vercel Inc.</strong> — hébergement du site (USA, clauses contractuelles types)</li>
           <li><strong>[Fournisseur d&apos;emails — À COMPLÉTER]</strong> — envoi des confirmations</li>
         </ul>

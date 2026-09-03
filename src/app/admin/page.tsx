@@ -2,7 +2,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { mockReservations } from "@/data/backoffice";
 import type { Metadata } from "next";
-import { Cake, CircleDot, Trophy, Building2, ClipboardList, AlertTriangle, Phone, Package } from "lucide-react";
+import { Cake, CircleDot, Building2, ClipboardList, AlertTriangle, Phone, Package } from "lucide-react";
 
 export const metadata: Metadata = {
   title: "Back-office — Résumé du jour | Offside World",
@@ -12,8 +12,7 @@ export const metadata: Metadata = {
 
 const typeBadge: Record<string, { label: string; className: string; icon: typeof Cake }> = {
   anniversaire: { label: "Anniversaire", className: "bg-kick/10 text-kick border-kick/30", icon: Cake },
-  libre: { label: "Entrée libre", className: "bg-field/10 text-field border-field/30", icon: CircleDot },
-  foot: { label: "Foot", className: "bg-primary/10 text-primary border-primary/30", icon: Trophy },
+  bubble: { label: "Bubble Foot", className: "bg-field/10 text-field border-field/30", icon: CircleDot },
   "team-building": { label: "Team Building", className: "bg-white/10 text-foreground border-white/20", icon: Building2 },
 };
 
@@ -29,7 +28,10 @@ export default function AdminPage() {
             <ClipboardList className="size-7 text-field" /> Résumé du jour
           </h1>
           <p className="text-muted-foreground">
-            Réservations pour demain — <strong>mardi 10 juin 2026</strong>
+            Réservations pour demain — <strong>vendredi 4 septembre 2026</strong>
+          </p>
+          <p className="text-xs text-muted-foreground">
+            Les locations de terrain sont gérées sur SportFinder.
           </p>
         </div>
         <div className="text-right">
@@ -39,8 +41,8 @@ export default function AdminPage() {
       </div>
 
       {/* Stats */}
-      <div className="mt-8 grid grid-cols-2 gap-4 md:grid-cols-4">
-        {(["anniversaire", "foot", "libre", "team-building"] as const).map((type) => {
+      <div className="mt-8 grid grid-cols-2 gap-4 md:grid-cols-3">
+        {(["anniversaire", "bubble", "team-building"] as const).map((type) => {
           const count = mockReservations.filter((r) => r.type === type).length;
           const badge = typeBadge[type];
           const Icon = badge.icon;
@@ -81,8 +83,8 @@ export default function AdminPage() {
                   <div className="text-right">
                     <p className="text-lg font-bold text-field">{res.totalPrice}€</p>
                     <p className="text-sm font-medium">{res.timeSlot}</p>
-                    {res.salle && (
-                      <p className="text-xs text-muted-foreground">{res.salle}</p>
+                    {res.espace && (
+                      <p className="text-xs text-muted-foreground">{res.espace}</p>
                     )}
                   </div>
                 </div>
