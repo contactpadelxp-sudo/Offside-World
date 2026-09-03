@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Space_Grotesk, DM_Sans, JetBrains_Mono } from "next/font/google";
 import { Header } from "@/components/header";
+import { resolveLogoSrc } from "@/lib/logo";
 import { Footer } from "@/components/footer";
 import { CookieBannerWrapper } from "@/components/cookie-banner";
 import "./globals.css";
@@ -67,7 +68,7 @@ export default function RootLayout({
       className={`${spaceGrotesk.variable} ${dmSans.variable} ${jetBrainsMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
-        <Header />
+        <Header logoSrc={resolveLogoSrc()} />
         <main className="flex-1">{children}</main>
         <Footer />
         <CookieBannerWrapper />

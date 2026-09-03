@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState, useEffect } from "react";
 import { buttonVariants } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet";
+import { Logo } from "@/components/logo";
 import { cn } from "@/lib/utils";
 import { Menu, Zap } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -22,7 +23,7 @@ const navLinksRight = [
 
 const navLinks = [...navLinksLeft, ...navLinksRight.filter(l => !l.cta)];
 
-export function Header() {
+export function Header({ logoSrc }: { logoSrc: string | null }) {
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
 
@@ -60,8 +61,8 @@ export function Header() {
               </div>
 
               {/* Logo central */}
-              <Link href="/" className="shrink-0 mx-3 text-base font-bold tracking-tight font-[family-name:var(--font-heading)]">
-                Offside <span className="text-gradient-field">World</span>
+              <Link href="/" aria-label="Offside World — accueil" className="shrink-0 mx-3 flex items-center">
+                <Logo src={logoSrc} height={34} className="h-7 sm:h-8" textClassName="text-base" />
               </Link>
 
               {/* Right nav */}
@@ -120,8 +121,8 @@ export function Header() {
               </nav>
 
               {/* Logo central */}
-              <Link href="/" className="shrink-0 mx-4 lg:mx-6 text-lg lg:text-xl font-bold tracking-tight font-[family-name:var(--font-heading)]">
-                Offside <span className="text-gradient-field">World</span>
+              <Link href="/" aria-label="Offside World — accueil" className="shrink-0 mx-4 lg:mx-6 flex items-center">
+                <Logo src={logoSrc} height={52} className="h-9 md:h-11 lg:h-13" textClassName="text-lg lg:text-xl" />
               </Link>
 
               {/* Right nav */}
