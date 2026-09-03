@@ -20,17 +20,17 @@ const typeLabels: Record<string, string> = {
 
 function AnimatedCheck() {
   return (
-    <div className="mx-auto flex h-24 w-24 items-center justify-center rounded-3xl bg-gradient-to-br from-field/10 to-field/20">
+    <div className="mx-auto flex h-24 w-24 items-center justify-center rounded-3xl bg-gradient-to-br from-field/10 to-kick/20 ring-1 ring-field/25">
       <motion.div
         initial={{ scale: 0 }}
         animate={{ scale: 1 }}
         transition={{ type: "spring", stiffness: 200, damping: 12, delay: 0.2 }}
       >
         <svg width="56" height="56" viewBox="0 0 56 56" fill="none">
-          <circle cx="28" cy="28" r="26" stroke="#10b956" strokeWidth="3" opacity="0.2" />
+          <circle cx="28" cy="28" r="26" stroke="#f4b23f" strokeWidth="3" opacity="0.2" />
           <motion.circle
             cx="28" cy="28" r="26"
-            stroke="#10b956" strokeWidth="3"
+            stroke="#f4b23f" strokeWidth="3"
             strokeLinecap="round"
             initial={{ pathLength: 0 }}
             animate={{ pathLength: 1 }}
@@ -38,7 +38,7 @@ function AnimatedCheck() {
           />
           <motion.path
             d="M18 28 L25 35 L38 22"
-            stroke="#10b956" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" fill="none"
+            stroke="#f4b23f" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" fill="none"
             initial={{ pathLength: 0 }}
             animate={{ pathLength: 1 }}
             transition={{ duration: 0.5, delay: 0.8, ease: "easeOut" }}
@@ -74,7 +74,7 @@ export function ConfirmationContent() {
         <div className="text-center">
           <AnimatedCheck />
           <FadeIn delay={0.6}>
-            <h1 className="mt-8 text-3xl md:text-4xl font-bold font-[family-name:var(--font-heading)]">
+            <h1 className="mt-8 text-3xl md:text-4xl font-bold font-[family-name:var(--font-heading)] text-foreground">
               Réservation confirmée !
             </h1>
             <p className="mt-3 text-muted-foreground text-lg">
@@ -127,7 +127,7 @@ export function ConfirmationContent() {
                   <p><strong>Objet :</strong> Votre réservation Offside World — Confirmation</p>
                   <p>Bonjour, votre terrain est réservé ! Présentez le QR code ci-dessous.</p>
                   <div className="flex justify-center py-4">
-                    <div className="flex h-32 w-32 items-center justify-center rounded-2xl border-2 border-dashed border-field bg-white">
+                    <div className="flex h-32 w-32 items-center justify-center rounded-2xl border-2 border-dashed border-field bg-white/5">
                       <div className="text-center">
                         <QrCode className="size-12 text-field mx-auto" />
                         <p className="text-xs text-muted-foreground mt-1">QR Code<br />(simulé)</p>
@@ -135,7 +135,7 @@ export function ConfirmationContent() {
                     </div>
                   </div>
                   <div className="rounded-xl bg-field/10 p-4 text-sm">
-                    <p className="font-semibold text-field-dark flex items-center gap-1.5">
+                    <p className="font-semibold text-field flex items-center gap-1.5">
                       <Lightbulb className="size-4" /> Consignes :
                     </p>
                     <ul className="mt-2 space-y-1 text-muted-foreground">
@@ -153,7 +153,7 @@ export function ConfirmationContent() {
         {/* Actions */}
         <FadeIn delay={1.2}>
           <div className="mt-10 flex flex-col gap-3 sm:flex-row sm:justify-center">
-            <Link href="/" className="btn-glass-field inline-flex items-center justify-center gap-2 text-white px-6 h-12 rounded-2xl">
+            <Link href="/" className="btn-glass-field inline-flex items-center justify-center gap-2 text-[#0a0a0b] px-6 h-12 rounded-2xl">
               <Home className="size-4" /> Retour à l&apos;accueil
             </Link>
             <Link href="/reservation" className={cn(buttonVariants({ variant: "outline" }), "gap-2 h-12 rounded-2xl")}>

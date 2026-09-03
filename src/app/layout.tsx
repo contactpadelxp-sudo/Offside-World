@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Space_Grotesk, DM_Sans, JetBrains_Mono } from "next/font/google";
 import { Header } from "@/components/header";
 import { Footer } from "@/components/footer";
@@ -49,6 +49,11 @@ export const metadata: Metadata = {
       "Le complexe de foot indoor pour anniversaires, entrées libres, location de terrain et team building en Belgique.",
     images: ["/images/offside-foot-indoor.jpg"],
   },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#0a0a0b",
+  colorScheme: "dark",
 };
 
 export default function RootLayout({

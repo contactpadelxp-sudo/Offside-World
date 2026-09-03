@@ -248,7 +248,7 @@ export function WaveDivider({ fill = "#ffffff", flip = false, className }: { fil
 
 /* ═══ CONFETTI ═══ */
 export function Confetti() {
-  const colors = ["#10b956", "#0a7a3c", "#34d399", "#6ee7a0", "#ffffff", "#0d9648"];
+  const colors = ["#f4b23f", "#f9a03f", "#ffd48a", "#e07c10", "#ffffff", "#ffc266"];
   const pieces = Array.from({ length: 40 }, (_, i) => ({
     id: i,
     color: colors[i % colors.length],

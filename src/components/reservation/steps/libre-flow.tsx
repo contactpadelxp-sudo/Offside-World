@@ -52,7 +52,7 @@ export function LibreFlow({ onBack }: { onBack: () => void }) {
             {DATES.map((d) => (
               <button key={d} onClick={() => { setSelectedDate(d); setSelectedSlot(null); }}
                 className={`rounded-xl border-2 px-4 py-2.5 text-sm font-medium transition-all duration-300 ${
-                  selectedDate === d ? "border-field bg-field/10 text-field-dark" : "border-muted hover:border-field/40"
+                  selectedDate === d ? "border-field bg-field/10 text-field" : "border-muted hover:border-field/40"
                 }`}
               >{formatDate(d)}</button>
             ))}
@@ -84,7 +84,7 @@ export function LibreFlow({ onBack }: { onBack: () => void }) {
           )}
           <div className="mt-8 flex justify-between">
             <Button variant="ghost" onClick={onBack} className="gap-1.5"><ArrowLeft className="size-4" /> Retour</Button>
-            <Button onClick={() => setStep("recap")} disabled={!selectedSlot} className="btn-glass-field text-white border-0 gap-1.5">Continuer <ArrowRight className="size-4" /></Button>
+            <Button onClick={() => setStep("recap")} disabled={!selectedSlot} className="btn-glass-field text-[#0a0a0b] border-0 gap-1.5">Continuer <ArrowRight className="size-4" /></Button>
           </div>
         </FadeIn>
       )}
@@ -113,7 +113,7 @@ export function LibreFlow({ onBack }: { onBack: () => void }) {
           </div>
           <div className="mt-8 flex justify-between">
             <Button variant="ghost" onClick={() => setStep("creneau")} className="gap-1.5"><ArrowLeft className="size-4" /> Retour</Button>
-            <Button onClick={() => setStep("paiement")} disabled={!name || !emailValid || !phoneValid} className="btn-glass-field text-white border-0 gap-1.5">Continuer <ArrowRight className="size-4" /></Button>
+            <Button onClick={() => setStep("paiement")} disabled={!name || !emailValid || !phoneValid} className="btn-glass-field text-[#0a0a0b] border-0 gap-1.5">Continuer <ArrowRight className="size-4" /></Button>
           </div>
         </FadeIn>
       )}

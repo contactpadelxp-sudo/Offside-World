@@ -106,9 +106,9 @@ export function AnniversaireFlow({ onBack }: { onBack: () => void }) {
               <div
                 className={`flex h-9 w-9 items-center justify-center rounded-xl text-xs font-bold shrink-0 transition-all duration-500 ${
                   i < stepIndex
-                    ? "bg-gradient-to-br from-field to-field-dark text-white shadow-lg shadow-field/20"
+                    ? "bg-gradient-to-br from-field to-kick text-[#0a0a0b] shadow-lg shadow-field/20"
                     : i === stepIndex
-                    ? "bg-gradient-to-br from-field to-field-dark text-white ring-4 ring-field/20 scale-110"
+                    ? "bg-gradient-to-br from-field to-kick text-[#0a0a0b] ring-4 ring-field/20 scale-110"
                     : "bg-muted text-muted-foreground"
                 }`}
               >
@@ -168,7 +168,7 @@ export function AnniversaireFlow({ onBack }: { onBack: () => void }) {
           </div>
           <div className="mt-8 flex justify-between">
             <Button variant="ghost" onClick={onBack} className="gap-1.5"><ArrowLeft className="size-4" /> Retour</Button>
-            <Button onClick={() => setStep("details")} disabled={!selectedFormule} className="btn-glass-field text-white border-0 gap-1.5">
+            <Button onClick={() => setStep("details")} disabled={!selectedFormule} className="btn-glass-field text-[#0a0a0b] border-0 gap-1.5">
               Continuer <ArrowRight className="size-4" />
             </Button>
           </div>
@@ -237,7 +237,7 @@ export function AnniversaireFlow({ onBack }: { onBack: () => void }) {
 
           <div className="mt-8 flex justify-between">
             <Button variant="ghost" onClick={() => setStep("formule")} className="gap-1.5"><ArrowLeft className="size-4" /> Retour</Button>
-            <Button onClick={() => setStep("creneau")} disabled={!childName || !childAge || childCount < selectedFormule.minChildren} className="btn-glass-field text-white border-0 gap-1.5">
+            <Button onClick={() => setStep("creneau")} disabled={!childName || !childAge || childCount < selectedFormule.minChildren} className="btn-glass-field text-[#0a0a0b] border-0 gap-1.5">
               Continuer <ArrowRight className="size-4" />
             </Button>
           </div>
@@ -258,7 +258,7 @@ export function AnniversaireFlow({ onBack }: { onBack: () => void }) {
               {DATES.map((d) => (
                 <button key={d} onClick={() => { setSelectedDate(d); setSelectedSalle(""); setSelectedSlot(""); }}
                   className={`rounded-xl border-2 px-4 py-2.5 text-sm font-medium transition-all duration-300 ${
-                    selectedDate === d ? "border-field bg-field/10 text-field-dark" : "border-muted hover:border-field/40"
+                    selectedDate === d ? "border-field bg-field/10 text-field" : "border-muted hover:border-field/40"
                   }`}
                 >
                   {formatDate(d)}
@@ -287,7 +287,7 @@ export function AnniversaireFlow({ onBack }: { onBack: () => void }) {
                           onClick={() => { setSelectedSalle(salle.id); setSelectedSlot(slot.id); }}
                           className={`rounded-xl border-2 px-3 py-2 text-sm font-medium transition-all duration-300 ${
                             booked ? "border-red-200 bg-red-50 text-red-400 cursor-not-allowed line-through"
-                            : isSelected ? "border-field bg-field text-white shadow-lg shadow-field/20"
+                            : isSelected ? "border-field bg-field text-[#0a0a0b] shadow-lg shadow-field/20"
                             : "border-muted hover:border-field/40"
                           }`}
                         >
@@ -304,7 +304,7 @@ export function AnniversaireFlow({ onBack }: { onBack: () => void }) {
 
           <div className="mt-8 flex justify-between">
             <Button variant="ghost" onClick={() => setStep("details")} className="gap-1.5"><ArrowLeft className="size-4" /> Retour</Button>
-            <Button onClick={() => setStep("paiement")} disabled={!selectedSalle || !selectedSlot} className="btn-glass-field text-white border-0 gap-1.5">
+            <Button onClick={() => setStep("paiement")} disabled={!selectedSalle || !selectedSlot} className="btn-glass-field text-[#0a0a0b] border-0 gap-1.5">
               Continuer <ArrowRight className="size-4" />
             </Button>
           </div>

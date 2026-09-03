@@ -45,14 +45,14 @@ export function Header() {
             transition={{ duration: 0.4, ease: [0.4, 0, 0.2, 1] }}
             className="flex justify-center pt-3 px-4 pointer-events-none"
           >
-            <nav className="pointer-events-auto relative w-full max-w-3xl flex items-center justify-center gap-1 h-12 rounded-full bg-white/90 backdrop-blur-2xl shadow-[0_2px_24px_rgba(0,0,0,0.06)] border border-black/[0.04] px-4">
+            <nav className="pointer-events-auto relative w-full max-w-3xl flex items-center justify-center gap-1 h-12 rounded-full bg-[#121214]/90 backdrop-blur-2xl shadow-[0_2px_24px_rgba(0,0,0,0.5)] border border-white/10 px-4">
               {/* Left nav */}
               <div className="hidden md:flex items-center gap-0.5 flex-1 justify-end">
                 {navLinksLeft.map((link) => (
                   <Link
                     key={link.href}
                     href={link.href}
-                    className="px-3 py-1.5 text-[12px] font-medium text-foreground/60 hover:text-foreground rounded-full hover:bg-black/[0.04] transition-colors duration-200"
+                    className="px-3 py-1.5 text-[12px] font-medium text-foreground/70 hover:text-foreground rounded-full hover:bg-white/10 transition-colors duration-200"
                   >
                     {link.label}
                   </Link>
@@ -71,7 +71,7 @@ export function Header() {
                     <Link
                       key={link.href}
                       href={link.href}
-                      className="inline-flex items-center gap-1.5 text-white font-semibold bg-gradient-to-r from-field to-field-dark px-4 h-8 rounded-full text-[12px] ml-1 hover:shadow-md hover:shadow-field/20 transition-shadow duration-300"
+                      className="inline-flex items-center gap-1.5 text-[#0a0a0b] font-semibold bg-gradient-to-r from-field to-field-dark px-4 h-8 rounded-full text-[12px] ml-1 hover:shadow-md hover:shadow-field/20 transition-shadow duration-300"
                     >
                       <Zap className="size-3" />
                       Réserver
@@ -80,7 +80,7 @@ export function Header() {
                     <Link
                       key={link.href}
                       href={link.href}
-                      className="px-3 py-1.5 text-[12px] font-medium text-foreground/60 hover:text-foreground rounded-full hover:bg-black/[0.04] transition-colors duration-200"
+                      className="px-3 py-1.5 text-[12px] font-medium text-foreground/70 hover:text-foreground rounded-full hover:bg-white/10 transition-colors duration-200"
                     >
                       {link.label}
                     </Link>
@@ -104,14 +104,14 @@ export function Header() {
             transition={{ duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] }}
             className="pointer-events-none pt-4 px-4 lg:px-6"
           >
-            <div className="pointer-events-auto mx-auto max-w-5xl flex items-center justify-center h-[4.5rem] rounded-2xl bg-white/60 backdrop-blur-xl border border-white/40 shadow-[0_1px_12px_rgba(0,0,0,0.03)] px-6 lg:px-8 gap-2">
+            <div className="pointer-events-auto mx-auto max-w-5xl flex items-center justify-center h-[4.5rem] rounded-2xl bg-[#121214]/70 backdrop-blur-xl border border-white/10 shadow-[0_1px_12px_rgba(0,0,0,0.4)] px-6 lg:px-8 gap-2">
               {/* Left nav */}
               <nav className="hidden md:flex items-center gap-1 flex-1 justify-end">
                 {navLinksLeft.map((link) => (
                   <Link
                     key={link.href}
                     href={link.href}
-                    className="relative px-3 py-2 text-[13px] font-medium text-foreground/50 hover:text-foreground rounded-xl hover:bg-black/[0.03] transition-all duration-200 group"
+                    className="relative px-3 py-2 text-[13px] font-medium text-foreground/70 hover:text-foreground rounded-xl hover:bg-white/10 transition-all duration-200 group"
                   >
                     {link.label}
                     <span className="absolute bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-field scale-0 group-hover:scale-100 transition-transform duration-200" />
@@ -131,7 +131,7 @@ export function Header() {
                     <Link
                       key={link.href}
                       href={link.href}
-                      className="inline-flex items-center gap-1.5 text-white font-semibold bg-gradient-to-r from-field to-field-dark px-5 h-9 rounded-xl text-[13px] ml-2 hover:shadow-lg hover:shadow-field/20 transition-shadow duration-300"
+                      className="inline-flex items-center gap-1.5 text-[#0a0a0b] font-semibold bg-gradient-to-r from-field to-field-dark px-5 h-9 rounded-xl text-[13px] ml-2 hover:shadow-lg hover:shadow-field/20 transition-shadow duration-300"
                     >
                       Réserver
                     </Link>
@@ -139,7 +139,7 @@ export function Header() {
                     <Link
                       key={link.href}
                       href={link.href}
-                      className="relative px-3 py-2 text-[13px] font-medium text-foreground/50 hover:text-foreground rounded-xl hover:bg-black/[0.03] transition-all duration-200 group"
+                      className="relative px-3 py-2 text-[13px] font-medium text-foreground/70 hover:text-foreground rounded-xl hover:bg-white/10 transition-all duration-200 group"
                     >
                       {link.label}
                       <span className="absolute bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-field scale-0 group-hover:scale-100 transition-transform duration-200" />
@@ -191,7 +191,7 @@ function MobileMenu({ open, setOpen }: { open: boolean; setOpen: (v: boolean) =>
           <Link
             href="/reservation"
             onClick={() => setOpen(false)}
-            className="mt-4 inline-flex items-center justify-center gap-2 text-white w-full h-12 rounded-2xl font-semibold bg-gradient-to-r from-field to-field-dark"
+            className="mt-4 inline-flex items-center justify-center gap-2 text-[#0a0a0b] w-full h-12 rounded-2xl font-semibold bg-gradient-to-r from-field to-kick"
           >
             <Zap className="size-4" />
             Réserver

@@ -129,11 +129,11 @@ export function CookieBanner() {
 
             <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:flex-wrap">
               {/* Refuser et Accepter ont volontairement le même poids visuel (conformité RGPD/CNIL) */}
-              <Button onClick={acceptAll} className="flex-1 btn-glass-field text-white border-0 gap-1.5">
+              <Button onClick={acceptAll} className="flex-1 btn-glass-field text-[#0a0a0b] border-0 gap-1.5">
                 <Check className="size-4" />
                 Tout accepter
               </Button>
-              <Button onClick={refuseAll} className="flex-1 bg-foreground text-background hover:bg-foreground/90 gap-1.5">
+              <Button onClick={refuseAll} className="flex-1 bg-[#ece7de] text-[#0a0a0b] hover:bg-[#f6f2ea] gap-1.5">
                 <X className="size-4" />
                 Tout refuser
               </Button>

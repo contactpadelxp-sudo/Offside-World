@@ -13,10 +13,10 @@ const cards = [
     icon: Cake,
     title: "Anniversaires",
     desc: "Foot, Bubble Foot, goûter privatisé et fous rires garantis. La formule parfaite pour un anniversaire inoubliable.",
-    itemClassName: "bg-gradient-to-br from-kick to-kick-dark text-white",
-    badgeClass: "bg-white/20 text-white",
-    ctaClass: "text-white",
-    frameClass: "border-white/30 bg-white/10",
+    itemClassName: "bg-gradient-to-br from-field to-kick text-[#0a0a0b]",
+    badgeClass: "bg-black/15 text-[#0a0a0b]",
+    ctaClass: "text-[#0a0a0b]",
+    frameClass: "border-black/25 bg-black/10",
     img: "/images/foot.jpeg",
   },
   {
@@ -24,10 +24,10 @@ const cards = [
     icon: CircleDot,
     title: "Entrées libres",
     desc: "Sessions ouvertes à tous, ambiance garantie. Venez seul ou entre amis, on s'occupe du reste.",
-    itemClassName: "bg-gradient-to-br from-field to-field-dark text-white",
-    badgeClass: "bg-white/20 text-white",
-    ctaClass: "text-white",
-    frameClass: "border-white/30 bg-white/10",
+    itemClassName: "bg-[#151517] text-foreground border border-white/10",
+    badgeClass: "bg-field/15 text-field",
+    ctaClass: "text-field",
+    frameClass: "border-field/30 bg-field/5",
     img: "/images/foot2.avif",
   },
   {
@@ -35,10 +35,10 @@ const cards = [
     icon: Trophy,
     title: "Location de terrain",
     desc: "Terrain privé avec éclairage, ballon et vestiaires. Réservez votre créneau entre amis.",
-    itemClassName: "bg-white text-foreground border border-field/15",
-    badgeClass: "bg-field/10 text-field",
-    ctaClass: "text-field",
-    frameClass: "border-field/25 bg-field/5",
+    itemClassName: "bg-gradient-to-br from-kick to-kick-dark text-[#0a0a0b]",
+    badgeClass: "bg-black/15 text-[#0a0a0b]",
+    ctaClass: "text-[#0a0a0b]",
+    frameClass: "border-black/25 bg-black/10",
     img: "/images/foot3.jpeg",
   },
 ];
@@ -143,12 +143,12 @@ export default function ActivitesStack({ children }: { children?: React.ReactNod
       <div className="sticky top-0 h-screen overflow-hidden flex flex-col justify-start pt-24 md:pt-28">
         {/* Décor graphique de fond (rond central, points, halos) */}
         <div aria-hidden className="pointer-events-none absolute inset-0">
-          <div className="absolute -right-48 top-16 w-[30rem] h-[30rem] rounded-full border-2 border-field/10" />
-          <div className="absolute -right-28 top-36 w-72 h-72 rounded-full border-2 border-field/10" />
-          <div className="absolute -right-8 top-56 w-32 h-32 rounded-full bg-field/5" />
+          <div className="absolute -right-48 top-16 w-[30rem] h-[30rem] rounded-full border-2 border-field/15" />
+          <div className="absolute -right-28 top-36 w-72 h-72 rounded-full border-2 border-field/15" />
+          <div className="absolute -right-8 top-56 w-32 h-32 rounded-full bg-field/[0.06]" />
           <div className="absolute left-6 md:left-12 top-32 w-44 h-44 dot-grid fade-mask-radial" />
-          <div className="absolute -left-28 bottom-12 w-80 h-80 rounded-full bg-field/10 blur-3xl" />
-          <div className="absolute -left-16 -top-16 w-56 h-56 rounded-full border-2 border-dashed border-field/15" />
+          <div className="absolute -left-28 bottom-12 w-80 h-80 rounded-full bg-field/15 blur-3xl" />
+          <div className="absolute -left-16 -top-16 w-56 h-56 rounded-full border-2 border-dashed border-field/20" />
         </div>
         {children}
         <div ref={areaRef} className="relative mx-auto w-full max-w-6xl px-4 lg:px-8 mt-4">

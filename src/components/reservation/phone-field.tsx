@@ -81,7 +81,7 @@ export function PhoneField({
           aria-label="Indicatif pays"
           value={country}
           onChange={(e) => handleCountry(e.target.value as CountryCode)}
-          className="h-8 shrink-0 rounded-lg border border-input bg-transparent px-2 text-sm outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+          className="h-9 shrink-0 rounded-lg border border-input bg-input/30 px-2 text-sm text-foreground outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
         >
           {COUNTRIES.map((c) => (
             <option key={c.code} value={c.code}>

@@ -11,10 +11,10 @@ export const metadata: Metadata = {
 };
 
 const typeBadge: Record<string, { label: string; className: string; icon: typeof Cake }> = {
-  anniversaire: { label: "Anniversaire", className: "bg-kick/10 text-kick-dark border-kick/30", icon: Cake },
-  libre: { label: "Entrée libre", className: "bg-field/10 text-field-dark border-field/30", icon: CircleDot },
+  anniversaire: { label: "Anniversaire", className: "bg-kick/10 text-kick border-kick/30", icon: Cake },
+  libre: { label: "Entrée libre", className: "bg-field/10 text-field border-field/30", icon: CircleDot },
   foot: { label: "Foot", className: "bg-primary/10 text-primary border-primary/30", icon: Trophy },
-  "team-building": { label: "Team Building", className: "bg-violet-100 text-violet-700 border-violet-300", icon: Building2 },
+  "team-building": { label: "Team Building", className: "bg-white/10 text-foreground border-white/20", icon: Building2 },
 };
 
 export default function AdminPage() {
@@ -105,7 +105,7 @@ export default function AdminPage() {
                     )}
                   </div>
                   {res.notes && (
-                    <p className="mt-2 text-sm text-kick-dark font-medium flex items-center gap-1.5">
+                    <p className="mt-2 text-sm text-kick font-medium flex items-center gap-1.5">
                       <AlertTriangle className="size-4 shrink-0" /> {res.notes}
                     </p>
                   )}

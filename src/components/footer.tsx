@@ -8,15 +8,15 @@ export function Footer() {
   return (
     <footer className="mt-auto relative overflow-hidden">
       {/* Gradient top border */}
-      <div className="h-1 bg-gradient-to-r from-field via-kick to-field" />
+      <div className="h-px bg-gradient-to-r from-transparent via-field/60 to-transparent" />
 
-      <div className="bg-[#07130b] text-white grain">
+      <div className="bg-[#050506] text-white grain">
         <div className="mx-auto max-w-7xl px-4 lg:px-8 py-16">
           <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-4">
             {/* Brand */}
             <div className="lg:col-span-1">
               <div className="flex items-center gap-2.5">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-field to-field-dark text-white text-sm font-bold">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-field to-field-dark text-[#0a0a0b] text-sm font-bold">
                   OW
                 </div>
                 <span className="text-lg font-bold font-[family-name:var(--font-heading)]">

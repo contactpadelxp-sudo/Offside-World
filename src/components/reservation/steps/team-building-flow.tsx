@@ -87,7 +87,7 @@ export function TeamBuildingFlow({ onBack }: { onBack: () => void }) {
           )}
           <div className="mt-8 flex justify-between">
             <Button variant="ghost" onClick={onBack} className="gap-1.5"><ArrowLeft className="size-4" /> Retour</Button>
-            <Button onClick={() => setStep("creneau")} disabled={!selectedPkg || nbPeople < (selectedPkg?.minPeople ?? 0)} className="btn-glass-field text-white border-0 gap-1.5">
+            <Button onClick={() => setStep("creneau")} disabled={!selectedPkg || nbPeople < (selectedPkg?.minPeople ?? 0)} className="btn-glass-field text-[#0a0a0b] border-0 gap-1.5">
               Continuer <ArrowRight className="size-4" />
             </Button>
           </div>
@@ -116,7 +116,7 @@ export function TeamBuildingFlow({ onBack }: { onBack: () => void }) {
           </div>
           <div className="mt-8 flex justify-between">
             <Button variant="ghost" onClick={() => setStep("formule")} className="gap-1.5"><ArrowLeft className="size-4" /> Retour</Button>
-            <Button onClick={() => setStep("recap")} disabled={!selectedSlot} className="btn-glass-field text-white border-0 gap-1.5">Continuer <ArrowRight className="size-4" /></Button>
+            <Button onClick={() => setStep("recap")} disabled={!selectedSlot} className="btn-glass-field text-[#0a0a0b] border-0 gap-1.5">Continuer <ArrowRight className="size-4" /></Button>
           </div>
         </FadeIn>
       )}
@@ -151,7 +151,7 @@ export function TeamBuildingFlow({ onBack }: { onBack: () => void }) {
           </div>
           <div className="mt-8 flex justify-between">
             <Button variant="ghost" onClick={() => setStep("creneau")} className="gap-1.5"><ArrowLeft className="size-4" /> Retour</Button>
-            <Button onClick={() => setStep("paiement")} disabled={!companyName || !contactName || !emailValid || !phoneValid} className="btn-glass-field text-white border-0 gap-1.5">
+            <Button onClick={() => setStep("paiement")} disabled={!companyName || !contactName || !emailValid || !phoneValid} className="btn-glass-field text-[#0a0a0b] border-0 gap-1.5">
               Continuer <ArrowRight className="size-4" />
             </Button>
           </div>

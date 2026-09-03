@@ -26,12 +26,12 @@ export default function Home() {
   return (
     <>
       {/* ══════ HERO ══════ */}
-      <section className="relative min-h-[88vh] flex items-center justify-center overflow-hidden bg-white">
+      <section className="relative min-h-[88vh] flex items-center justify-center overflow-hidden bg-[#0a0a0b]">
         {/* MagicRings background */}
         <div className="absolute inset-0 z-0">
           <MagicRings
-            color="#33ff00"
-            colorTwo="#00d11b"
+            color="#f4b23f"
+            colorTwo="#f9a03f"
             ringCount={6}
             speed={1}
             attenuation={10}
@@ -56,7 +56,7 @@ export default function Home() {
         <div className="grain" style={{ position: "absolute", inset: 0, pointerEvents: "none", zIndex: 1 }} />
 
         {/* Overlay radial blanc pour lisibilité au centre */}
-        <div className="absolute inset-0 z-[1] bg-radial-[ellipse_at_center] from-white/80 via-white/50 to-transparent" />
+        <div className="absolute inset-0 z-[1] bg-radial-[ellipse_at_center] from-black/65 via-black/35 to-transparent" />
 
         <div className="relative z-10 mx-auto max-w-5xl px-4 lg:px-8 pt-28 pb-14 md:pt-32 md:pb-16 w-full text-center">
           {/* Headline central */}
@@ -87,7 +87,7 @@ export default function Home() {
             <div className="mt-10 flex flex-col sm:flex-row sm:flex-wrap justify-center gap-4 px-2">
               <Link
                 href="/reservation"
-                className="btn-glass-field inline-flex items-center justify-center gap-2 text-white text-lg px-8 h-14 rounded-2xl"
+                className="btn-glass-field inline-flex items-center justify-center gap-2 text-[#0a0a0b] text-lg px-8 h-14 rounded-2xl"
               >
                 Réserver maintenant
               </Link>
@@ -120,7 +120,7 @@ export default function Home() {
 
           {/* Cadre d'aperçu du complexe */}
           <FadeIn delay={1.5}>
-            <div className="relative mt-12 mx-auto w-full max-w-3xl aspect-[16/9] overflow-hidden rounded-3xl border-2 border-dashed border-field/30 bg-white/40 backdrop-blur-sm shadow-xl shadow-field/5 flex items-center justify-center">
+            <div className="relative mt-12 mx-auto w-full max-w-3xl aspect-[16/9] overflow-hidden rounded-3xl border-2 border-dashed border-field/30 bg-white/[0.04] backdrop-blur-sm shadow-2xl shadow-black/40 flex items-center justify-center">
               <span className="text-sm text-muted-foreground/70 tracking-wide">Aperçu du complexe — photo à venir</span>
               <Photo src="/images/offside-foot-indoor.jpg" alt="Le complexe Offside World — foot indoor" sizes="(max-width: 768px) 100vw, 768px" className="object-cover" preload />
             </div>
@@ -137,10 +137,10 @@ export default function Home() {
       </section>
 
       {/* ── Vague de transition hero → marquee ── */}
-      <WaveDivider fill="#eef3f0" className="-mt-1 relative z-10" />
+      <WaveDivider fill="#121214" className="-mt-1 relative z-10" />
 
       {/* ══════ MARQUEE ══════ */}
-      <section className="py-5 overflow-hidden bg-[#eef3f0]">
+      <section className="py-5 overflow-hidden bg-[#121214]">
         <Marquee speed={25} className="text-muted-foreground/50 font-[family-name:var(--font-heading)] text-2xl md:text-3xl font-bold">
           <div className="flex items-center gap-8 px-4">
             {marqueeItems.map((item, i) => (
@@ -154,14 +154,14 @@ export default function Home() {
       </section>
 
       {/* ── Vague de sortie marquee → activités ── */}
-      <WaveDivider fill="#eef3f0" flip />
+      <WaveDivider fill="#121214" flip />
 
       {/* ══════ ACTIVITÉS — section épinglée pendant l'empilement ══════ */}
       <section id="activites">
         <ActivitesStack>
           <FadeInView>
             <div className="text-center max-w-2xl mx-auto px-4">
-              <span className="inline-flex items-center gap-2 rounded-full bg-field/10 px-4 py-1.5 text-sm font-semibold text-field-dark mb-4">
+              <span className="inline-flex items-center gap-2 rounded-full bg-field/10 px-4 py-1.5 text-sm font-semibold text-field mb-4">
                 <PartyPopper className="size-4" /> Nos activités
               </span>
               <h2 className="font-[family-name:var(--font-heading)] text-3xl md:text-5xl font-bold">
@@ -173,10 +173,10 @@ export default function Home() {
       </section>
 
       {/* ── Vague de transition → team building ── */}
-      <WaveDivider fill="#eef3f0" />
+      <WaveDivider fill="#121214" />
 
       {/* ══════ TEAM BUILDING ══════ */}
-      <section className="bg-[#eef3f0] grain relative overflow-hidden">
+      <section className="bg-[#121214] grain relative overflow-hidden">
         {/* Décor : demi rond central + points + halo */}
         <div aria-hidden className="pointer-events-none absolute inset-0">
           <div className="absolute -left-40 top-1/2 -translate-y-1/2 w-96 h-96 rounded-full border-2 border-field/15" />
@@ -187,7 +187,7 @@ export default function Home() {
         <div className="relative mx-auto max-w-7xl px-4 lg:px-8 py-12 md:py-16">
           <div className="grid items-center gap-14 lg:grid-cols-2">
             <FadeInView>
-              <span className="inline-flex items-center gap-2 rounded-full bg-field/10 px-4 py-1.5 text-sm font-semibold text-field-dark mb-4">
+              <span className="inline-flex items-center gap-2 rounded-full bg-field/10 px-4 py-1.5 text-sm font-semibold text-field mb-4">
                 <Building2 className="size-4" /> Entreprises
               </span>
               <h2 className="font-[family-name:var(--font-heading)] text-3xl md:text-5xl font-bold leading-tight">
@@ -205,7 +205,7 @@ export default function Home() {
                   { icon: Building2, label: "Salle privatisée" },
                   { icon: Zap, label: "Devis sur mesure" },
                 ].map((item) => (
-                  <div key={item.label} className="flex items-center gap-3 p-3 rounded-xl bg-white/70 border border-field/10">
+                  <div key={item.label} className="flex items-center gap-3 p-3 rounded-xl bg-white/[0.04] border border-white/10">
                     <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-field/10 text-field shrink-0">
                       <item.icon className="size-4" />
                     </div>
@@ -216,7 +216,7 @@ export default function Home() {
               <MagneticButton className="inline-block mt-8">
                 <Link
                   href="/reservation?activite=team-building"
-                  className="btn-glass-field inline-flex items-center gap-2 text-white px-7 h-13 rounded-2xl text-base"
+                  className="btn-glass-field inline-flex items-center gap-2 text-[#0a0a0b] px-7 h-13 rounded-2xl text-base"
                 >
                   Organiser mon événement <ArrowRight className="size-5" />
                 </Link>
@@ -226,7 +226,7 @@ export default function Home() {
             <FadeInView delay={0.2}>
               <div className="relative">
                 <Tilt3D intensity={8}>
-                  <div className="relative aspect-[4/3] rounded-3xl bg-gradient-to-br from-field/20 via-white to-field/10 overflow-hidden border border-field/10 shadow-xl shadow-field/5">
+                  <div className="relative aspect-[4/3] rounded-3xl bg-gradient-to-br from-field/20 via-[#121214] to-kick/10 overflow-hidden border border-field/10 shadow-xl shadow-field/5">
                     <Photo src="/images/offside-foot-indoor.jpg" alt="Team building sportif à Offside World — foot indoor entre collègues" sizes="(max-width: 1024px) 100vw, 600px" className="object-cover" />
                   </div>
                 </Tilt3D>
@@ -237,7 +237,7 @@ export default function Home() {
       </section>
 
       {/* ── Vague de transition → réassurance ── */}
-      <WaveDivider fill="#eef3f0" flip />
+      <WaveDivider fill="#121214" flip />
 
       {/* ══════ RÉASSURANCE ══════ */}
       <section className="relative overflow-hidden">
@@ -255,14 +255,14 @@ export default function Home() {
         </FadeInView>
         <StaggerContainer className="grid grid-cols-2 gap-5 md:grid-cols-4" staggerDelay={0.1}>
           {[
-            { icon: Star, title: "4.8/5", subtitle: "sur Google (200+ avis)", color: "bg-field/10 text-field border-field/20" },
-            { icon: MapPin, title: "Facile d'accès", subtitle: "Parking gratuit", color: "bg-white text-field-dark border-field/15" },
-            { icon: Baby, title: "Dès 6 ans", subtitle: "Encadrement adapté", color: "bg-kick/10 text-kick border-kick/20" },
-            { icon: ShieldCheck, title: "100% sécurisé", subtitle: "Paiement via PayPal", color: "bg-field/5 text-field border-field/20" },
+            { icon: Star, title: "4.8/5", subtitle: "sur Google (200+ avis)", color: "bg-white/[0.04] text-field border-white/10" },
+            { icon: MapPin, title: "Facile d'accès", subtitle: "Parking gratuit", color: "bg-white/[0.04] text-field border-white/10" },
+            { icon: Baby, title: "Dès 6 ans", subtitle: "Encadrement adapté", color: "bg-white/[0.04] text-kick border-white/10" },
+            { icon: ShieldCheck, title: "100% sécurisé", subtitle: "Paiement via PayPal", color: "bg-white/[0.04] text-field border-white/10" },
           ].map((item) => (
             <StaggerItem key={item.title}>
               <div className={`text-center p-6 rounded-2xl border ${item.color} group hover:shadow-lg transition-all duration-500`}>
-                <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-white shadow-sm group-hover:scale-110 transition-transform duration-500">
+                <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-white/10 shadow-sm group-hover:scale-110 transition-transform duration-500">
                   <item.icon className="size-7" />
                 </div>
                 <p className="mt-4 text-lg font-bold font-[family-name:var(--font-heading)]">{item.title}</p>
@@ -304,7 +304,7 @@ export default function Home() {
       </section>
 
       {/* ── Vague de transition → CTA ── */}
-      <WaveDivider fill="#062e16" />
+      <WaveDivider fill="#050506" />
 
       {/* ══════ CTA FINAL ══════ */}
       <section className="aurora-bg text-white relative overflow-hidden">
@@ -325,7 +325,7 @@ export default function Home() {
               <PulseGlow>
                 <Link
                   href="/reservation"
-                  className="btn-glass-kick inline-flex items-center gap-2.5 text-white text-lg px-10 h-14 rounded-2xl"
+                  className="btn-glass-kick inline-flex items-center gap-2.5 text-[#0a0a0b] text-lg px-10 h-14 rounded-2xl"
                 >
                   <Zap className="size-5" />
                   C&apos;est parti !
