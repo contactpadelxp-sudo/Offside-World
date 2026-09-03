@@ -124,7 +124,7 @@ export default function Home() {
           <FadeIn delay={1.5}>
             <div className="relative mt-12 mx-auto w-full max-w-3xl aspect-[16/9] overflow-hidden rounded-3xl border-2 border-dashed border-field/30 bg-white/[0.04] backdrop-blur-sm shadow-2xl shadow-black/40 flex items-center justify-center">
               <span className="text-sm text-muted-foreground/70 tracking-wide">Aperçu du complexe — photo à venir</span>
-              <Photo src="/images/offside-foot-indoor.jpg" alt="Le complexe Offside World — foot indoor" sizes="(max-width: 768px) 100vw, 768px" className="object-cover" preload />
+              <Photo src="/images/offside-foot-indoor.jpg" alt="Le complexe Offside Foot Indoor — foot indoor" sizes="(max-width: 768px) 100vw, 768px" className="object-cover" preload />
             </div>
           </FadeIn>
         </div>
@@ -321,7 +321,7 @@ export default function Home() {
               <div className="relative">
                 <Tilt3D intensity={8}>
                   <div className="relative aspect-[4/3] rounded-3xl bg-gradient-to-br from-field/20 via-[#121214] to-kick/10 overflow-hidden border border-field/10 shadow-xl shadow-field/5">
-                    <Photo src="/images/offside-foot-indoor.jpg" alt="Team building sportif à Offside World — foot indoor entre collègues" sizes="(max-width: 1024px) 100vw, 600px" className="object-cover" />
+                    <Photo src="/images/offside-foot-indoor.jpg" alt="Team building sportif à Offside Foot Indoor — foot indoor entre collègues" sizes="(max-width: 1024px) 100vw, 600px" className="object-cover" />
                   </div>
                 </Tilt3D>
               </div>
@@ -344,7 +344,7 @@ export default function Home() {
         <div className="relative mx-auto max-w-7xl px-4 lg:px-8 py-10 md:py-12">
         <FadeInView>
           <h2 className="text-center font-[family-name:var(--font-heading)] text-3xl md:text-4xl font-bold mb-10">
-            Pourquoi <span className="text-gradient-field">Offside World</span> ?
+            Pourquoi <span className="text-gradient-field">Offside Foot Indoor</span> ?
           </h2>
         </FadeInView>
         <StaggerContainer className="grid grid-cols-2 gap-5 md:grid-cols-4" staggerDelay={0.1}>

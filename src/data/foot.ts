@@ -6,7 +6,7 @@
  * vers le compte du complexe.
  */
 
-// TODO remplacer par l'URL exacte du compte Offside World une fois le compte connecté.
+// TODO remplacer par l'URL exacte du compte Offside Foot Indoor une fois le compte connecté.
 export const SPORTFINDER_URL = "https://sportfinder.be";
 
 export const FOOT_INCLUS = [

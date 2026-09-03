@@ -416,7 +416,7 @@ export function AnniversaireFlow({ onBack }: { onBack: () => void }) {
                 <div className="flex items-start gap-3">
                   <Checkbox id="acceptNewsletter" checked={acceptNewsletter} onCheckedChange={(v) => setAcceptNewsletter(v === true)} />
                   <Label htmlFor="acceptNewsletter" className="text-sm leading-relaxed text-muted-foreground">
-                    Je souhaite recevoir les offres et actualités d&apos;Offside World par email (facultatif).
+                    Je souhaite recevoir les offres et actualités d&apos;Offside Foot Indoor par email (facultatif).
                   </Label>
                 </div>
               </div>

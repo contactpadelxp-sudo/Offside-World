@@ -3,7 +3,7 @@
 import Image from "next/image";
 
 /**
- * Logo Offside World.
+ * Logo Offside Foot Indoor.
  *
  * `src` est résolu au build par `resolveLogoSrc()` (src/lib/logo.ts) : il suffit
  * de déposer le fichier dans `public/images/logo.{png,webp,svg,jpg}`. Tant qu'il
@@ -40,7 +40,7 @@ export function Logo({
   return (
     <Image
       src={src}
-      alt="Offside World — Foot Indoor"
+      alt="Offside Foot Indoor"
       width={Math.round(height * RATIO)}
       height={height}
       preload

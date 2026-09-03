@@ -124,7 +124,7 @@ export function ConfirmationContent() {
                   <Mail className="size-5 text-field" /> Aperçu de l&apos;email (simulé)
                 </h2>
                 <div className="rounded-2xl bg-muted p-5 space-y-3 text-sm">
-                  <p><strong>Objet :</strong> Votre réservation Offside World — Confirmation</p>
+                  <p><strong>Objet :</strong> Votre réservation Offside Foot Indoor — Confirmation</p>
                   <p>Bonjour, votre terrain est réservé ! Présentez le QR code ci-dessous.</p>
                   <div className="flex justify-center py-4">
                     <div className="flex h-32 w-32 items-center justify-center rounded-2xl border-2 border-dashed border-field bg-white/5">

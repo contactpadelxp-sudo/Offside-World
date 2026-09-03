@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Space_Grotesk, DM_Sans, JetBrains_Mono } from "next/font/google";
 import { Header } from "@/components/header";
 import { resolveLogoSrc } from "@/lib/logo";
+import { NOM_COMMERCIAL } from "@/data/entreprise";
 import { Footer } from "@/components/footer";
 import { CookieBannerWrapper } from "@/components/cookie-banner";
 import "./globals.css";
@@ -26,26 +27,26 @@ const jetBrainsMono = JetBrains_Mono({
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://offside-world.vercel.app"),
-  title: "Offside World — Anniversaires foot, Bubble Foot & Team Building",
+  title: `${NOM_COMMERCIAL} — Anniversaires foot, Bubble Foot & Team Building`,
   description:
-    "Offside World : le complexe de foot indoor en Belgique. Anniversaires enfants dès 180 €, Bubble Foot, location de terrain et team building.",
-  applicationName: "Offside World",
+    "Offside Foot Indoor : le complexe de foot indoor en Belgique. Anniversaires enfants dès 180 €, Bubble Foot, location de terrain et team building.",
+  applicationName: NOM_COMMERCIAL,
   robots: { index: true, follow: true },
   openGraph: {
     type: "website",
     locale: "fr_BE",
-    siteName: "Offside World",
+    siteName: NOM_COMMERCIAL,
     url: "https://offside-world.vercel.app",
-    title: "Offside World — Anniversaires foot, Bubble Foot & Team Building",
+    title: `${NOM_COMMERCIAL} — Anniversaires foot, Bubble Foot & Team Building`,
     description:
       "Le complexe de foot indoor en Belgique. Anniversaires enfants dès 180 €, Bubble Foot, location de terrain et team building.",
     images: [
-      { url: "/images/offside-foot-indoor.jpg", width: 1200, height: 630, alt: "Offside World — foot indoor" },
+      { url: "/images/offside-foot-indoor.jpg", width: 1200, height: 630, alt: `${NOM_COMMERCIAL} — foot indoor` },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Offside World — Anniversaires foot, Bubble Foot & Team Building",
+    title: `${NOM_COMMERCIAL} — Anniversaires foot, Bubble Foot & Team Building`,
     description:
       "Le complexe de foot indoor en Belgique. Anniversaires enfants dès 180 €, Bubble Foot, location de terrain et team building.",
     images: ["/images/offside-foot-indoor.jpg"],

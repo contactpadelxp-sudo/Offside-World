@@ -5,7 +5,7 @@ import type { Metadata } from "next";
 import { Cake, CircleDot, Building2, ClipboardList, AlertTriangle, Phone, Package } from "lucide-react";
 
 export const metadata: Metadata = {
-  title: "Back-office — Résumé du jour | Offside World",
+  title: "Back-office — Résumé du jour | Offside Foot Indoor",
   description: "Vue d'ensemble des réservations du lendemain.",
   robots: { index: false, follow: false, nocache: true },
 };

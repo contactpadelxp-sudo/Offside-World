@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "Politique cookies | Offside Foot Indoor",
-  description: "Politique d'utilisation des cookies sur Offside World.",
+  description: "Politique d'utilisation des cookies sur Offside Foot Indoor.",
 };
 
 export default function PolitiqueCookies() {

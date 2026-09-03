@@ -60,7 +60,7 @@ export function Header({ logoSrc }: { logoSrc: string | null }) {
               </div>
 
               {/* Logo central */}
-              <Link href="/" aria-label="Offside World — accueil" className="shrink-0 mx-3 flex items-center">
+              <Link href="/" aria-label="Offside Foot Indoor — accueil" className="shrink-0 mx-3 flex items-center">
                 <Logo src={logoSrc} height={28} className="h-6 sm:h-7" textClassName="text-base" />
               </Link>
 
@@ -120,7 +120,7 @@ export function Header({ logoSrc }: { logoSrc: string | null }) {
               </nav>
 
               {/* Logo central */}
-              <Link href="/" aria-label="Offside World — accueil" className="shrink-0 mx-4 lg:mx-6 flex items-center">
+              <Link href="/" aria-label="Offside Foot Indoor — accueil" className="shrink-0 mx-4 lg:mx-6 flex items-center">
                 <Logo src={logoSrc} height={44} className="h-8 md:h-9 lg:h-11" textClassName="text-lg lg:text-xl" />
               </Link>
 
