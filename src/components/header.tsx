@@ -62,7 +62,7 @@ export function Header({ logoSrc }: { logoSrc: string | null }) {
 
               {/* Logo central */}
               <Link href="/" aria-label="Offside World — accueil" className="shrink-0 mx-3 flex items-center">
-                <Logo src={logoSrc} height={34} className="h-7 sm:h-8" textClassName="text-base" />
+                <Logo src={logoSrc} height={28} className="h-6 sm:h-7" textClassName="text-base" />
               </Link>
 
               {/* Right nav */}
@@ -122,7 +122,7 @@ export function Header({ logoSrc }: { logoSrc: string | null }) {
 
               {/* Logo central */}
               <Link href="/" aria-label="Offside World — accueil" className="shrink-0 mx-4 lg:mx-6 flex items-center">
-                <Logo src={logoSrc} height={52} className="h-9 md:h-11 lg:h-13" textClassName="text-lg lg:text-xl" />
+                <Logo src={logoSrc} height={44} className="h-8 md:h-9 lg:h-11" textClassName="text-lg lg:text-xl" />
               </Link>
 
               {/* Right nav */}

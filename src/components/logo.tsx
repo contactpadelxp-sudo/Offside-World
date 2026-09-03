@@ -13,8 +13,8 @@ import Image from "next/image";
  * responsive ; `height` ne sert que d'indice de rendu à next/image.
  */
 
-// Ratio du logo « OFFSIDE — FOOT INDOOR » (largeur / hauteur)
-const RATIO = 2.4;
+// Ratio du logo détouré « OFFSIDE — FOOT INDOOR » (largeur / hauteur)
+const RATIO = 3.8;
 
 export function Logo({
   src,
