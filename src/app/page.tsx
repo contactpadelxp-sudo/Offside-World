@@ -10,7 +10,7 @@ import { Photo } from "@/components/photo";
 import { usePhoto } from "@/components/photos-provider";
 import { Ballon, Batiment, Bouclier, Carte, Coche, Document, Enfant, Epingle, Etoile, FlecheDroite, Gateau, Groupe, Horloge } from "@/components/icons";
 import { formules, GATEAU_NOTE, MAX_CHILDREN } from "@/data/formules";
-import { RESUME_ANNULATION, DELAI_RESERVATION_HEURES, ANNIVERSAIRES_SIMULTANES } from "@/data/reglement";
+import { RESUME_ANNULATION, DELAI_RESERVATION_HEURES } from "@/data/reglement";
 
 const MagicRings = dynamic(() => import("@/components/magic-rings"), { ssr: false });
 
@@ -102,8 +102,8 @@ export default function Home() {
             <div className="mt-10 flex flex-wrap justify-center gap-x-8 gap-y-6 sm:gap-x-16 md:gap-x-24">
               {[
                 { value: 2000, suffix: "+", label: "fêtes organisées" },
-                { value: ANNIVERSAIRES_SIMULTANES, suffix: "", label: "anniversaires en simultané" },
-                { value: 98, suffix: "%", label: "clients satisfaits" },
+                { value: 2, suffix: "", label: "terrains indoor" },
+                { value: 2, suffix: "", label: "formules anniversaire" },
               ].map((stat) => (
                 <div key={stat.label} className="text-center">
                   <p className="text-3xl md:text-4xl font-bold font-[family-name:var(--font-heading)] text-foreground">
@@ -199,7 +199,8 @@ export default function Home() {
                 2 formules, 2 façons de <span className="text-gradient-field">fêter son anniversaire</span>
               </h2>
               <p className="mt-4 text-muted-foreground text-lg">
-                Forfait tout compris jusqu&apos;à 10 enfants, jusqu&apos;à {MAX_CHILDREN} au total.
+                Chaque formule couvre 10 enfants, tout compris. Au-delà, un supplément
+                par enfant s&apos;applique, jusqu&apos;à {MAX_CHILDREN} enfants maximum.
               </p>
             </div>
           </FadeInView>
