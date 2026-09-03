@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Politique cookies | Offside World",
+  title: "Politique cookies | Offside Foot Indoor",
   description: "Politique d'utilisation des cookies sur Offside World.",
 };
 
@@ -11,7 +11,7 @@ export default function PolitiqueCookies() {
       <p className="text-sm text-muted-foreground mb-8">Dernière mise à jour : [À COMPLÉTER]</p>
       <h1 className="text-3xl font-bold">Politique cookies</h1>
       <p className="mt-4 text-muted-foreground">
-        Cette page explique comment Offside World (exploité par BELANTIS) utilise les cookies et technologies similaires.
+        Cette page explique comment Offside Foot Indoor utilise les cookies et technologies similaires.
       </p>
 
       <section className="mt-8 space-y-4">
@@ -74,7 +74,7 @@ export default function PolitiqueCookies() {
         <h2 className="text-xl font-bold">4. Contact</h2>
         <p className="text-muted-foreground">
           Pour toute question concernant notre utilisation des cookies :{" "}
-          <a href="mailto:rgpd@offsideworld.be" className="underline text-primary">rgpd@offsideworld.be</a>
+          <a href="mailto:info@offsidefootindoor.be" className="underline text-primary">info@offsidefootindoor.be</a>
         </p>
       </section>
     </div>

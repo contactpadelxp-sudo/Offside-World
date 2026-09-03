@@ -62,15 +62,17 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const logoSrc = resolveLogoSrc();
+
   return (
     <html
       lang="fr"
       className={`${spaceGrotesk.variable} ${dmSans.variable} ${jetBrainsMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
-        <Header logoSrc={resolveLogoSrc()} />
+        <Header logoSrc={logoSrc} />
         <main className="flex-1">{children}</main>
-        <Footer />
+        <Footer logoSrc={logoSrc} />
         <CookieBannerWrapper />
       </body>
     </html>

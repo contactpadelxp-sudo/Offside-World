@@ -1,131 +1,374 @@
 import type { Metadata } from "next";
+import {
+  NOM_COMMERCIAL, DENOMINATION_SOCIALE, BCE, ADRESSE, ADRESSE_LIGNE,
+  EMAIL, TELEPHONE, TELEPHONE_TEL, MAJ_LEGALE, ouACompleter,
+} from "@/data/entreprise";
 
 export const metadata: Metadata = {
-  title: "Politique de confidentialité | Offside World",
-  description: "Politique de confidentialité et RGPD du site Offside World.",
+  title: `Politique de confidentialité | ${NOM_COMMERCIAL}`,
+  description: `Comment ${NOM_COMMERCIAL} collecte et traite vos données personnelles.`,
 };
+
+function Article({ n, titre, children }: { n: number; titre: string; children: React.ReactNode }) {
+  return (
+    <section className="mt-8 space-y-4">
+      <h2 className="text-xl font-bold">{n}. {titre}</h2>
+      {children}
+    </section>
+  );
+}
+
+const P = ({ children }: { children: React.ReactNode }) => (
+  <p className="text-muted-foreground">{children}</p>
+);
+
+const SousTitre = ({ children }: { children: React.ReactNode }) => (
+  <h3 className="font-semibold pt-2">{children}</h3>
+);
+
+const Liste = ({ items }: { items: string[] }) => (
+  <ul className="list-disc pl-6 space-y-1 text-muted-foreground">
+    {items.map((i) => <li key={i}>{i}</li>)}
+  </ul>
+);
 
 export default function Confidentialite() {
   return (
     <div className="mx-auto max-w-4xl px-4 pt-24 pb-12 md:pt-28 md:pb-20">
-      <p className="text-sm text-muted-foreground mb-8">Dernière mise à jour : [À COMPLÉTER]</p>
+      <p className="text-sm text-muted-foreground mb-8">Dernière mise à jour : {MAJ_LEGALE}</p>
       <h1 className="text-3xl font-bold">Politique de confidentialité</h1>
+      <p className="mt-2 text-muted-foreground">{NOM_COMMERCIAL}</p>
       <p className="mt-4 text-muted-foreground">
-        La présente politique décrit comment BELANTIS (&quot;nous&quot;, &quot;notre&quot;) collecte, utilise et protège vos données personnelles conformément au Règlement Général sur la Protection des Données (RGPD — Règlement UE 2016/679) et à la législation belge applicable.
+        La présente Politique de confidentialité explique comment {NOM_COMMERCIAL} collecte et
+        traite les données personnelles de ses clients, participants et visiteurs de son site internet.
       </p>
 
-      <section className="mt-8 space-y-4">
-        <h2 className="text-xl font-bold">1. Responsable du traitement</h2>
-        <p className="text-muted-foreground">
-          BELANTIS — [Adresse à compléter], Belgique<br />
-          Email : <a href="mailto:rgpd@offsideworld.be" className="underline text-primary">rgpd@offsideworld.be</a><br />
-          Numéro d&apos;entreprise : [À COMPLÉTER]
-        </p>
-      </section>
-
-      <section className="mt-8 space-y-4">
-        <h2 className="text-xl font-bold">2. Données collectées</h2>
-        <p className="text-muted-foreground">Nous collectons uniquement les données strictement nécessaires :</p>
+      <Article n={1} titre="Responsable du traitement">
+        <P>Le responsable du traitement est :</P>
         <ul className="list-disc pl-6 space-y-1 text-muted-foreground">
-          <li><strong>Réservation :</strong> nom, prénom, email, téléphone</li>
-          <li><strong>Anniversaire :</strong> prénom et âge de l&apos;enfant fêté, nombre d&apos;enfants invités</li>
-          <li><strong>Team Building :</strong> nom de l&apos;entreprise, nom du contact, email, téléphone</li>
-          <li><strong>Paiement :</strong> traité intégralement par notre prestataire de paiement (carte bancaire et Bancontact) — aucune donnée de carte n&apos;est stockée sur nos serveurs</li>
-          <li><strong>Navigation :</strong> cookies (voir <a href="/politique-cookies" className="underline text-primary">Politique cookies</a>)</li>
+          <li><strong>{ouACompleter(DENOMINATION_SOCIALE, "dénomination sociale à compléter")}</strong></li>
+          <li><strong>Nom commercial :</strong> {NOM_COMMERCIAL}</li>
+          <li><strong>Adresse :</strong> {ADRESSE_LIGNE}</li>
+          <li><strong>N° d&apos;entreprise :</strong> {ouACompleter(BCE)}</li>
+          <li>
+            <strong>E-mail relatif à la vie privée :</strong>{" "}
+            <a href={`mailto:${EMAIL}`} className="underline text-primary">{EMAIL}</a>
+          </li>
+          <li>
+            <strong>Téléphone :</strong>{" "}
+            <a href={`tel:${TELEPHONE_TEL}`} className="underline text-primary">{TELEPHONE}</a>
+          </li>
         </ul>
-      </section>
+      </Article>
 
-      <section className="mt-8 space-y-4">
-        <h2 className="text-xl font-bold">3. Finalités et bases légales</h2>
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm border">
-            <thead>
-              <tr className="bg-muted">
-                <th className="text-left p-3 font-semibold">Finalité</th>
-                <th className="text-left p-3 font-semibold">Base légale</th>
-              </tr>
-            </thead>
-            <tbody className="text-muted-foreground">
-              <tr className="border-t"><td className="p-3">Gestion des réservations</td><td className="p-3">Exécution du contrat (art. 6.1.b RGPD)</td></tr>
-              <tr className="border-t"><td className="p-3">Traitement des paiements</td><td className="p-3">Exécution du contrat</td></tr>
-              <tr className="border-t"><td className="p-3">Envoi de la confirmation par email</td><td className="p-3">Exécution du contrat</td></tr>
-              <tr className="border-t"><td className="p-3">Newsletter / offres commerciales</td><td className="p-3">Consentement (art. 6.1.a RGPD)</td></tr>
-              <tr className="border-t"><td className="p-3">Obligations comptables et fiscales</td><td className="p-3">Obligation légale (art. 6.1.c RGPD)</td></tr>
-              <tr className="border-t"><td className="p-3">Mesure d&apos;audience (cookies)</td><td className="p-3">Consentement</td></tr>
-            </tbody>
-          </table>
-        </div>
-      </section>
+      <Article n={2} titre="Quelles données pouvons-nous traiter ?">
+        <P>
+          Selon votre utilisation du site et des services Offside, nous pouvons notamment traiter
+          les catégories de données suivantes.
+        </P>
 
-      <section className="mt-8 space-y-4">
-        <h2 className="text-xl font-bold">4. Durées de conservation</h2>
-        <ul className="list-disc pl-6 space-y-1 text-muted-foreground">
-          <li><strong>Données de réservation :</strong> 3 ans après la prestation</li>
-          <li><strong>Données comptables :</strong> 7 ans (obligation légale belge)</li>
-          <li><strong>Données newsletter :</strong> jusqu&apos;au retrait du consentement</li>
-          <li><strong>Cookies :</strong> voir <a href="/politique-cookies" className="underline text-primary">Politique cookies</a></li>
-        </ul>
-      </section>
+        <SousTitre>Données d&apos;identification et de contact</SousTitre>
+        <Liste items={[
+          "nom ;", "prénom ;", "adresse e-mail ;", "numéro de téléphone ;",
+          "éventuellement adresse de facturation ;",
+          "informations communiquées dans un formulaire de contact.",
+        ]} />
 
-      <section className="mt-8 space-y-4">
-        <h2 className="text-xl font-bold">5. Sous-traitants et destinataires</h2>
-        <ul className="list-disc pl-6 space-y-1 text-muted-foreground">
-          <li><strong>[Prestataire de paiement — à compléter]</strong> — traitement des paiements (carte bancaire et Bancontact)</li>
-          <li><strong>SportFinder</strong> — réservation et paiement des locations de terrain</li>
-          <li><strong>Vercel Inc.</strong> — hébergement du site (USA, clauses contractuelles types)</li>
-          <li><strong>[Fournisseur d&apos;emails — À COMPLÉTER]</strong> — envoi des confirmations</li>
-        </ul>
-      </section>
+        <SousTitre>Données liées aux réservations</SousTitre>
+        <Liste items={[
+          "date et heure de la réservation ;", "prestation choisie ;", "nombre de participants ;",
+          "informations relatives à un anniversaire, stage ou événement ;",
+          "informations nécessaires à la bonne organisation de l'activité ;",
+          "historique des réservations.",
+        ]} />
 
-      <section className="mt-8 space-y-4">
-        <h2 className="text-xl font-bold">6. Transferts hors UE</h2>
-        <p className="text-muted-foreground">
-          Certains sous-traitants (Vercel) sont basés aux États-Unis. Ces transferts sont encadrés par des clauses contractuelles types (CCT) approuvées par la Commission européenne, conformément à l&apos;article 46 du RGPD. [À vérifier et compléter selon les sous-traitants retenus.]
-        </p>
-      </section>
+        <SousTitre>Données relatives aux participants</SousTitre>
+        <P>
+          Lorsque cela est nécessaire pour l&apos;organisation d&apos;une activité, certaines
+          informations concernant les participants peuvent être traitées, notamment leur nom, leur
+          tranche d&apos;âge ou les informations nécessaires à leur participation.
+        </P>
+        <P>Nous évitons de collecter des données sensibles lorsqu&apos;elles ne sont pas nécessaires.</P>
 
-      <section className="mt-8 space-y-4 rounded-lg border-2 border-kick/30 bg-kick/5 p-6">
-        <h2 className="text-xl font-bold">7. Données des mineurs</h2>
-        <p className="text-muted-foreground">
-          Dans le cadre des réservations d&apos;anniversaire, nous appliquons le principe de <strong>minimisation des données</strong> : seuls le prénom, l&apos;âge de l&apos;enfant fêté et le nombre d&apos;enfants invités sont collectés. Aucune autre donnée concernant les enfants n&apos;est demandée.
-        </p>
-        <p className="text-muted-foreground">
-          La réservation est effectuée par le parent ou le responsable légal de l&apos;enfant, qui donne son consentement au traitement de ces données. Les données relatives aux mineurs sont conservées selon les mêmes durées que les données de réservation et sont supprimées à l&apos;issue de cette période.
-        </p>
-      </section>
+        <SousTitre>Données de paiement et de facturation</SousTitre>
+        <P>Offside peut traiter :</P>
+        <Liste items={[
+          "montant payé ;", "statut du paiement ;", "informations de facturation ;",
+          "références de transaction.",
+        ]} />
+        <P>
+          Lorsque le paiement est effectué par l&apos;intermédiaire d&apos;un prestataire de
+          paiement externe, les données bancaires ou de carte peuvent être traitées directement par
+          ce prestataire. Offside ne reçoit pas nécessairement les données complètes de la carte
+          bancaire.
+        </P>
 
-      <section className="mt-8 space-y-4">
-        <h2 className="text-xl font-bold">8. Vos droits</h2>
-        <p className="text-muted-foreground">Conformément au RGPD, vous disposez des droits suivants :</p>
-        <ul className="list-disc pl-6 space-y-1 text-muted-foreground">
-          <li><strong>Droit d&apos;accès</strong> (art. 15) : obtenir une copie de vos données</li>
-          <li><strong>Droit de rectification</strong> (art. 16) : corriger des données inexactes</li>
-          <li><strong>Droit à l&apos;effacement</strong> (art. 17) : demander la suppression de vos données</li>
-          <li><strong>Droit à la limitation</strong> (art. 18) : restreindre le traitement</li>
-          <li><strong>Droit à la portabilité</strong> (art. 20) : recevoir vos données dans un format structuré</li>
-          <li><strong>Droit d&apos;opposition</strong> (art. 21) : s&apos;opposer au traitement</li>
-          <li><strong>Retrait du consentement</strong> : à tout moment, sans affecter la licéité du traitement antérieur</li>
-        </ul>
-        <p className="text-muted-foreground">
-          Pour exercer ces droits, contactez-nous à{" "}
-          <a href="mailto:rgpd@offsideworld.be" className="underline text-primary">rgpd@offsideworld.be</a>.
-          Nous répondrons dans un délai de 30 jours.
-        </p>
-      </section>
+        <SousTitre>Images et vidéos</SousTitre>
+        <P>
+          Les installations Offside peuvent être équipées de caméras utilisées notamment pour les
+          fonctionnalités de replay ou de vidéo souvenir annoncées dans certaines prestations.
+          Ces images peuvent permettre l&apos;identification de participants.
+        </P>
+        <P>
+          Les images réalisées pour une fonctionnalité de jeu ou de souvenir ne sont pas
+          automatiquement utilisées à des fins publicitaires. L&apos;utilisation identifiable
+          d&apos;une photographie ou d&apos;une vidéo à des fins promotionnelles fait l&apos;objet
+          d&apos;une base juridique appropriée et, lorsque la loi l&apos;exige, d&apos;un
+          consentement distinct.
+        </P>
+        <P>Une attention particulière est accordée aux images de mineurs.</P>
 
-      <section className="mt-8 space-y-4">
-        <h2 className="text-xl font-bold">9. Réclamation</h2>
-        <p className="text-muted-foreground">
-          Si vous estimez que le traitement de vos données n&apos;est pas conforme, vous pouvez introduire une réclamation auprès de l&apos;Autorité de protection des données (APD/GBA) :
-        </p>
-        <ul className="list-disc pl-6 space-y-1 text-muted-foreground">
-          <li>Autorité de protection des données (APD)</li>
-          <li>Rue de la Presse 35, 1000 Bruxelles</li>
-          <li>Tél. : +32 (0)2 274 48 00</li>
-          <li>Email : contact@apd-gba.be</li>
-          <li>Site : <span className="font-mono">www.autoriteprotectiondonnees.be</span></li>
-        </ul>
-      </section>
+        <SousTitre>Données techniques</SousTitre>
+        <P>
+          Lors de la consultation du site, certaines informations techniques peuvent être traitées,
+          par exemple :
+        </P>
+        <Liste items={[
+          "adresse IP ;", "type de navigateur ;", "type d'appareil ;", "système d'exploitation ;",
+          "date et heure de connexion ;", "pages consultées ;",
+          "informations liées aux cookies et technologies similaires.",
+        ]} />
+      </Article>
+
+      <Article n={3} titre="Pourquoi utilisons-nous vos données ?">
+        <P>Nous pouvons traiter vos données pour les finalités suivantes.</P>
+
+        <SousTitre>Gérer vos réservations et fournir nos services</SousTitre>
+        <P>Cela comprend notamment :</P>
+        <Liste items={[
+          "enregistrer une réservation ;", "confirmer un créneau ;", "organiser une activité ;",
+          "communiquer avec le client ;", "gérer les participants ;",
+          "fournir une vidéo souvenir lorsque celle-ci est prévue ;",
+          "traiter une modification ou une annulation.",
+        ]} />
+        <P>
+          La base juridique est principalement l&apos;exécution du contrat ou les démarches
+          précontractuelles demandées par le client.
+        </P>
+
+        <SousTitre>Gérer les paiements et la comptabilité</SousTitre>
+        <P>
+          Nous traitons les informations nécessaires à la facturation, aux paiements, à la
+          comptabilité et au respect de nos obligations fiscales et légales. La base juridique est
+          l&apos;exécution du contrat ainsi que le respect de nos obligations légales.
+        </P>
+
+        <SousTitre>Répondre aux demandes</SousTitre>
+        <P>
+          Lorsque vous nous contactez par e-mail, téléphone ou formulaire, nous utilisons les
+          informations communiquées pour répondre à votre demande. Selon la nature de celle-ci, le
+          traitement repose sur les démarches précontractuelles demandées par vous ou sur notre
+          intérêt légitime à assurer le suivi des demandes reçues.
+        </P>
+
+        <SousTitre>Sécurité et protection de nos droits</SousTitre>
+        <P>Certaines données peuvent être utilisées lorsqu&apos;elles sont nécessaires pour :</P>
+        <Liste items={[
+          "assurer la sécurité des installations et des systèmes informatiques ;",
+          "prévenir les abus ou fraudes ;", "constater un incident ;",
+          "gérer une réclamation ou un litige ;",
+          "défendre les droits d'Offside ou d'une personne concernée.",
+        ]} />
+        <P>
+          Le traitement repose, selon les circonstances, sur une obligation légale ou sur notre
+          intérêt légitime, après prise en compte des droits et libertés des personnes concernées.
+        </P>
+
+        <SousTitre>Communication commerciale</SousTitre>
+        <P>
+          Nous pouvons envoyer des informations commerciales aux personnes ayant valablement accepté
+          de les recevoir ou lorsque la législation nous permet de le faire.
+        </P>
+        <P>
+          Lorsqu&apos;un traitement repose sur votre consentement, vous pouvez le retirer à tout
+          moment. Vous pouvez également vous opposer à l&apos;utilisation de vos données à des fins
+          de marketing direct.
+        </P>
+      </Article>
+
+      <Article n={4} titre="Cookies et technologies similaires">
+        <P>Le site utilise ou peut utiliser des cookies et technologies similaires.</P>
+
+        <SousTitre>Cookies strictement nécessaires</SousTitre>
+        <P>
+          Ces cookies sont indispensables au fonctionnement du site ou à la fourniture d&apos;un
+          service expressément demandé par l&apos;utilisateur. Ils peuvent notamment servir à :
+        </P>
+        <Liste items={[
+          "sécuriser le site ;", "maintenir une session ;",
+          "mémoriser les choix relatifs aux cookies ;",
+          "faire fonctionner un formulaire ou un processus de réservation.",
+        ]} />
+        <P>
+          Ils ne nécessitent pas nécessairement le consentement préalable de l&apos;utilisateur
+          lorsque les conditions légales sont remplies.
+        </P>
+
+        <SousTitre>Cookies non nécessaires</SousTitre>
+        <P>D&apos;autres cookies peuvent notamment servir à :</P>
+        <Liste items={[
+          "mesurer l'audience ;", "analyser la navigation ;", "intégrer des contenus externes ;",
+          "personnaliser l'expérience ;", "mesurer l'efficacité d'une campagne publicitaire ;",
+          "permettre certaines fonctionnalités de réseaux sociaux.",
+        ]} />
+        <P>
+          Lorsqu&apos;un consentement est légalement requis, ces cookies ne sont activés
+          qu&apos;après le choix positif de l&apos;utilisateur. Refuser les cookies non nécessaires
+          ne doit pas empêcher l&apos;accès normal au site.
+        </P>
+        <P>
+          L&apos;utilisateur doit pouvoir retirer son consentement ou modifier ses préférences aussi
+          facilement qu&apos;il les a données. La liste précise des cookies utilisés, leur
+          fournisseur, leur finalité et leur durée est reprise dans la{" "}
+          <a href="/politique-cookies" className="underline text-primary">politique de gestion des cookies</a> du site.
+        </P>
+      </Article>
+
+      <Article n={5} titre="Avec qui partageons-nous vos données ?">
+        <P>Offside ne vend pas les données personnelles de ses clients.</P>
+        <P>
+          Certaines données peuvent toutefois être accessibles à des prestataires lorsque cela est
+          nécessaire au fonctionnement de nos services, par exemple :
+        </P>
+        <Liste items={[
+          "hébergeur et prestataire du site internet ;", "système de réservation ;",
+          "prestataire de paiement ;", "prestataire informatique ;", "outil d'envoi d'e-mails ;",
+          "prestataire comptable ;",
+          "partenaires intervenant directement dans l'organisation d'une activité lorsque cela est nécessaire.",
+        ]} />
+        <P>
+          Ces prestataires ne peuvent traiter les données que dans le cadre de leurs missions et
+          conformément aux règles applicables.
+        </P>
+        <P>
+          Les données peuvent également être communiquées lorsqu&apos;une obligation légale nous
+          l&apos;impose ou lorsqu&apos;une autorité légalement habilitée en fait la demande.
+        </P>
+      </Article>
+
+      <Article n={6} titre="Transferts en dehors de l'Espace économique européen">
+        <P>
+          Certains prestataires numériques peuvent traiter des données depuis des pays situés en
+          dehors de l&apos;Espace économique européen.
+        </P>
+        <P>
+          Lorsqu&apos;un tel transfert a lieu, Offside veille à ce qu&apos;il repose sur un
+          mécanisme prévu par le RGPD, notamment une décision d&apos;adéquation ou des garanties
+          contractuelles appropriées lorsqu&apos;elles sont requises.
+        </P>
+        <P>Les informations spécifiques dépendent des prestataires effectivement utilisés par le site.</P>
+      </Article>
+
+      <Article n={7} titre="Combien de temps conservons-nous les données ?">
+        <P>
+          Nous ne conservons les données personnelles que pendant la période nécessaire à la
+          finalité pour laquelle elles ont été collectées, sous réserve des obligations légales
+          applicables. À titre général :
+        </P>
+        <Liste items={[
+          "Données de réservation et de relation client : pendant la durée nécessaire à la gestion de la réservation et ensuite pendant la période raisonnablement nécessaire à la gestion des réclamations ou litiges éventuels.",
+          "Documents comptables et factures : pendant la durée de conservation légalement applicable, qui peut atteindre 10 ans en Belgique.",
+          "Demandes de contact sans réservation : le temps nécessaire pour répondre à la demande, puis pendant une durée limitée permettant d'en assurer le suivi.",
+          "Données utilisées pour le marketing avec consentement : jusqu'au retrait du consentement ou jusqu'à ce que les données ne soient plus nécessaires à cette finalité.",
+          "Images et vidéos Replay : pendant la durée nécessaire à la fourniture de la fonctionnalité ou du souvenir annoncé. Offside veille à ne pas les conserver indéfiniment sans justification.",
+          "Cookies : selon la durée propre à chaque cookie indiquée dans l'outil ou la politique de gestion des cookies.",
+        ]} />
+        <P>
+          En cas de litige, certaines informations peuvent être conservées plus longtemps dans la
+          mesure nécessaire à la constatation, l&apos;exercice ou la défense d&apos;un droit en justice.
+        </P>
+      </Article>
+
+      <Article n={8} titre="Vos droits">
+        <P>Dans les conditions prévues par le RGPD, vous pouvez notamment demander :</P>
+        <Liste items={[
+          "l'accès à vos données personnelles ;", "la rectification de données inexactes ;",
+          "l'effacement de certaines données ;", "la limitation d'un traitement ;",
+          "la portabilité de certaines données ;", "l'opposition à certains traitements ;",
+          "l'arrêt de l'utilisation de vos données pour le marketing direct.",
+        ]} />
+        <P>
+          Lorsque le traitement repose sur votre consentement, vous pouvez retirer ce consentement à
+          tout moment. Le retrait du consentement n&apos;affecte pas la légalité des traitements
+          réalisés avant ce retrait.
+        </P>
+        <P>
+          Pour exercer vos droits, vous pouvez contacter{" "}
+          <a href={`mailto:${EMAIL}`} className="underline text-primary">{EMAIL}</a>.
+        </P>
+        <P>
+          Afin d&apos;éviter de transmettre des données à une personne non autorisée, nous pouvons
+          demander les informations raisonnablement nécessaires pour vérifier votre identité.
+        </P>
+      </Article>
+
+      <Article n={9} titre="Droit de déposer une plainte">
+        <P>
+          Si vous estimez que vos données personnelles ne sont pas traitées conformément à la
+          réglementation, vous pouvez introduire une plainte auprès de l&apos;autorité belge
+          compétente en matière de protection des données :{" "}
+          <a href="https://www.autoriteprotectiondonnees.be" target="_blank" rel="noopener noreferrer" className="underline text-primary">
+            Autorité de protection des données — Belgique
+          </a>.
+        </P>
+        <P>
+          Vous pouvez également nous contacter préalablement à l&apos;adresse{" "}
+          <a href={`mailto:${EMAIL}`} className="underline text-primary">{EMAIL}</a>{" "}
+          afin que nous puissions examiner votre demande.
+        </P>
+      </Article>
+
+      <Article n={10} titre="Données concernant les mineurs">
+        <P>
+          Une partie importante des activités proposées par Offside peut concerner des enfants.
+          Nous accordons par conséquent une attention particulière à la protection de leurs données.
+        </P>
+        <P>
+          Lorsqu&apos;une autorisation parentale est légalement nécessaire, notamment pour certaines
+          utilisations d&apos;images ou de données, Offside veille à obtenir l&apos;autorisation
+          appropriée avant l&apos;utilisation concernée.
+        </P>
+        <P>
+          Les informations concernant les mineurs ne sont collectées que lorsqu&apos;elles sont
+          utiles ou nécessaires à l&apos;activité concernée.
+        </P>
+      </Article>
+
+      <Article n={11} titre="Sécurité">
+        <P>
+          Offside prend des mesures techniques et organisationnelles raisonnables afin de protéger
+          les données personnelles contre notamment :
+        </P>
+        <Liste items={[
+          "l'accès non autorisé ;", "la perte ;", "l'altération ;",
+          "la divulgation injustifiée ;", "l'utilisation abusive.",
+        ]} />
+        <P>
+          L&apos;accès aux données est limité aux personnes et prestataires qui en ont besoin dans
+          le cadre de leurs missions.
+        </P>
+      </Article>
+
+      <Article n={12} titre="Modification de cette politique">
+        <P>La présente Politique de confidentialité peut être adaptée afin de tenir compte :</P>
+        <Liste items={[
+          "d'une modification de nos services ;", "d'un changement de prestataire ;",
+          "d'une évolution technologique ;", "d'une modification légale ou réglementaire.",
+        ]} />
+        <P>La date de la dernière mise à jour est indiquée en haut de cette page.</P>
+      </Article>
+
+      <Article n={13} titre="Contact">
+        <P>Pour toute question concernant vos données personnelles :</P>
+        <address className="not-italic text-muted-foreground">
+          {NOM_COMMERCIAL}<br />
+          {ADRESSE.rue}<br />
+          {ADRESSE.codePostal} {ADRESSE.ville}<br />
+          {ADRESSE.pays}<br />
+          E-mail : <a href={`mailto:${EMAIL}`} className="underline text-primary">{EMAIL}</a><br />
+          Téléphone : <a href={`tel:${TELEPHONE_TEL}`} className="underline text-primary">{TELEPHONE}</a>
+        </address>
+      </Article>
     </div>
   );
 }

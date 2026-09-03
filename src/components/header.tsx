@@ -16,7 +16,7 @@ const navLinksLeft = [
 
 const navLinksRight = [
   { label: "Terrain", href: "/reservation?activite=foot" },
-  { label: "Bubble & Team Building", href: "/reservation?activite=groupes" },
+  { label: "Bubble & Team", href: "/reservation?activite=groupes" },
   { label: "Réserver", href: "/reservation", cta: true },
 ];
 
