@@ -8,7 +8,9 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
-import { FadeIn } from "@/components/motion";
+import { FadeIn, StaggerContainer, StaggerItem, Tilt3D } from "@/components/motion";
+import { Photo } from "@/components/photo";
+import { usePhoto } from "@/components/photos-provider";
 import { PhoneField } from "@/components/reservation/phone-field";
 import { isValidEmail } from "@/lib/validation";
 import { saveReservation } from "@/lib/reservation";
@@ -25,7 +27,9 @@ import {
   type DemiJournee,
 } from "@/data/bubble-team";
 import { RESUME_ANNULATION } from "@/data/reglement";
-import { AlerteCercle, Ballon, Batiment, Bouclier, Cadenas, Coche, Document, FlecheDroite, FlecheGauche, Groupe, Horloge, Info } from "@/components/icons";
+import {
+  AlerteCercle, Ballon, Batiment, Bouclier, Cadenas, Coche, Document, FlecheDroite, FlecheGauche, Groupe, Horloge, Info, Visuel,
+} from "@/components/icons";
 
 type Offre = "bubble" | "team-building";
 type Step = "offre" | "creneau" | "recap";
@@ -59,6 +63,43 @@ export function GroupesFlow({ onBack }: { onBack: () => void }) {
   // Chaque changement d'étape repart du haut de la page.
   useScrollTop(step);
 
+  const photoBubble = usePhoto("bubble-portrait");
+  const photoEntree = usePhoto("entree-double-ballon");
+
+  const offres = [
+    {
+      id: "bubble" as Offre,
+      icon: Ballon,
+      title: "Bubble Foot",
+      description: "Le foot dans des bulles géantes : fous rires garantis.",
+      img: photoBubble,
+      // Les bulles sont à ~54 % de la hauteur de la photo.
+      imgPosition: "object-[center_54%]",
+      tag: `${BUBBLE_PRIX_PAR_PERSONNE}€/personne`,
+      detail: `${BUBBLE_DUREE_MINUTES} minutes • à partir de ${BUBBLE_MIN_PERSONNES} personnes`,
+      accentText: "text-field",
+      accentBadge: "bg-field/15 text-field",
+      iconBg: "bg-field/15 text-field",
+      border: "border-field/20 hover:border-field/60",
+      glow: "bg-field/25",
+    },
+    {
+      id: "team-building" as Offre,
+      icon: Batiment,
+      title: "Team Building",
+      description: "Privatisation du complexe pour votre équipe, à la demi-journée.",
+      img: photoEntree,
+      imgPosition: "object-center",
+      tag: "Sur devis",
+      detail: "Demi-journée • organisation sur mesure",
+      accentText: "text-kick",
+      accentBadge: "bg-kick/15 text-kick",
+      iconBg: "bg-kick/15 text-kick",
+      border: "border-kick/20 hover:border-kick/60",
+      glow: "bg-kick/25",
+    },
+  ];
+
   return (
     <div>
       <h1 className="text-2xl font-bold font-[family-name:var(--font-heading)] md:text-3xl flex items-center gap-2">
@@ -68,54 +109,62 @@ export function GroupesFlow({ onBack }: { onBack: () => void }) {
 
       {/* ÉTAPE 1 — choix de l'offre */}
       {step === "offre" && (
-        <FadeIn className="mt-6">
-          <div className="grid gap-4 sm:grid-cols-2">
-            <button onClick={() => { setOffre("bubble"); setStep("creneau"); }} className="text-left">
-              <Card className="h-full border-2 hover:border-field transition-all duration-300 card-hover">
-                <CardContent className="p-6">
-                  <div className="inline-flex items-center justify-center rounded-xl bg-field/10 p-3 text-field">
-                    <Ballon className="size-6" />
-                  </div>
-                  <h2 className="mt-3 text-lg font-bold">Bubble Foot</h2>
-                  <p className="mt-1 text-sm text-muted-foreground">
-                    Le foot dans des bulles géantes : fous rires garantis.
-                  </p>
-                  <p className="mt-3 text-3xl font-bold font-[family-name:var(--font-heading)] text-field">
-                    {BUBBLE_PRIX_PAR_PERSONNE}€
-                    <span className="text-sm font-normal text-muted-foreground">/personne</span>
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    {BUBBLE_DUREE_MINUTES} minutes • à partir de {BUBBLE_MIN_PERSONNES} personnes
-                  </p>
-                </CardContent>
-              </Card>
-            </button>
+        <FadeIn className="mt-8">
+          <StaggerContainer className="grid gap-6 sm:grid-cols-2" staggerDelay={0.1}>
+            {offres.map((o) => (
+              <StaggerItem key={o.id} className="h-full">
+                <Tilt3D intensity={8} className="h-full">
+                  <button
+                    onClick={() => { setOffre(o.id); setStep("creneau"); }}
+                    className="w-full text-left h-full group"
+                  >
+                    <Card className={`h-full overflow-hidden border-2 py-0 gap-0 transition-all duration-500 cursor-pointer ${o.border} bg-card flex flex-col`}>
+                      {/* Emplacement photo — fondu dans le corps de la carte */}
+                      <div className="relative aspect-[4/5] overflow-hidden">
+                        {o.img ? (
+                          <Photo
+                            src={o.img}
+                            alt={o.title}
+                            sizes="(max-width: 640px) 100vw, 420px"
+                            className={`object-cover ${o.imgPosition} transition-transform duration-700 group-hover:scale-105`}
+                          />
+                        ) : (
+                          <div className="absolute inset-0 flex flex-col items-center justify-center gap-3">
+                            <div aria-hidden className="absolute inset-0 bg-gradient-to-b from-white/[0.035] to-transparent" />
+                            <div aria-hidden className="absolute inset-0 dot-grid fade-mask-radial opacity-70" />
+                            <div aria-hidden className={`absolute left-1/2 top-[46%] -translate-x-1/2 -translate-y-1/2 size-44 rounded-full blur-3xl ${o.glow}`} />
+                            <o.icon className="relative size-12 text-foreground/25" />
+                            <span className="relative inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground/60">
+                              <Visuel className="size-3.5" /> Photo à venir
+                            </span>
+                          </div>
+                        )}
+                        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-28 bg-gradient-to-b from-transparent to-card" />
+                        <div className={`absolute left-4 top-4 inline-flex items-center rounded-full bg-black/65 px-3 py-1 text-xs font-semibold ring-1 ring-white/15 backdrop-blur-md ${o.accentText}`}>
+                          {o.tag}
+                        </div>
+                      </div>
 
-            <button onClick={() => { setOffre("team-building"); setStep("creneau"); }} className="text-left">
-              <Card className="h-full border-2 hover:border-field transition-all duration-300 card-hover">
-                <CardContent className="p-6">
-                  <div className="inline-flex items-center justify-center rounded-xl bg-kick/10 p-3 text-kick">
-                    <Batiment className="size-6" />
-                  </div>
-                  <h2 className="mt-3 text-lg font-bold">Team Building</h2>
-                  <p className="mt-1 text-sm text-muted-foreground">
-                    Privatisation du complexe pour votre équipe, à la demi-journée.
-                  </p>
-                  <p className="mt-3 text-2xl font-bold font-[family-name:var(--font-heading)] text-kick">
-                    Sur devis
-                  </p>
-                  <p className="text-xs text-muted-foreground">Demi-journée • organisation sur mesure</p>
-                  <ul className="mt-3 space-y-1">
-                    {TEAM_BUILDING_INCLUS.slice(0, 3).map((inc) => (
-                      <li key={inc} className="flex items-start gap-1.5 text-xs text-muted-foreground">
-                        <Coche className="size-3 text-kick mt-0.5 shrink-0" />{inc}
-                      </li>
-                    ))}
-                  </ul>
-                </CardContent>
-              </Card>
-            </button>
-          </div>
+                      {/* Contenu — remonte légèrement pour chevaucher le fondu */}
+                      <div className="-mt-6 p-6 flex flex-col flex-1">
+                        <div className="flex items-center gap-2.5">
+                          <div className={`inline-flex items-center justify-center rounded-xl p-2.5 ${o.iconBg} group-hover:scale-110 transition-transform duration-500`}>
+                            <o.icon className="size-5" />
+                          </div>
+                          <h2 className="text-xl font-bold font-[family-name:var(--font-heading)] leading-tight">{o.title}</h2>
+                        </div>
+                        <p className="mt-3 text-[15px] leading-relaxed text-muted-foreground">{o.description}</p>
+                        <p className="mt-2 text-xs text-muted-foreground flex-1">{o.detail}</p>
+                        <span className={`mt-5 inline-flex items-center gap-1.5 text-sm font-semibold ${o.accentText} group-hover:gap-2.5 transition-all duration-300`}>
+                          Choisir <FlecheDroite className="size-4" />
+                        </span>
+                      </div>
+                    </Card>
+                  </button>
+                </Tilt3D>
+              </StaggerItem>
+            ))}
+          </StaggerContainer>
           <div className="mt-8">
             <Button variant="ghost" onClick={onBack} className="gap-1.5"><FlecheGauche className="size-4" /> Retour</Button>
           </div>

@@ -108,7 +108,7 @@ export function ActivityChoice({ onSelect }: { onSelect: (a: Activity) => void }
                     )}
                     {/* Dégradé qui fond l'image dans la carte (supprime la cassure) */}
                     <div className="pointer-events-none absolute inset-x-0 bottom-0 h-28 bg-gradient-to-b from-transparent to-card" />
-                    <div className={`absolute left-4 top-4 inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold backdrop-blur-md ${act.accentBadge}`}>
+                    <div className={`absolute left-4 top-4 inline-flex items-center rounded-full bg-black/65 px-3 py-1 text-xs font-semibold ring-1 ring-white/15 backdrop-blur-md ${act.accentText}`}>
                       {act.tag}
                     </div>
                   </div>

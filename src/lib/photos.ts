@@ -21,6 +21,7 @@ const SLOTS = {
   "terrain-vide": ["terrainsvide", "terrainvide"],
   "bubble-portrait": ["bubbleportrait"],
   "ballon-terrain": ["ballonterrain"],
+  "entree-double-ballon": ["entreedoubleballon"],
   "anniversaire-carte": ["anniversairecarte", "anniv"],
 } as const;
 
