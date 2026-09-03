@@ -2,6 +2,8 @@ import type { Metadata, Viewport } from "next";
 import { Space_Grotesk, DM_Sans, JetBrains_Mono } from "next/font/google";
 import { Header } from "@/components/header";
 import { resolveLogoSrc } from "@/lib/logo";
+import { resolvePhotos } from "@/lib/photos";
+import { PhotosProvider } from "@/components/photos-provider";
 import { NOM_COMMERCIAL } from "@/data/entreprise";
 import { Footer } from "@/components/footer";
 import { CookieBannerWrapper } from "@/components/cookie-banner";
@@ -64,6 +66,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   const logoSrc = resolveLogoSrc();
+  const photos = resolvePhotos();
 
   return (
     <html
@@ -71,9 +74,11 @@ export default function RootLayout({
       className={`${spaceGrotesk.variable} ${dmSans.variable} ${jetBrainsMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
-        <Header logoSrc={logoSrc} />
-        <main className="flex-1">{children}</main>
-        <Footer logoSrc={logoSrc} />
+        <PhotosProvider value={photos}>
+          <Header logoSrc={logoSrc} />
+          <main className="flex-1">{children}</main>
+          <Footer logoSrc={logoSrc} />
+        </PhotosProvider>
         <CookieBannerWrapper />
       </body>
     </html>

@@ -3,6 +3,7 @@
 import { Card } from "@/components/ui/card";
 import { StaggerContainer, StaggerItem, Tilt3D } from "@/components/motion";
 import { Photo } from "@/components/photo";
+import { usePhoto } from "@/components/photos-provider";
 import { FlecheDroite, Gateau, Groupe, IconType, Trophee, Visuel } from "@/components/icons";
 import type { Activity } from "../reservation-flow";
 
@@ -11,8 +12,10 @@ type ActivityCard = {
   icon: IconType;
   title: string;
   description: string;
-  /** Emplacement photo : mettre le chemin de l'image quand elle sera fournie, sinon null → placeholder. */
+  /** Emplacement photo : `null` tant que l'image n'est pas fournie → placeholder. */
   img: string | null;
+  /** Cadrage dans le cadre 4/5 (utile pour les images portrait ou paysage). */
+  imgPosition?: string;
   tag: string;
   accentText: string;
   accentBadge: string;
@@ -22,49 +25,53 @@ type ActivityCard = {
   glow: string;
 };
 
-const activities: ActivityCard[] = [
-  {
-    id: "anniversaire" as Activity,
-    icon: Gateau,
-    title: "Anniversaire",
-    description: "Deux formules 100 % foot — Kick-Off et Bubble — jusqu'à 10 enfants.",
-    img: null,
-    tag: "Dès 180 €",
-    accentText: "text-kick",
-    accentBadge: "bg-kick/15 text-kick",
-    iconBg: "bg-kick/15 text-kick",
-    border: "border-kick/20 hover:border-kick/60",
-    glow: "bg-kick/25",
-  },
-  {
-    id: "foot" as Activity,
-    icon: Trophee,
-    title: "Location de terrain",
-    description: "Réservez un terrain privé entre amis, via SportFinder.",
-    img: null,
-    tag: "Via SportFinder",
-    accentText: "text-field",
-    accentBadge: "bg-field/15 text-field",
-    iconBg: "bg-field/15 text-field",
-    border: "border-field/20 hover:border-field/60",
-    glow: "bg-field/25",
-  },
-  {
-    id: "groupes" as Activity,
-    icon: Groupe,
-    title: "Bubble Foot & Team Building",
-    description: "Bubble Foot à 23 €/personne, ou privatisation à la demi-journée.",
-    img: null,
-    tag: "Dès 23 €/pers.",
-    accentText: "text-kick",
-    accentBadge: "bg-kick/15 text-kick",
-    iconBg: "bg-kick/15 text-kick",
-    border: "border-field/20 hover:border-field/60",
-    glow: "bg-kick/20",
-  },
-];
 
 export function ActivityChoice({ onSelect }: { onSelect: (a: Activity) => void }) {
+  const photoBubble = usePhoto("bubble-portrait");
+  const photoBallon = usePhoto("ballon-terrain");
+
+  const activities: ActivityCard[] = [
+    {
+      id: "anniversaire" as Activity,
+      icon: Gateau,
+      title: "Anniversaire",
+      description: "Deux formules 100 % foot — Kick-Off et Bubble — jusqu'à 10 enfants.",
+      img: null,
+      tag: "Dès 180 €",
+      accentText: "text-kick",
+      accentBadge: "bg-kick/15 text-kick",
+      iconBg: "bg-kick/15 text-kick",
+      border: "border-kick/20 hover:border-kick/60",
+      glow: "bg-kick/25",
+    },
+    {
+      id: "foot" as Activity,
+      icon: Trophee,
+      title: "Location de terrain",
+      description: "Réservez un terrain privé entre amis, via SportFinder.",
+      img: photoBallon,
+      tag: "Via SportFinder",
+      accentText: "text-field",
+      accentBadge: "bg-field/15 text-field",
+      iconBg: "bg-field/15 text-field",
+      border: "border-field/20 hover:border-field/60",
+      glow: "bg-field/25",
+    },
+    {
+      id: "groupes" as Activity,
+      icon: Groupe,
+      title: "Bubble Foot & Team Building",
+      description: "Bubble Foot à 23 €/personne, ou privatisation à la demi-journée.",
+      img: photoBubble,
+      tag: "Dès 23 €/pers.",
+      accentText: "text-kick",
+      accentBadge: "bg-kick/15 text-kick",
+      iconBg: "bg-kick/15 text-kick",
+      border: "border-field/20 hover:border-field/60",
+      glow: "bg-kick/20",
+    },
+  ];
+
   return (
     <div>
       <h1 className="font-[family-name:var(--font-heading)] text-3xl md:text-4xl font-bold">Réserver</h1>
@@ -83,7 +90,7 @@ export function ActivityChoice({ onSelect }: { onSelect: (a: Activity) => void }
                         src={act.img}
                         alt={act.title}
                         sizes="(max-width: 640px) 100vw, 380px"
-                        className="object-cover transition-transform duration-700 group-hover:scale-105"
+                        className={`object-cover ${act.imgPosition ?? "object-center"} transition-transform duration-700 group-hover:scale-105`}
                       />
                     ) : (
                       /* Placeholder tant que la photo n'est pas fournie */

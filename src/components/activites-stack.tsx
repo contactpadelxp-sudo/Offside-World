@@ -5,49 +5,71 @@ import Link from "next/link";
 import Lenis from "lenis";
 import { FlecheDroite, Gateau, Groupe, Trophee } from "@/components/icons";
 import { Photo } from "@/components/photo";
+import { usePhoto } from "@/components/photos-provider";
 import "./scroll-stack.css";
 
-const cards = [
-  {
-    href: "/reservation?activite=anniversaire",
-    icon: Gateau,
-    title: "Anniversaires",
-    desc: "Deux formules 100 % foot : Kick-Off dès 180 € et Bubble dès 290 €, jusqu'à 10 enfants. Décoration, boissons et vidéo souvenir comprises.",
-    itemClassName: "bg-gradient-to-br from-field to-kick text-[#0a0a0b]",
-    badgeClass: "bg-black/15 text-[#0a0a0b]",
-    ctaClass: "text-[#0a0a0b]",
-    frameClass: "border-black/25 bg-black/10",
-    img: "/images/foot.jpeg",
-  },
-  {
-    href: "/reservation?activite=foot",
-    icon: Trophee,
-    title: "Location de terrain",
-    desc: "Terrain privé avec éclairage, ballon, chasubles et vestiaires. Réservez votre créneau entre amis sur SportFinder.",
-    itemClassName: "bg-[#151517] text-foreground border border-white/10",
-    badgeClass: "bg-field/15 text-field",
-    ctaClass: "text-field",
-    frameClass: "border-field/30 bg-field/5",
-    img: "/images/foot3.jpeg",
-  },
-  {
-    href: "/reservation?activite=groupes",
-    icon: Groupe,
-    title: "Bubble Foot & Team Building",
-    desc: "Le foot dans des bulles géantes à 23 € par personne, ou la privatisation du complexe à la demi-journée pour votre équipe.",
-    itemClassName: "bg-gradient-to-br from-kick to-kick-dark text-[#0a0a0b]",
-    badgeClass: "bg-black/15 text-[#0a0a0b]",
-    ctaClass: "text-[#0a0a0b]",
-    frameClass: "border-black/25 bg-black/10",
-    img: "/images/foot2.avif",
-  },
-];
+type Card = {
+  href: string;
+  icon: typeof Gateau;
+  title: string;
+  desc: string;
+  itemClassName: string;
+  badgeClass: string;
+  ctaClass: string;
+  frameClass: string;
+  img: string | null;
+  /** Cadrage de la photo dans le cadre paysage (utile pour les images portrait). */
+  imgPosition?: string;
+};
+
 
 const ITEM_STACK_DISTANCE = 30; // décalage en escalier entre cartes posées
 const SCALE_STEP = 0.05;        // réduction des cartes du dessous à chaque pose
 const DWELL = 260;              // scroll (px) pendant lequel l'empilement complet reste affiché
 
 export default function ActivitesStack({ children }: { children?: React.ReactNode }) {
+  const photoTerrain = usePhoto("terrain-vide");
+  const photoBubble = usePhoto("bubble-portrait");
+
+  const cards: Card[] = [
+    {
+      href: "/reservation?activite=anniversaire",
+      icon: Gateau,
+      title: "Anniversaires",
+      desc: "Deux formules 100 % foot : Kick-Off dès 180 € et Bubble dès 290 €, jusqu'à 10 enfants. Décoration, boissons et vidéo souvenir comprises.",
+      itemClassName: "bg-gradient-to-br from-field to-kick text-[#0a0a0b]",
+      badgeClass: "bg-black/15 text-[#0a0a0b]",
+      ctaClass: "text-[#0a0a0b]",
+      frameClass: "border-black/25 bg-black/10",
+      img: "/images/foot.jpeg",
+    },
+    {
+      href: "/reservation?activite=foot",
+      icon: Trophee,
+      title: "Location de terrain",
+      desc: "Terrain privé avec éclairage, ballon, chasubles et vestiaires. Réservez votre créneau entre amis sur SportFinder.",
+      itemClassName: "bg-[#151517] text-foreground border border-white/10",
+      badgeClass: "bg-field/15 text-field",
+      ctaClass: "text-field",
+      frameClass: "border-field/30 bg-field/5",
+      img: photoTerrain,
+    },
+    {
+      href: "/reservation?activite=groupes",
+      icon: Groupe,
+      title: "Bubble Foot & Team Building",
+      desc: "Le foot dans des bulles géantes à 23 € par personne, ou la privatisation du complexe à la demi-journée pour votre équipe.",
+      itemClassName: "bg-gradient-to-br from-kick to-kick-dark text-[#0a0a0b]",
+      badgeClass: "bg-black/15 text-[#0a0a0b]",
+      ctaClass: "text-[#0a0a0b]",
+      frameClass: "border-black/25 bg-black/10",
+      img: photoBubble,
+      // Photo portrait dans un cadre paysage : on recadre sur le haut, là où
+      // sont les bulles, plutôt que de centrer.
+      imgPosition: "object-top",
+    },
+  ];
+
   const wrapperRef = useRef<HTMLDivElement>(null);
   const areaRef = useRef<HTMLDivElement>(null);
   const cardRefs = useRef<(HTMLDivElement | null)[]>([]);
@@ -192,7 +214,14 @@ export default function ActivitesStack({ children }: { children?: React.ReactNod
                 </div>
                 {/* Cadre photo (même taille pour les 3 cartes) */}
                 <div className={`relative hidden md:block h-full w-64 lg:w-80 shrink-0 overflow-hidden rounded-2xl border-2 border-dashed ${card.frameClass}`}>
-                  <Photo src={card.img} alt={card.title} sizes="(max-width: 1024px) 40vw, 320px" className="object-cover" />
+                  {card.img && (
+                    <Photo
+                      src={card.img}
+                      alt={card.title}
+                      sizes="(max-width: 1024px) 40vw, 320px"
+                      className={`object-cover ${card.imgPosition ?? "object-center"}`}
+                    />
+                  )}
                 </div>
               </div>
             </div>
