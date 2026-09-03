@@ -7,6 +7,7 @@ import {
   MagneticButton, CountUp, Marquee, Tilt3D, WaveDivider,
 } from "@/components/motion";
 import { Photo } from "@/components/photo";
+import { usePhoto } from "@/components/photos-provider";
 import { Ballon, Batiment, Bouclier, Carte, Coche, Document, Enfant, Epingle, Etoile, FlecheDroite, Gateau, Groupe, Horloge } from "@/components/icons";
 import { formules, GATEAU_NOTE, MAX_CHILDREN } from "@/data/formules";
 import { RESUME_ANNULATION, DELAI_RESERVATION_HEURES, ANNIVERSAIRES_SIMULTANES } from "@/data/reglement";
@@ -20,7 +21,9 @@ const marqueeItems = [
   "FOUS RIRES", "FOOT INDOOR", "GOÛTER", "FUN",
 ];
 
-export default function Maison() {
+export default function Home() {
+  const photoHero = usePhoto("terrain-vide-2");
+
   return (
     <>
       {/* ══════ HERO ══════ */}
@@ -56,33 +59,29 @@ export default function Maison() {
         {/* Overlay radial blanc pour lisibilité au centre */}
         <div className="absolute inset-0 z-[1] bg-radial-[ellipse_at_center] from-black/65 via-black/35 to-transparent" />
 
-        <div className="relative z-10 mx-auto max-w-5xl px-4 lg:px-8 pt-28 pb-14 md:pt-32 md:pb-16 w-full text-center">
+        <div className="relative z-10 mx-auto max-w-5xl px-4 lg:px-8 pt-24 pb-12 md:pt-28 md:pb-14 w-full text-center">
           {/* Headline central */}
           <h1 className="font-[family-name:var(--font-heading)] text-[clamp(2rem,5.5vw,4.5rem)] font-bold tracking-tight leading-[1.05] text-foreground">
             <FadeIn delay={0.1} className="block md:whitespace-nowrap">
-              <span>Le complexe où les</span>
+              <span>Les enfants </span>
+              <span className="text-gradient-field">s&apos;éclatent</span>
+              <span>,</span>
             </FadeIn>
             <FadeIn delay={0.3} className="block md:whitespace-nowrap">
-              <span>enfants </span>
-              <span className="text-gradient-field">s&apos;éclatent</span>
-              <span> et</span>
-            </FadeIn>
-            <FadeIn delay={0.5} className="block md:whitespace-nowrap">
               <span>les parents </span>
               <span className="text-gradient-field">soufflent.</span>
             </FadeIn>
           </h1>
 
           <FadeIn delay={0.9}>
-            <p className="mt-6 text-lg md:text-xl text-muted-foreground max-w-xl mx-auto leading-relaxed">
-              Organiser l&apos;anniversaire de votre enfant n&apos;a jamais été{" "}
-              <span className="text-foreground font-semibold">aussi simple.</span>
+            <p className="mt-5 text-lg md:text-xl text-muted-foreground text-balance px-4">
+              L&apos;anniversaire 100&nbsp;%&nbsp;foot, <span className="text-foreground font-semibold">organisé de A à Z.</span>
             </p>
           </FadeIn>
 
           {/* CTAs */}
           <FadeIn delay={1.1}>
-            <div className="mt-10 flex flex-col sm:flex-row sm:flex-wrap justify-center gap-4 px-2">
+            <div className="mt-8 flex flex-col sm:flex-row sm:flex-wrap justify-center gap-4 px-2">
               <Link
                 href="/reservation"
                 className="btn-glass-field inline-flex items-center justify-center gap-2 text-[#0a0a0b] text-lg px-8 h-14 rounded-2xl"
@@ -100,7 +99,7 @@ export default function Maison() {
 
           {/* Stats — espacées */}
           <FadeIn delay={1.3}>
-            <div className="mt-12 flex flex-wrap justify-center gap-x-8 gap-y-6 sm:gap-x-16 md:gap-x-24">
+            <div className="mt-10 flex flex-wrap justify-center gap-x-8 gap-y-6 sm:gap-x-16 md:gap-x-24">
               {[
                 { value: 2000, suffix: "+", label: "fêtes organisées" },
                 { value: ANNIVERSAIRES_SIMULTANES, suffix: "", label: "anniversaires en simultané" },
@@ -118,9 +117,18 @@ export default function Maison() {
 
           {/* Cadre d'aperçu du complexe */}
           <FadeIn delay={1.5}>
-            <div className="relative mt-12 mx-auto w-full max-w-3xl aspect-[16/9] overflow-hidden rounded-3xl border-2 border-dashed border-field/30 bg-white/[0.04] backdrop-blur-sm shadow-2xl shadow-black/40 flex items-center justify-center">
-              <span className="text-sm text-muted-foreground/70 tracking-wide">Aperçu du complexe — photo à venir</span>
-              <Photo src="/images/offside-foot-indoor.jpg" alt="Le complexe Offside Foot Indoor — foot indoor" sizes="(max-width: 768px) 100vw, 768px" className="object-cover" preload />
+            <div className={`relative mt-8 mx-auto w-full max-w-3xl aspect-[16/9] overflow-hidden rounded-3xl border-2 bg-white/[0.04] backdrop-blur-sm shadow-2xl shadow-black/40 flex items-center justify-center ${photoHero ? "border-field/25" : "border-dashed border-field/30"}`}>
+              {photoHero ? (
+                <Photo
+                  src={photoHero}
+                  alt="Les terrains de foot indoor du complexe Offside Foot Indoor"
+                  sizes="(max-width: 768px) 100vw, 768px"
+                  className="object-cover object-[center_40%]"
+                  preload
+                />
+              ) : (
+                <span className="text-sm text-muted-foreground/70 tracking-wide">Aperçu du complexe — photo à venir</span>
+              )}
             </div>
           </FadeIn>
         </div>

@@ -19,6 +19,7 @@ const EXTENSIONS = ["avif", "webp", "jpg", "jpeg", "png"];
 /** Emplacements du site et noms de fichiers acceptés pour chacun. */
 const SLOTS = {
   "terrain-vide": ["terrainsvide", "terrainvide"],
+  "terrain-vide-2": ["terrainvide2"],
   "bubble-portrait": ["bubbleportrait"],
   "ballon-terrain": ["ballonterrain"],
   "entree-double-ballon": ["entreedoubleballon"],
