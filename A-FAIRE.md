@@ -32,21 +32,25 @@ Informations à obtenir :
 
 ## 2. Cohérence des prix avec Sport-Finder
 
-Les deux plateformes annoncent des tarifs différents. Un client qui compare
-verra la contradiction.
+**Décision prise :** les prix qui font foi sont ceux communiqués par Brahim, et
+déjà en place sur le site et dans la base — Kick-Off 180 €, Bubble 290 €,
++10 €/+15 € par enfant supplémentaire, Bubble Foot 23 €/pers. (minimum 6).
 
-| Prestation | Sport-Finder | Ce site |
+Reste l'écart avec ce qui est affiché sur Sport-Finder :
+
+| Prestation | Sport-Finder | Prix retenu |
 | --- | --- | --- |
-| Bubble Foot | dès 20 €/pers. | 23 €/pers. |
-| Anniversaire | dès 140 €/session | 180 € (Kick-Off) |
-| Location de terrain | dès 70 €/heure | prix non affiché |
+| Anniversaire | dès 140 €/session | **180 €** (Kick-Off) |
+| Bubble Foot | dès 20 €/pers. | **23 €/pers.** |
+| Location de terrain | dès 70 €/heure | non affiché sur le site |
 
-- [ ] **Demander à Brahim quels prix font foi**, puis aligner le site ou Sport-Finder
-
-Ce point bloque désormais la base de données : le référentiel tarifaire
-(`supabase/migrations/0002_referentiel.sql`) fige 180 € et 23 €. Si Brahim
-confirme d'autres montants, il faut corriger la migration **avant** de
-l'appliquer, ou passer par une mise à jour SQL ensuite.
+- [ ] **Brahim doit mettre Sport-Finder à jour**, sinon un client qui compare les
+      deux pages verra deux tarifs différents pour la même prestation — et
+      pourra légitimement exiger le moins cher.
+- [ ] Vérifier au passage si l'entrée « Anniversaire de Football » de
+      Sport-Finder fait double emploi avec la réservation du site : deux canaux
+      pour la même prestation rouvrent le risque de double réservation que la
+      règle d'étanchéité cherche justement à éliminer.
 
 ## 3. Informations d'entreprise à fournir
 
