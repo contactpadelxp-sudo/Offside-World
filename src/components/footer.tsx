@@ -92,7 +92,7 @@ export function Footer({ logoSrc }: { logoSrc: string | null }) {
                   </li>
                 ))}
                 <li>
-                  <button onClick={openCookieSettings} className="text-sm text-white/60 hover:text-white transition-colors duration-300 inline-flex items-center gap-1.5">
+                  <button onClick={openCookieSettings} className="inline-flex min-h-6 items-center gap-1.5 py-0.5 text-sm text-white/60 hover:text-white transition-colors duration-300">
                     <Cookie className="size-3.5" /> Gérer mes cookies
                   </button>
                 </li>
@@ -105,7 +105,12 @@ export function Footer({ logoSrc }: { logoSrc: string | null }) {
             <p>© {new Date().getFullYear()} {NOM_COMMERCIAL}. Tous droits réservés.</p>
             <p>
               Droits RGPD :{" "}
-              <a href={`mailto:${EMAIL}`} className="underline hover:text-white transition-colors">{EMAIL}</a>
+              <a
+                href={`mailto:${EMAIL}`}
+                className="inline-flex min-h-6 items-center py-0.5 underline hover:text-white transition-colors"
+              >
+                {EMAIL}
+              </a>
             </p>
           </div>
         </div>

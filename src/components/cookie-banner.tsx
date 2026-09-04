@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Coche, Cookie, Croix, Reglages } from "@/components/icons";
 import { motion, AnimatePresence } from "framer-motion";
@@ -37,6 +37,7 @@ function storeConsent(consent: CookieConsent) {
 
 export function CookieBanner() {
   const [visible, setVisible] = useState(false);
+  const bandeau = useRef<HTMLDivElement>(null);
   const [showDetails, setShowDetails] = useState(false);
   const [analytics, setAnalytics] = useState(false);
   const [marketing, setMarketing] = useState(false);
@@ -47,6 +48,39 @@ export function CookieBanner() {
     const t = setTimeout(() => setVisible(true), 0);
     return () => clearTimeout(t);
   }, []);
+
+  /**
+   * Réserve en bas de page la hauteur qu'occupe le bandeau.
+   *
+   * Il est en `position: fixed` : sans cela, il recouvre ce qui se trouve au
+   * bas de l'écran, et le recouvrement rend le clic impossible — pas seulement
+   * illisible. Sur mobile, le bouton « Voir les créneaux » de la page « Louer
+   * un terrain » était ainsi inatteignable pour tout visiteur n'ayant pas
+   * encore répondu au bandeau, c'est-à-dire pour tout nouveau visiteur.
+   *
+   * La hauteur est mesurée plutôt que devinée : elle change selon la longueur
+   * du texte, et double quand on déplie « Personnaliser ».
+   */
+  useEffect(() => {
+    const racine = document.documentElement;
+    const remettreAZero = () => racine.style.setProperty("--bandeau-cookies", "0px");
+
+    if (!visible) {
+      remettreAZero();
+      return;
+    }
+    const el = bandeau.current;
+    if (!el) return;
+
+    const mesurer = () => racine.style.setProperty("--bandeau-cookies", `${el.offsetHeight}px`);
+    mesurer();
+    const observateur = new ResizeObserver(mesurer);
+    observateur.observe(el);
+    return () => {
+      observateur.disconnect();
+      remettreAZero();
+    };
+  }, [visible]);
 
   const save = useCallback(
     (consent: CookieConsent) => {
@@ -68,6 +102,7 @@ export function CookieBanner() {
           animate={{ y: 0, opacity: 1 }}
           exit={{ y: 100, opacity: 0 }}
           transition={{ type: "spring", damping: 25, stiffness: 200 }}
+          ref={bandeau}
           className="fixed inset-x-0 bottom-0 z-50 p-4"
         >
           <div className="mx-auto max-w-2xl rounded-2xl border bg-card/95 backdrop-blur-xl p-5 shadow-2xl">
@@ -80,7 +115,10 @@ export function CookieBanner() {
                 <p className="mt-1 text-sm text-muted-foreground">
                   Nous utilisons des cookies pour améliorer votre expérience. Vous pouvez
                   accepter, refuser ou personnaliser vos choix.{" "}
-                  <a href="/politique-cookies" className="underline hover:text-primary transition-colors">
+                  <a
+                    href="/politique-cookies"
+                    className="inline-flex min-h-6 items-center underline hover:text-primary transition-colors"
+                  >
                     En savoir plus
                   </a>
                 </p>

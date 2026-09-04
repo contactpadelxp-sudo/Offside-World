@@ -73,7 +73,7 @@ export function BarreAdmin({
           visibles à une ligne tronquée — c'est un outil de travail, pas une
           vitrine.
         */}
-        <nav className="order-3 flex w-full flex-wrap items-center gap-1 sm:order-none sm:w-auto sm:flex-nowrap">
+        <nav className="order-3 flex w-full flex-wrap items-center gap-2 sm:order-none sm:w-auto sm:flex-nowrap sm:gap-1">
           {SECTIONS.map((s) => {
             const actif = s.href === "/admin" ? chemin === "/admin" : chemin.startsWith(s.href);
             const n = pastille(s.href);

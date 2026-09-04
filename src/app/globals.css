@@ -99,6 +99,12 @@
   }
   body {
     @apply bg-background text-foreground;
+    /* Place réservée au bandeau cookies, qui est en position fixe : sans elle,
+       il recouvre le bas de la page et rend inatteignables les boutons qui s'y
+       trouvent. La variable est posée par le bandeau lui-même, qui mesure sa
+       propre hauteur ; elle vaut 0 le reste du temps. */
+    padding-bottom: var(--bandeau-cookies, 0px);
+    transition: padding-bottom 0.25s ease;
   }
   html {
     @apply font-sans scroll-smooth;
