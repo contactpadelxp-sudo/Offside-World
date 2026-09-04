@@ -4,6 +4,9 @@ import { useState, useEffect, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
 import { useScrollTop } from "@/lib/use-scroll-top";
 import { RESERVER_RESET_EVENT } from "@/lib/events";
+import type { CreneauVue } from "@/lib/db/creneaux";
+import type { FormuleVue, OptionVue } from "@/lib/db/referentiel";
+import type { DemiJourneeVue } from "@/lib/demi-journees";
 import { ActivityChoice } from "./steps/activity-choice";
 import { AnniversaireFlow } from "./steps/anniversaire-flow";
 import { FootFlow } from "./steps/foot-flow";
@@ -13,7 +16,21 @@ export type Activity = "anniversaire" | "foot" | "groupes" | null;
 
 const ACTIVITIES = ["anniversaire", "foot", "groupes"] as const;
 
-export function ReservationFlow() {
+/**
+ * Tout ce que le funnel affiche vient de la base, lu par le composant serveur
+ * qui rend cette page. Aucun tarif ni aucune disponibilité n'est écrit en dur
+ * côté navigateur : c'est ce qui garantit qu'un prix affiché est bien celui que
+ * le serveur facturera.
+ */
+export interface DonneesReservation {
+  formules: FormuleVue[];
+  options: OptionVue[];
+  creneauxAnniversaire: CreneauVue[];
+  creneauxBubble: CreneauVue[];
+  demiJournees: DemiJourneeVue[];
+}
+
+export function ReservationFlow({ donnees }: { donnees: DonneesReservation }) {
   const searchParams = useSearchParams();
   const [activity, setActivity] = useState<Activity>(null);
 
@@ -62,9 +79,22 @@ export function ReservationFlow() {
   return (
     <div className="mx-auto max-w-4xl px-4 pt-24 pb-8 md:pt-28 md:pb-12">
       {!activity && <ActivityChoice onSelect={selectActivity} />}
-      {activity === "anniversaire" && <AnniversaireFlow onBack={backToChoice} />}
+      {activity === "anniversaire" && (
+        <AnniversaireFlow
+          onBack={backToChoice}
+          formules={donnees.formules}
+          options={donnees.options}
+          creneaux={donnees.creneauxAnniversaire}
+        />
+      )}
       {activity === "foot" && <FootFlow onBack={backToChoice} />}
-      {activity === "groupes" && <GroupesFlow onBack={backToChoice} />}
+      {activity === "groupes" && (
+        <GroupesFlow
+          onBack={backToChoice}
+          creneaux={donnees.creneauxBubble}
+          demiJournees={donnees.demiJournees}
+        />
+      )}
     </div>
   );
 }

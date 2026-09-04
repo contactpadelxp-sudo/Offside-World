@@ -6,11 +6,18 @@
 /** Délai minimum entre la réservation et le début de l'activité (heures). */
 export const DELAI_RESERVATION_HEURES = 1;
 
-/** Nombre d'anniversaires pouvant se dérouler simultanément. */
-export const ANNIVERSAIRES_SIMULTANES = 2;
-
-/** Battement entre deux anniversaires successifs, pour le changement (minutes). */
-export const BATTEMENT_MINUTES = 30;
+/*
+ * Anniversaires simultanés et battement entre deux groupes : ces deux règles
+ * ne sont plus des constantes ici. Elles sont désormais inscrites dans la base,
+ * là où elles s'appliquent réellement :
+ *   - le nombre d'anniversaires en parallèle est le nombre d'espaces actifs
+ *     (table `espaces`) ;
+ *   - le battement est l'espacement des créneaux produits par
+ *     `generer_creneaux_anniversaire()`, et la contrainte d'exclusion sur
+ *     `creneaux` interdit tout chevauchement.
+ * Les redéclarer ici créerait une seconde vérité, qui divergerait au premier
+ * changement d'horaire.
+ */
 
 export interface PalierAnnulation {
   /** Délai avant l'activité, en heures. */

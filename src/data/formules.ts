@@ -1,53 +1,41 @@
-export interface Option {
-  id: string;
-  label: string;
-  price: number; // €
-  description?: string;
-}
-
-export interface Formule {
-  id: string;
-  name: string;
-  /** Accroche courte : « Je joue avec mes amis » */
-  tagline: string;
-  description: string;
-  /** Prix forfaitaire, enfants inclus compris */
-  basePrice: number; // €
-  /** Nombre d'enfants couverts par le forfait */
-  includedChildren: number;
-  /** Supplément par enfant au-delà du forfait */
-  extraChildPrice: number; // €
-  maxChildren: number;
-  durationMinutes: number;
-  includes: string[];
-  image: string;
-}
-
-/** Capacité maximale d'un anniversaire, toutes formules confondues. */
-export const MAX_CHILDREN = 20;
+import type { FormuleVue } from "@/lib/vues";
 
 /**
- * Calcule le prix d'un anniversaire : forfait jusqu'à `includedChildren`,
- * puis supplément par enfant supplémentaire.
+ * Anniversaires : textes fixes et repli d'affichage.
+ *
+ * LA SOURCE DES TARIFS EST LA TABLE `formules`, pas ce fichier. Le prix
+ * facturé est recalculé par le serveur à partir de la base, à chaque
+ * réservation (voir src/app/reservation/actions.ts).
+ *
+ * `FORMULES_REPLI` ne sert qu'à un cas : la page d'accueil, prérendue, quand la
+ * base n'a pas répondu au moment du rendu. Mieux vaut afficher un tarif
+ * légèrement daté que masquer la section — mais rien de ce qui est ici n'atteint
+ * jamais le montant réellement demandé au client. En cas de doute, c'est la
+ * base qui a raison.
  */
-export function formulePrice(formule: Formule, nbChildren: number): number {
-  const extra = Math.max(0, nbChildren - formule.includedChildren);
-  return formule.basePrice + extra * formule.extraChildPrice;
-}
 
-export const formules: Formule[] = [
+/** Mention commune aux deux formules. */
+export const GATEAU_NOTE = "Le gâteau est apporté par les parents.";
+
+/** Illustration de chaque option (chemins exacts dans public/images/). */
+export const OPTION_IMAGES: Record<string, string> = {
+  photo: "/images/photos.jpeg",
+  pinata: "/images/pinata.webp",
+};
+
+export const FORMULES_REPLI: FormuleVue[] = [
   {
     id: "kick-off",
-    name: "Kick-Off",
-    tagline: "Je joue avec mes amis",
+    nom: "Kick-Off",
+    accroche: "Je joue avec mes amis",
     description:
       "La formule idéale pour profiter d'un anniversaire 100 % foot en toute liberté.",
-    basePrice: 180,
-    includedChildren: 10,
-    extraChildPrice: 10,
-    maxChildren: MAX_CHILDREN,
-    durationMinutes: 120,
-    includes: [
+    prixBase: 180,
+    enfantsInclus: 10,
+    prixEnfantSup: 10,
+    enfantsMax: 20,
+    dureeMinutes: 120,
+    inclus: [
       "2 heures de Football Indoor",
       "Terrain réservé pour le groupe",
       "Ballons et chasubles à disposition",
@@ -62,16 +50,16 @@ export const formules: Formule[] = [
   },
   {
     id: "bubble",
-    name: "Bubble",
-    tagline: "Je veux l'expérience la plus fun",
+    nom: "Bubble",
+    accroche: "Je veux l'expérience la plus fun",
     description:
       "L'anniversaire Offside dans sa version la plus fun ! Une expérience qui mélange Football Indoor et Bubble Foot pour un maximum de rires et de souvenirs.",
-    basePrice: 290,
-    includedChildren: 10,
-    extraChildPrice: 15,
-    maxChildren: MAX_CHILDREN,
-    durationMinutes: 120,
-    includes: [
+    prixBase: 290,
+    enfantsInclus: 10,
+    prixEnfantSup: 15,
+    enfantsMax: 20,
+    dureeMinutes: 120,
+    inclus: [
       "1 heure de Bubble Foot",
       "Animateur Bubble dédié",
       "1 heure de Football Indoor",
@@ -85,17 +73,4 @@ export const formules: Formule[] = [
     ],
     image: "/images/anniv1.jpg",
   },
-];
-
-/** Mention commune aux deux formules. */
-export const GATEAU_NOTE = "Le gâteau est apporté par les parents.";
-
-/**
- * Options payantes en supplément.
- * La décoration, les boissons et la vaisselle sont désormais comprises dans
- * les deux formules : elles ne sont plus vendues à part.
- */
-export const options: Option[] = [
-  { id: "photo", label: "Pack photo souvenir", price: 20, description: "Photos de groupe + individuelles imprimées" },
-  { id: "pinata", label: "Piñata", price: 30, description: "Piñata remplie de bonbons" },
 ];

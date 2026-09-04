@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -13,58 +13,123 @@ import { Photo } from "@/components/photo";
 import { usePhoto } from "@/components/photos-provider";
 import { PhoneField } from "@/components/reservation/phone-field";
 import { isValidEmail } from "@/lib/validation";
-import { saveReservation } from "@/lib/reservation";
+import { memoriserRecap } from "@/lib/reservation";
 import { useScrollTop } from "@/lib/use-scroll-top";
+import { demanderDevis, reserverBubble } from "@/app/reservation/actions";
+import type { CreneauVue } from "@/lib/vues";
+import type { DemiJourneeVue } from "@/lib/demi-journees";
 import {
   BUBBLE_PRIX_PAR_PERSONNE,
   BUBBLE_MIN_PERSONNES,
+  BUBBLE_MAX_PERSONNES,
   BUBBLE_DUREE_MINUTES,
-  bubbleSlots,
-  bubbleTotal,
-  demiJournees,
   TEAM_BUILDING_INCLUS,
-  type BubbleSlot,
-  type DemiJournee,
+  TEAM_BUILDING_MAX_PARTICIPANTS,
+  TEAM_BUILDING_MIN_PARTICIPANTS,
 } from "@/data/bubble-team";
 import { RESUME_ANNULATION } from "@/data/reglement";
 import {
-  AlerteCercle, Ballon, Batiment, Bouclier, Cadenas, Coche, Document, FlecheDroite, FlecheGauche, Groupe, Horloge, Info, Visuel,
+  AlerteCercle, Ballon, Batiment, Bouclier, Coche, Document, FlecheDroite, FlecheGauche, Groupe, Horloge, Info, Visuel,
 } from "@/components/icons";
 
 type Offre = "bubble" | "team-building";
 type Step = "offre" | "creneau" | "recap";
 
-function formatDate(d: string) {
-  return new Date(d + "T00:00:00").toLocaleDateString("fr-BE", { weekday: "long", day: "numeric", month: "long" });
-}
-
-export function GroupesFlow({ onBack }: { onBack: () => void }) {
+export function GroupesFlow({
+  onBack,
+  creneaux,
+  demiJournees,
+}: {
+  onBack: () => void;
+  creneaux: CreneauVue[];
+  demiJournees: DemiJourneeVue[];
+}) {
   const router = useRouter();
   const [step, setStep] = useState<Step>("offre");
   const [offre, setOffre] = useState<Offre | null>(null);
 
-  const [bubbleSlot, setBubbleSlot] = useState<BubbleSlot | null>(null);
+  const [bubbleCreneau, setBubbleCreneau] = useState<CreneauVue | null>(null);
   const [nbPersonnes, setNbPersonnes] = useState(BUBBLE_MIN_PERSONNES);
-  const [demiJournee, setDemiJournee] = useState<DemiJournee | null>(null);
+  const [demiJournee, setDemiJournee] = useState<DemiJourneeVue | null>(null);
+  const [nbParticipants, setNbParticipants] = useState(TEAM_BUILDING_MIN_PARTICIPANTS);
 
   const [nom, setNom] = useState("");
   const [entreprise, setEntreprise] = useState("");
   const [email, setEmail] = useState("");
   const [emailTouched, setEmailTouched] = useState(false);
+  const [phone, setPhone] = useState("");
   const [phoneValid, setPhoneValid] = useState(false);
   const [message, setMessage] = useState("");
   const [acceptCGV, setAcceptCGV] = useState(false);
   const [acceptNewsletter, setAcceptNewsletter] = useState(false);
+  const [envoi, setEnvoi] = useState(false);
+  const [erreur, setErreur] = useState<string | null>(null);
 
   const emailValid = isValidEmail(email);
   const isBubble = offre === "bubble";
-  const total = isBubble ? bubbleTotal(nbPersonnes) : 0;
+  /** Aperçu : le montant qui fera foi est recalculé par le serveur. */
+  const total = isBubble ? BUBBLE_PRIX_PAR_PERSONNE * nbPersonnes : 0;
 
   // Chaque changement d'étape repart du haut de la page.
   useScrollTop(step);
 
   const photoBubble = usePhoto("bubble-portrait");
   const photoEntree = usePhoto("entree-double-ballon");
+
+  /** Les créneaux Bubble arrivent triés par date : on limite l'affichage. */
+  const creneauxAffiches = useMemo(() => creneaux.slice(0, 12), [creneaux]);
+
+  async function envoyer() {
+    setEnvoi(true);
+    setErreur(null);
+
+    const resultat = isBubble
+      ? await reserverBubble({
+          creneauId: bubbleCreneau?.id ?? "",
+          nbPersonnes,
+          clientNom: nom,
+          clientEmail: email,
+          clientTelephone: phone,
+          remarques: message || undefined,
+          newsletter: acceptNewsletter,
+          cgv: acceptCGV,
+        })
+      : await demanderDevis({
+          entreprise,
+          contactNom: nom,
+          contactEmail: email,
+          contactTelephone: phone,
+          dateSouhaitee: demiJournee?.jour ?? "",
+          periode: demiJournee?.periode ?? "matin",
+          nbParticipants,
+          message: message || undefined,
+          newsletter: acceptNewsletter,
+          cgv: acceptCGV,
+        });
+
+    if (!resultat.ok) {
+      setEnvoi(false);
+      setErreur(resultat.message);
+      if (resultat.champ === "creneau") {
+        setBubbleCreneau(null);
+        setStep("creneau");
+      }
+      return;
+    }
+
+    memoriserRecap({
+      ref: resultat.reference,
+      type: isBubble ? "bubble" : "team-building",
+      total: resultat.total,
+      formule: isBubble ? "Bubble Foot" : "Team Building — demi-journée",
+      date: isBubble ? bubbleCreneau?.jourLabel : demiJournee?.jourLabel,
+      horaire: isBubble
+        ? `${bubbleCreneau?.debut} – ${bubbleCreneau?.fin}`
+        : `${demiJournee?.periodeLabel} · ${demiJournee?.debut} – ${demiJournee?.fin}`,
+      surDevis: !isBubble,
+    });
+    router.push(`/confirmation?ref=${resultat.reference}`);
+  }
 
   const offres = [
     {
@@ -175,80 +240,126 @@ export function GroupesFlow({ onBack }: { onBack: () => void }) {
         </FadeIn>
       )}
 
-      {/* ÉTAPE 2 — créneau */}
+      {/* ÉTAPE 2 — créneau Bubble Foot */}
       {step === "creneau" && isBubble && (
         <FadeIn className="mt-6">
           <h2 className="text-xl font-bold font-[family-name:var(--font-heading)]">Choisissez votre créneau</h2>
-          <div className="mt-4 grid gap-3 sm:grid-cols-2">
-            {bubbleSlots.map((slot) => (
-              <button key={slot.id} onClick={() => slot.available && setBubbleSlot(slot)} disabled={!slot.available} className="text-left">
-                <Card className={`border-2 transition-all duration-300 ${
-                  !slot.available ? "opacity-50 cursor-not-allowed"
-                  : bubbleSlot?.id === slot.id ? "border-field ring-2 ring-field/20"
-                  : "hover:border-field/40 card-hover"
-                }`}>
-                  <CardContent className="p-4 flex items-center justify-between">
-                    <div>
-                      <p className="font-bold capitalize">{formatDate(slot.date)}</p>
-                      <p className="text-sm text-muted-foreground">{slot.start} – {slot.end}</p>
-                    </div>
-                    <Badge variant={slot.available ? "secondary" : "destructive"}>
-                      {slot.available ? "Disponible" : "Complet"}
-                    </Badge>
-                  </CardContent>
-                </Card>
-              </button>
-            ))}
-          </div>
 
-          {bubbleSlot && (
+          {creneauxAffiches.length === 0 ? (
+            <p className="mt-4 rounded-xl border border-field/20 bg-field/5 p-4 text-sm text-muted-foreground">
+              Aucun créneau Bubble Foot n&apos;est ouvert pour le moment. Contactez-nous : nous
+              trouverons un horaire.
+            </p>
+          ) : (
+            <div className="mt-4 grid gap-3 sm:grid-cols-2">
+              {creneauxAffiches.map((c) => (
+                <button key={c.id} onClick={() => c.libre && setBubbleCreneau(c)} disabled={!c.libre} className="text-left">
+                  <Card className={`border-2 transition-all duration-300 ${
+                    !c.libre ? "opacity-50 cursor-not-allowed"
+                    : bubbleCreneau?.id === c.id ? "border-field ring-2 ring-field/20"
+                    : "hover:border-field/40 card-hover"
+                  }`}>
+                    <CardContent className="p-4 flex items-center justify-between">
+                      <div>
+                        <p className="font-bold capitalize">{c.jourLabel}</p>
+                        <p className="text-sm text-muted-foreground">{c.debut} – {c.fin}</p>
+                      </div>
+                      <Badge variant={c.libre ? "secondary" : "destructive"}>
+                        {c.libre ? "Disponible" : "Complet"}
+                      </Badge>
+                    </CardContent>
+                  </Card>
+                </button>
+              ))}
+            </div>
+          )}
+
+          {bubbleCreneau && (
             <div className="mt-6 max-w-xs">
               <Label htmlFor="nbPersonnes">Nombre de personnes</Label>
-              <Input id="nbPersonnes" type="number" min={BUBBLE_MIN_PERSONNES} max={30} value={nbPersonnes}
-                onChange={(e) => setNbPersonnes(Math.max(BUBBLE_MIN_PERSONNES, Number(e.target.value)))} />
-              <p className="mt-1 text-xs text-muted-foreground">Minimum {BUBBLE_MIN_PERSONNES} personnes.</p>
+              <Input
+                id="nbPersonnes"
+                type="number"
+                min={BUBBLE_MIN_PERSONNES}
+                max={Math.min(BUBBLE_MAX_PERSONNES, bubbleCreneau.capacite)}
+                value={nbPersonnes}
+                onChange={(e) =>
+                  setNbPersonnes(
+                    Math.min(
+                      Math.min(BUBBLE_MAX_PERSONNES, bubbleCreneau.capacite),
+                      Math.max(BUBBLE_MIN_PERSONNES, Number(e.target.value))
+                    )
+                  )
+                }
+              />
+              <p className="mt-1 text-xs text-muted-foreground">
+                De {BUBBLE_MIN_PERSONNES} à {Math.min(BUBBLE_MAX_PERSONNES, bubbleCreneau.capacite)} personnes.
+              </p>
               <p className="mt-3 text-2xl font-bold text-field">{total}€</p>
               <p className="text-xs text-muted-foreground">{nbPersonnes} × {BUBBLE_PRIX_PAR_PERSONNE}€</p>
             </div>
           )}
 
+          {erreur && (
+            <p className="mt-6 rounded-xl border border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive flex items-start gap-2">
+              <AlerteCercle className="size-4 shrink-0 mt-0.5" /> {erreur}
+            </p>
+          )}
+
           <div className="mt-8 flex justify-between">
             <Button variant="ghost" onClick={() => setStep("offre")} className="gap-1.5"><FlecheGauche className="size-4" /> Retour</Button>
-            <Button onClick={() => setStep("recap")} disabled={!bubbleSlot} className="btn-glass-field text-[#0a0a0b] border-0 gap-1.5">
+            <Button onClick={() => setStep("recap")} disabled={!bubbleCreneau} className="btn-glass-field text-[#0a0a0b] border-0 gap-1.5">
               Continuer <FlecheDroite className="size-4" />
             </Button>
           </div>
         </FadeIn>
       )}
 
+      {/* ÉTAPE 2 — demi-journée team building */}
       {step === "creneau" && !isBubble && (
         <FadeIn className="mt-6">
           <h2 className="text-xl font-bold font-[family-name:var(--font-heading)]">Choisissez votre demi-journée</h2>
           <p className="mt-1 text-sm text-muted-foreground">
-            Le team building se réserve à la demi-journée. Nous revenons vers vous avec un devis personnalisé.
+            Le team building se réserve à la demi-journée. Indiquez votre préférence : nous revenons
+            vers vous avec un devis et la confirmation de la disponibilité.
           </p>
           <div className="mt-4 grid gap-3 sm:grid-cols-2">
             {demiJournees.map((dj) => (
-              <button key={dj.id} onClick={() => dj.available && setDemiJournee(dj)} disabled={!dj.available} className="text-left">
+              <button key={dj.id} onClick={() => setDemiJournee(dj)} className="text-left">
                 <Card className={`border-2 transition-all duration-300 ${
-                  !dj.available ? "opacity-50 cursor-not-allowed"
-                  : demiJournee?.id === dj.id ? "border-kick ring-2 ring-kick/20"
-                  : "hover:border-kick/40 card-hover"
+                  demiJournee?.id === dj.id ? "border-kick ring-2 ring-kick/20" : "hover:border-kick/40 card-hover"
                 }`}>
-                  <CardContent className="p-4 flex items-center justify-between">
-                    <div>
-                      <p className="font-bold capitalize">{formatDate(dj.date)}</p>
-                      <p className="text-sm text-muted-foreground flex items-center gap-1.5">
-                        <Horloge className="size-3.5" /> {dj.periode} · {dj.start} – {dj.end}
-                      </p>
-                    </div>
-                    <Badge variant={dj.available ? "secondary" : "destructive"}>
-                      {dj.available ? "Disponible" : "Réservé"}
-                    </Badge>
+                  <CardContent className="p-4">
+                    <p className="font-bold capitalize">{dj.jourLabel}</p>
+                    <p className="text-sm text-muted-foreground flex items-center gap-1.5">
+                      <Horloge className="size-3.5" /> {dj.periodeLabel} · {dj.debut} – {dj.fin}
+                    </p>
                   </CardContent>
                 </Card>
               </button>
             ))}
+          </div>
+
+          <div className="mt-6 max-w-xs">
+            <Label htmlFor="nbParticipants">Nombre de participants</Label>
+            <Input
+              id="nbParticipants"
+              type="number"
+              min={TEAM_BUILDING_MIN_PARTICIPANTS}
+              max={TEAM_BUILDING_MAX_PARTICIPANTS}
+              value={nbParticipants}
+              onChange={(e) =>
+                setNbParticipants(
+                  Math.min(
+                    TEAM_BUILDING_MAX_PARTICIPANTS,
+                    Math.max(TEAM_BUILDING_MIN_PARTICIPANTS, Number(e.target.value))
+                  )
+                )
+              }
+            />
+            <p className="mt-1 text-xs text-muted-foreground">
+              De {TEAM_BUILDING_MIN_PARTICIPANTS} à {TEAM_BUILDING_MAX_PARTICIPANTS} personnes.
+            </p>
           </div>
 
           <div className="mt-6 rounded-xl border border-kick/20 bg-kick/5 p-4">
@@ -275,8 +386,8 @@ export function GroupesFlow({ onBack }: { onBack: () => void }) {
       {step === "recap" && (
         <FadeIn className="mt-6">
           <h2 className="text-xl font-bold font-[family-name:var(--font-heading)] flex items-center gap-2">
-            {isBubble ? <Cadenas className="size-5 text-field" /> : <Document className="size-5 text-kick" />}
-            {isBubble ? "Récapitulatif & paiement" : "Votre demande de devis"}
+            {isBubble ? <Coche className="size-5 text-field" /> : <Document className="size-5 text-kick" />}
+            {isBubble ? "Récapitulatif & coordonnées" : "Votre demande de devis"}
           </h2>
 
           <Card className="mt-4 border-2">
@@ -288,23 +399,21 @@ export function GroupesFlow({ onBack }: { onBack: () => void }) {
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Date</span>
                 <span className="font-semibold capitalize">
-                  {formatDate((isBubble ? bubbleSlot?.date : demiJournee?.date) ?? "")}
+                  {isBubble ? bubbleCreneau?.jourLabel : demiJournee?.jourLabel}
                 </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Horaire</span>
                 <span className="font-semibold">
                   {isBubble
-                    ? `${bubbleSlot?.start} – ${bubbleSlot?.end}`
-                    : `${demiJournee?.periode} · ${demiJournee?.start} – ${demiJournee?.end}`}
+                    ? `${bubbleCreneau?.debut} – ${bubbleCreneau?.fin}`
+                    : `${demiJournee?.periodeLabel} · ${demiJournee?.debut} – ${demiJournee?.fin}`}
                 </span>
               </div>
-              {isBubble && (
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Personnes</span>
-                  <span className="font-semibold">{nbPersonnes}</span>
-                </div>
-              )}
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">{isBubble ? "Personnes" : "Participants"}</span>
+                <span className="font-semibold">{isBubble ? nbPersonnes : nbParticipants}</span>
+              </div>
               <div className="border-t pt-3 flex justify-between text-lg">
                 <span className="font-bold">{isBubble ? "Total" : "Tarif"}</span>
                 <span className={`font-bold ${isBubble ? "text-field" : "text-kick"}`}>
@@ -329,17 +438,17 @@ export function GroupesFlow({ onBack }: { onBack: () => void }) {
             {!isBubble && (
               <div>
                 <Label htmlFor="entreprise">Entreprise</Label>
-                <Input id="entreprise" value={entreprise} onChange={(e) => setEntreprise(e.target.value)} placeholder="TechCorp SA" />
+                <Input id="entreprise" value={entreprise} onChange={(e) => setEntreprise(e.target.value)} maxLength={120} />
               </div>
             )}
             <div>
               <Label htmlFor="nom">{isBubble ? "Nom" : "Nom du contact"}</Label>
-              <Input id="nom" value={nom} onChange={(e) => setNom(e.target.value)} />
+              <Input id="nom" value={nom} onChange={(e) => setNom(e.target.value)} maxLength={120} />
             </div>
             <div>
               <Label htmlFor="email">Email</Label>
               <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)}
-                onBlur={() => setEmailTouched(true)} placeholder={isBubble ? "jean@email.com" : "contact@entreprise.be"}
+                onBlur={() => setEmailTouched(true)} maxLength={254}
                 className={emailTouched && email && !emailValid ? "border-destructive" : ""} />
               {emailTouched && email && !emailValid && (
                 <p className="mt-1 text-sm text-destructive flex items-center gap-1">
@@ -347,15 +456,13 @@ export function GroupesFlow({ onBack }: { onBack: () => void }) {
                 </p>
               )}
             </div>
-            <PhoneField onChange={(_, valid) => setPhoneValid(valid)} />
-            {!isBubble && (
-              <div>
-                <Label htmlFor="message">Votre projet (facultatif)</Label>
-                <textarea id="message" value={message} onChange={(e) => setMessage(e.target.value)}
-                  className="mt-1 flex min-h-[80px] w-full rounded-md border border-input bg-input/30 px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                  placeholder="Nombre de participants, horaires souhaités, restauration…" />
-              </div>
-            )}
+            <PhoneField onChange={(valeur, valide) => { setPhone(valeur); setPhoneValid(valide); }} />
+            <div>
+              <Label htmlFor="message">{isBubble ? "Remarques (facultatif)" : "Votre projet (facultatif)"}</Label>
+              <textarea id="message" value={message} onChange={(e) => setMessage(e.target.value)} maxLength={2000}
+                className="mt-1 flex min-h-[80px] w-full rounded-md border border-input bg-input/30 px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                placeholder={isBubble ? "Une précision utile pour votre venue…" : "Horaires souhaités, restauration, contraintes…"} />
+            </div>
           </div>
 
           <Card className="mt-6 border-2">
@@ -373,24 +480,29 @@ export function GroupesFlow({ onBack }: { onBack: () => void }) {
                 </div>
               </div>
 
+              {erreur && (
+                <p className="mb-4 rounded-xl border border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive flex items-start gap-2">
+                  <AlerteCercle className="size-4 shrink-0 mt-0.5" /> {erreur}
+                </p>
+              )}
+
               <button
-                onClick={() => {
-                  const ref = saveReservation({
-                    type: isBubble ? "bubble" : "team-building",
-                    total,
-                    formule: isBubble ? "Bubble Foot" : "Team Building — demi-journée",
-                  });
-                  router.push(`/confirmation?ref=${ref}`);
-                }}
-                disabled={!acceptCGV || !nom || !emailValid || !phoneValid || (!isBubble && !entreprise)}
+                onClick={envoyer}
+                disabled={envoi || !acceptCGV || !nom || !emailValid || !phoneValid || (!isBubble && !entreprise)}
                 className="btn-glass-field w-full h-14 text-[#0a0a0b] text-lg rounded-2xl font-semibold disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center justify-center gap-2"
               >
-                {isBubble ? (<><Cadenas className="size-5" /> Payer ma réservation (démo)</>) : (<><Document className="size-5" /> Demander un devis</>)}
+                {envoi ? (
+                  "Envoi…"
+                ) : isBubble ? (
+                  <><Coche className="size-5" /> Confirmer ma réservation</>
+                ) : (
+                  <><Document className="size-5" /> Demander un devis</>
+                )}
               </button>
               <p className="mt-3 text-xs text-center text-muted-foreground flex items-center justify-center gap-1">
                 <Bouclier className="size-3.5" />
                 {isBubble
-                  ? "Paiement par carte et Bancontact — bientôt disponible."
+                  ? "Le paiement en ligne arrive bientôt : nous vous recontactons pour confirmer."
                   : "Nous vous répondons sous 48 heures ouvrables."}
               </p>
             </CardContent>

@@ -1,45 +1,48 @@
 /**
- * Handoff de réservation vers la page de confirmation SANS exposer de données
- * personnelles dans l'URL (le prénom d'un enfant, le total, etc. ne doivent pas
- * finir dans l'historique du navigateur, les logs serveur ni l'en-tête Referer).
+ * Passage de main vers la page de confirmation, SANS donnée personnelle dans
+ * l'URL.
  *
- * Maquette : on stocke le récap en sessionStorage et on ne passe qu'une référence
- * opaque dans l'URL. En production, ces détails seront récupérés côté serveur à
- * partir de la référence de réservation.
+ * Le prénom d'un enfant, le montant ou la formule n'ont rien à faire dans
+ * l'historique du navigateur, les journaux du serveur ni l'en-tête Referer
+ * envoyé aux tiers. Le récapitulatif est donc rangé en sessionStorage, et
+ * l'URL ne transporte que la référence.
+ *
+ * La référence est celle attribuée par le serveur au moment d'écrire la
+ * réservation : c'est elle qui figure en base, et c'est elle que le client
+ * cite au complexe. Le stockage local n'en est qu'un affichage.
  */
-export interface ReservationSummary {
+export interface RecapReservation {
   ref: string;
   type: string;
   total: number;
   formule?: string;
   enfant?: string;
+  /** « samedi 5 septembre » */
+  date?: string;
+  /** « 15:00 – 17:00 » */
+  horaire?: string;
+  /** Vrai pour une demande de devis : rien n'est à régler. */
+  surDevis?: boolean;
 }
 
-const KEY = "ow_reservation";
+const CLE = "ow_reservation";
 
-function makeRef(): string {
-  const rnd = Math.random().toString(36).slice(2, 8).toUpperCase();
-  return `OW-${rnd}`;
-}
-
-/** À appeler dans le gestionnaire de paiement. Retourne la référence à mettre dans l'URL. */
-export function saveReservation(data: Omit<ReservationSummary, "ref">): string {
-  const ref = makeRef();
+/** À appeler après une écriture réussie, avec la référence renvoyée par le serveur. */
+export function memoriserRecap(recap: RecapReservation): void {
   try {
-    sessionStorage.setItem(KEY, JSON.stringify({ ...data, ref }));
+    sessionStorage.setItem(CLE, JSON.stringify(recap));
   } catch {
-    /* sessionStorage indisponible : la confirmation affichera un récap générique */
+    /* sessionStorage indisponible : la confirmation affichera un récap réduit */
   }
-  return ref;
 }
 
 /** À appeler sur la page de confirmation. Renvoie le récap si la référence correspond. */
-export function loadReservation(ref: string): ReservationSummary | null {
+export function lireRecap(ref: string): RecapReservation | null {
   try {
-    const raw = sessionStorage.getItem(KEY);
-    if (!raw) return null;
-    const data = JSON.parse(raw) as ReservationSummary;
-    return data.ref === ref ? data : null;
+    const brut = sessionStorage.getItem(CLE);
+    if (!brut) return null;
+    const recap = JSON.parse(brut) as RecapReservation;
+    return recap.ref === ref ? recap : null;
   } catch {
     return null;
   }
