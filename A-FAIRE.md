@@ -41,7 +41,12 @@ verra la contradiction.
 | Anniversaire | dès 140 €/session | 180 € (Kick-Off) |
 | Location de terrain | dès 70 €/heure | prix non affiché |
 
-- [ ] Décider quels prix font foi, puis aligner le site ou Sport-Finder
+- [ ] **Demander à Brahim quels prix font foi**, puis aligner le site ou Sport-Finder
+
+Ce point bloque désormais la base de données : le référentiel tarifaire
+(`supabase/migrations/0002_referentiel.sql`) fige 180 € et 23 €. Si Brahim
+confirme d'autres montants, il faut corriger la migration **avant** de
+l'appliquer, ou passer par une mise à jour SQL ensuite.
 
 ## 3. Informations d'entreprise à fournir
 
