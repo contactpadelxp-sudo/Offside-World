@@ -1,61 +1,53 @@
 # À faire — Offside Foot Indoor
 
-Suivi des informations et contenus en attente. Ce fichier fait foi plutôt que la
-mémoire d'une conversation.
+Suivi des décisions et informations en attente. Ce fichier fait foi plutôt que
+la mémoire d'une conversation.
 
-> Ce dépôt est public. Les points touchant à la sécurité et à la conformité sont
-> suivis hors dépôt, dans le document remis à Mathis.
+> Ce dépôt est public. Les points touchant à la sécurité sont suivis hors dépôt,
+> dans le document remis à Mathis.
 
 ---
 
-## 1. Créneaux des anniversaires
+# À demander à Brahim
 
-**Décision prise :** la location de terrain est gérée par Sport-Finder, les
-anniversaires par ce site. Pour qu'aucune réservation ne se chevauche, les
-anniversaires n'occupent que des plages **retirées de la location côté
-Sport-Finder** (par exemple le mercredi après-midi).
+## Sport-Finder — 5 points
 
-⚠️ L'étanchéité repose sur **deux** actions, pas une : configurer ces créneaux
-ici **et** les bloquer sur Sport-Finder. Sans le second, le chevauchement reste
-possible.
+Sa page publique est le seul canal de réservation des terrains ; plusieurs
+réglages y sont incohérents avec le site.
 
-Informations à obtenir :
+- [ ] **Aligner les prix.** Sport-Finder annonce 140 €/session pour
+      l'anniversaire et 20 €/pers. pour le Bubble Foot ; les prix retenus sont
+      **180 €** et **23 €/pers.** Un client qui compare les deux pages verra deux
+      tarifs pour la même prestation et pourra exiger le moins cher.
+- [ ] **Désactiver ou clarifier les entrées « Anniversaire de Football » et
+      « Activité de groupe de Bubble Foot ».** Ces prestations se réservent sur
+      le site : les laisser sur Sport-Finder crée deux canaux pour la même
+      chose, donc un risque de double réservation. Elles sont aujourd'hui en
+      « Faire une demande » et non en réservation instantanée, ce qui limite le
+      risque sans le supprimer.
+- [ ] **Retirer de la location de terrain les plages réservées aux
+      anniversaires.** C'est la moitié de la règle d'étanchéité — sans elle,
+      configurer les créneaux côté site ne sert à rien.
+- [ ] **Confirmer que la page publique est bien en ligne.** Mathis ne trouvait
+      pas le complexe dans la recherche : vérifier dans « Page publique →
+      Général » que la page est publiée et que les activités sont renseignées.
+- [ ] **Vérifier les factures Sport-Finder.** Un bandeau du back-office mentionne
+      2 factures ; un impayé peut suspendre la page publique.
+
+## Créneaux des anniversaires
+
+**Décision prise :** les terrains restent sur Sport-Finder, les anniversaires sur
+le site, et les anniversaires n'occupent que des plages retirées de la location.
 
 - [ ] Jours et plages horaires réservés aux anniversaires
-- [ ] Nombre d'anniversaires en parallèle par plage (le site en annonce 2
-      aujourd'hui, avec 30 min de battement)
-- [ ] Profondeur de réservation (jusqu'à combien de temps à l'avance)
-- [ ] Confirmation que ces plages ont bien été retirées de la location
+- [ ] Nombre d'anniversaires en parallèle par plage (le site en annonce 2, avec
+      30 min de battement)
+- [ ] Jusqu'à combien de temps à l'avance on peut réserver
 
-À modifier ensuite : `timeSlots` dans `src/data/salles.ts` et `DATES` dans
-`src/components/reservation/steps/anniversaire-flow.tsx`.
+## Informations d'entreprise
 
-## 2. Cohérence des prix avec Sport-Finder
-
-**Décision prise :** les prix qui font foi sont ceux communiqués par Brahim, et
-déjà en place sur le site et dans la base — Kick-Off 180 €, Bubble 290 €,
-+10 €/+15 € par enfant supplémentaire, Bubble Foot 23 €/pers. (minimum 6).
-
-Reste l'écart avec ce qui est affiché sur Sport-Finder :
-
-| Prestation | Sport-Finder | Prix retenu |
-| --- | --- | --- |
-| Anniversaire | dès 140 €/session | **180 €** (Kick-Off) |
-| Bubble Foot | dès 20 €/pers. | **23 €/pers.** |
-| Location de terrain | dès 70 €/heure | non affiché sur le site |
-
-- [ ] **Brahim doit mettre Sport-Finder à jour**, sinon un client qui compare les
-      deux pages verra deux tarifs différents pour la même prestation — et
-      pourra légitimement exiger le moins cher.
-- [ ] Vérifier au passage si l'entrée « Anniversaire de Football » de
-      Sport-Finder fait double emploi avec la réservation du site : deux canaux
-      pour la même prestation rouvrent le risque de double réservation que la
-      règle d'étanchéité cherche justement à éliminer.
-
-## 3. Informations d'entreprise à fournir
-
-Obligatoires en Belgique (Code de droit économique, art. III.74). Un seul
-fichier à compléter : `src/data/entreprise.ts`.
+Obligatoires en Belgique (Code de droit économique, art. III.74). Elles
+s'affichent aujourd'hui « [à compléter] » sur le site public.
 
 - [ ] Dénomination sociale de l'exploitant
 - [ ] Numéro d'entreprise (BCE)
@@ -64,18 +56,51 @@ fichier à compléter : `src/data/entreprise.ts`.
 - [ ] Responsable de la publication
 - [ ] Arrondissement judiciaire compétent (pour les CGU)
 
-## 4. Contenus manquants
+## Décisions à trancher
 
-- [ ] **Photo de la carte « Anniversaire »** sur la page de réservation
-- [ ] **Photo de Bubble Foot** pour la formule anniversaire du même nom
-- [ ] **Horaires réels des demi-journées** de team building (9h–13h et 14h–18h
-      sont des valeurs provisoires)
-- [ ] **Noms réels des espaces anniversaire** (« Espace anniversaire 1 et 2 »
-      sont provisoires)
-- [ ] **Décision sur la vidéo souvenir** : la maintenir dans les formules
+- [ ] **Vidéo souvenir.** Elle est vendue dans les deux formules. La maintenir
       suppose de pouvoir la produire, la livrer, et recueillir l'autorisation
-      parentale pour filmer des enfants
+      parentale pour filmer des enfants. Sinon, la retirer des formules.
+- [ ] **Chiffres affichés.** « 2000+ fêtes organisées » et « 4.8/5 sur Google,
+      200+ avis » ne correspondent à rien : le complexe vient d'ouvrir. Fournir
+      les vrais chiffres, ou les retirer.
 
-Les emplacements photo se remplissent en déposant le fichier dans
-`public/images/` : la résolution ignore majuscules, accents, espaces et tirets.
-Voir `src/lib/photos.ts`.
+## Contenus manquants
+
+- [ ] Photo pour la carte « Anniversaire » de la page de réservation
+- [ ] Photo de Bubble Foot pour la formule du même nom
+- [ ] Horaires réels des demi-journées de team building (9h–13h et 14h–18h sont
+      provisoires)
+- [ ] Noms réels des espaces anniversaire (« Espace anniversaire 1 et 2 »)
+
+Il suffit de déposer les photos dans `public/images/` : la résolution ignore
+majuscules, accents, espaces et tirets. Voir `src/lib/photos.ts`.
+
+---
+
+# À faire côté Mathis
+
+- [ ] **Passer le dépôt GitHub en privé.** Tant qu'il est public, l'historique
+      reste lisible, y compris les versions précédentes de ce fichier.
+- [ ] **Configurer DMARC et durcir SPF** sur `offsidefootindoor.be`, chez le
+      registrar. Sans cela, les e-mails de confirmation partiront en spam et
+      l'adresse pourra être usurpée.
+- [ ] **Donner l'accès Supabase** au projet `shybhkzgwxyajysjlrbv` (réglages →
+      connecteurs → Supabase, en incluant la bonne organisation).
+- [ ] Ouvrir un compte **Stripe** avec Bancontact activé.
+
+---
+
+# État technique
+
+**Base de données** — schéma appliqué sur Supabase (migrations `0001` et `0002`).
+Tables prêtes : formules, options, espaces, creneaux, reservations, paiements,
+demandes_devis, journal_admin. RLS activé et forcé sans aucune politique : rien
+n'est accessible par les clés publiques, tout passe par le serveur.
+
+**Ce qui reste à construire :** la connexion du site à cette base, le calcul du
+prix côté serveur, le paiement, les e-mails transactionnels et le back-office
+authentifié. Voir la section correspondante avec Mathis.
+
+**Les fichiers `src/data/`** doivent cesser d'être la source des prix une fois la
+base branchée, sous peine d'avoir deux vérités qui divergent.
