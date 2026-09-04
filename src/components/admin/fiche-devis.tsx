@@ -5,7 +5,6 @@ import { changerStatutDevis, enregistrerNoteDevis } from "@/lib/actions/admin";
 import type { DevisAdmin, StatutDevis } from "@/lib/vues";
 import {
   BOUTON_NEUTRE,
-  BOUTON_PRINCIPAL,
   MessageAction,
   Rotative,
   useAction,
@@ -162,7 +161,7 @@ export function FicheDevis({ d }: { d: DevisAdmin }) {
                     return r;
                   })
                 }
-                className={BOUTON_PRINCIPAL}
+                className={BOUTON_NEUTRE}
               >
                 {occupe("note") && <Rotative />}
                 Enregistrer la note
@@ -175,7 +174,7 @@ export function FicheDevis({ d }: { d: DevisAdmin }) {
                 }}
                 className={BOUTON_NEUTRE}
               >
-                Annuler
+                Fermer
               </button>
             </div>
           </div>

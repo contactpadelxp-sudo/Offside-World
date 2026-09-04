@@ -52,7 +52,16 @@ export function BarreAdmin({
     href === "/admin" ? aConfirmer : href === "/admin/devis" ? devisNouveaux : 0;
 
   return (
-    <header className="sticky top-0 z-30 border-b border-border bg-[#0a0a0b]/95 backdrop-blur">
+    /*
+      Épinglée, cette barre confisquait 183 px — 27 % d'un écran de téléphone —
+      en permanence, sur toutes les pages. Les six sections ont besoin de trois
+      rangées pour rester lisibles (on refuse de tronquer, voir plus bas), donc
+      la barre restera haute : autant la laisser défiler. Sur téléphone, la
+      liste de travail occupe tout l'écran ; il faut remonter pour changer de
+      section, ce qui est un geste, quand l'ancien réglage coûtait un quart de
+      l'écran à chaque instant. Dès `sm:`, la place existe : on ré-épingle.
+    */
+    <header className="relative z-30 border-b border-border bg-[#0a0a0b]/95 backdrop-blur sm:sticky sm:top-0">
       {/* Bandeau de couleur : on voit d'un coup d'œil qu'on n'est pas sur le site public. */}
       <div className="h-1 bg-gradient-to-r from-field to-kick" />
 

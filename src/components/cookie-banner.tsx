@@ -167,11 +167,19 @@ export function CookieBanner() {
 
             <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:flex-wrap">
               {/* Refuser et Accepter ont volontairement le même poids visuel (conformité RGPD/CNIL) */}
-              <Button onClick={acceptAll} className="flex-1 btn-glass-field text-[#0a0a0b] border-0 gap-1.5">
+              {/*
+                `flex-1` s'applique à l'axe principal : en colonne (téléphone),
+                il pilotait la HAUTEUR et écrasait les deux boutons à 22 px,
+                sous le minimum tactile — alors que « Personnaliser », qui ne
+                l'a pas, gardait ses 32 px. On ne l'active donc qu'à partir de
+                `sm:`, là où la rangée passe à l'horizontale et où il sert
+                vraiment à égaliser les largeurs.
+              */}
+              <Button onClick={acceptAll} className="sm:flex-1 btn-glass-field text-[#0a0a0b] border-0 gap-1.5">
                 <Coche className="size-4" />
                 Tout accepter
               </Button>
-              <Button onClick={refuseAll} className="flex-1 bg-[#ece7de] text-[#0a0a0b] hover:bg-[#f6f2ea] gap-1.5">
+              <Button onClick={refuseAll} className="sm:flex-1 bg-[#ece7de] text-[#0a0a0b] hover:bg-[#f6f2ea] gap-1.5">
                 <Croix className="size-4" />
                 Tout refuser
               </Button>

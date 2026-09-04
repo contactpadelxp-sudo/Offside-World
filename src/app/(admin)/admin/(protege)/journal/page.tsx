@@ -27,7 +27,36 @@ export default async function PageJournal() {
           Aucune action enregistrée pour l&apos;instant.
         </p>
       ) : (
-        <div className="mt-6 overflow-x-auto rounded-2xl border border-border bg-card">
+        <>
+          {/*
+            Quatre colonnes ne tiennent pas dans 375 px : le tableau défilait à
+            l'horizontale et « Cible » — la réservation concernée, donc le seul
+            moyen de relier une action à un client — restait hors de l'écran,
+            sans rien pour signaler qu'on pouvait faire défiler. Sur téléphone,
+            chaque entrée devient donc un bloc où les quatre champs sont lisibles
+            d'un coup. Le tableau reprend dès qu'il y a la place.
+          */}
+          <ul className="mt-6 space-y-2 sm:hidden">
+            {entrees.map((e) => (
+              <li key={e.id} className="rounded-xl border border-border bg-card p-3">
+                {/*
+                  Date et auteur sur une seule ligne, toujours sous l'action :
+                  alignée à droite, la date sautait d'une entrée à l'autre selon
+                  la longueur du libellé — collée au titre quand il était court,
+                  rejetée à la ligne quand il était long.
+                */}
+                <p className="font-medium">{e.action}</p>
+                <p className="mt-0.5 text-sm text-muted-foreground">
+                  {e.quand} · par <span className="text-foreground">{e.acteur}</span>
+                </p>
+                {e.cible && (
+                  <p className="mt-1 break-all font-mono text-xs text-muted-foreground">{e.cible}</p>
+                )}
+              </li>
+            ))}
+          </ul>
+
+          <div className="mt-6 hidden overflow-x-auto rounded-2xl border border-border bg-card sm:block">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-border text-left text-xs uppercase tracking-wider text-muted-foreground">
@@ -52,7 +81,8 @@ export default async function PageJournal() {
               ))}
             </tbody>
           </table>
-        </div>
+          </div>
+        </>
       )}
     </div>
   );

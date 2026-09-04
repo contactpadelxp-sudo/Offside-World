@@ -79,6 +79,26 @@ export function GroupesFlow({
   /** Les créneaux Bubble arrivent triés par date : on limite l'affichage. */
   const creneauxAffiches = useMemo(() => creneaux.slice(0, 12), [creneaux]);
 
+  /**
+   * Les demi-journées arrivent à plat, deux par date. Les afficher telles
+   * quelles donnait vingt cartes pleine largeur qui répétaient chaque date
+   * deux fois de suite, et repoussaient le bouton « Continuer » à six écrans
+   * du haut. On les regroupe : une ligne par jour, deux pastilles à choisir.
+   */
+  const journees = useMemo(() => {
+    const parJour = new Map<string, DemiJourneeVue[]>();
+    for (const dj of demiJournees) {
+      const liste = parJour.get(dj.jour);
+      if (liste) liste.push(dj);
+      else parJour.set(dj.jour, [dj]);
+    }
+    return [...parJour.entries()].map(([jour, liste]) => ({
+      jour,
+      jourLabel: liste[0].jourLabel,
+      demiJournees: liste,
+    }));
+  }, [demiJournees]);
+
   async function envoyer() {
     setEnvoi(true);
     setErreur(null);
@@ -140,7 +160,8 @@ export function GroupesFlow({
       img: photoBubble,
       // Les bulles sont à ~54 % de la hauteur de la photo.
       imgPosition: "object-[center_54%]",
-      tag: `${BUBBLE_PRIX_PAR_PERSONNE}€/personne`,
+      // Même libellé que sur la page de choix d'activité, espace insécable comprise.
+      tag: `Dès ${BUBBLE_PRIX_PAR_PERSONNE} €/pers.`,
       detail: `${BUBBLE_DUREE_MINUTES} minutes • à partir de ${BUBBLE_MIN_PERSONNES} personnes`,
       accentText: "text-field",
       accentBadge: "bg-field/15 text-field",
@@ -323,24 +344,36 @@ export function GroupesFlow({
             Le team building se réserve à la demi-journée. Indiquez votre préférence : nous revenons
             vers vous avec un devis et la confirmation de la disponibilité.
           </p>
-          <div className="mt-4 grid gap-3 sm:grid-cols-2">
-            {demiJournees.map((dj) => (
-              <button key={dj.id} onClick={() => setDemiJournee(dj)} className="text-left">
-                <Card className={`border-2 transition-all duration-300 ${
-                  demiJournee?.id === dj.id ? "border-kick ring-2 ring-kick/20" : "hover:border-kick/40 card-hover"
-                }`}>
-                  <CardContent className="p-4">
-                    <p className="font-bold">{dj.jourLabel}</p>
-                    <p className="text-sm text-muted-foreground flex items-center gap-1.5">
-                      <Horloge className="size-3.5" /> {dj.periodeLabel} · {dj.debut} – {dj.fin}
-                    </p>
-                  </CardContent>
-                </Card>
-              </button>
+          <ul className="mt-4 divide-y divide-border overflow-hidden rounded-2xl border border-border bg-card">
+            {journees.map((j) => (
+              <li key={j.jour} className="flex flex-wrap items-center gap-x-4 gap-y-2 px-4 py-3">
+                <span className="w-full font-medium sm:w-48">{j.jourLabel}</span>
+                <div className="flex flex-wrap gap-2">
+                  {j.demiJournees.map((dj) => {
+                    const choisi = demiJournee?.id === dj.id;
+                    return (
+                      <button
+                        key={dj.id}
+                        type="button"
+                        onClick={() => setDemiJournee(dj)}
+                        aria-pressed={choisi}
+                        className={`inline-flex items-center gap-1.5 rounded-xl border-2 px-3 py-2 text-sm font-medium transition-all duration-200 active:scale-[0.97] ${
+                          choisi
+                            ? "border-kick bg-kick/10 text-kick"
+                            : "border-muted text-muted-foreground hover:border-kick/40 hover:text-foreground"
+                        }`}
+                      >
+                        <Horloge className="size-3.5" />
+                        {dj.periodeLabel} · {dj.debut} – {dj.fin}
+                      </button>
+                    );
+                  })}
+                </div>
+              </li>
             ))}
-          </div>
+          </ul>
 
-          <div className="mt-6 max-w-xs">
+          <div className="mt-6">
             <Label htmlFor="nbParticipants">Nombre de participants</Label>
             <Input
               id="nbParticipants"

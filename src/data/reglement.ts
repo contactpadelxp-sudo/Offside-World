@@ -39,7 +39,11 @@ export const PALIERS_ANNULATION: PalierAnnulation[] = [
 
 /** Résumé du barème, en une phrase, pour les écrans de réservation. */
 export const RESUME_ANNULATION =
-  "Annulation gratuite jusqu'à 7 jours avant. Entre 7 jours et 48 heures : 50 % remboursés. Moins de 48 heures : aucun remboursement.";
+  // Le texte est toujours précédé du mot « Annulation » dans l'interface et
+  // dans les e-mails : le répéter ici donnait « Annulation : Annulation
+  // gratuite… ». Espaces insécables avant % pour que le nombre ne se sépare
+  // pas de son symbole en fin de ligne.
+  "Gratuite jusqu'à 7 jours avant. Entre 7 jours et 48 heures : 50 % remboursés. Moins de 48 heures : aucun remboursement.";
 
 /**
  * Part remboursée pour une annulation intervenant `heuresAvant` heures

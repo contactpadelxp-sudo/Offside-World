@@ -39,24 +39,27 @@ export default async function PageReservations({
 
   return (
     <div>
-      <div className="flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <h1 className="flex items-center gap-2 font-[family-name:var(--font-heading)] text-2xl font-bold">
-            <PressePapier className="size-6 text-field" /> Réservations
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            Les locations de terrain sont gérées sur Sport-Finder et n&apos;apparaissent pas ici.
-          </p>
-        </div>
+      {/*
+        Sur un iPhone SE, l'en-tête poussait la première fiche à 628 px du
+        haut : sur un écran de 667 px, on ne voyait aucune réservation au
+        chargement. Le montant attendu passe donc sur une seule ligne, à côté
+        du titre, au lieu d'occuper deux rangées à lui seul.
+      */}
+      <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+        <h1 className="flex items-center gap-2 font-[family-name:var(--font-heading)] text-2xl font-bold">
+          <PressePapier className="size-6 text-field" /> Réservations
+        </h1>
         {montantAffiche && (
-          <div className="text-right">
-            <p className="text-xs text-muted-foreground">Montant attendu</p>
-            <p className="text-xl font-bold text-field">{total}€</p>
-          </div>
+          <p className="text-sm text-muted-foreground">
+            Montant attendu <span className="font-bold text-foreground">{total}€</span>
+          </p>
         )}
       </div>
+      <p className="mt-1 text-sm text-muted-foreground">
+        Les locations de terrain sont gérées sur Sport-Finder et n&apos;apparaissent pas ici.
+      </p>
 
-      <div className="mt-5 flex flex-wrap items-center gap-3">
+      <div className="mt-4 flex flex-wrap items-center gap-3">
         <OngletsFiltres filtres={FILTRES} actif={actif} desactives={Boolean(recherche)} />
         <Recherche valeur={recherche} />
       </div>

@@ -5,6 +5,35 @@ export const metadata: Metadata = {
   description: "Politique d'utilisation des cookies sur Offside Foot Indoor.",
 };
 
+/*
+  Décrites une seule fois : le tableau (à partir de `sm:`) et la liste
+  (téléphone) sont deux rendus de ces mêmes lignes. Sur 375 px, les quatre
+  colonnes débordaient et « Consentement » — la réponse juridique que la page
+  existe pour donner — tombait hors de l'écran, dans un conteneur qui défilait
+  sans le dire.
+*/
+const CATEGORIES: { categorie: string; finalite: string; duree: string; consentement: string }[] = [
+  {
+    categorie: "Nécessaires",
+    finalite: "Fonctionnement du site, mémorisation du consentement cookies, sécurité",
+    duree: "Session / 12 mois",
+    consentement: "Non requis (intérêt légitime)",
+  },
+  {
+    categorie: "Mesure d'audience",
+    finalite:
+      "Statistiques anonymes de fréquentation [À COMPLÉTER — ex. : Google Analytics, Plausible]",
+    duree: "[À COMPLÉTER]",
+    consentement: "Requis",
+  },
+  {
+    categorie: "Marketing",
+    finalite: "Publicité ciblée, retargeting [À COMPLÉTER]",
+    duree: "[À COMPLÉTER]",
+    consentement: "Requis",
+  },
+];
+
 export default function PolitiqueCookies() {
   return (
     <div className="mx-auto max-w-4xl px-4 pt-24 pb-12 md:pt-28 md:pb-20">
@@ -23,7 +52,26 @@ export default function PolitiqueCookies() {
 
       <section className="mt-8 space-y-4">
         <h2 className="text-xl font-bold">2. Catégories de cookies utilisés</h2>
-        <div className="overflow-x-auto">
+        <ul className="space-y-3 sm:hidden">
+          {CATEGORIES.map((c) => (
+            <li key={c.categorie} className="rounded-xl border p-3">
+              <p className="font-semibold">{c.categorie}</p>
+              <p className="mt-1 text-sm text-muted-foreground">{c.finalite}</p>
+              <dl className="mt-2 space-y-1 text-sm">
+                <div className="flex gap-2">
+                  <dt className="shrink-0 text-muted-foreground">Durée :</dt>
+                  <dd>{c.duree}</dd>
+                </div>
+                <div className="flex gap-2">
+                  <dt className="shrink-0 text-muted-foreground">Consentement :</dt>
+                  <dd>{c.consentement}</dd>
+                </div>
+              </dl>
+            </li>
+          ))}
+        </ul>
+
+        <div className="hidden overflow-x-auto sm:block">
           <table className="w-full text-sm border">
             <thead>
               <tr className="bg-muted">
@@ -34,24 +82,14 @@ export default function PolitiqueCookies() {
               </tr>
             </thead>
             <tbody className="text-muted-foreground">
-              <tr className="border-t">
-                <td className="p-3 font-medium">Nécessaires</td>
-                <td className="p-3">Fonctionnement du site, mémorisation du consentement cookies, sécurité</td>
-                <td className="p-3">Session / 12 mois</td>
-                <td className="p-3">Non requis (intérêt légitime)</td>
-              </tr>
-              <tr className="border-t">
-                <td className="p-3 font-medium">Mesure d&apos;audience</td>
-                <td className="p-3">Statistiques anonymes de fréquentation [À COMPLÉTER — ex. : Google Analytics, Plausible]</td>
-                <td className="p-3">[À COMPLÉTER]</td>
-                <td className="p-3">Requis</td>
-              </tr>
-              <tr className="border-t">
-                <td className="p-3 font-medium">Marketing</td>
-                <td className="p-3">Publicité ciblée, retargeting [À COMPLÉTER]</td>
-                <td className="p-3">[À COMPLÉTER]</td>
-                <td className="p-3">Requis</td>
-              </tr>
+              {CATEGORIES.map((c) => (
+                <tr key={c.categorie} className="border-t">
+                  <td className="p-3 font-medium">{c.categorie}</td>
+                  <td className="p-3">{c.finalite}</td>
+                  <td className="p-3">{c.duree}</td>
+                  <td className="p-3">{c.consentement}</td>
+                </tr>
+              ))}
             </tbody>
           </table>
         </div>

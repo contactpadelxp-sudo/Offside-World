@@ -69,12 +69,12 @@ export function ConfirmationContent() {
   return (
     <>
       <Confetti />
-      <div className="mx-auto max-w-2xl px-4 pt-24 pb-12 md:pt-28 md:pb-20">
+      <div className="mx-auto max-w-2xl px-4 pt-32 pb-12 md:pt-36 md:pb-20">
         <div className="text-center">
           <AnimatedCheck />
           <FadeIn delay={0.6}>
             <h1 className="mt-8 text-3xl md:text-4xl font-bold font-[family-name:var(--font-heading)] text-foreground">
-              {surDevis ? "Demande envoyée !" : "Réservation enregistrée !"}
+              {surDevis ? "Demande envoyée !" : "Réservation enregistrée !"}
             </h1>
             {/*
               Honnêteté : rien n'est encore payé ni confirmé automatiquement.

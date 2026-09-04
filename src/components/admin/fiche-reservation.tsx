@@ -103,7 +103,15 @@ export function FicheReservation({ r }: { r: ReservationAdmin }) {
           </p>
         </div>
 
-        <div className="text-right">
+        {/*
+          Aligné à droite sur téléphone, ce bloc dessinait un escalier : montant,
+          date, horaire et espace n'ont pas la même longueur, donc chaque ligne
+          démarrait à un retrait différent, juste sous un nom de client aligné à
+          gauche. On repasse à gauche, sur une seule ligne quand ça tient ;
+          l'alignement à droite ne reprend que là où il y a deux colonnes.
+          Même correction que sur la fiche de devis.
+        */}
+        <div className="flex flex-wrap items-baseline gap-x-2 sm:block sm:text-right">
           <p className="text-lg font-bold text-field">{r.total}€</p>
           <p className="text-sm font-medium">{r.jourLabel}</p>
           <p className="text-sm text-muted-foreground">
@@ -239,11 +247,17 @@ export function FicheReservation({ r }: { r: ReservationAdmin }) {
                     return r2;
                   })
                 }
-                className={BOUTON_PRINCIPAL}
+                className={BOUTON_NEUTRE}
               >
                 {occupe("note") && <Rotative />}
                 Enregistrer la note
               </button>
+              {/*
+                Ce bouton s'appelait « Annuler », comme celui qui annule la
+                réservation du client, avec exactement le même style et à
+                quelques centimètres de distance. « Fermer » lève l'ambiguïté :
+                une des deux actions est irréversible et prévient un client.
+              */}
               <button
                 type="button"
                 onClick={() => {
@@ -252,7 +266,7 @@ export function FicheReservation({ r }: { r: ReservationAdmin }) {
                 }}
                 className={BOUTON_NEUTRE}
               >
-                Annuler
+                Fermer
               </button>
             </div>
           </div>
