@@ -84,14 +84,29 @@ main, aujourd'hui signé par rien du tout.
 
 ### b. Ajouter le domaine chez Resend
 
-[resend.com](https://resend.com) → Domains → Add Domain. Resend recommande un
-**sous-domaine** d'envoi, par exemple `send.offsidefootindoor.be` : les envois
-automatiques ont alors leur propre réputation, séparée de celle de la boîte de
-Brahim. Un incident sur l'un n'affecte pas l'autre.
+[resend.com](https://resend.com) → Domains → Add Domain.
 
-Resend affiche 2 à 3 enregistrements (un DKIM, un SPF sur le sous-domaine, et
-parfois un MX pour les retours). Les recopier dans Wix, puis cliquer sur
-« Verify ».
+**Essayer d'abord le domaine nu**, `offsidefootindoor.be` : l'adresse
+d'expédition sera alors `reservations@offsidefootindoor.be`, courte et
+rassurante pour un client. Puis regarder ce que Resend demande :
+
+- **Que des enregistrements à AJOUTER** (un DKIM, et le plus souvent un MX et
+  un TXT sur un sous-domaine technique) → parfait, on garde le domaine nu.
+  Rien d'existant n'est touché, la messagerie de Brahim ne risque rien.
+- **Une MODIFICATION de la ligne SPF existante**
+  (`v=spf1 include:_spf.google.com ~all`, qui n'autorise aujourd'hui que
+  Google) → là il faut être prudent : une erreur sur cette ligne casse le
+  courrier sortant de Brahim. Deux options alors : fusionner soigneusement les
+  deux autorisations sur une seule ligne, ou basculer sur un sous-domaine
+  d'envoi (`send.offsidefootindoor.be`), dont les enregistrements sont tous
+  nouveaux et ne peuvent rien casser — au prix d'une adresse d'expédition plus
+  longue.
+
+Un sous-domaine a un second avantage : la réputation des envois automatiques
+reste séparée de celle de la boîte de Brahim. Pour une vingtaine d'e-mails par
+semaine, ce n'est pas déterminant ; l'apparence de l'adresse, si.
+
+Recopier les enregistrements dans Wix, puis cliquer sur « Verify ».
 
 ### c. Publier DMARC
 
@@ -117,7 +132,7 @@ tout courrier légitime qu'on aurait oublié d'autoriser.
 | Variable | Valeur | Type |
 |----------|--------|------|
 | `RESEND_API_KEY` | la clé donnée par Resend | **Sensitive** |
-| `EMAIL_EXPEDITEUR` | `Offside Foot Indoor <reservations@send.offsidefootindoor.be>` | Config |
+| `EMAIL_EXPEDITEUR` | `Offside Foot Indoor <reservations@offsidefootindoor.be>` — ou l'adresse du sous-domaine si c'est lui qui a été vérifié | Config |
 | `EMAIL_COMPLEXE` | l'adresse où Brahim veut recevoir les avis | Config |
 
 Redéployer. **L'adresse d'expédition doit être sur le domaine vérifié chez
@@ -138,6 +153,17 @@ back-office. Il disparaît de lui-même une fois les variables renseignées.
 mettre `EMAIL_EXPEDITEUR` à `Offside <onboarding@resend.dev>` et envoyer le
 test vers l'adresse du titulaire du compte Resend — la seule autorisée dans ce
 mode.
+
+⚠ **Dans cet état, les clients ne reçoivent rien.** Brahim reçoit bien ses avis
+de nouvelle réservation, parce qu'ils partent vers l'adresse du titulaire du
+compte ; les confirmations envoyées aux clients, elles, sont refusées par le
+fournisseur — et l'échec est avalé, par conception, pour qu'un problème d'e-mail
+ne fasse jamais échouer une réservation. `/admin/reglages` affiche cet état en
+rouge tant qu'il dure.
+
+Le test qui prouve vraiment que les clients peuvent recevoir est donc celui
+qu'on envoie, une fois le domaine vérifié, vers une adresse qui **n'est pas**
+celle du compte Resend.
 
 ---
 
