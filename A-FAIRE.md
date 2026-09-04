@@ -109,10 +109,23 @@ majuscules, accents, espaces et tirets. Voir `src/lib/photos.ts`.
       `RESEND_API_KEY`, `EMAIL_EXPEDITEUR` et `EMAIL_COMPLEXE` dans Vercel.
       **Tant que ces variables sont absentes, aucun e-mail ne part** — le site
       fonctionne, mais personne n'est prévenu de rien.
-- [ ] **Configurer DMARC et durcir SPF** sur `offsidefootindoor.be`, chez le
-      registrar. Sans cela, les e-mails partiront en indésirable et l'adresse
-      pourra être usurpée. Le fournisseur donnera les enregistrements DNS à
-      ajouter : c'est le même travail.
+- [ ] **Compléter l'authentification e-mail du domaine.** État relevé le
+      4 septembre 2026 sur `offsidefootindoor.be` :
+      - zone DNS gérée par **Wix** (`ns10.wixdns.net`) — c'est là que se font
+        les changements, pas chez le registrar ;
+      - **SPF présent** : `v=spf1 include:_spf.google.com ~all` — seul Google
+        est autorisé à envoyer. Ajouter un autre expéditeur demandera de
+        compléter cet enregistrement ;
+      - **DKIM absent**, y compris pour Google Workspace
+        (`google._domainkey` n'existe pas) ;
+      - **DMARC absent** (`_dmarc` n'existe pas).
+      À faire, dans l'ordre : activer DKIM dans la console Google Workspace,
+      ajouter les enregistrements du fournisseur d'e-mails, puis publier un
+      DMARC en `p=none` le temps de lire les rapports, avant de le durcir.
+- [ ] **Faire pointer le domaine sur le nouveau site.** `offsidefootindoor.be`
+      sert aujourd'hui le site Wix (A vers 185.230.63.x, `www` vers
+      `cdn1.wixdns.net`). Le nouveau site n'est accessible que par son adresse
+      Vercel.
 - [ ] **Renseigner `SITE_URL`** dès que le domaine définitif remplacera
       l'adresse Vercel — les liens des e-mails et le sitemap en dépendent.
 - [ ] Ouvrir un compte **Stripe** avec Bancontact activé.
