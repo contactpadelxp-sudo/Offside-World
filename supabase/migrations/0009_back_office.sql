@@ -75,7 +75,14 @@ comment on column demandes_devis.note_interne is
 
 -- ──────────────────────────────────── la vue doit exposer la note interne
 
-create or replace view reservations_detaillees
+-- `create or replace view` ne sait qu'AJOUTER des colonnes à la fin : insérer
+-- `note_interne` entre `remarques` et `created_at` lui fait croire qu'on renomme
+-- une colonne existante (« cannot change name of view column »). On supprime
+-- donc la vue avant de la recréer — rien n'en dépend, et cela permet de garder
+-- les colonnes dans un ordre lisible.
+drop view if exists reservations_detaillees;
+
+create view reservations_detaillees
 with (security_invoker = true) as
 select
   r.id,

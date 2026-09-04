@@ -102,9 +102,6 @@ majuscules, accents, espaces et tirets. Voir `src/lib/photos.ts`.
       « Sensitive » pour le mot de passe). Sans ces deux variables, `/admin`
       répond 404 : c'est voulu, mais le back-office reste alors inaccessible à
       Brahim.
-- [ ] **Appliquer la migration `0009_back_office.sql`** dans Supabase. Sans
-      elle, la connexion au back-office échoue : la table des sessions n'existe
-      pas encore.
 - [ ] **Passer le dépôt GitHub en privé.** Tant qu'il est public, l'historique
       reste lisible, y compris les versions précédentes de ce fichier.
 - [ ] **Configurer DMARC et durcir SPF** sur `offsidefootindoor.be`, chez le
@@ -122,7 +119,7 @@ majuscules, accents, espaces et tirets. Voir `src/lib/photos.ts`.
 # État technique
 
 **Base de données** — projet `shybhkzgwxyajysjlrbv` (Offside World, eu-west-1),
-migrations `0001` à `0008` appliquées et vérifiées ; `0009` à appliquer.
+migrations `0001` à `0009` appliquées et vérifiées.
 RLS activé et forcé sur les 8 tables, sans aucune politique : rien n'est
 accessible par les clés publiques, tout passe par le serveur.
 
@@ -146,9 +143,11 @@ n'est qu'un aperçu : le modifier ne change pas ce qui est facturé.
 **Garde-fous vérifiés en conditions réelles :** une seconde réservation sur un
 créneau déjà pris est rejetée par la base, deux créneaux qui se chevauchent dans
 le même espace sont rejetés, et le prix d'une formule Bubble à 14 enfants avec
-deux options tombe au centime attendu. Le linter de sécurité Supabase ne remonte
-aucun avertissement — les 8 avis « RLS activé sans politique » sont le
-comportement voulu.
+deux options tombe au centime attendu. Côté back-office : une réservation ne
+peut pas être confirmée deux fois, l'annulation libère bien le créneau, la note
+interne ressort dans la vue, et une session révoquée le reste. Le linter de
+sécurité Supabase ne remonte aucun avertissement — les 9 avis « RLS activé sans
+politique » sont le comportement voulu.
 
 **Ce qui reste à construire :** le paiement en ligne (Stripe + Bancontact) et
 les e-mails transactionnels — aujourd'hui, personne n'est prévenu
