@@ -117,18 +117,16 @@ majuscules, accents, espaces et tirets. Voir `src/lib/photos.ts`.
 - [ ] **Renseigner `SITE_URL`** dès que le domaine définitif remplacera
       l'adresse Vercel — les liens des e-mails et le sitemap en dépendent.
 - [ ] Ouvrir un compte **Stripe** avec Bancontact activé.
-- [ ] **Planifier les tâches d'entretien** en base (Supabase → Cron) :
-      `anonymiser_reservations_anciennes` pour la minimisation RGPD, et
-      `purger_sessions_admin` pour les sessions périmées. La génération des
-      créneaux n'a plus besoin d'être planifiée : Brahim la déclenche depuis
-      l'onglet « Créneaux » du back-office.
+- [x] ~~Planifier les tâches d'entretien en base.~~ Fait : `pg_cron` est
+      activé, l'anonymisation RGPD tourne chaque nuit à 3h30 UTC et la purge
+      des sessions chaque dimanche. Voir `supabase/migrations/0010`.
 
 ---
 
 # État technique
 
 **Base de données** — projet `shybhkzgwxyajysjlrbv` (Offside World, eu-west-1),
-migrations `0001` à `0009` appliquées et vérifiées.
+migrations `0001` à `0010` appliquées et vérifiées.
 RLS activé et forcé sur les 8 tables, sans aucune politique : rien n'est
 accessible par les clés publiques, tout passe par le serveur.
 

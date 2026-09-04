@@ -155,10 +155,14 @@ Régénérer les types après une migration :
 npx supabase gen types typescript --project-id <ref> > src/lib/supabase/types.ts
 ```
 
-Deux fonctions sont à planifier (Supabase → Cron) :
-`anonymiser_reservations_anciennes` pour la minimisation RGPD, et
-`purger_sessions_admin` pour les sessions périmées. L'ouverture de nouveaux
-créneaux se fait depuis le back-office, onglet « Créneaux ».
+Deux tâches tournent en base via `pg_cron` (migration `0010`) :
+`anonymiser_reservations_anciennes` chaque nuit pour la minimisation RGPD, et
+`purger_sessions_admin` chaque dimanche. L'ouverture de nouveaux créneaux se
+fait depuis le back-office, onglet « Créneaux ».
+
+```sql
+select jobname, schedule, active from cron.job;
+```
 
 ## Ajouter un composant shadcn/ui
 
