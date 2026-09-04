@@ -86,6 +86,30 @@ const nextConfig: NextConfig = {
         source: "/:path*",
         headers: securityHeaders,
       },
+      {
+        /*
+         * Le back-office affiche des noms, des téléphones, des prénoms et des
+         * âges d'enfants. Rien de tout cela ne doit être conservé par un CDN,
+         * un proxy d'entreprise ou le cache du navigateur : une page encore en
+         * cache reste lisible après la déconnexion, et se sert sans repasser
+         * par l'authentification.
+         *
+         * `src/proxy.ts` pose déjà ces en-têtes ; les redéclarer ici les rend
+         * indépendants d'une éventuelle modification du matcher du proxy.
+         */
+        source: "/admin/:path*",
+        headers: [
+          { key: "Cache-Control", value: "no-store, max-age=0, must-revalidate" },
+          { key: "X-Robots-Tag", value: "noindex, nofollow, noarchive" },
+        ],
+      },
+      {
+        source: "/admin",
+        headers: [
+          { key: "Cache-Control", value: "no-store, max-age=0, must-revalidate" },
+          { key: "X-Robots-Tag", value: "noindex, nofollow, noarchive" },
+        ],
+      },
     ];
   },
 };
