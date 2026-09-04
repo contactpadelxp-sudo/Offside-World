@@ -109,6 +109,14 @@ export interface DiagnosticEmail {
   complexe: string;
   /** Vrai si l'envoi vise autre chose que Resend (relais, bac à sable). */
   pointPersonnalise: boolean;
+  /**
+   * Vrai tant qu'on expédie depuis le domaine de démonstration du
+   * fournisseur. Dans cet état, seul le titulaire du compte peut recevoir :
+   * les e-mails aux clients échouent, en silence puisque les erreurs d'envoi
+   * ne doivent jamais faire échouer une réservation. C'est exactement le genre
+   * de situation qu'on ne découvre qu'en perdant un client — d'où l'affichage.
+   */
+  modeDemonstration: boolean;
 }
 
 export function diagnosticEmail(): DiagnosticEmail {
@@ -118,6 +126,7 @@ export function diagnosticEmail(): DiagnosticEmail {
     expediteur: process.env.EMAIL_EXPEDITEUR || null,
     complexe: adresseComplexe(),
     pointPersonnalise: Boolean(process.env.EMAIL_API_URL),
+    modeDemonstration: (process.env.EMAIL_EXPEDITEUR ?? "").includes("resend.dev"),
   };
 }
 

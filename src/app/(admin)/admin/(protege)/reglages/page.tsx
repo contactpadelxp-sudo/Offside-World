@@ -70,6 +70,15 @@ export default async function PageReglages() {
           }
         />
         <Ligne
+          ok={!email.modeDemonstration}
+          titre="Envois vers les clients"
+          detail={
+            email.modeDemonstration
+              ? "Impossibles : l'expéditeur est le domaine de démonstration du fournisseur."
+              : "Possibles : l'expéditeur est sur un domaine vérifié."
+          }
+        />
+        <Ligne
           ok
           titre="Avis internes envoyés à"
           detail={email.complexe}
@@ -82,6 +91,20 @@ export default async function PageReglages() {
           />
         )}
       </ul>
+
+      {email.configure && email.modeDemonstration && (
+        <p className="mt-4 flex items-start gap-2 rounded-xl border border-kick/30 bg-kick/10 p-4 text-sm text-kick">
+          <AlerteTriangle className="mt-0.5 size-4 shrink-0" />
+          <span>
+            <strong>Mode démonstration : vos clients ne reçoivent rien.</strong> L&apos;adresse
+            d&apos;expédition est celle du fournisseur, pas la vôtre. Dans cet état, seule
+            l&apos;adresse du titulaire du compte peut recevoir un e-mail — les confirmations
+            envoyées aux clients échouent. Vérifiez le domaine chez le fournisseur, puis
+            remplacez <span className="font-mono">EMAIL_EXPEDITEUR</span> par une adresse de ce
+            domaine.
+          </span>
+        </p>
+      )}
 
       {!email.configure && (
         <p className="mt-4 flex items-start gap-2 rounded-xl border border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive">
