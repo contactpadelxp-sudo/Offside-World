@@ -85,18 +85,22 @@ majuscules, accents, espaces et tirets. Voir `src/lib/photos.ts`.
 - [ ] **Configurer DMARC et durcir SPF** sur `offsidefootindoor.be`, chez le
       registrar. Sans cela, les e-mails de confirmation partiront en spam et
       l'adresse pourra être usurpée.
-- [ ] **Donner l'accès Supabase** au projet `shybhkzgwxyajysjlrbv` (réglages →
-      connecteurs → Supabase, en incluant la bonne organisation).
 - [ ] Ouvrir un compte **Stripe** avec Bancontact activé.
 
 ---
 
 # État technique
 
-**Base de données** — schéma appliqué sur Supabase (migrations `0001` et `0002`).
+**Base de données** — projet `shybhkzgwxyajysjlrbv` (Offside World, eu-west-1),
+migrations `0001` à `0004` appliquées et vérifiées.
 Tables prêtes : formules, options, espaces, creneaux, reservations, paiements,
 demandes_devis, journal_admin. RLS activé et forcé sans aucune politique : rien
 n'est accessible par les clés publiques, tout passe par le serveur.
+
+Garde-fous testés en conditions réelles : une seconde réservation sur un créneau
+déjà pris est rejetée, deux créneaux qui se chevauchent dans le même espace sont
+rejetés. Le linter de sécurité Supabase ne remonte plus aucun avertissement — les
+8 avis restants (« RLS activé sans politique ») sont le comportement voulu.
 
 **Ce qui reste à construire :** la connexion du site à cette base, le calcul du
 prix côté serveur, le paiement, les e-mails transactionnels et le back-office
