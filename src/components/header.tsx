@@ -184,9 +184,14 @@ function MobileMenu({ open, setOpen }: { open: boolean; setOpen: (v: boolean) =>
       >
         <Menu className="size-5" />
       </SheetTrigger>
+      {/*
+        Le panneau de shadcn ne porte aucune marge intérieure : sans px-6 ici,
+        les liens démarrent à un pixel de la bordure et le bouton « Réserver »
+        court jusqu'au bord de l'écran. On la pose donc sur le contenu.
+      */}
       <SheetContent side="right" className="w-72">
         <SheetTitle className="sr-only">Menu de navigation</SheetTitle>
-        <nav className="mt-8 flex flex-col gap-3">
+        <nav className="mt-8 flex flex-col gap-3 px-6 pb-6">
           {navLinks.map((link, i) => (
             <motion.div
               key={link.href}

@@ -121,7 +121,7 @@ export function Accueil({ formules }: { formules: FormuleVue[] }) {
 
           {/* Stats — espacées */}
           <FadeIn delay={1.3}>
-            <div className="mt-10 flex flex-wrap justify-center gap-x-8 gap-y-6 sm:gap-x-16 md:gap-x-24">
+            <div className="mt-10 grid grid-cols-3 gap-x-3 gap-y-6 sm:flex sm:flex-wrap sm:justify-center sm:gap-x-16 md:gap-x-24">
               {[
                 { value: 2000, suffix: "+", label: "fêtes organisées" },
                 { value: 2, suffix: "", label: "terrains indoor" },
@@ -169,7 +169,7 @@ export function Accueil({ formules }: { formules: FormuleVue[] }) {
 
       {/* ══════ MARQUEE ══════ */}
       <section className="py-5 overflow-hidden bg-[#121214]">
-        <Marquee speed={25} className="text-muted-foreground/50 font-[family-name:var(--font-heading)] text-2xl md:text-3xl font-bold">
+        <Marquee speed={25} className="text-foreground/70 font-[family-name:var(--font-heading)] text-2xl md:text-3xl font-bold">
           <div className="flex items-center gap-8 px-4">
             {marqueeItems.map((item, i) => (
               <span key={i} className="flex items-center gap-4 whitespace-nowrap">

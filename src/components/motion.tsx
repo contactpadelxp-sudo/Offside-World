@@ -259,7 +259,10 @@ export function Confetti() {
   }));
 
   return (
-    <div className="fixed inset-0 pointer-events-none z-50 overflow-hidden">
+    // z-20 et non z-50 : les confettis doivent passer DERRIÈRE l'en-tête et le
+    // titre, sinon des pastilles se posent sur le logo et sur le mot
+    // « enregistrée ». Ils restent au-dessus du fond de page.
+    <div className="fixed inset-0 pointer-events-none z-20 overflow-hidden">
       {pieces.map((p) => (
         <div
           key={p.id}

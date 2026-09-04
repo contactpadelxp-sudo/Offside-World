@@ -2,7 +2,7 @@ import Link from "next/link";
 import { ListeCreneaux, OuvrirPeriode } from "@/components/admin/actions-creneaux";
 import { LienOnglet } from "@/components/admin/onglets";
 import { lireCreneauxDuJour } from "@/lib/db/backoffice";
-import { jourISO, jourLisibleCap } from "@/lib/temps";
+import { jourCompact, jourISO, jourLisibleCap } from "@/lib/temps";
 import { Calendrier, FlecheDroite, FlecheGauche } from "@/components/icons";
 
 /** Midi UTC : la date reste la même quel que soit le décalage horaire. */
@@ -47,11 +47,19 @@ export default async function PageCreneaux({
           <FlecheGauche className="size-4" />
         </Link>
 
-        <div className="-mx-1 flex flex-1 items-center gap-1 overflow-x-auto px-1">
+        {/*
+          La bande défilait à l'horizontale : sur téléphone, deux jours
+          seulement tenaient, le second coupé en plein mot, et le jour
+          réellement affiché plus bas pouvait n'y même pas figurer. Elle passe
+          à la ligne, avec un format court — « Mer. 2 sept. » plutôt que
+          « Mercredi 2 septembre » — pour que la semaine entière soit visible.
+        */}
+        <div className="flex flex-1 flex-wrap items-center gap-1.5">
           {semaine.map((j) => (
             <LienOnglet key={j} href={`/admin/creneaux?jour=${j}`} actif={j === jour}>
-              {jourLisibleCap(versDate(j))}
-              {j === aujourdhui && <span className="text-xs opacity-70">(aujourd&apos;hui)</span>}
+              <span className="sm:hidden">{jourCompact(versDate(j))}</span>
+              <span className="hidden sm:inline">{jourLisibleCap(versDate(j))}</span>
+              {j === aujourdhui && <span className="text-xs opacity-70">(auj.)</span>}
             </LienOnglet>
           ))}
         </div>

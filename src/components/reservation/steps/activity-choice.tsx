@@ -86,7 +86,12 @@ export function ActivityChoice({ onSelect }: { onSelect: (a: Activity) => void }
               <button onClick={() => onSelect(act.id)} className="w-full text-left h-full group">
                 <Card className={`h-full overflow-hidden border-2 py-0 gap-0 transition-all duration-500 cursor-pointer ${act.border} bg-card flex flex-col`}>
                   {/* Emplacement photo — fondu dans le corps de la carte */}
-                  <div className="relative aspect-[4/5] overflow-hidden">
+                  {/*
+                    Format paysage sur téléphone : en 4/5, une seule carte
+                    remplissait 83 % de l'écran et on ne pouvait jamais comparer
+                    deux offres d'un coup d'œil.
+                  */}
+                  <div className="relative aspect-[3/2] overflow-hidden sm:aspect-[4/5]">
                     {act.img ? (
                       <Photo
                         src={act.img}

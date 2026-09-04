@@ -52,14 +52,26 @@ export function FicheDevis({ d }: { d: DevisAdmin }) {
           <p className="text-sm text-muted-foreground">{d.contactNom}</p>
         </div>
 
-        <div className="text-right text-sm">
-          {d.dateSouhaitee && <p className="font-medium">{d.dateSouhaitee}</p>}
-          {d.periode && <p className="text-muted-foreground">{d.periode}</p>}
+        {/*
+          Sur téléphone, trois lignes alignées à droite dessinent un escalier :
+          chaque ligne démarre à un retrait différent. On les met donc sur une
+          seule ligne, alignée à gauche comme le reste ; l'alignement à droite
+          ne reprend qu'à partir de deux colonnes.
+        */}
+        <div className="flex flex-wrap items-center gap-x-2 text-sm sm:block sm:text-right">
+          {d.dateSouhaitee && <span className="font-medium">{d.dateSouhaitee}</span>}
+          {d.periode && (
+            <span className="text-muted-foreground">
+              <span className="sm:hidden">· </span>
+              {d.periode}
+            </span>
+          )}
           {d.nbParticipants && (
-            <p className="flex items-center justify-end gap-1.5 text-muted-foreground">
+            <span className="inline-flex items-center gap-1.5 text-muted-foreground sm:flex sm:justify-end">
+              <span className="sm:hidden">·</span>
               <Groupe className="size-3.5" />
               {d.nbParticipants} participants
-            </p>
+            </span>
           )}
         </div>
       </div>

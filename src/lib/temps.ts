@@ -61,6 +61,21 @@ export function jourLisibleCap(instant: Date): string {
   return capitaliser(jourLisible(instant));
 }
 
+/**
+ * « Mer. 2 sept. » — pour les bandes de jours, où « Mercredi 2 septembre »
+ * ne laisse tenir que deux dates sur un écran de téléphone.
+ */
+const JOUR_COMPACT = new Intl.DateTimeFormat("fr-BE", {
+  timeZone: FUSEAU,
+  weekday: "short",
+  day: "numeric",
+  month: "short",
+});
+
+export function jourCompact(instant: Date): string {
+  return capitaliser(JOUR_COMPACT.format(instant));
+}
+
 export function heure(instant: Date): string {
   return HEURE.format(instant);
 }

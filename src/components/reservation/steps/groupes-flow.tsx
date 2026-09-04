@@ -470,13 +470,13 @@ export function GroupesFlow({
               <div className="space-y-4 mb-6">
                 <div className="flex items-start gap-3">
                   <Checkbox id="cgv" checked={acceptCGV} onCheckedChange={(v) => setAcceptCGV(v === true)} />
-                  <Label htmlFor="cgv" className="text-sm">
+                  <Label htmlFor="cgv" className="block text-sm leading-relaxed">
                     J&apos;accepte les <a href="/cgv" target="_blank" rel="noopener noreferrer" className="underline text-field">CGV</a> et la <a href="/confidentialite" target="_blank" rel="noopener noreferrer" className="underline text-field">Politique de confidentialité</a>. <span className="text-destructive">*</span>
                   </Label>
                 </div>
                 <div className="flex items-start gap-3">
                   <Checkbox id="nl" checked={acceptNewsletter} onCheckedChange={(v) => setAcceptNewsletter(v === true)} />
-                  <Label htmlFor="nl" className="text-sm text-muted-foreground">Recevoir les offres par email (facultatif).</Label>
+                  <Label htmlFor="nl" className="block text-sm leading-relaxed text-muted-foreground">Recevoir les offres par email (facultatif).</Label>
                 </div>
               </div>
 
