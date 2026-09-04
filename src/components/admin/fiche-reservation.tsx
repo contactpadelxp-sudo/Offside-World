@@ -115,11 +115,11 @@ export function FicheReservation({ r }: { r: ReservationAdmin }) {
 
       <div className="mt-4 rounded-xl bg-muted/60 p-3">
         <div className="flex flex-wrap gap-x-5 gap-y-1.5 text-sm">
-          <a href={`tel:${r.clientTelephone}`} className="flex items-center gap-1.5 hover:text-field">
+          <a href={`tel:${r.clientTelephone}`} className="inline-flex min-h-8 items-center gap-1.5 py-0.5 hover:text-field">
             <Telephone className="size-3.5 text-muted-foreground" />
             {r.clientTelephone}
           </a>
-          <a href={`mailto:${r.clientEmail}`} className="flex items-center gap-1.5 hover:text-field">
+          <a href={`mailto:${r.clientEmail}`} className="inline-flex min-h-8 items-center gap-1.5 py-0.5 hover:text-field">
             <Enveloppe className="size-3.5 text-muted-foreground" />
             {r.clientEmail}
           </a>

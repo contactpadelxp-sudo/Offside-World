@@ -37,12 +37,12 @@ function Interrupteur({
   libelle: string;
 }) {
   return (
-    <label className="inline-flex cursor-pointer items-center gap-2 text-sm">
+    <label className="inline-flex min-h-8 cursor-pointer items-center gap-2 py-1 text-sm">
       <input
         type="checkbox"
         checked={actif}
         onChange={(e) => onChange(e.target.checked)}
-        className="size-4 accent-[var(--color-field)]"
+        className="size-5 accent-[var(--color-field)]"
       />
       {libelle}
     </label>

@@ -66,7 +66,14 @@ export function BarreAdmin({
           </span>
         </div>
 
-        <nav className="order-3 -mx-1 flex w-full items-center gap-1 overflow-x-auto sm:order-none sm:mx-0 sm:w-auto">
+        {/*
+          La barre défilait à l'horizontale sur téléphone : « Créneaux »,
+          « Tarifs », « Journal » et « Réglages » étaient hors de l'écran, sans
+          rien pour indiquer qu'on pouvait faire défiler. On préfère deux lignes
+          visibles à une ligne tronquée — c'est un outil de travail, pas une
+          vitrine.
+        */}
+        <nav className="order-3 flex w-full flex-wrap items-center gap-1 sm:order-none sm:w-auto sm:flex-nowrap">
           {SECTIONS.map((s) => {
             const actif = s.href === "/admin" ? chemin === "/admin" : chemin.startsWith(s.href);
             const n = pastille(s.href);

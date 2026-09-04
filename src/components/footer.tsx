@@ -41,7 +41,7 @@ export function Footer({ logoSrc }: { logoSrc: string | null }) {
                   { label: "Team Building", href: "/reservation?activite=groupes" },
                 ].map((item) => (
                   <li key={item.label}>
-                    <Link href={item.href} className="text-sm text-white/60 hover:text-white transition-colors duration-300 inline-flex items-center gap-1 group">
+                    <Link href={item.href} className="text-sm text-white/60 hover:text-white transition-colors duration-300 inline-flex min-h-6 items-center gap-1 py-0.5 group">
                       {item.label}
                       <FlecheDiagonale className="size-3 opacity-0 -translate-y-1 translate-x-1 group-hover:opacity-100 group-hover:translate-y-0 group-hover:translate-x-0 transition-all duration-300" />
                     </Link>
@@ -65,11 +65,11 @@ export function Footer({ logoSrc }: { logoSrc: string | null }) {
                 </li>
                 <li className="flex items-center gap-2.5">
                   <Telephone className="size-4 text-white/60 shrink-0" />
-                  <a href={`tel:${TELEPHONE_TEL}`} className="hover:text-white transition-colors">{TELEPHONE}</a>
+                  <a href={`tel:${TELEPHONE_TEL}`} className="inline-flex min-h-6 items-center py-0.5 hover:text-white transition-colors">{TELEPHONE}</a>
                 </li>
                 <li className="flex items-center gap-2.5">
                   <Enveloppe className="size-4 text-white/60 shrink-0" />
-                  <a href={`mailto:${EMAIL}`} className="hover:text-white transition-colors">{EMAIL}</a>
+                  <a href={`mailto:${EMAIL}`} className="inline-flex min-h-6 items-center py-0.5 hover:text-white transition-colors">{EMAIL}</a>
                 </li>
               </ul>
             </div>
@@ -88,7 +88,7 @@ export function Footer({ logoSrc }: { logoSrc: string | null }) {
                   { label: "CGU", href: "/cgu" },
                 ].map((item) => (
                   <li key={item.href}>
-                    <Link href={item.href} className="text-sm text-white/60 hover:text-white transition-colors duration-300">{item.label}</Link>
+                    <Link href={item.href} className="inline-flex min-h-6 items-center py-0.5 text-sm text-white/60 hover:text-white transition-colors duration-300">{item.label}</Link>
                   </li>
                 ))}
                 <li>
