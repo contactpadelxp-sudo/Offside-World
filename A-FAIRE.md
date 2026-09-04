@@ -98,27 +98,31 @@ majuscules, accents, espaces et tirets. Voir `src/lib/photos.ts`.
 
 # À faire côté Mathis
 
-- [ ] **Définir `ADMIN_USER` et `ADMIN_PASSWORD`** dans Vercel (type
+- [x] **Définir `ADMIN_USER` et `ADMIN_PASSWORD`** dans Vercel (type
       « Sensitive » pour le mot de passe). Sans ces deux variables, `/admin`
       répond 404 : c'est voulu, mais le back-office reste alors inaccessible à
       Brahim.
+- [ ] **Appliquer la migration `0009_back_office.sql`** dans Supabase. Sans
+      elle, la connexion au back-office échoue : la table des sessions n'existe
+      pas encore.
 - [ ] **Passer le dépôt GitHub en privé.** Tant qu'il est public, l'historique
       reste lisible, y compris les versions précédentes de ce fichier.
 - [ ] **Configurer DMARC et durcir SPF** sur `offsidefootindoor.be`, chez le
       registrar. Sans cela, les e-mails de confirmation partiront en spam et
       l'adresse pourra être usurpée.
 - [ ] Ouvrir un compte **Stripe** avec Bancontact activé.
-- [ ] **Planifier deux tâches récurrentes** en base (Supabase → Cron) :
-      `generer_creneaux_anniversaire` / `generer_creneaux_bubble` pour prolonger
-      l'horizon de réservation, et `anonymiser_reservations_anciennes` pour la
-      minimisation RGPD.
+- [ ] **Planifier les tâches d'entretien** en base (Supabase → Cron) :
+      `anonymiser_reservations_anciennes` pour la minimisation RGPD, et
+      `purger_sessions_admin` pour les sessions périmées. La génération des
+      créneaux n'a plus besoin d'être planifiée : Brahim la déclenche depuis
+      l'onglet « Créneaux » du back-office.
 
 ---
 
 # État technique
 
 **Base de données** — projet `shybhkzgwxyajysjlrbv` (Offside World, eu-west-1),
-migrations `0001` à `0008` appliquées et vérifiées.
+migrations `0001` à `0008` appliquées et vérifiées ; `0009` à appliquer.
 RLS activé et forcé sur les 8 tables, sans aucune politique : rien n'est
 accessible par les clés publiques, tout passe par le serveur.
 
@@ -126,7 +130,14 @@ accessible par les clés publiques, tout passe par le serveur.
 - les formules et leurs tarifs (page d'accueil et funnel) ;
 - les créneaux et leur disponibilité réelle ;
 - les réservations et les demandes de devis, écrites par une Server Action ;
-- le back-office, qui liste les vraies réservations à venir.
+- le back-office, qui lit et modifie les vraies réservations.
+
+**Le back-office est une application séparée.** Il ne partage avec le site que
+les polices et la feuille de style : pas d'en-tête, pas de pied de page, aucun
+lien dans un sens ni dans l'autre. On y entre par une page de connexion, et la
+session dure 12 heures. Brahim peut confirmer et annuler des réservations,
+suivre les demandes de devis, ouvrir et fermer des créneaux, et consulter le
+journal des actions — chaque modification y laisse une trace.
 
 **Le prix est recalculé côté serveur** à partir des tables `formules` et
 `options` au moment d'écrire la réservation. Le total affiché dans le navigateur
@@ -139,10 +150,15 @@ deux options tombe au centime attendu. Le linter de sécurité Supabase ne remon
 aucun avertissement — les 8 avis « RLS activé sans politique » sont le
 comportement voulu.
 
-**Ce qui reste à construire :** le paiement en ligne (Stripe + Bancontact), les
-e-mails transactionnels, et un vrai système de comptes pour le back-office —
-l'authentification actuelle est volontairement sommaire et ne convient qu'à une
-page en lecture seule.
+**Ce qui reste à construire :** le paiement en ligne (Stripe + Bancontact) et
+les e-mails transactionnels — aujourd'hui, personne n'est prévenu
+automatiquement d'une nouvelle réservation, il faut ouvrir le back-office.
+
+**Limite connue de l'authentification :** un seul identifiant, partagé. Le
+journal enregistre donc « qui » au sens du compte, pas de la personne. Le jour
+où plusieurs personnes auront besoin d'un accès distinct, seule la fonction
+`verifierIdentifiants` est à remplacer — tout le reste passe déjà par une
+session nommée.
 
 **`src/data/formules.ts`** ne contient plus que des textes fixes et un repli
 d'affichage pour la page d'accueil. Ce repli ne sert jamais au calcul d'un

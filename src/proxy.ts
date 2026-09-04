@@ -1,107 +1,65 @@
 import { NextResponse, type NextRequest } from "next/server";
+import { COOKIE_SESSION, verifier } from "@/lib/admin/jeton";
 
 /**
- * Protection du back-office.
+ * Barrière d'entrée du back-office.
  *
- * `/admin` affiche des réservations : noms, téléphones, prénoms et âges
- * d'enfants, allergies. Sans authentification, cette page est publique et
- * indexable. Tant qu'il n'y a pas de véritable système de comptes, on la ferme
- * par une authentification HTTP Basic — sommaire, mais efficace parce qu'elle
- * s'applique AVANT le rendu de la page, y compris sur une version mise en cache
- * par le CDN.
+ * `/admin` affiche et modifie des réservations : noms, téléphones, prénoms et
+ * âges d'enfants, allergies. Le proxy s'exécute AVANT le rendu et avant la
+ * résolution de la route — donc avant qu'une éventuelle version en cache ne
+ * puisse être servie.
  *
- * FERMÉ PAR DÉFAUT : si les identifiants ne sont pas configurés, la page répond
- * 404. Une variable d'environnement oubliée ne peut donc pas rouvrir l'accès.
- * On répond 404 et non 403 pour ne pas confirmer l'existence du back-office.
+ * CE QU'IL FAIT, ET CE QU'IL NE FAIT PAS
  *
- * Identifiants attendus dans l'environnement (Vercel → Settings → Environment
- * Variables, type « Sensitive » pour le mot de passe) :
- *   ADMIN_USER      nom d'utilisateur
- *   ADMIN_PASSWORD  mot de passe
+ * Il redirige tôt, il n'autorise pas. Il se contente de vérifier que le cookie
+ * porte une signature émise par ce serveur : c'est un contrôle sans accès à la
+ * base, donc rapide, mais qui ne sait rien d'une session expirée ou révoquée.
+ * La vraie décision est prise dans `(admin)/admin/(protege)/layout.tsx` et
+ * redite dans chaque Server Action. La documentation de Next insiste sur ce
+ * point, et pour une bonne raison : un changement de `matcher` ou un
+ * déplacement de fichier peut retirer silencieusement la couverture du proxy.
  *
- * Limite assumée : HTTP Basic transmet les identifiants à chaque requête. C'est
- * acceptable ici parce que tout passe en HTTPS (HSTS est actif) et que la page
- * est en lecture seule. À remplacer par de vrais comptes le jour où le
- * back-office permettra de modifier des réservations.
+ * FERMÉ PAR DÉFAUT : sans ADMIN_USER ni ADMIN_PASSWORD dans l'environnement,
+ * tout /admin répond 404. Une variable oubliée ne peut donc pas ouvrir l'accès.
+ * 404 et non 403, pour ne pas confirmer l'existence du back-office.
  */
 
-const REALM = 'Basic realm="Offside back-office", charset="UTF-8"';
+const CONNEXION = "/admin/connexion";
 
-/** En-têtes communs : jamais de mise en cache, jamais d'indexation. */
+/** Jamais de cache, jamais d'indexation. */
 const PRIVE = {
   "Cache-Control": "no-store, max-age=0, must-revalidate",
   "X-Robots-Tag": "noindex, nofollow, noarchive",
 };
 
-/**
- * Comparaison à temps constant.
- *
- * On compare les empreintes SHA-256 plutôt que les chaînes : la durée ne dépend
- * alors ni du contenu ni de la LONGUEUR du secret, que comparer les chaînes
- * brutes divulguerait. `crypto.subtle` est disponible dans les deux runtimes.
- */
-async function memeSecret(a: string, b: string): Promise<boolean> {
-  const encodeur = new TextEncoder();
-  const [ha, hb] = await Promise.all([
-    crypto.subtle.digest("SHA-256", encodeur.encode(a)),
-    crypto.subtle.digest("SHA-256", encodeur.encode(b)),
-  ]);
-  const va = new Uint8Array(ha);
-  const vb = new Uint8Array(hb);
-  let diff = 0;
-  for (let i = 0; i < va.length; i++) diff |= va[i] ^ vb[i];
-  return diff === 0;
-}
-
-/** Décode « Basic <base64> » en couple identifiant / mot de passe. */
-function lireBasic(entete: string | null): { user: string; password: string } | null {
-  if (!entete?.startsWith("Basic ")) return null;
-  let decode: string;
-  try {
-    decode = atob(entete.slice(6).trim());
-  } catch {
-    return null;
-  }
-  // Le mot de passe peut contenir « : », pas l'identifiant : on coupe au premier.
-  const sep = decode.indexOf(":");
-  if (sep < 0) return null;
-  return { user: decode.slice(0, sep), password: decode.slice(sep + 1) };
-}
-
-export async function proxy(request: NextRequest) {
-  const attenduUser = process.env.ADMIN_USER;
-  const attenduPassword = process.env.ADMIN_PASSWORD;
-
-  // Identifiants absents : le back-office n'existe pas.
-  if (!attenduUser || !attenduPassword) {
-    return new NextResponse(null, { status: 404, headers: PRIVE });
-  }
-
-  const fourni = lireBasic(request.headers.get("authorization"));
-  const ok =
-    fourni !== null &&
-    // Les deux comparaisons sont toujours évaluées : pas de court-circuit,
-    // donc pas de différence de temps entre « bon nom, mauvais mot de passe »
-    // et « mauvais nom ».
-    (await Promise.all([
-      memeSecret(fourni.user, attenduUser),
-      memeSecret(fourni.password, attenduPassword),
-    ])).every(Boolean);
-
-  if (!ok) {
-    return new NextResponse("Authentification requise.", {
-      status: 401,
-      headers: { ...PRIVE, "WWW-Authenticate": REALM, "Content-Type": "text/plain; charset=utf-8" },
-    });
-  }
-
-  const reponse = NextResponse.next();
+function avecEntetes(reponse: NextResponse): NextResponse {
   for (const [cle, valeur] of Object.entries(PRIVE)) reponse.headers.set(cle, valeur);
   return reponse;
 }
 
+export async function proxy(request: NextRequest) {
+  if (!process.env.ADMIN_USER || !process.env.ADMIN_PASSWORD) {
+    return avecEntetes(new NextResponse(null, { status: 404 }));
+  }
+
+  const chemin = request.nextUrl.pathname;
+
+  // La page de connexion doit rester atteignable sans session, sinon on ne
+  // pourrait jamais en ouvrir une.
+  if (chemin === CONNEXION) return avecEntetes(NextResponse.next());
+
+  const id = await verifier(request.cookies.get(COOKIE_SESSION)?.value);
+  if (id) return avecEntetes(NextResponse.next());
+
+  const cible = new URL(CONNEXION, request.url);
+  // On ne réinjecte que des chemins internes au back-office : un paramètre
+  // `suite` venu de l'extérieur ne peut pas servir de redirection ouverte.
+  if (chemin.startsWith("/admin/") && chemin !== CONNEXION) {
+    cible.searchParams.set("suite", chemin);
+  }
+  return avecEntetes(NextResponse.redirect(cible));
+}
+
 export const config = {
-  // `/admin` et tout ce qui pourrait s'y ajouter. Le reste du site n'est pas
-  // traversé : le proxy ne coûte rien sur les pages publiques.
   matcher: ["/admin", "/admin/:path*"],
 };

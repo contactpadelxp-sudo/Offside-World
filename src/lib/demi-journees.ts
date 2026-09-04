@@ -1,4 +1,4 @@
-import { jourISO, jourLisible } from "@/lib/temps";
+import { jourISO, jourLisibleCap } from "@/lib/temps";
 import { TEAM_BUILDING_MATIN, TEAM_BUILDING_APRES_MIDI } from "@/data/bubble-team";
 
 /**
@@ -40,7 +40,7 @@ export function prochainesDemiJournees(nbJours = 10, depuis = new Date()): DemiJ
     if (semaine === 0 || semaine === 6) continue;
 
     const jour = jourISO(curseur);
-    const label = jourLisible(curseur);
+    const label = jourLisibleCap(curseur);
     sortie.push(
       {
         id: `${jour}-matin`,

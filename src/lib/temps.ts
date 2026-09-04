@@ -43,6 +43,24 @@ export function jourLisible(instant: Date): string {
   return JOUR_LISIBLE.format(instant);
 }
 
+/**
+ * « samedi 5 septembre » -> « Samedi 5 septembre ».
+ *
+ * Fait en JavaScript et non avec `capitalize` de Tailwind, qui met une
+ * majuscule à CHAQUE mot et produirait « Samedi 5 Septembre » — les noms de
+ * mois ne prennent pas de majuscule en français. `first-letter:uppercase`
+ * n'irait pas non plus : la pseudo-classe ne s'applique pas aux éléments en
+ * ligne, où la plupart de ces dates sont affichées.
+ */
+export function capitaliser(v: string): string {
+  return v.charAt(0).toUpperCase() + v.slice(1);
+}
+
+/** Libellé de journée prêt à être affiché seul. */
+export function jourLisibleCap(instant: Date): string {
+  return capitaliser(jourLisible(instant));
+}
+
 export function heure(instant: Date): string {
   return HEURE.format(instant);
 }

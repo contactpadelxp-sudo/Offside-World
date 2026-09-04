@@ -15,7 +15,7 @@ import { PhoneField } from "@/components/reservation/phone-field";
 import { isValidEmail } from "@/lib/validation";
 import { memoriserRecap } from "@/lib/reservation";
 import { useScrollTop } from "@/lib/use-scroll-top";
-import { demanderDevis, reserverBubble } from "@/app/reservation/actions";
+import { demanderDevis, reserverBubble } from "@/lib/actions/reservation";
 import type { CreneauVue } from "@/lib/vues";
 import type { DemiJourneeVue } from "@/lib/demi-journees";
 import {
@@ -261,7 +261,7 @@ export function GroupesFlow({
                   }`}>
                     <CardContent className="p-4 flex items-center justify-between">
                       <div>
-                        <p className="font-bold capitalize">{c.jourLabel}</p>
+                        <p className="font-bold">{c.jourLabel}</p>
                         <p className="text-sm text-muted-foreground">{c.debut} – {c.fin}</p>
                       </div>
                       <Badge variant={c.libre ? "secondary" : "destructive"}>
@@ -330,7 +330,7 @@ export function GroupesFlow({
                   demiJournee?.id === dj.id ? "border-kick ring-2 ring-kick/20" : "hover:border-kick/40 card-hover"
                 }`}>
                   <CardContent className="p-4">
-                    <p className="font-bold capitalize">{dj.jourLabel}</p>
+                    <p className="font-bold">{dj.jourLabel}</p>
                     <p className="text-sm text-muted-foreground flex items-center gap-1.5">
                       <Horloge className="size-3.5" /> {dj.periodeLabel} · {dj.debut} – {dj.fin}
                     </p>
@@ -398,7 +398,7 @@ export function GroupesFlow({
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Date</span>
-                <span className="font-semibold capitalize">
+                <span className="font-semibold">
                   {isBubble ? bubbleCreneau?.jourLabel : demiJournee?.jourLabel}
                 </span>
               </div>

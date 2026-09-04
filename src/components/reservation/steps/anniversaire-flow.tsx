@@ -13,7 +13,7 @@ import { PhoneField } from "@/components/reservation/phone-field";
 import { isValidEmail } from "@/lib/validation";
 import { memoriserRecap } from "@/lib/reservation";
 import { useScrollTop } from "@/lib/use-scroll-top";
-import { reserverAnniversaire } from "@/app/reservation/actions";
+import { reserverAnniversaire } from "@/lib/actions/reservation";
 import type { CreneauVue, FormuleVue, OptionVue } from "@/lib/vues";
 import { GATEAU_NOTE, OPTION_IMAGES } from "@/data/formules";
 import { RESUME_ANNULATION, DELAI_RESERVATION_HEURES } from "@/data/reglement";
@@ -377,7 +377,7 @@ export function AnniversaireFlow({
                     <button
                       key={j.jour}
                       onClick={() => { setSelectedJour(j.jour); setSelectedCreneau(null); }}
-                      className={`rounded-xl border-2 px-4 py-2.5 text-sm font-medium capitalize transition-all duration-300 ${
+                      className={`rounded-xl border-2 px-4 py-2.5 text-sm font-medium transition-all duration-300 ${
                         jourCourant === j.jour ? "border-field bg-field/10 text-field" : "border-muted hover:border-field/40"
                       }`}
                     >
@@ -468,7 +468,7 @@ export function AnniversaireFlow({
               <div className="flex justify-between"><span className="text-muted-foreground">Formule</span><span className="font-semibold">{selectedFormule.nom}</span></div>
               <div className="flex justify-between"><span className="text-muted-foreground">Enfant fêté</span><span className="font-semibold">{childName} ({childAge} ans)</span></div>
               <div className="flex justify-between"><span className="text-muted-foreground">Nombre d&apos;enfants</span><span className="font-semibold">{childCount}</span></div>
-              <div className="flex justify-between"><span className="text-muted-foreground">Date</span><span className="font-semibold capitalize">{selectedCreneau.jourLabel}</span></div>
+              <div className="flex justify-between"><span className="text-muted-foreground">Date</span><span className="font-semibold">{selectedCreneau.jourLabel}</span></div>
               <div className="flex justify-between"><span className="text-muted-foreground">Espace</span><span className="font-semibold">{selectedCreneau.espaceNom}</span></div>
               <div className="flex justify-between"><span className="text-muted-foreground">Horaire</span><span className="font-semibold">{selectedCreneau.debut} – {selectedCreneau.fin}</span></div>
               {selectedOptions.length > 0 && (

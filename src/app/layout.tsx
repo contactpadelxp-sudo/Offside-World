@@ -1,13 +1,18 @@
 import type { Metadata, Viewport } from "next";
 import { Space_Grotesk, DM_Sans, JetBrains_Mono } from "next/font/google";
-import { Header } from "@/components/header";
-import { resolveLogoSrc } from "@/lib/logo";
-import { resolvePhotos } from "@/lib/photos";
-import { PhotosProvider } from "@/components/photos-provider";
 import { NOM_COMMERCIAL } from "@/data/entreprise";
-import { Footer } from "@/components/footer";
-import { CookieBannerWrapper } from "@/components/cookie-banner";
 import "./globals.css";
+
+/**
+ * Racine commune au site public et au back-office : polices, feuille de style,
+ * balises <html> et <body>. Rien d'autre.
+ *
+ * Tout ce qui appartient au site vitrine — en-tête, pied de page, bandeau
+ * cookies, métadonnées de partage — vit dans `(site)/layout.tsx`. Le
+ * back-office a le sien dans `(admin)/layout.tsx`. Les deux coquilles sont
+ * ainsi étanches : aucune barre de navigation du site n'existe dans le
+ * back-office, et aucun lien ne mène de l'un à l'autre.
+ */
 
 const spaceGrotesk = Space_Grotesk({
   variable: "--font-heading",
@@ -29,30 +34,7 @@ const jetBrainsMono = JetBrains_Mono({
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://offside-world.vercel.app"),
-  title: `${NOM_COMMERCIAL} — Anniversaires foot, Bubble Foot & Team Building`,
-  description:
-    "Offside Foot Indoor : le complexe de foot indoor en Belgique. Anniversaires enfants dès 180 €, Bubble Foot, location de terrain et team building.",
-  applicationName: NOM_COMMERCIAL,
-  robots: { index: true, follow: true },
-  openGraph: {
-    type: "website",
-    locale: "fr_BE",
-    siteName: NOM_COMMERCIAL,
-    url: "https://offside-world.vercel.app",
-    title: `${NOM_COMMERCIAL} — Anniversaires foot, Bubble Foot & Team Building`,
-    description:
-      "Le complexe de foot indoor en Belgique. Anniversaires enfants dès 180 €, Bubble Foot, location de terrain et team building.",
-    images: [
-      { url: "/images/offside-foot-indoor.jpg", width: 1200, height: 630, alt: `${NOM_COMMERCIAL} — foot indoor` },
-    ],
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: `${NOM_COMMERCIAL} — Anniversaires foot, Bubble Foot & Team Building`,
-    description:
-      "Le complexe de foot indoor en Belgique. Anniversaires enfants dès 180 €, Bubble Foot, location de terrain et team building.",
-    images: ["/images/offside-foot-indoor.jpg"],
-  },
+  title: NOM_COMMERCIAL,
 };
 
 export const viewport: Viewport = {
@@ -60,27 +42,13 @@ export const viewport: Viewport = {
   colorScheme: "dark",
 };
 
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
-  const logoSrc = resolveLogoSrc();
-  const photos = resolvePhotos();
-
+export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html
       lang="fr"
       className={`${spaceGrotesk.variable} ${dmSans.variable} ${jetBrainsMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">
-        <PhotosProvider value={photos}>
-          <Header logoSrc={logoSrc} />
-          <main className="flex-1">{children}</main>
-          <Footer logoSrc={logoSrc} />
-        </PhotosProvider>
-        <CookieBannerWrapper />
-      </body>
+      <body className="min-h-full flex flex-col">{children}</body>
     </html>
   );
 }

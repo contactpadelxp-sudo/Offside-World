@@ -1,6 +1,6 @@
 import "server-only";
 import { base, baseConfiguree } from "@/lib/supabase/server";
-import { heure, jourISO, jourLisible } from "@/lib/temps";
+import { heure, jourISO, jourLisibleCap } from "@/lib/temps";
 import { DELAI_RESERVATION_HEURES } from "@/data/reglement";
 import type { Database } from "@/lib/supabase/types";
 import type { CreneauVue } from "@/lib/vues";
@@ -63,7 +63,7 @@ export async function lireCreneaux(type: TypeActivite): Promise<CreneauVue[]> {
       espaceNom: c.espace_nom,
       capacite: c.capacite,
       jour: jourISO(debut),
-      jourLabel: jourLisible(debut),
+      jourLabel: jourLisibleCap(debut),
       debut: heure(debut),
       fin: heure(fin),
       libre: c.libre ?? false,

@@ -111,7 +111,7 @@ export function ConfirmationContent() {
               {recap?.date && (
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Date</span>
-                  <span className="font-semibold capitalize">{recap.date}</span>
+                  <span className="font-semibold">{recap.date}</span>
                 </div>
               )}
               {recap?.horaire && (

@@ -38,6 +38,31 @@ indisponible.
 Sans `ADMIN_USER` ni `ADMIN_PASSWORD`, `/admin` répond 404 : le back-office est
 fermé par défaut plutôt qu'ouvert par défaut.
 
+`ADMIN_SESSION_SECRET` est facultative : sans elle, la clé de signature des
+sessions est dérivée de `ADMIN_PASSWORD`. Conséquence voulue — changer le mot de
+passe met fin à toutes les sessions en cours.
+
+## Le back-office
+
+Une application à part, servie sous `/admin`. Elle ne partage avec le site que
+les polices et la feuille de style : son gabarit n'a ni en-tête ni pied de page
+publics, et aucun lien ne mène de l'un à l'autre. On n'y arrive donc pas par une
+fausse manœuvre, et on n'en sort pas par un retour arrière.
+
+Trois barrières, dans cet ordre :
+
+1. `src/proxy.ts` s'exécute avant le rendu. Sans identifiants configurés, tout
+   `/admin` répond 404 ; sans cookie signé, il redirige vers la connexion. Il ne
+   consulte pas la base : c'est un aiguillage, pas une autorisation.
+2. `(admin)/admin/(protege)/layout.tsx` relit la session en base — expiration et
+   révocation comprises. C'est là que l'accès est réellement décidé.
+3. Chaque Server Action revérifie la session pour son propre compte. Une Server
+   Action reste une URL publique, appelable sans passer par la page.
+
+Toute modification est écrite dans `journal_admin` : qui, quoi, quand, depuis
+quelle adresse. Les réservations contiennent des données d'enfants et de santé ;
+cette trace fait partie des mesures attendues d'un responsable de traitement.
+
 ## Pages
 
 | URL | Description |
@@ -45,7 +70,11 @@ fermé par défaut plutôt qu'ouvert par défaut.
 | `/` | Page d'accueil |
 | `/reservation` | Tunnel de réservation (anniversaire, terrain, groupes) |
 | `/confirmation` | Écran de confirmation |
-| `/admin` | Back-office — réservations à venir (authentifié) |
+| `/admin/connexion` | Connexion au back-office |
+| `/admin` | Back-office — réservations |
+| `/admin/devis` | Back-office — demandes de devis |
+| `/admin/creneaux` | Back-office — ouverture et fermeture des créneaux |
+| `/admin/journal` | Back-office — journal des actions |
 | `/mentions-legales` | Mentions légales |
 | `/confidentialite` | Politique de confidentialité (RGPD) |
 | `/politique-cookies` | Politique cookies |
@@ -79,9 +108,9 @@ npx supabase gen types typescript --project-id <ref> > src/lib/supabase/types.ts
 ```
 
 Deux fonctions sont à planifier (Supabase → Cron) :
-`generer_creneaux_anniversaire` / `generer_creneaux_bubble` pour prolonger
-l'horizon de réservation, et `anonymiser_reservations_anciennes` pour la
-minimisation RGPD.
+`anonymiser_reservations_anciennes` pour la minimisation RGPD, et
+`purger_sessions_admin` pour les sessions périmées. L'ouverture de nouveaux
+créneaux se fait depuis le back-office, onglet « Créneaux ».
 
 ## Ajouter un composant shadcn/ui
 

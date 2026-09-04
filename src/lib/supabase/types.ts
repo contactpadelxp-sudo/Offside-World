@@ -24,6 +24,36 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_sessions: {
+        Row: {
+          acteur: string
+          agent: string | null
+          cree_le: string
+          expire_le: string
+          id: string
+          ip: unknown
+          revoquee_le: string | null
+        }
+        Insert: {
+          acteur: string
+          agent?: string | null
+          cree_le?: string
+          expire_le: string
+          id?: string
+          ip?: unknown
+          revoquee_le?: string | null
+        }
+        Update: {
+          acteur?: string
+          agent?: string | null
+          cree_le?: string
+          expire_le?: string
+          id?: string
+          ip?: unknown
+          revoquee_le?: string | null
+        }
+        Relationships: []
+      }
       creneaux: {
         Row: {
           created_at: string
@@ -75,6 +105,7 @@ export type Database = {
           message: string | null
           nb_participants: number | null
           newsletter: boolean
+          note_interne: string | null
           periode: string | null
           reference: string
           statut: Database["public"]["Enums"]["statut_devis"]
@@ -92,6 +123,7 @@ export type Database = {
           message?: string | null
           nb_participants?: number | null
           newsletter?: boolean
+          note_interne?: string | null
           periode?: string | null
           reference: string
           statut?: Database["public"]["Enums"]["statut_devis"]
@@ -109,6 +141,7 @@ export type Database = {
           message?: string | null
           nb_participants?: number | null
           newsletter?: boolean
+          note_interne?: string | null
           periode?: string | null
           reference?: string
           statut?: Database["public"]["Enums"]["statut_devis"]
@@ -303,6 +336,7 @@ export type Database = {
           nb_enfants: number | null
           nb_personnes: number | null
           newsletter: boolean
+          note_interne: string | null
           options_ids: string[]
           reference: string
           remarques: string | null
@@ -327,6 +361,7 @@ export type Database = {
           nb_enfants?: number | null
           nb_personnes?: number | null
           newsletter?: boolean
+          note_interne?: string | null
           options_ids?: string[]
           reference: string
           remarques?: string | null
@@ -351,6 +386,7 @@ export type Database = {
           nb_enfants?: number | null
           nb_personnes?: number | null
           newsletter?: boolean
+          note_interne?: string | null
           options_ids?: string[]
           reference?: string
           remarques?: string | null
@@ -396,6 +432,7 @@ export type Database = {
           id: string | null
           nb_enfants: number | null
           nb_personnes: number | null
+          note_interne: string | null
           options_ids: string[] | null
           reference: string | null
           remarques: string | null
@@ -442,6 +479,10 @@ export type Database = {
       }
       generer_creneaux_bubble: {
         Args: { au: string; du: string }
+        Returns: number
+      }
+      purger_sessions_admin: {
+        Args: { garde?: string }
         Returns: number
       }
     }
