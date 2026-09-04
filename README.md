@@ -114,6 +114,7 @@ cette trace fait partie des mesures attendues d'un responsable de traitement.
 | `/admin` | Back-office — réservations |
 | `/admin/devis` | Back-office — demandes de devis |
 | `/admin/creneaux` | Back-office — ouverture et fermeture des créneaux |
+| `/admin/tarifs` | Back-office — prix des formules et des options |
 | `/admin/journal` | Back-office — journal des actions |
 | `/mentions-legales` | Mentions légales |
 | `/confidentialite` | Politique de confidentialité (RGPD) |
@@ -128,11 +129,17 @@ créneaux et disponibilités, réservations, demandes de devis, paiements.
 Le prix facturé est recalculé côté serveur à partir de ces tables à chaque
 réservation — jamais recopié depuis le navigateur.
 
+Les tarifs se modifient depuis `/admin/tarifs` : ce qui y est écrit est ce que
+le serveur facturera, puisque c'est la même table qu'il relit au moment
+d'enregistrer une réservation. Les réservations déjà prises gardent le montant
+figé à leur enregistrement.
+
 **Dans `src/data/`**, uniquement ce qui n'est pas tarifaire :
 - `entreprise.ts` — identité de l'entreprise (source unique des pages légales)
 - `reglement.ts` — délai de réservation, barème d'annulation
 - `foot.ts` — liens vers Sport-Finder, qui gère la location de terrain
-- `bubble-team.ts` — tarif Bubble Foot et textes du team building
+- `bubble-team.ts` — tarif Bubble Foot (facturé à la personne, hors table
+  `formules`) et textes du team building
 - `formules.ts` — textes fixes et repli d'affichage de la page d'accueil
 
 ## Base de données

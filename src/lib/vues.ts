@@ -123,3 +123,30 @@ export interface CreneauAdmin {
 }
 
 export type FiltreReservations = "a-venir" | "a-confirmer" | "passees" | "annulees";
+
+// ── Tarifs modifiables ───────────────────────────────────────────────────────
+
+export interface FormuleAdmin {
+  id: string;
+  nom: string;
+  accroche: string;
+  description: string;
+  /** en euros */
+  prixBase: number;
+  enfantsInclus: number;
+  /** en euros */
+  prixEnfantSup: number;
+  enfantsMax: number;
+  dureeMinutes: number;
+  inclus: string[];
+  actif: boolean;
+}
+
+export interface OptionAdmin {
+  id: string;
+  libelle: string;
+  description: string;
+  /** en euros */
+  prix: number;
+  actif: boolean;
+}

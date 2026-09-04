@@ -4,7 +4,17 @@ import { revalidatePath } from "next/cache";
 import { after } from "next/server";
 import { base } from "@/lib/supabase/server";
 import { journaliser, sessionCourante, type Session } from "@/lib/admin/session";
-import { SaisieInvalide, jour, texteFacultatif, uuid } from "@/lib/saisie";
+import {
+  SaisieInvalide,
+  booleen,
+  entier,
+  jour,
+  lignes,
+  montantEnCents,
+  texte,
+  texteFacultatif,
+  uuid,
+} from "@/lib/saisie";
 import { lireRecapEmail } from "@/lib/db/backoffice";
 import { envoyer } from "@/lib/email/envoi";
 import {
@@ -316,6 +326,131 @@ export async function genererCreneaux(du: string, au: string): Promise<Resultat>
           ? `${total} créneau${total > 1 ? "x" : ""} ouvert${total > 1 ? "s" : ""}.`
           : "Aucun nouveau créneau : la période était déjà ouverte.",
     };
+  } catch (e) {
+    return echec(e);
+  }
+}
+
+// ── Tarifs ───────────────────────────────────────────────────────────────────
+
+/**
+ * Modification du référentiel tarifaire.
+ *
+ * Ce que Brahim écrit ici est ce que le serveur facturera : c'est la même table
+ * que celle relue au moment d'enregistrer une réservation. D'où le bornage
+ * strict de chaque champ, et la cohérence vérifiée entre eux — un forfait qui
+ * couvrirait plus d'enfants que le maximum autorisé rendrait le maximum
+ * inatteignable.
+ *
+ * Les réservations déjà enregistrées ne bougent pas : leur montant a été figé
+ * au moment de l'écriture. Un changement de tarif ne vaut que pour la suite.
+ */
+export interface SaisieFormule {
+  nom: string;
+  accroche: string;
+  description: string;
+  prixBase: string;
+  enfantsInclus: number;
+  prixEnfantSup: string;
+  enfantsMax: number;
+  dureeMinutes: number;
+  inclus: string;
+  actif: boolean;
+}
+
+export async function modifierFormule(id: string, saisie: SaisieFormule): Promise<Resultat> {
+  const session = await garde();
+  if (!session) return REFUS_SESSION;
+
+  try {
+    const cible = texte(id, "Formule", { max: 60 });
+    const nom = texte(saisie?.nom, "Nom", { min: 2, max: 60 });
+    const accroche = texteFacultatif(saisie?.accroche, "Accroche", { max: 120, sauts: false });
+    const description = texte(saisie?.description, "Description", { min: 10, max: 800, sauts: true });
+    const prixBase = montantEnCents(saisie?.prixBase, "Prix de base", { max: 500_000 });
+    const prixEnfantSup = montantEnCents(saisie?.prixEnfantSup, "Prix par enfant supplémentaire", { max: 50_000 });
+    const enfantsInclus = entier(saisie?.enfantsInclus, "Enfants inclus", { min: 1, max: 100 });
+    const enfantsMax = entier(saisie?.enfantsMax, "Enfants maximum", { min: 1, max: 100 });
+    const dureeMinutes = entier(saisie?.dureeMinutes, "Durée", { min: 15, max: 600 });
+    const inclus = lignes(saisie?.inclus, "Ce qui est compris");
+
+    if (enfantsMax < enfantsInclus) {
+      return {
+        ok: false,
+        message: "Le maximum d'enfants ne peut pas être inférieur au nombre inclus dans le forfait.",
+      };
+    }
+
+    const { data, error } = await base()
+      .from("formules")
+      .update({
+        nom,
+        accroche,
+        description,
+        prix_base_cents: prixBase,
+        enfants_inclus: enfantsInclus,
+        prix_enfant_sup_cents: prixEnfantSup,
+        enfants_max: enfantsMax,
+        duree_minutes: dureeMinutes,
+        inclus,
+        actif: booleen(saisie?.actif),
+      })
+      .eq("id", cible)
+      .select("id")
+      .maybeSingle();
+
+    if (error) throw error;
+    if (!data) return { ok: false, message: "Formule introuvable." };
+
+    await journaliser(session, "formule.modifiee", cible, {
+      prix_base_cents: prixBase,
+      prix_enfant_sup_cents: prixEnfantSup,
+      actif: booleen(saisie?.actif),
+    });
+    rafraichir();
+    // La page d'accueil est prérendue toutes les heures : on la régénère tout
+    // de suite, sinon l'ancien tarif y resterait affiché jusqu'à une heure.
+    revalidatePath("/");
+    return { ok: true, message: "Formule enregistrée." };
+  } catch (e) {
+    return echec(e);
+  }
+}
+
+export interface SaisieOption {
+  libelle: string;
+  description: string;
+  prix: string;
+  actif: boolean;
+}
+
+export async function modifierOption(id: string, saisie: SaisieOption): Promise<Resultat> {
+  const session = await garde();
+  if (!session) return REFUS_SESSION;
+
+  try {
+    const cible = texte(id, "Option", { max: 60 });
+    const libelle = texte(saisie?.libelle, "Libellé", { min: 2, max: 80 });
+    const description = texteFacultatif(saisie?.description, "Description", { max: 300 });
+    const prix = montantEnCents(saisie?.prix, "Prix", { max: 100_000 });
+
+    const { data, error } = await base()
+      .from("options")
+      .update({ libelle, description, prix_cents: prix, actif: booleen(saisie?.actif) })
+      .eq("id", cible)
+      .select("id")
+      .maybeSingle();
+
+    if (error) throw error;
+    if (!data) return { ok: false, message: "Option introuvable." };
+
+    await journaliser(session, "option.modifiee", cible, {
+      prix_cents: prix,
+      actif: booleen(saisie?.actif),
+    });
+    rafraichir();
+    revalidatePath("/");
+    return { ok: true, message: "Option enregistrée." };
   } catch (e) {
     return echec(e);
   }

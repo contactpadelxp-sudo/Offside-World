@@ -159,10 +159,14 @@ politique » sont le comportement voulu.
 
 **Ce qui reste à construire, par ordre d'urgence :**
 
-1. **Le paiement en ligne** (Stripe + Bancontact).
-2. **La modification des tarifs depuis le back-office.** Les prix viennent bien
-   de la base, mais seule une intervention dans Supabase permet de les changer.
-   Tant que les tarifs sont stables, ce n'est pas bloquant.
+1. **Le paiement en ligne** (Stripe + Bancontact). C'est le dernier morceau
+   qui demande du développement.
+
+**Les tarifs sont modifiables** depuis l'onglet « Tarifs » du back-office :
+prix des formules, supplément par enfant, nombre d'enfants couverts, durée,
+description, ce qui est compris, et les options. Seul le tarif Bubble Foot
+reste dans le code — il se facture à la personne et n'entre pas dans la même
+structure ; la page le dit explicitement.
 
 **Les e-mails sont écrits et branchés** — demande enregistrée, devis reçu,
 réservation confirmée, réservation annulée, plus les deux avis internes. Il

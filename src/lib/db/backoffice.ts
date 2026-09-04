@@ -34,6 +34,8 @@ const LIBELLES_ACTION: Record<string, string> = {
   "creneau.ouvert": "Créneau rouvert",
   "creneau.ferme": "Créneau fermé",
   "creneaux.generes": "Créneaux générés",
+  "formule.modifiee": "Formule modifiée",
+  "option.modifiee": "Option modifiée",
 };
 
 /**

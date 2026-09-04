@@ -57,7 +57,9 @@ export function texte(
   { min = 1, max = 200, sauts = false }: { min?: number; max?: number; sauts?: boolean } = {}
 ): string {
   const s = assainir(brut(v, champ), sauts);
-  if (s.length < min) throw new SaisieInvalide(champ, `${champ} : information manquante.`);
+  if (min > 0 && s.length < min) {
+    throw new SaisieInvalide(champ, `${champ} : information manquante.`);
+  }
   if (s.length > max) throw new SaisieInvalide(champ, `${champ} : ${max} caractères maximum.`);
   return s;
 }
@@ -159,4 +161,45 @@ export function jour(
   const jours = (d.getTime() - Date.now()) / 86_400_000;
   if (jours < -1 || jours > maxJours) throw new SaisieInvalide(champ, `${champ} : date hors période.`);
   return s;
+}
+
+/**
+ * Montant saisi en euros, converti en centimes entiers.
+ *
+ * On accepte la virgule comme séparateur décimal — c'est ce qu'un clavier
+ * belge produit — et on arrondit au centime le plus proche plutôt que de
+ * laisser filer un flottant : « 18,1 » doit donner 1810, pas 1809,9999.
+ */
+export function montantEnCents(
+  v: unknown,
+  champ: string,
+  { max = 1_000_000 }: { max?: number } = {}
+): number {
+  const brut = typeof v === "number" ? String(v) : texte(v, champ, { min: 1, max: 12 });
+  const normalise = brut.replace(",", ".").replace(/\s/g, "");
+  if (!/^\d+(\.\d{1,2})?$/.test(normalise)) {
+    throw new SaisieInvalide(champ, `${champ} : montant invalide.`);
+  }
+  const cents = Math.round(Number(normalise) * 100);
+  if (!Number.isFinite(cents) || cents < 0 || cents > max) {
+    throw new SaisieInvalide(champ, `${champ} : montant hors limites.`);
+  }
+  return cents;
+}
+
+/** Liste de lignes saisies dans une zone de texte, une par ligne. */
+export function lignes(v: unknown, champ: string, { max = 30, maxLigne = 200 } = {}): string[] {
+  if (v === null || v === undefined || v === "") return [];
+  const brut = texte(v, champ, { min: 0, max: 8000, sauts: true });
+  const sortie = brut
+    .split("\n")
+    .map((l) => l.trim())
+    .filter(Boolean);
+  if (sortie.length > max) throw new SaisieInvalide(champ, `${champ} : ${max} lignes maximum.`);
+  for (const l of sortie) {
+    if (l.length > maxLigne) {
+      throw new SaisieInvalide(champ, `${champ} : ${maxLigne} caractères maximum par ligne.`);
+    }
+  }
+  return sortie;
 }
