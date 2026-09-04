@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useFormStatus } from "react-dom";
 import { seDeconnecter } from "@/lib/actions/session";
+import { Voyant } from "@/components/admin/onglets";
 import { Bouclier, Calendrier, Document, PressePapier, type IconType } from "@/components/icons";
 
 /**
@@ -72,7 +73,7 @@ export function BarreAdmin({
                 key={s.href}
                 href={s.href}
                 aria-current={actif ? "page" : undefined}
-                className={`inline-flex shrink-0 items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
+                className={`inline-flex shrink-0 items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition-all duration-150 active:scale-[0.97] ${
                   actif
                     ? "bg-field/15 text-field"
                     : "text-muted-foreground hover:bg-white/5 hover:text-foreground"
@@ -85,6 +86,7 @@ export function BarreAdmin({
                     {n}
                   </span>
                 )}
+                <Voyant />
               </Link>
             );
           })}

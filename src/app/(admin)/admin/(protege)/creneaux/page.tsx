@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ListeCreneaux, OuvrirPeriode } from "@/components/admin/actions-creneaux";
+import { LienOnglet } from "@/components/admin/onglets";
 import { lireCreneauxDuJour } from "@/lib/db/backoffice";
 import { jourISO, jourLisibleCap } from "@/lib/temps";
 import { Calendrier, FlecheDroite, FlecheGauche } from "@/components/icons";
@@ -48,19 +49,10 @@ export default async function PageCreneaux({
 
         <div className="-mx-1 flex flex-1 items-center gap-1 overflow-x-auto px-1">
           {semaine.map((j) => (
-            <Link
-              key={j}
-              href={`/admin/creneaux?jour=${j}`}
-              aria-current={j === jour ? "page" : undefined}
-              className={`shrink-0 rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
-                j === jour
-                  ? "bg-field/15 text-field ring-1 ring-field/40"
-                  : "border border-border text-muted-foreground hover:border-field/40 hover:text-foreground"
-              }`}
-            >
+            <LienOnglet key={j} href={`/admin/creneaux?jour=${j}`} actif={j === jour}>
               {jourLisibleCap(versDate(j))}
-              {j === aujourdhui && <span className="ml-1.5 text-xs opacity-70">(aujourd&apos;hui)</span>}
-            </Link>
+              {j === aujourdhui && <span className="text-xs opacity-70">(aujourd&apos;hui)</span>}
+            </LienOnglet>
           ))}
         </div>
 

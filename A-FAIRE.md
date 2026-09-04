@@ -149,9 +149,18 @@ interne ressort dans la vue, et une session révoquée le reste. Le linter de
 sécurité Supabase ne remonte aucun avertissement — les 9 avis « RLS activé sans
 politique » sont le comportement voulu.
 
-**Ce qui reste à construire :** le paiement en ligne (Stripe + Bancontact) et
-les e-mails transactionnels — aujourd'hui, personne n'est prévenu
-automatiquement d'une nouvelle réservation, il faut ouvrir le back-office.
+**Ce qui reste à construire, par ordre d'urgence :**
+
+1. **Les e-mails.** C'est le trou le plus visible à l'usage. Personne n'est
+   prévenu d'une nouvelle réservation : Brahim doit penser à ouvrir le
+   back-office. Et surtout, le client n'est averti de rien — ni de
+   l'enregistrement de sa demande, ni de sa confirmation, ni de son
+   **annulation**. Aujourd'hui, annuler une réservation depuis le back-office
+   libère le créneau sans que le client l'apprenne.
+2. **Le paiement en ligne** (Stripe + Bancontact).
+3. **La modification des tarifs depuis le back-office.** Les prix viennent bien
+   de la base, mais seule une intervention dans Supabase permet de les changer.
+   Tant que les tarifs sont stables, ce n'est pas bloquant.
 
 **Limite connue de l'authentification :** un seul identifiant, partagé. Le
 journal enregistre donc « qui » au sens du compte, pas de la personne. Le jour

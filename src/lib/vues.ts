@@ -50,3 +50,76 @@ export interface CreneauVue {
   fin: string;
   libre: boolean;
 }
+
+// ── Back-office ──────────────────────────────────────────────────────────────
+
+export type StatutReservation = "en_attente" | "confirmee" | "annulee" | "expiree";
+export type StatutDevis = "nouvelle" | "traitee" | "devis_envoye" | "acceptee" | "refusee";
+
+export interface ReservationAdmin {
+  id: string;
+  reference: string;
+  type: "anniversaire" | "bubble";
+  statut: StatutReservation;
+  /** en euros */
+  total: number;
+  formuleNom: string | null;
+  nbEnfants: number | null;
+  enfantPrenom: string | null;
+  enfantAge: number | null;
+  nbPersonnes: number | null;
+  options: string[];
+  clientNom: string;
+  clientEmail: string;
+  clientTelephone: string;
+  allergies: string | null;
+  remarques: string | null;
+  noteInterne: string | null;
+  jour: string;
+  jourLabel: string;
+  debut: string;
+  fin: string;
+  espaceNom: string | null;
+  /** Vrai si le créneau est déjà passé : on n'y propose plus d'action. */
+  passee: boolean;
+}
+
+export interface DevisAdmin {
+  id: string;
+  reference: string;
+  entreprise: string;
+  contactNom: string;
+  contactEmail: string;
+  contactTelephone: string;
+  dateSouhaitee: string | null;
+  periode: string | null;
+  nbParticipants: number | null;
+  message: string | null;
+  noteInterne: string | null;
+  statut: StatutDevis;
+  recuLe: string;
+}
+
+export interface EntreeJournal {
+  id: number;
+  acteur: string;
+  action: string;
+  cible: string | null;
+  detail: string | null;
+  quand: string;
+}
+
+export interface CreneauAdmin {
+  id: string;
+  type: "anniversaire" | "bubble";
+  espaceNom: string;
+  jour: string;
+  jourLabel: string;
+  debut: string;
+  fin: string;
+  ouvert: boolean;
+  /** Référence de la réservation active, si le créneau est pris. */
+  reservePar: string | null;
+}
+
+export type FiltreReservations = "a-venir" | "a-confirmer" | "passees" | "annulees";

@@ -2,6 +2,17 @@ import "server-only";
 import { base, baseConfiguree } from "@/lib/supabase/server";
 import { heure, jourISO, jourLisible, jourLisibleCap } from "@/lib/temps";
 import { lireOptions } from "@/lib/db/referentiel";
+import type { Database } from "@/lib/supabase/types";
+import type {
+  CreneauAdmin,
+  DevisAdmin,
+  EntreeJournal,
+  FiltreReservations,
+  ReservationAdmin,
+  StatutDevis,
+} from "@/lib/vues";
+
+export type * from "@/lib/vues";
 
 /**
  * Lectures du back-office.
@@ -10,77 +21,6 @@ import { lireOptions } from "@/lib/db/referentiel";
  * de mineurs et de santé. L'accès est fermé par la session vérifiée dans le
  * gabarit du back-office, et les pages ne sont ni mises en cache ni indexables.
  */
-
-export type StatutReservation = "en_attente" | "confirmee" | "annulee" | "expiree";
-export type StatutDevis = "nouvelle" | "traitee" | "devis_envoye" | "acceptee" | "refusee";
-
-export interface ReservationAdmin {
-  id: string;
-  reference: string;
-  type: "anniversaire" | "bubble";
-  statut: StatutReservation;
-  /** en euros */
-  total: number;
-  formuleNom: string | null;
-  nbEnfants: number | null;
-  enfantPrenom: string | null;
-  enfantAge: number | null;
-  nbPersonnes: number | null;
-  options: string[];
-  clientNom: string;
-  clientEmail: string;
-  clientTelephone: string;
-  allergies: string | null;
-  remarques: string | null;
-  noteInterne: string | null;
-  jour: string;
-  jourLabel: string;
-  debut: string;
-  fin: string;
-  espaceNom: string | null;
-  /** Vrai si le créneau est déjà passé : on n'y propose plus d'action. */
-  passee: boolean;
-}
-
-export interface DevisAdmin {
-  id: string;
-  reference: string;
-  entreprise: string;
-  contactNom: string;
-  contactEmail: string;
-  contactTelephone: string;
-  dateSouhaitee: string | null;
-  periode: string | null;
-  nbParticipants: number | null;
-  message: string | null;
-  noteInterne: string | null;
-  statut: StatutDevis;
-  recuLe: string;
-}
-
-export interface EntreeJournal {
-  id: number;
-  acteur: string;
-  action: string;
-  cible: string | null;
-  detail: string | null;
-  quand: string;
-}
-
-export interface CreneauAdmin {
-  id: string;
-  type: "anniversaire" | "bubble";
-  espaceNom: string;
-  jour: string;
-  jourLabel: string;
-  debut: string;
-  fin: string;
-  ouvert: boolean;
-  /** Référence de la réservation active, si le créneau est pris. */
-  reservePar: string | null;
-}
-
-export type FiltreReservations = "a-venir" | "a-confirmer" | "passees" | "annulees";
 
 const LIBELLES_ACTION: Record<string, string> = {
   connexion: "Connexion",
@@ -95,12 +35,59 @@ const LIBELLES_ACTION: Record<string, string> = {
   "creneaux.generes": "Créneaux générés",
 };
 
-/** Réservations, filtrées selon ce que le back-office affiche. */
-export async function lireReservations(filtre: FiltreReservations): Promise<ReservationAdmin[]> {
+/**
+ * Nettoie un terme de recherche avant de le passer à PostgREST.
+ *
+ * La syntaxe `or=(...)` utilise la virgule et les parenthèses comme
+ * séparateurs : les laisser passer permettrait de réécrire le filtre. On ne
+ * garde donc que ce qui peut réellement figurer dans une référence, un nom, un
+ * e-mail ou un numéro.
+ */
+function termeRecherche(q: string): string {
+  return q
+    .normalize("NFC")
+    .replace(/[^\p{L}\p{N} @._+-]/gu, " ")
+    .trim()
+    .slice(0, 80);
+}
+
+/**
+ * Réservations, filtrées selon ce que le back-office affiche.
+ *
+ * Une recherche l'emporte sur le filtre : quand on cherche une référence, on
+ * veut la trouver qu'elle soit à venir, passée ou annulée.
+ */
+export async function lireReservations(
+  filtre: FiltreReservations,
+  recherche?: string
+): Promise<ReservationAdmin[]> {
   if (!baseConfiguree()) return [];
 
   const maintenant = new Date();
   let requete = base().from("reservations_detaillees").select("*");
+
+  const terme = recherche ? termeRecherche(recherche) : "";
+  if (terme) {
+    const motif = `*${terme}*`;
+    requete = requete
+      .or(
+        [
+          `reference.ilike.${motif}`,
+          `client_nom.ilike.${motif}`,
+          `client_email.ilike.${motif}`,
+          `client_telephone.ilike.${motif}`,
+          `enfant_prenom.ilike.${motif}`,
+        ].join(",")
+      )
+      .order("debut", { ascending: false })
+      .limit(50);
+    const { data, error } = await requete;
+    if (error || !data) {
+      console.error("Recherche impossible :", error?.message);
+      return [];
+    }
+    return construire(data, await lireOptions(), maintenant);
+  }
 
   switch (filtre) {
     case "a-venir":
@@ -137,6 +124,17 @@ export async function lireReservations(filtre: FiltreReservations): Promise<Rese
     return [];
   }
 
+  return construire(data, options, maintenant);
+}
+
+type LigneReservation = Database["public"]["Views"]["reservations_detaillees"]["Row"];
+
+/** Traduit les lignes de la vue en fiches affichables. */
+function construire(
+  data: LigneReservation[],
+  options: { id: string; libelle: string }[],
+  maintenant: Date
+): ReservationAdmin[] {
   const libelles = new Map(options.map((o) => [o.id, o.libelle]));
 
   const sortie: ReservationAdmin[] = [];
@@ -177,10 +175,14 @@ export async function lireReservations(filtre: FiltreReservations): Promise<Rese
 /** Nombre de réservations encore à confirmer — sert la pastille de navigation. */
 export async function compterAConfirmer(): Promise<number> {
   if (!baseConfiguree()) return 0;
+  // On ne compte que les réservations à venir : la pastille doit correspondre
+  // exactement à ce que montre le filtre « À confirmer ». Une réservation
+  // passée et jamais confirmée sera de toute façon expirée par le serveur.
   const { count, error } = await base()
-    .from("reservations")
+    .from("reservations_detaillees")
     .select("id", { count: "exact", head: true })
-    .eq("statut", "en_attente");
+    .eq("statut", "en_attente")
+    .gte("debut", new Date().toISOString());
   if (error) return 0;
   return count ?? 0;
 }
