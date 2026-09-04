@@ -1,6 +1,6 @@
 import type { MetadataRoute } from "next";
 
-const BASE_URL = "https://offside-world.vercel.app";
+import { URL_SITE as BASE_URL } from "@/lib/site";
 
 // Pages publiques indexables (on exclut /admin et /confirmation)
 const routes = [

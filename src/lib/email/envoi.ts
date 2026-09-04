@@ -23,6 +23,7 @@ import { EMAIL as EMAIL_CONTACT } from "@/data/entreprise";
  *   RESEND_API_KEY     clé d'API (type « Sensitive »)
  *   EMAIL_EXPEDITEUR   « Offside Foot Indoor <reservations@offsidefootindoor.be> »
  *   EMAIL_COMPLEXE     boîte qui reçoit les avis internes (défaut : contact du site)
+ *   EMAIL_API_URL      facultatif : autre point d'envoi (relais, bac à sable)
  */
 
 export interface Message {
@@ -34,7 +35,11 @@ export interface Message {
   repondreA?: string;
 }
 
-const POINT_DE_TERMINAISON = "https://api.resend.com/emails";
+/**
+ * Point d'envoi. Configurable pour pouvoir viser un relais interne ou un bac à
+ * sable lors des vérifications, sans toucher au code.
+ */
+const POINT_DE_TERMINAISON = process.env.EMAIL_API_URL || "https://api.resend.com/emails";
 
 export function emailConfigure(): boolean {
   return Boolean(process.env.RESEND_API_KEY && process.env.EMAIL_EXPEDITEUR);

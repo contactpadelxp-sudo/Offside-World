@@ -77,6 +77,7 @@ export interface CreneauReservable {
   id: string;
   type: TypeActivite;
   espaceId: string;
+  espaceNom: string;
   capacite: number;
   debut: Date;
   fin: Date;
@@ -95,7 +96,7 @@ export async function verifierCreneau(
 ): Promise<CreneauReservable | null> {
   const { data, error } = await base()
     .from("creneaux_disponibles")
-    .select("id, type, espace_id, capacite, debut, fin, libre")
+    .select("id, type, espace_id, espace_nom, capacite, debut, fin, libre")
     .eq("id", id)
     .eq("type", type)
     .maybeSingle();
@@ -111,6 +112,7 @@ export async function verifierCreneau(
     id: data.id,
     type: data.type,
     espaceId: data.espace_id,
+    espaceNom: data.espace_nom ?? data.espace_id,
     capacite: data.capacite,
     debut,
     fin: new Date(data.fin),

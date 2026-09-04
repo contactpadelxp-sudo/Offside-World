@@ -1,6 +1,6 @@
 import type { MetadataRoute } from "next";
 
-const BASE_URL = "https://offside-world.vercel.app";
+import { URL_SITE as BASE_URL } from "@/lib/site";
 
 export default function robots(): MetadataRoute.Robots {
   return {

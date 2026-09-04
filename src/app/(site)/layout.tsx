@@ -6,6 +6,7 @@ import { PhotosProvider } from "@/components/photos-provider";
 import { resolveLogoSrc } from "@/lib/logo";
 import { resolvePhotos } from "@/lib/photos";
 import { NOM_COMMERCIAL } from "@/data/entreprise";
+import { URL_SITE } from "@/lib/site";
 
 /**
  * Coquille du site public : en-tête, pied de page, bandeau cookies.
@@ -25,7 +26,7 @@ export const metadata: Metadata = {
     type: "website",
     locale: "fr_BE",
     siteName: NOM_COMMERCIAL,
-    url: "https://offside-world.vercel.app",
+    url: URL_SITE,
     title: `${NOM_COMMERCIAL} — Anniversaires foot, Bubble Foot & Team Building`,
     description:
       "Le complexe de foot indoor en Belgique. Anniversaires enfants dès 180 €, Bubble Foot, location de terrain et team building.",

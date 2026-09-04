@@ -3,6 +3,7 @@ import { base, baseConfiguree } from "@/lib/supabase/server";
 import { heure, jourISO, jourLisible, jourLisibleCap } from "@/lib/temps";
 import { lireOptions } from "@/lib/db/referentiel";
 import type { Database } from "@/lib/supabase/types";
+import type { RecapEmail } from "@/lib/email/modeles";
 import type {
   CreneauAdmin,
   DevisAdmin,
@@ -310,4 +311,53 @@ export async function lireJournal(limite = 150): Promise<EntreeJournal[]> {
       quand: `${jourLisibleCap(quand)} à ${heure(quand)}`,
     };
   });
+}
+
+/**
+ * Récapitulatif d'une réservation destiné à un e-mail.
+ *
+ * Relu depuis la base après une modification : l'action ne dispose que de
+ * l'identifiant, et il faut l'horaire, l'espace et la formule pour écrire un
+ * message compréhensible. Le contenu des allergies n'est PAS transmis — seul
+ * un indicateur l'est, le détail restant dans le back-office.
+ */
+export async function lireRecapEmail(id: string): Promise<RecapEmail | null> {
+  if (!baseConfiguree()) return null;
+
+  const [{ data, error }, options] = await Promise.all([
+    base().from("reservations_detaillees").select("*").eq("id", id).maybeSingle(),
+    lireOptions(),
+  ]);
+
+  if (error || !data || !data.reference || !data.type || !data.debut || !data.fin) return null;
+
+  const libelles = new Map(options.map((o) => [o.id, o.libelle]));
+  const debut = new Date(data.debut);
+
+  return {
+    reference: data.reference,
+    activite:
+      data.type === "anniversaire"
+        ? `Anniversaire — formule ${data.formule_nom ?? ""}`.trim()
+        : "Bubble Foot",
+    detail:
+      data.type === "anniversaire"
+        ? `${data.nb_enfants ?? "?"} enfants${
+            data.enfant_prenom
+              ? ` — ${data.enfant_prenom}${data.enfant_age ? `, ${data.enfant_age} ans` : ""}`
+              : ""
+          }`
+        : `${data.nb_personnes ?? "?"} personnes`,
+    jourLabel: jourLisibleCap(debut),
+    debut: heure(debut),
+    fin: heure(new Date(data.fin)),
+    espaceNom: data.espace_nom,
+    total: (data.total_cents ?? 0) / 100,
+    clientNom: data.client_nom ?? "",
+    clientEmail: data.client_email ?? "",
+    clientTelephone: data.client_telephone ?? "",
+    options: (data.options_ids ?? []).map((o) => libelles.get(o) ?? o),
+    allergieSignalee: Boolean(data.allergies),
+    remarques: data.remarques,
+  };
 }

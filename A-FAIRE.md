@@ -104,9 +104,17 @@ majuscules, accents, espaces et tirets. Voir `src/lib/photos.ts`.
       Brahim.
 - [ ] **Passer le dépôt GitHub en privé.** Tant qu'il est public, l'historique
       reste lisible, y compris les versions précédentes de ce fichier.
+- [ ] **Ouvrir un compte chez un fournisseur d'e-mails** (Resend par défaut),
+      y vérifier le domaine `offsidefootindoor.be`, puis renseigner
+      `RESEND_API_KEY`, `EMAIL_EXPEDITEUR` et `EMAIL_COMPLEXE` dans Vercel.
+      **Tant que ces variables sont absentes, aucun e-mail ne part** — le site
+      fonctionne, mais personne n'est prévenu de rien.
 - [ ] **Configurer DMARC et durcir SPF** sur `offsidefootindoor.be`, chez le
-      registrar. Sans cela, les e-mails de confirmation partiront en spam et
-      l'adresse pourra être usurpée.
+      registrar. Sans cela, les e-mails partiront en indésirable et l'adresse
+      pourra être usurpée. Le fournisseur donnera les enregistrements DNS à
+      ajouter : c'est le même travail.
+- [ ] **Renseigner `SITE_URL`** dès que le domaine définitif remplacera
+      l'adresse Vercel — les liens des e-mails et le sitemap en dépendent.
 - [ ] Ouvrir un compte **Stripe** avec Bancontact activé.
 - [ ] **Planifier les tâches d'entretien** en base (Supabase → Cron) :
       `anonymiser_reservations_anciennes` pour la minimisation RGPD, et
@@ -151,16 +159,14 @@ politique » sont le comportement voulu.
 
 **Ce qui reste à construire, par ordre d'urgence :**
 
-1. **Les e-mails.** C'est le trou le plus visible à l'usage. Personne n'est
-   prévenu d'une nouvelle réservation : Brahim doit penser à ouvrir le
-   back-office. Et surtout, le client n'est averti de rien — ni de
-   l'enregistrement de sa demande, ni de sa confirmation, ni de son
-   **annulation**. Aujourd'hui, annuler une réservation depuis le back-office
-   libère le créneau sans que le client l'apprenne.
-2. **Le paiement en ligne** (Stripe + Bancontact).
-3. **La modification des tarifs depuis le back-office.** Les prix viennent bien
+1. **Le paiement en ligne** (Stripe + Bancontact).
+2. **La modification des tarifs depuis le back-office.** Les prix viennent bien
    de la base, mais seule une intervention dans Supabase permet de les changer.
    Tant que les tarifs sont stables, ce n'est pas bloquant.
+
+**Les e-mails sont écrits et branchés** — demande enregistrée, devis reçu,
+réservation confirmée, réservation annulée, plus les deux avis internes. Il
+reste deux choses qui ne dépendent pas du code, voir plus bas.
 
 **Limite connue de l'authentification :** un seul identifiant, partagé. Le
 journal enregistre donc « qui » au sens du compte, pas de la personne. Le jour

@@ -1,9 +1,16 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { after } from "next/server";
 import { base } from "@/lib/supabase/server";
 import { journaliser, sessionCourante, type Session } from "@/lib/admin/session";
 import { SaisieInvalide, jour, texteFacultatif, uuid } from "@/lib/saisie";
+import { lireRecapEmail } from "@/lib/db/backoffice";
+import { envoyer } from "@/lib/email/envoi";
+import {
+  auClientReservationAnnulee,
+  auClientReservationConfirmee,
+} from "@/lib/email/modeles";
 import type { StatutDevis } from "@/lib/db/backoffice";
 
 /**
@@ -79,6 +86,14 @@ export async function confirmerReservation(id: string): Promise<Resultat> {
 
     await journaliser(session, "reservation.confirmee", data.reference);
     rafraichir();
+
+    // Le client doit l'apprendre. L'envoi a lieu après la réponse : le
+    // back-office ne reste pas bloqué sur le fournisseur d'e-mails.
+    after(async () => {
+      const recap = await lireRecapEmail(cible);
+      if (recap?.clientEmail) await envoyer(auClientReservationConfirmee(recap));
+    });
+
     return { ok: true, message: `Réservation ${data.reference} confirmée.` };
   } catch (e) {
     return echec(e);
@@ -105,9 +120,19 @@ export async function annulerReservation(id: string): Promise<Resultat> {
 
     await journaliser(session, "reservation.annulee", data.reference);
     rafraichir();
+
+    // Annuler sans prévenir le client, c'est le laisser venir pour rien.
+    after(async () => {
+      const recap = await lireRecapEmail(cible);
+      if (recap?.clientEmail) await envoyer(auClientReservationAnnulee(recap));
+    });
+
     // L'annulation retire la ligne de l'index unique partiel : le créneau
     // redevient réservable immédiatement.
-    return { ok: true, message: `Réservation ${data.reference} annulée, le créneau est libéré.` };
+    return {
+      ok: true,
+      message: `Réservation ${data.reference} annulée, le créneau est libéré. Le client en est informé par e-mail.`,
+    };
   } catch (e) {
     return echec(e);
   }

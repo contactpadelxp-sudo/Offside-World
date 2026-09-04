@@ -107,15 +107,15 @@ export async function lireTarifFormule(id: string): Promise<TarifFormule | null>
  */
 export async function lireTarifsOptions(
   ids: string[]
-): Promise<{ id: string; prixCents: number }[]> {
+): Promise<{ id: string; libelle: string; prixCents: number }[]> {
   if (ids.length === 0) return [];
 
   const { data, error } = await base()
     .from("options")
-    .select("id, prix_cents")
+    .select("id, libelle, prix_cents")
     .in("id", ids)
     .eq("actif", true);
 
   if (error || !data) return [];
-  return data.map((o) => ({ id: o.id, prixCents: o.prix_cents }));
+  return data.map((o) => ({ id: o.id, libelle: o.libelle, prixCents: o.prix_cents }));
 }

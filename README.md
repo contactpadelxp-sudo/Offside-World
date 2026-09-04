@@ -34,13 +34,53 @@ indisponible.
 | `SUPABASE_SERVICE_ROLE_KEY` | Clé de service — **jamais préfixée `NEXT_PUBLIC_`** |
 | `ADMIN_USER` | Identifiant du back-office |
 | `ADMIN_PASSWORD` | Mot de passe du back-office |
+| `RESEND_API_KEY` | Clé d'API du fournisseur d'e-mails |
+| `EMAIL_EXPEDITEUR` | `Offside Foot Indoor <reservations@offsidefootindoor.be>` |
+| `EMAIL_COMPLEXE` | Boîte qui reçoit les avis internes (défaut : contact du site) |
 
 Sans `ADMIN_USER` ni `ADMIN_PASSWORD`, `/admin` répond 404 : le back-office est
 fermé par défaut plutôt qu'ouvert par défaut.
 
-`ADMIN_SESSION_SECRET` est facultative : sans elle, la clé de signature des
-sessions est dérivée de `ADMIN_PASSWORD`. Conséquence voulue — changer le mot de
-passe met fin à toutes les sessions en cours.
+Trois variables facultatives :
+
+- `ADMIN_SESSION_SECRET` — sans elle, la clé de signature des sessions est
+  dérivée de `ADMIN_PASSWORD`. Conséquence voulue : changer le mot de passe met
+  fin à toutes les sessions en cours.
+- `SITE_URL` — adresse publique du site, utilisée par les métadonnées, le
+  sitemap, robots.txt et les liens dans les e-mails. Sans elle, l'adresse
+  Vercel actuelle sert de repli.
+- `EMAIL_API_URL` — autre point d'envoi pour les e-mails (relais interne, bac à
+  sable de vérification). Sans elle, l'API de Resend.
+
+Sans `RESEND_API_KEY` ni `EMAIL_EXPEDITEUR`, aucun e-mail n'est envoyé : l'envoi
+est simplement ignoré avec un avertissement dans les journaux. Rien d'autre ne
+change — une réservation reste enregistrée.
+
+## Les e-mails
+
+Transactionnels uniquement : informer quelqu'un d'une opération qu'il vient de
+déclencher. Aucune newsletter — le consentement marketing est recueilli et
+horodaté en base, mais rien ne s'en sert, et rien ne doit s'en servir avant
+qu'un mécanisme de désinscription existe.
+
+| Événement | Client | Complexe |
+|-----------|--------|----------|
+| Réservation enregistrée | ✓ | ✓ |
+| Demande de devis | ✓ | ✓ |
+| Réservation confirmée | ✓ | |
+| Réservation annulée | ✓ | |
+
+Trois règles tenues par `src/lib/email/` :
+
+- **Un envoi raté ne fait jamais échouer une réservation.** Les erreurs sont
+  avalées et journalisées ; la réservation est déjà en base, c'est elle qui fait
+  foi.
+- **Le client n'attend pas le fournisseur.** L'envoi passe par `after()`, donc
+  après la réponse.
+- **Le contenu des allergies ne part pas par e-mail.** L'avis interne signale
+  qu'une allergie a été renseignée et renvoie au back-office, sans en recopier
+  le détail : c'est une donnée de santé concernant un enfant, et la dupliquer
+  dans une boîte aux lettres n'apporte rien.
 
 ## Le back-office
 

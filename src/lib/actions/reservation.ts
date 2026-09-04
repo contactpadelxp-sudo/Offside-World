@@ -1,5 +1,6 @@
 "use server";
 
+import { after } from "next/server";
 import { headers } from "next/headers";
 import { verifierCreneau } from "@/lib/db/creneaux";
 import {
@@ -12,6 +13,16 @@ import {
   enregistrerReservation,
   expirerReservationsAbandonnees,
 } from "@/lib/db/reservations";
+import { envoyerTous } from "@/lib/email/envoi";
+import {
+  auClientDevisRecu,
+  auClientReservationEnregistree,
+  auComplexeNouveauDevis,
+  auComplexeNouvelleReservation,
+  type DevisEmail,
+  type RecapEmail,
+} from "@/lib/email/modeles";
+import { heure, jourLisibleCap } from "@/lib/temps";
 import { autoriser } from "@/lib/limiteur";
 import { baseConfiguree } from "@/lib/supabase/server";
 import { SaisieInvalide, booleen, email, entier, identifiants, jour, telephone, texte, texteFacultatif, uuid, vrai } from "@/lib/saisie";
@@ -173,6 +184,28 @@ export async function reserverAnniversaire(saisie: SaisieAnniversaire): Promise<
       remarques,
     });
 
+    // Les e-mails partent APRÈS la réponse : le client n'attend pas le
+    // fournisseur, et un envoi raté ne remet pas la réservation en cause.
+    const recap: RecapEmail = {
+      reference,
+      activite: `Anniversaire — formule ${formule.nom}`,
+      detail: `${nbEnfants} enfants — ${enfantPrenom}${enfantAge ? `, ${enfantAge} ans` : ""}`,
+      jourLabel: jourLisibleCap(creneau.debut),
+      debut: heure(creneau.debut),
+      fin: heure(creneau.fin),
+      espaceNom: creneau.espaceNom,
+      total: totalCents / 100,
+      clientNom,
+      clientEmail,
+      clientTelephone,
+      options: tarifsOptions.map((o) => o.libelle),
+      allergieSignalee: Boolean(allergies),
+      remarques,
+    };
+    after(() =>
+      envoyerTous([auClientReservationEnregistree(recap), auComplexeNouvelleReservation(recap)])
+    );
+
     return { ok: true, reference, total: totalCents / 100 };
   } catch (e) {
     return enEchec(e);
@@ -241,6 +274,24 @@ export async function reserverBubble(saisie: SaisieBubble): Promise<Resultat> {
       remarques,
     });
 
+    const recap: RecapEmail = {
+      reference,
+      activite: "Bubble Foot",
+      detail: `${nbPersonnes} personnes`,
+      jourLabel: jourLisibleCap(creneau.debut),
+      debut: heure(creneau.debut),
+      fin: heure(creneau.fin),
+      espaceNom: creneau.espaceNom,
+      total: totalCents / 100,
+      clientNom,
+      clientEmail,
+      clientTelephone,
+      remarques,
+    };
+    after(() =>
+      envoyerTous([auClientReservationEnregistree(recap), auComplexeNouvelleReservation(recap)])
+    );
+
     return { ok: true, reference, total: totalCents / 100 };
   } catch (e) {
     return enEchec(e);
@@ -298,6 +349,19 @@ export async function demanderDevis(saisie: SaisieDevis): Promise<Resultat> {
       newsletter: booleen(saisie?.newsletter),
       cgv_acceptees_le: new Date().toISOString(),
     });
+
+    const demande: DevisEmail = {
+      reference,
+      entreprise,
+      contactNom,
+      contactEmail,
+      contactTelephone,
+      dateSouhaitee: jourLisibleCap(new Date(`${dateSouhaitee}T12:00:00Z`)),
+      periode: periode === "matin" ? "Matin" : "Après-midi",
+      nbParticipants,
+      message,
+    };
+    after(() => envoyerTous([auClientDevisRecu(demande), auComplexeNouveauDevis(demande)]));
 
     // Un devis n'a pas de montant : il sera chiffré par le complexe.
     return { ok: true, reference, total: 0 };

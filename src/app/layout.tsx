@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Space_Grotesk, DM_Sans, JetBrains_Mono } from "next/font/google";
 import { NOM_COMMERCIAL } from "@/data/entreprise";
+import { URL_SITE } from "@/lib/site";
 import "./globals.css";
 
 /**
@@ -33,7 +34,7 @@ const jetBrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://offside-world.vercel.app"),
+  metadataBase: new URL(URL_SITE),
   title: NOM_COMMERCIAL,
 };
 
