@@ -192,6 +192,10 @@ Attention : le CLI peut réécrire `src/app/globals.css` et y remettre
 
 ## Déploiement
 
+La procédure de bascule du domaine et d'activation des e-mails est détaillée
+dans [`MISE-EN-LIGNE.md`](./MISE-EN-LIGNE.md), avec l'état DNS relevé et le
+piège à éviter.
+
 ```bash
 npm run build
 ```

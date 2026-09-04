@@ -104,28 +104,16 @@ majuscules, accents, espaces et tirets. Voir `src/lib/photos.ts`.
       Brahim.
 - [ ] **Passer le dépôt GitHub en privé.** Tant qu'il est public, l'historique
       reste lisible, y compris les versions précédentes de ce fichier.
-- [ ] **Ouvrir un compte chez un fournisseur d'e-mails** (Resend par défaut),
-      y vérifier le domaine `offsidefootindoor.be`, puis renseigner
-      `RESEND_API_KEY`, `EMAIL_EXPEDITEUR` et `EMAIL_COMPLEXE` dans Vercel.
-      **Tant que ces variables sont absentes, aucun e-mail ne part** — le site
-      fonctionne, mais personne n'est prévenu de rien.
-- [ ] **Compléter l'authentification e-mail du domaine.** État relevé le
-      4 septembre 2026 sur `offsidefootindoor.be` :
-      - zone DNS gérée par **Wix** (`ns10.wixdns.net`) — c'est là que se font
-        les changements, pas chez le registrar ;
-      - **SPF présent** : `v=spf1 include:_spf.google.com ~all` — seul Google
-        est autorisé à envoyer. Ajouter un autre expéditeur demandera de
-        compléter cet enregistrement ;
-      - **DKIM absent**, y compris pour Google Workspace
-        (`google._domainkey` n'existe pas) ;
-      - **DMARC absent** (`_dmarc` n'existe pas).
-      À faire, dans l'ordre : activer DKIM dans la console Google Workspace,
-      ajouter les enregistrements du fournisseur d'e-mails, puis publier un
-      DMARC en `p=none` le temps de lire les rapports, avant de le durcir.
-- [ ] **Faire pointer le domaine sur le nouveau site.** `offsidefootindoor.be`
-      sert aujourd'hui le site Wix (A vers 185.230.63.x, `www` vers
-      `cdn1.wixdns.net`). Le nouveau site n'est accessible que par son adresse
-      Vercel.
+- [ ] **Ouvrir un compte Resend** (choix acté), y vérifier le domaine, puis
+      renseigner `RESEND_API_KEY`, `EMAIL_EXPEDITEUR` et `EMAIL_COMPLEXE` dans
+      Vercel. **Tant que ces variables sont absentes, aucun e-mail ne part** —
+      le site fonctionne, mais personne n'est prévenu de rien. Détail dans
+      `MISE-EN-LIGNE.md`.
+- [ ] **Basculer le domaine et activer les e-mails.** Le domaine appartient à
+      Brahim ; il sert encore le site Wix, et rien n'autorise encore l'envoi
+      d'e-mails automatiques. La marche à suivre complète, avec l'état DNS
+      relevé et le piège à éviter (déplacer les serveurs de noms couperait la
+      messagerie de Brahim), est dans **`MISE-EN-LIGNE.md`**.
 - [ ] **Renseigner `SITE_URL`** dès que le domaine définitif remplacera
       l'adresse Vercel — les liens des e-mails et le sitemap en dépendent.
 - [ ] Ouvrir un compte **Stripe** avec Bancontact activé.
