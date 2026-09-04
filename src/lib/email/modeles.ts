@@ -283,3 +283,29 @@ export function auComplexeNouveauDevis(d: DevisEmail): Message {
     d.contactEmail
   );
 }
+
+// ── Vérification ─────────────────────────────────────────────────────────────
+
+/**
+ * Message de test, envoyé depuis le back-office.
+ *
+ * Il emprunte exactement le même chemin qu'un vrai e-mail — même expéditeur,
+ * même gabarit, même fournisseur — pour que le réussir prouve quelque chose.
+ */
+export function emailDeTest(destinataire: string, acteur: string): Message {
+  return composer(
+    destinataire,
+    `Test d'envoi — ${NOM_COMMERCIAL}`,
+    "L'envoi d'e-mails fonctionne",
+    "Ce message a été déclenché depuis le back-office. S'il est arrivé, la chaîne complète est en place.",
+    [
+      { cle: "Déclenché par", valeur: acteur },
+      { cle: "Expéditeur", valeur: process.env.EMAIL_EXPEDITEUR ?? "—" },
+    ],
+    [
+      "S'il est arrivé dans les indésirables, ouvrez ses en-têtes complets et vérifiez que <code>spf</code>, <code>dkim</code> et <code>dmarc</code> affichent tous <code>pass</code>.",
+      "Aucune réservation n'a été créée par ce test.",
+    ],
+    EMAIL
+  );
+}

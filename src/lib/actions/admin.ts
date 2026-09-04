@@ -7,6 +7,7 @@ import { journaliser, sessionCourante, type Session } from "@/lib/admin/session"
 import {
   SaisieInvalide,
   booleen,
+  email,
   entier,
   jour,
   lignes,
@@ -15,11 +16,13 @@ import {
   texteFacultatif,
   uuid,
 } from "@/lib/saisie";
+import { autoriser } from "@/lib/limiteur";
 import { lireRecapEmail } from "@/lib/db/backoffice";
-import { envoyer } from "@/lib/email/envoi";
+import { diagnosticEmail, envoyer, envoyerEnRemontantLErreur } from "@/lib/email/envoi";
 import {
   auClientReservationAnnulee,
   auClientReservationConfirmee,
+  emailDeTest,
 } from "@/lib/email/modeles";
 import type { StatutDevis } from "@/lib/db/backoffice";
 
@@ -453,5 +456,50 @@ export async function modifierOption(id: string, saisie: SaisieOption): Promise<
     return { ok: true, message: "Option enregistrée." };
   } catch (e) {
     return echec(e);
+  }
+}
+
+// ── Vérification de l'envoi d'e-mails ────────────────────────────────────────
+
+/**
+ * Envoie un e-mail de test.
+ *
+ * Il emprunte exactement le même chemin qu'un vrai message — même expéditeur,
+ * même gabarit, même fournisseur : le réussir prouve donc quelque chose. Et
+ * contrairement aux envois automatiques, l'échec est REMONTÉ ici plutôt
+ * qu'avalé : c'est le seul cas où l'on veut voir l'erreur du fournisseur.
+ *
+ * Deux tests par tranche de cinq minutes : de quoi vérifier une configuration
+ * sans transformer le back-office en outil d'envoi.
+ */
+export async function envoyerEmailTest(destinataire: string): Promise<Resultat> {
+  const session = await garde();
+  if (!session) return REFUS_SESSION;
+
+  try {
+    const adresse = email(destinataire, "Adresse de test");
+
+    if (!autoriser(`test-email:${session.acteur}`, 2, 5 * 60_000)) {
+      return { ok: false, message: "Deux tests par tranche de cinq minutes. Patientez un peu." };
+    }
+
+    const diagnostic = diagnosticEmail();
+    if (!diagnostic.configure) {
+      return {
+        ok: false,
+        message:
+          "Aucun fournisseur d'e-mails configuré : renseignez RESEND_API_KEY et EMAIL_EXPEDITEUR dans Vercel, puis redéployez.",
+      };
+    }
+
+    await envoyerEnRemontantLErreur(emailDeTest(adresse, session.acteur));
+    await journaliser(session, "email.test", adresse);
+    return { ok: true, message: `Message envoyé à ${adresse}. Vérifiez la boîte, et les indésirables.` };
+  } catch (e) {
+    if (e instanceof SaisieInvalide) return { ok: false, message: e.message };
+    // Ici on montre l'erreur du fournisseur : c'est précisément ce qu'on cherche.
+    const detail = e instanceof Error ? e.message : String(e);
+    console.error("Test d'e-mail :", e);
+    return { ok: false, message: `Refusé par le fournisseur : ${detail.slice(0, 300)}` };
   }
 }

@@ -116,6 +116,7 @@ cette trace fait partie des mesures attendues d'un responsable de traitement.
 | `/admin/creneaux` | Back-office — ouverture et fermeture des créneaux |
 | `/admin/tarifs` | Back-office — prix des formules et des options |
 | `/admin/journal` | Back-office — journal des actions |
+| `/admin/reglages` | Back-office — état de la configuration et test d'envoi |
 | `/mentions-legales` | Mentions légales |
 | `/confidentialite` | Politique de confidentialité (RGPD) |
 | `/politique-cookies` | Politique cookies |

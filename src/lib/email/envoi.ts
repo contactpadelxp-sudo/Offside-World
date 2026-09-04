@@ -95,6 +95,41 @@ export async function envoyer(message: Message): Promise<void> {
   }
 }
 
+/**
+ * État de la configuration, pour l'afficher dans le back-office.
+ *
+ * Ne divulgue JAMAIS la clé d'API — seulement si elle est présente. Le
+ * back-office est authentifié, mais une valeur secrète qui n'a aucune raison
+ * d'être affichée n'a aucune raison d'être renvoyée.
+ */
+export interface DiagnosticEmail {
+  configure: boolean;
+  cle: boolean;
+  expediteur: string | null;
+  complexe: string;
+  /** Vrai si l'envoi vise autre chose que Resend (relais, bac à sable). */
+  pointPersonnalise: boolean;
+}
+
+export function diagnosticEmail(): DiagnosticEmail {
+  return {
+    configure: emailConfigure(),
+    cle: Boolean(process.env.RESEND_API_KEY),
+    expediteur: process.env.EMAIL_EXPEDITEUR || null,
+    complexe: adresseComplexe(),
+    pointPersonnalise: Boolean(process.env.EMAIL_API_URL),
+  };
+}
+
+/**
+ * Comme `envoyer`, mais remonte l'échec au lieu de l'avaler.
+ * Réservé à l'envoi de test : c'est le seul cas où l'on veut voir l'erreur.
+ */
+export async function envoyerEnRemontantLErreur(message: Message): Promise<void> {
+  if (!emailConfigure()) throw new Error("Fournisseur d'e-mails non configuré.");
+  await appelerFournisseur(message);
+}
+
 /** Envoie plusieurs messages sans qu'un échec n'empêche les autres. */
 export async function envoyerTous(messages: Message[]): Promise<void> {
   await Promise.all(messages.map(envoyer));

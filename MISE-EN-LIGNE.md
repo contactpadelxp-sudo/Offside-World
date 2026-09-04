@@ -123,6 +123,22 @@ tout courrier légitime qu'on aurait oublié d'autoriser.
 Redéployer. **L'adresse d'expédition doit être sur le domaine vérifié chez
 Resend**, sinon les envois sont refusés.
 
+### e. Vérifier depuis le back-office
+
+`/admin/reglages` affiche l'état réel de la configuration et permet
+d'**envoyer un e-mail de test** sans créer de réservation. Le message emprunte
+exactement le même chemin qu'un vrai — même expéditeur, même gabarit, même
+fournisseur — et l'erreur du fournisseur est affichée telle quelle en cas de
+refus. C'est l'endroit où revenir après chaque changement DNS.
+
+Tant que rien n'est configuré, un bandeau le rappelle sur toutes les pages du
+back-office. Il disparaît de lui-même une fois les variables renseignées.
+
+**Avant qu'un domaine soit vérifié chez Resend**, on peut déjà tout tester :
+mettre `EMAIL_EXPEDITEUR` à `Offside <onboarding@resend.dev>` et envoyer le
+test vers l'adresse du titulaire du compte Resend — la seule autorisée dans ce
+mode.
+
 ---
 
 ## 3. Vérifier

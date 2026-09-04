@@ -36,6 +36,7 @@ const LIBELLES_ACTION: Record<string, string> = {
   "creneaux.generes": "Créneaux générés",
   "formule.modifiee": "Formule modifiée",
   "option.modifiee": "Option modifiée",
+  "email.test": "E-mail de test envoyé",
 };
 
 /**

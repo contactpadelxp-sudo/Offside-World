@@ -1,4 +1,7 @@
+import Link from "next/link";
 import { BarreAdmin } from "@/components/admin/barre";
+import { emailConfigure } from "@/lib/email/envoi";
+import { AlerteTriangle } from "@/components/icons";
 import { exigerSession } from "@/lib/admin/session";
 import { compterAConfirmer, compterDevisANouveau } from "@/lib/db/backoffice";
 import { expirerReservationsAbandonnees } from "@/lib/db/reservations";
@@ -34,6 +37,28 @@ export default async function GabaritProtege({
   return (
     <>
       <BarreAdmin acteur={session.acteur} aConfirmer={aConfirmer} devisNouveaux={devisNouveaux} />
+
+      {/*
+        Les e-mails sont ignorés en silence quand le fournisseur n'est pas
+        configuré : le site continue de fonctionner, mais personne n'est
+        prévenu de rien. « En silence » est le problème — on le dit, partout,
+        tant que ce n'est pas réglé. Le bandeau disparaît de lui-même ensuite.
+      */}
+      {!emailConfigure() && (
+        <div className="border-b border-kick/25 bg-kick/10">
+          <p className="mx-auto flex max-w-6xl items-start gap-2 px-4 py-2.5 text-sm text-kick">
+            <AlerteTriangle className="mt-0.5 size-4 shrink-0" />
+            <span>
+              Aucun e-mail n&apos;est envoyé : ni le client ni vous n&apos;êtes prévenus des
+              nouvelles réservations.{" "}
+              <Link href="/admin/reglages" className="font-semibold underline">
+                Voir les réglages
+              </Link>
+            </span>
+          </p>
+        </div>
+      )}
+
       <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-8">{children}</main>
     </>
   );
