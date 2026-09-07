@@ -277,6 +277,13 @@ export const Graphique: IconType = (p) => (
   </Svg>
 );
 
+/** Plume — section « Blog » du back-office. */
+export const Plume: IconType = (p) => (
+  <Svg {...p}>
+    <path d="M20.6 3.4C13.9 3.9 9.2 6.5 7 10.9c-1.2 2.4-1.4 5-.7 7.3l-2.2 2.2 1.7 1.7 2.2-2.2c2.3.7 4.9.5 7.3-.7 4.4-2.2 7-6.9 7.5-13.6l.1-2.3-2.3.1Zm-2.2 2.9c-.7 4.6-2.6 7.8-5.5 9.5l4.2-6.6-7.5 5.2c1.5-3.5 4.6-6.7 8.8-8.1Z" />
+  </Svg>
+);
+
 export const Calendrier: IconType = (p) => (
   <Svg {...p}>
     <path d="M7.4 2h2.4v4H7.4zM14.2 2h2.4v4h-2.4z" />

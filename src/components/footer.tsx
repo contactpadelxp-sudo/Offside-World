@@ -39,6 +39,7 @@ export function Footer({ logoSrc }: { logoSrc: string | null }) {
                   { label: "Bubble Foot", href: "/reservation?activite=groupes" },
                   { label: "Louer un terrain", href: "/reservation?activite=foot" },
                   { label: "Team Building", href: "/reservation?activite=groupes" },
+                  { label: "Blog", href: "/blog" },
                 ].map((item) => (
                   <li key={item.label}>
                     <Link href={item.href} className="text-sm text-white/60 hover:text-white transition-colors duration-300 inline-flex min-h-6 items-center gap-1 py-0.5 group">

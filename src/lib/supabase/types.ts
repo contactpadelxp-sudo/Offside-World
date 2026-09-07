@@ -218,6 +218,45 @@ export type Database = {
         }
         Relationships: []
       }
+      articles: {
+        Row: {
+          chapo: string | null
+          corps: string
+          cree_le: string
+          id: string
+          image: string | null
+          modifie_le: string
+          publie: boolean
+          publie_le: string | null
+          slug: string
+          titre: string
+        }
+        Insert: {
+          chapo?: string | null
+          corps?: string
+          cree_le?: string
+          id?: string
+          image?: string | null
+          modifie_le?: string
+          publie?: boolean
+          publie_le?: string | null
+          slug: string
+          titre: string
+        }
+        Update: {
+          chapo?: string | null
+          corps?: string
+          cree_le?: string
+          id?: string
+          image?: string | null
+          modifie_le?: string
+          publie?: boolean
+          publie_le?: string | null
+          slug?: string
+          titre?: string
+        }
+        Relationships: []
+      }
       evenements_audience: {
         Row: {
           appareil: string | null

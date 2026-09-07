@@ -14,6 +14,7 @@ import { motion, AnimatePresence } from "framer-motion";
 const navLinksLeft = [
   { label: "Accueil", href: "/" },
   { label: "Anniversaires", href: "/reservation?activite=anniversaire" },
+  { label: "Blog", href: "/blog" },
 ];
 
 const navLinksRight = [
