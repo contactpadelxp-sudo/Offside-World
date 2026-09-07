@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Editeur } from "@/components/admin/editeur";
-import { enregistrerArticle, supprimerArticle } from "@/lib/actions/blog";
+import { enregistrerArticle, supprimerArticle, televerserImage } from "@/lib/actions/blog";
+import { preparerImage } from "@/lib/blog/image-client";
 import type { ArticleComplet } from "@/lib/db/blog";
 import { versSlugClient } from "@/lib/blog/slug-client";
 import {
@@ -46,6 +47,27 @@ export function FormulaireArticle({ a }: { a: ArticleComplet }) {
   const router = useRouter();
   const { enCours, occupe, retour, lancer } = useAction();
   const [confirmeSuppression, setConfirmeSuppression] = useState(false);
+  const champCouverture = useRef<HTMLInputElement>(null);
+  const [envoiCouverture, setEnvoiCouverture] = useState<string | null>(null);
+
+  /** Dépose la photo de couverture. Même chemin que dans l'éditeur. */
+  const deposerCouverture = async (fichier: File) => {
+    setEnvoiCouverture("Envoi…");
+    try {
+      const pret = await preparerImage(fichier);
+      const donnees = new FormData();
+      donnees.append("fichier", pret);
+      const r = await televerserImage(donnees);
+      if (r.ok && r.url) {
+        setV((p) => ({ ...p, image: r.url as string }));
+        setEnvoiCouverture(null);
+      } else {
+        setEnvoiCouverture(r.message ?? "L'envoi a échoué.");
+      }
+    } catch {
+      setEnvoiCouverture("L'envoi a échoué. Réessayez.");
+    }
+  };
 
   const [v, setV] = useState({
     titre: a.titre,
@@ -95,16 +117,44 @@ export function FormulaireArticle({ a }: { a: ArticleComplet }) {
           </div>
           <div>
             <label className={ETIQUETTE} htmlFor="image">
-              Image de couverture — chemin ou adresse, facultatif
+              Image de couverture — facultative
             </label>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => champCouverture.current?.click()}
+                className={BOUTON_NEUTRE}
+              >
+                {v.image ? "Remplacer" : "Choisir une image"}
+              </button>
+              {v.image && (
+                <>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={v.image} alt="" className="h-10 w-16 rounded-lg object-cover" />
+                  <button
+                    type="button"
+                    onClick={() => setV({ ...v, image: "" })}
+                    className={BOUTON_NEUTRE}
+                  >
+                    Retirer
+                  </button>
+                </>
+              )}
+            </div>
             <input
-              id="image"
-              className={CHAMP}
-              value={v.image}
-              maxLength={400}
-              placeholder="/images/bubble-foot.jpg"
-              onChange={(e) => setV({ ...v, image: e.target.value })}
+              ref={champCouverture}
+              type="file"
+              accept="image/jpeg,image/png,image/webp,image/avif,image/gif"
+              className="hidden"
+              onChange={(e) => {
+                const f = e.target.files?.[0];
+                e.target.value = "";
+                if (f) void deposerCouverture(f);
+              }}
             />
+            {envoiCouverture && (
+              <p className="mt-1 text-xs text-muted-foreground">{envoiCouverture}</p>
+            )}
           </div>
         </div>
 

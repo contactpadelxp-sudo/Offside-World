@@ -176,3 +176,73 @@ export async function supprimerArticle(id: string): Promise<Resultat> {
     return echec(e);
   }
 }
+
+// ---------------------------------------------------------------------------
+// Images
+// ---------------------------------------------------------------------------
+
+/** Ce que le seau de stockage accepte. Répété ici : on ne compte pas sur lui. */
+const TYPES_IMAGE = new Set([
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+  "image/avif",
+  "image/gif",
+]);
+const TAILLE_MAX = 5 * 1024 * 1024;
+
+export interface ResultatImage {
+  ok: boolean;
+  url?: string;
+  message?: string;
+}
+
+/**
+ * Reçoit une image depuis l'éditeur et renvoie son adresse publique.
+ *
+ * SANS CETTE FONCTION, LE BLOG NE TIENT PAS SA PROMESSE. Brahim devrait sinon
+ * saisir le chemin d'un fichier déjà présent dans le dépôt — donc demander à
+ * un développeur, et attendre un redéploiement, pour chaque photo. Un article
+ * de complexe sportif sans photo n'a pas d'intérêt.
+ *
+ * Le nom du fichier envoyé n'est JAMAIS réutilisé : on le remplace par un
+ * identifiant tiré au hasard. Un nom d'origine peut contenir des séparateurs
+ * de chemin, des caractères qui changent de sens selon le système, ou tout
+ * simplement le nom d'un client.
+ */
+export async function televerserImage(donnees: FormData): Promise<ResultatImage> {
+  const session = await garde();
+  if (!session) return { ok: false, message: REFUS_SESSION.message };
+
+  try {
+    const fichier = donnees.get("fichier");
+    if (!(fichier instanceof File) || fichier.size === 0) {
+      return { ok: false, message: "Aucun fichier reçu." };
+    }
+    if (!TYPES_IMAGE.has(fichier.type)) {
+      return {
+        ok: false,
+        message: "Format non accepté. Utilisez une image JPEG, PNG, WebP, AVIF ou GIF.",
+      };
+    }
+    if (fichier.size > TAILLE_MAX) {
+      return { ok: false, message: "Image trop lourde : 5 Mo maximum." };
+    }
+
+    const extension = (fichier.type.split("/")[1] ?? "jpg").replace("jpeg", "jpg");
+    const chemin = `${new Date().getFullYear()}/${crypto.randomUUID()}.${extension}`;
+
+    const { error } = await base()
+      .storage.from("blog")
+      .upload(chemin, fichier, { contentType: fichier.type, upsert: false });
+    if (error) throw error;
+
+    const { data } = base().storage.from("blog").getPublicUrl(chemin);
+    await journaliser(session, "article.image", chemin);
+
+    return { ok: true, url: data.publicUrl };
+  } catch (e) {
+    console.error("Blog — téléversement :", e);
+    return { ok: false, message: "L'envoi de l'image a échoué. Réessayez." };
+  }
+}

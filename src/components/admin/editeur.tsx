@@ -1,9 +1,11 @@
 "use client";
 
-import { useCallback } from "react";
+import { useCallback, useRef, useState } from "react";
 import { EditorContent, useEditor, type Editor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Image from "@tiptap/extension-image";
+import { televerserImage } from "@/lib/actions/blog";
+import { preparerImage } from "@/lib/blog/image-client";
 
 /**
  * Éditeur visuel des articles.
@@ -64,6 +66,9 @@ export function Editeur({
   valeur: string;
   onChange: (html: string) => void;
 }) {
+  const champFichier = useRef<HTMLInputElement>(null);
+  const [envoi, setEnvoi] = useState<string | null>(null);
+
   const editeur = useEditor({
     // Obligatoire avec le rendu serveur de Next : sans ça, le premier rendu
     // du navigateur diffère de celui du serveur et React se plaint.
@@ -102,13 +107,41 @@ export function Editeur({
     editeur.chain().focus().extendMarkRange("link").setLink({ href: saisi.trim() }).run();
   }, [editeur]);
 
-  const poserImage = useCallback(() => {
-    if (!editeur) return;
-    const src = window.prompt("Adresse de l'image (par exemple /images/bubble.jpg)");
-    if (!src?.trim()) return;
-    const alt = window.prompt("Décrivez l'image en quelques mots (pour les non-voyants)") ?? "";
-    editeur.chain().focus().setImage({ src: src.trim(), alt: alt.trim() }).run();
-  }, [editeur]);
+  /**
+   * Dépose une image depuis l'ordinateur ou le téléphone.
+   *
+   * Un vrai sélecteur de fichier, et non une adresse à saisir : demander une
+   * URL à quelqu'un qui vient de prendre une photo revient à lui demander de
+   * ne pas en mettre. L'image est réduite dans le navigateur avant l'envoi —
+   * voir `image-client.ts`.
+   */
+  const choisirImage = useCallback(
+    async (fichier: File) => {
+      if (!editeur) return;
+      setEnvoi("Préparation de l'image…");
+      try {
+        const pret = await preparerImage(fichier);
+        setEnvoi("Envoi en cours…");
+        const donnees = new FormData();
+        donnees.append("fichier", pret);
+        const r = await televerserImage(donnees);
+        if (!r.ok || !r.url) {
+          setEnvoi(r.message ?? "L'envoi a échoué.");
+          return;
+        }
+        // Le texte alternatif décrit l'image aux personnes qui ne la voient
+        // pas, et s'affiche si elle ne charge pas. On le demande APRÈS l'envoi :
+        // le poser avant ferait attendre pour rien en cas d'échec.
+        const alt =
+          window.prompt("Décrivez l'image en quelques mots (facultatif)")?.trim() ?? "";
+        editeur.chain().focus().setImage({ src: r.url, alt }).run();
+        setEnvoi(null);
+      } catch {
+        setEnvoi("L'envoi a échoué. Réessayez.");
+      }
+    },
+    [editeur]
+  );
 
   if (!editeur) {
     return (
@@ -161,7 +194,12 @@ export function Editeur({
         <Outil editeur={editeur} titre="Lien" actif={editeur.isActive("link")} onClick={poserLien}>
           Lien
         </Outil>
-        <Outil editeur={editeur} titre="Image" actif={false} onClick={poserImage}>
+        <Outil
+          editeur={editeur}
+          titre="Insérer une image"
+          actif={false}
+          onClick={() => champFichier.current?.click()}
+        >
           Image
         </Outil>
 
@@ -176,6 +214,24 @@ export function Editeur({
           </Outil>
         </span>
       </div>
+
+      <input
+        ref={champFichier}
+        type="file"
+        accept="image/jpeg,image/png,image/webp,image/avif,image/gif"
+        className="hidden"
+        onChange={(e) => {
+          const f = e.target.files?.[0];
+          // On vide le champ tout de suite : sans ça, redéposer DEUX FOIS la
+          // même photo ne déclencherait rien la seconde fois.
+          e.target.value = "";
+          if (f) void choisirImage(f);
+        }}
+      />
+
+      {envoi && (
+        <p className="border-t border-border px-4 py-2 text-sm text-muted-foreground">{envoi}</p>
+      )}
 
       <EditorContent editor={editeur} />
     </div>

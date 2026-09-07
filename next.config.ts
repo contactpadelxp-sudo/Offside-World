@@ -8,6 +8,31 @@ const isPreview = process.env.VERCEL_ENV === "preview";
 const preview = (hosts: string) => (isPreview ? ` ${hosts}` : "");
 
 /**
+ * Origine du stockage des images du blog.
+ *
+ * Les photos déposées par le back-office sont servies par Supabase Storage,
+ * donc par un autre hôte que le site. Sans cette origine dans `img-src`, elles
+ * se téléversent sans erreur mais ne s'affichent JAMAIS — le navigateur les
+ * bloque en silence, côté visiteur comme dans l'éditeur. C'est le genre de
+ * panne qu'on ne découvre qu'en production.
+ *
+ * On ajoute cette seule origine, et non `https:` : ce dernier a été retiré
+ * exprès (voir plus bas), parce qu'il autorise n'importe quel hôte et permet
+ * donc d'exfiltrer des données par une balise <img>. Elle est déduite de la
+ * variable d'environnement plutôt qu'écrite en dur, pour qu'un changement de
+ * projet Supabase n'oblige pas à se souvenir de ce fichier.
+ */
+const origineStockage = (() => {
+  const brut = process.env.SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL;
+  if (!brut) return "";
+  try {
+    return ` ${new URL(brut).origin}`;
+  } catch {
+    return "";
+  }
+})();
+
+/**
  * Politique de sécurité du contenu (CSP).
  * Chaque assouplissement conservé ci-dessous a été vérifié sur le build réel
  * (Next 16.2.7, Turbopack) : ce ne sont pas des précautions de principe.
@@ -32,9 +57,10 @@ const preview = (hosts: string) => (isPreview ? ` ${hosts}` : "");
  *   en noModule — donc jamais chargé par un navigateur moderne. three, lenis et
  *   framer-motion en sont exempts. Conservé en développement, où React s'en sert
  *   pour reconstruire les traces d'erreur.
- * - img-src https: et blob: : aucune image distante, aucun remotePatterns, tout
- *   passe par /_next/image en même origine. `https:` autorisait n'importe quel
- *   hôte, donc l'exfiltration de données par une balise <img>.
+ * - img-src https: et blob: : `https:` autorisait n'importe quel hôte, donc
+ *   l'exfiltration de données par une balise <img>. Depuis l'ajout du blog, une
+ *   seule origine distante est admise — celle du stockage Supabase, déduite de
+ *   SUPABASE_URL (voir `origineStockage` plus haut) — et non un joker.
  * - font-src data: : les trois familles next/font/google sont téléchargées au
  *   build et auto-hébergées en .woff2. Aucune @font-face en data:.
  * - worker-src blob: devient 'none' : aucun `new Worker` dans le projet ni dans
@@ -56,7 +82,7 @@ const csp = [
   `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""}${preview("https://vercel.live")}`,
   "script-src-attr 'none'",
   `style-src 'self' 'unsafe-inline'${preview("https://vercel.live")}`,
-  `img-src 'self' data:${preview("https://vercel.live https://vercel.com")}`,
+  `img-src 'self' data:${origineStockage}${preview("https://vercel.live https://vercel.com")}`,
   `font-src 'self'${preview("https://vercel.live https://assets.vercel.com")}`,
   `connect-src 'self'${preview("https://vercel.live wss://ws-us3.pusher.com")}`,
   "media-src 'self'",
