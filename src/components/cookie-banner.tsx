@@ -5,10 +5,24 @@ import { Button } from "@/components/ui/button";
 import { Coche, Cookie, Croix, Reglages } from "@/components/icons";
 import { motion, AnimatePresence } from "framer-motion";
 
+/*
+  La catégorie « Marketing » a été retirée : elle proposait au visiteur de
+  consentir à de la publicité ciblée et à du retargeting alors qu'aucun outil
+  de ce genre n'existe sur le site. Ce n'était pas seulement inutile — le RGPD
+  exige que l'information donnée soit exacte, et annoncer une finalité qu'on ne
+  poursuit pas est une information fausse sur un document public. Accessoirement,
+  une troisième case à trancher poussait à tout refuser en bloc, y compris la
+  mesure d'audience, qui, elle, existe vraiment.
+
+  Le jour où une publicité Meta ou Google sera réellement installée, la
+  catégorie devra revenir EN MÊME TEMPS que l'outil, jamais avant.
+
+  Les consentements déjà enregistrés chez les visiteurs contiennent encore une
+  clé `marketing` : elle est simplement ignorée à la relecture, rien ne casse.
+*/
 interface CookieConsent {
   necessary: boolean;
   analytics: boolean;
-  marketing: boolean;
   date?: number;
 }
 
@@ -44,7 +58,6 @@ export function CookieBanner() {
   const bandeau = useRef<HTMLDivElement>(null);
   const [showDetails, setShowDetails] = useState(false);
   const [analytics, setAnalytics] = useState(false);
-  const [marketing, setMarketing] = useState(false);
 
   useEffect(() => {
     // Ré-affiche si aucun consentement OU s'il a expiré
@@ -94,9 +107,9 @@ export function CookieBanner() {
     []
   );
 
-  const acceptAll = () => save({ necessary: true, analytics: true, marketing: true });
-  const refuseAll = () => save({ necessary: true, analytics: false, marketing: false });
-  const saveChoices = () => save({ necessary: true, analytics, marketing });
+  const acceptAll = () => save({ necessary: true, analytics: true });
+  const refuseAll = () => save({ necessary: true, analytics: false });
+  const saveChoices = () => save({ necessary: true, analytics });
 
   return (
     <AnimatePresence>
@@ -153,16 +166,6 @@ export function CookieBanner() {
                       />
                       <span className="font-medium">Mesure d&apos;audience</span>
                       <span className="text-muted-foreground">(anonyme)</span>
-                    </label>
-                    <label className="flex items-center gap-2 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={marketing}
-                        onChange={(e) => setMarketing(e.target.checked)}
-                        className="accent-primary"
-                      />
-                      <span className="font-medium">Marketing</span>
-                      <span className="text-muted-foreground">(publicité ciblée)</span>
                     </label>
                   </div>
                 </motion.div>

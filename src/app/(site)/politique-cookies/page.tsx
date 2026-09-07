@@ -30,12 +30,6 @@ const CATEGORIES: { categorie: string; finalite: string; duree: string; consente
     duree: "Identifiant de visite : 30 minutes. Statistiques : 13 mois.",
     consentement: "Requis",
   },
-  {
-    categorie: "Marketing",
-    finalite: "Publicité ciblée, retargeting [À COMPLÉTER]",
-    duree: "[À COMPLÉTER]",
-    consentement: "Requis",
-  },
 ];
 
 export default function PolitiqueCookies() {
