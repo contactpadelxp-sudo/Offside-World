@@ -34,9 +34,19 @@ export const ADRESSE = {
 export const ADRESSE_LIGNE = `${ADRESSE.rue}, ${ADRESSE.codePostal} ${ADRESSE.ville}, ${ADRESSE.pays}`;
 
 export const EMAIL = "info@offsidefootindoor.be";
-export const TELEPHONE = "0471/34.21.80";
-/** Format international, pour les liens tel: */
-export const TELEPHONE_TEL = "+32471342180";
+
+/**
+ * Téléphone public — retiré du site à la demande du client.
+ *
+ * Tous les affichages (pied de page, pages légales, e-mails, page d'erreur)
+ * sont désormais conditionnels ou reformulés autour de l'e-mail : redonner une
+ * valeur à ces deux constantes ne suffirait donc PAS à le faire réapparaître,
+ * il faudrait rétablir les blocs correspondants. L'e-mail reste le moyen de
+ * contact direct, ce que la loi exige (Code de droit économique, art. III.74).
+ */
+export const TELEPHONE: string | null = null;
+/** Format international, pour les liens tel:. */
+export const TELEPHONE_TEL: string | null = null;
 
 /** Date de la dernière mise à jour des documents légaux. */
 export const MAJ_LEGALE = "1er septembre 2026";

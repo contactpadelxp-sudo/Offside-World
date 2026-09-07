@@ -2,7 +2,7 @@ import "server-only";
 import type { Message } from "@/lib/email/envoi";
 import { adresseComplexe } from "@/lib/email/envoi";
 import { urlAbsolue } from "@/lib/site";
-import { ADRESSE_LIGNE, EMAIL, NOM_COMMERCIAL, TELEPHONE } from "@/data/entreprise";
+import { ADRESSE_LIGNE, EMAIL, NOM_COMMERCIAL } from "@/data/entreprise";
 import { RESUME_ANNULATION } from "@/data/reglement";
 
 /**
@@ -77,7 +77,7 @@ function enveloppe(titre: string, intro: string, lignes: Ligne[], apres: string[
     <tr><td style="padding:8px 28px 26px;border-top:1px solid #ececea;">
       <p style="margin:12px 0 0;font-size:12px;line-height:1.6;color:${GRIS};">
         ${ech(NOM_COMMERCIAL)} — ${ech(ADRESSE_LIGNE)}<br>
-        ${ech(TELEPHONE)} · <a href="mailto:${ech(EMAIL)}" style="color:${ACCENT};">${ech(EMAIL)}</a>
+        <a href="mailto:${ech(EMAIL)}" style="color:${ACCENT};">${ech(EMAIL)}</a>
       </p>
     </td></tr>
   </table>
@@ -97,7 +97,7 @@ function versTexte(titre: string, intro: string, lignes: Ligne[], apres: string[
     ...apres.map(sansBalises),
     "",
     `${NOM_COMMERCIAL} — ${ADRESSE_LIGNE}`,
-    `${TELEPHONE} · ${EMAIL}`,
+    EMAIL,
   ]
     .filter((l) => l !== "")
     .join("\n");
@@ -197,7 +197,7 @@ export function auClientReservationConfirmee(r: RecapEmail): Message {
     lignesReservation(r),
     [
       `<strong>Annulation :</strong> ${ech(RESUME_ANNULATION)}`,
-      `Une question d'ici là ? Appelez-nous au ${ech(TELEPHONE)} ou répondez à cet e-mail.`,
+      `Une question d'ici là ? Répondez simplement à cet e-mail.`,
     ],
     EMAIL
   );
@@ -211,7 +211,7 @@ export function auClientReservationAnnulee(r: RecapEmail): Message {
     `Bonjour ${ech(r.clientNom)}, la réservation ci-dessous vient d'être annulée. Si ce n'est pas ce que vous attendiez, contactez-nous : nous trouverons une solution.`,
     lignesReservation(r),
     [
-      `Nous joindre : ${ech(TELEPHONE)} ou <a href="mailto:${ech(EMAIL)}" style="color:${ACCENT};">${ech(EMAIL)}</a>.`,
+      `Nous joindre : <a href="mailto:${ech(EMAIL)}" style="color:${ACCENT};">${ech(EMAIL)}</a>.`,
     ],
     EMAIL
   );

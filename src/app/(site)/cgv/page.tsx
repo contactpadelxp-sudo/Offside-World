@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import {
   NOM_COMMERCIAL, DENOMINATION_SOCIALE, SIEGE_SOCIAL, BCE, TVA,
-  ADRESSE, ADRESSE_LIGNE, EMAIL, TELEPHONE, TELEPHONE_TEL,
+  ADRESSE, ADRESSE_LIGNE, EMAIL,
   MAJ_LEGALE, ouACompleter,
 } from "@/data/entreprise";
 
@@ -48,7 +48,6 @@ export default function CGV() {
           <li><strong>N° d&apos;entreprise (BCE) :</strong> {ouACompleter(BCE)}</li>
           <li><strong>N° de TVA :</strong> BE {ouACompleter(TVA)}</li>
           <li><strong>E-mail :</strong> <a href={`mailto:${EMAIL}`} className="underline text-primary">{EMAIL}</a></li>
-          <li><strong>Téléphone :</strong> <a href={`tel:${TELEPHONE_TEL}`} className="underline text-primary">{TELEPHONE}</a></li>
         </ul>
         <P>Ci-après dénommé « Offside ».</P>
       </Article>
@@ -394,8 +393,7 @@ export default function CGV() {
           {ADRESSE.rue}<br />
           {ADRESSE.codePostal} {ADRESSE.ville}<br />
           {ADRESSE.pays}<br />
-          E-mail : <a href={`mailto:${EMAIL}`} className="underline text-primary">{EMAIL}</a><br />
-          Téléphone : <a href={`tel:${TELEPHONE_TEL}`} className="underline text-primary">{TELEPHONE}</a>
+          E-mail : <a href={`mailto:${EMAIL}`} className="underline text-primary">{EMAIL}</a>
         </address>
         <P>Offside privilégie toujours la recherche d&apos;une solution amiable.</P>
         <P>

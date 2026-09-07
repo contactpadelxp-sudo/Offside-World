@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import {
   NOM_COMMERCIAL, DENOMINATION_SOCIALE, SIEGE_SOCIAL, BCE, TVA,
-  RESPONSABLE_PUBLICATION, ADRESSE, EMAIL, TELEPHONE, TELEPHONE_TEL,
+  RESPONSABLE_PUBLICATION, ADRESSE, EMAIL,
   MAJ_LEGALE, ouACompleter,
 } from "@/data/entreprise";
 
@@ -39,7 +39,6 @@ export default function MentionsLegales() {
           <li><strong>N° d&apos;entreprise (BCE) :</strong> {ouACompleter(BCE)}</li>
           <li><strong>N° de TVA :</strong> BE {ouACompleter(TVA)}</li>
           <li><strong>E-mail :</strong> <a href={`mailto:${EMAIL}`} className="underline text-primary">{EMAIL}</a></li>
-          <li><strong>Téléphone :</strong> <a href={`tel:${TELEPHONE_TEL}`} className="underline text-primary">{TELEPHONE}</a></li>
         </ul>
       </section>
 
@@ -137,8 +136,7 @@ export default function MentionsLegales() {
           {ADRESSE.rue}<br />
           {ADRESSE.codePostal} {ADRESSE.ville}<br />
           {ADRESSE.pays}<br />
-          E-mail : <a href={`mailto:${EMAIL}`} className="underline text-primary">{EMAIL}</a><br />
-          Téléphone : <a href={`tel:${TELEPHONE_TEL}`} className="underline text-primary">{TELEPHONE}</a>
+          E-mail : <a href={`mailto:${EMAIL}`} className="underline text-primary">{EMAIL}</a>
         </address>
       </section>
     </div>

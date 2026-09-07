@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import {
   NOM_COMMERCIAL, DENOMINATION_SOCIALE, BCE, ADRESSE, ADRESSE_LIGNE,
-  EMAIL, TELEPHONE, TELEPHONE_TEL, MAJ_LEGALE, ouACompleter,
+  EMAIL, MAJ_LEGALE, ouACompleter,
 } from "@/data/entreprise";
 
 export const metadata: Metadata = {
@@ -53,10 +53,6 @@ export default function Confidentialite() {
           <li>
             <strong>E-mail relatif à la vie privée :</strong>{" "}
             <a href={`mailto:${EMAIL}`} className="underline text-primary">{EMAIL}</a>
-          </li>
-          <li>
-            <strong>Téléphone :</strong>{" "}
-            <a href={`tel:${TELEPHONE_TEL}`} className="underline text-primary">{TELEPHONE}</a>
           </li>
         </ul>
       </Article>
@@ -365,8 +361,7 @@ export default function Confidentialite() {
           {ADRESSE.rue}<br />
           {ADRESSE.codePostal} {ADRESSE.ville}<br />
           {ADRESSE.pays}<br />
-          E-mail : <a href={`mailto:${EMAIL}`} className="underline text-primary">{EMAIL}</a><br />
-          Téléphone : <a href={`tel:${TELEPHONE_TEL}`} className="underline text-primary">{TELEPHONE}</a>
+          E-mail : <a href={`mailto:${EMAIL}`} className="underline text-primary">{EMAIL}</a>
         </address>
       </Article>
     </div>

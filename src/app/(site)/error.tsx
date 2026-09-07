@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import Link from "next/link";
 import { AlerteTriangle } from "@/components/icons";
-import { TELEPHONE, TELEPHONE_TEL } from "@/data/entreprise";
+import { EMAIL } from "@/data/entreprise";
 
 /**
  * Écran d'erreur du site public.
@@ -46,10 +46,10 @@ export default function ErreurSite({
           Réessayer
         </button>
         <a
-          href={`tel:${TELEPHONE_TEL}`}
+          href={`mailto:${EMAIL}`}
           className="btn-outline-light inline-flex h-12 items-center justify-center rounded-2xl px-6"
         >
-          Appeler le {TELEPHONE}
+          Nous écrire
         </a>
       </div>
 

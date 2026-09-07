@@ -4,9 +4,9 @@ import Link from "next/link";
 import { openCookieSettings } from "@/components/cookie-banner";
 import { Logo } from "@/components/logo";
 import {
-  NOM_COMMERCIAL, ADRESSE, EMAIL, TELEPHONE, TELEPHONE_TEL,
+  NOM_COMMERCIAL, ADRESSE, EMAIL,
 } from "@/data/entreprise";
-import { Cookie, Enveloppe, Epingle, FlecheDiagonale, Telephone } from "@/components/icons";
+import { Cookie, Enveloppe, Epingle, FlecheDiagonale } from "@/components/icons";
 
 export function Footer({ logoSrc }: { logoSrc: string | null }) {
   return (
@@ -62,10 +62,6 @@ export function Footer({ logoSrc }: { logoSrc: string | null }) {
                     {ADRESSE.rue}<br />
                     {ADRESSE.codePostal} {ADRESSE.ville}, {ADRESSE.pays}
                   </address>
-                </li>
-                <li className="flex items-center gap-2.5">
-                  <Telephone className="size-4 text-white/60 shrink-0" />
-                  <a href={`tel:${TELEPHONE_TEL}`} className="inline-flex min-h-6 items-center py-0.5 hover:text-white transition-colors">{TELEPHONE}</a>
                 </li>
                 <li className="flex items-center gap-2.5">
                   <Enveloppe className="size-4 text-white/60 shrink-0" />
