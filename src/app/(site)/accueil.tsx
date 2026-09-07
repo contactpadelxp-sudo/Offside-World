@@ -9,7 +9,7 @@ import {
 } from "@/components/motion";
 import { Photo } from "@/components/photo";
 import { usePhoto } from "@/components/photos-provider";
-import { Ballon, Batiment, Bouclier, Carte, Coche, Document, Enfant, Epingle, Etoile, FlecheDroite, Gateau, Groupe, Horloge } from "@/components/icons";
+import { Ballon, Batiment, Bouclier, Carte, Coche, Document, Enfant, Epingle, FlecheDroite, Gateau, Groupe, Horloge } from "@/components/icons";
 import { GATEAU_NOTE } from "@/data/formules";
 import type { FormuleVue } from "@/lib/vues";
 import { RESUME_ANNULATION, DELAI_RESERVATION_HEURES } from "@/data/reglement";
@@ -372,7 +372,7 @@ export function Accueil({ formules }: { formules: FormuleVue[] }) {
         </FadeInView>
         <StaggerContainer className="grid grid-cols-2 gap-5 md:grid-cols-4" staggerDelay={0.1}>
           {[
-            { icon: Etoile, title: "4.8/5", subtitle: "sur Google (200+ avis)", color: "bg-white/[0.04] text-field border-white/10" },
+            { icon: Batiment, title: "Toute l’année", subtitle: "En salle, quelle que soit la météo", color: "bg-white/[0.04] text-field border-white/10" },
             { icon: Epingle, title: "Facile d'accès", subtitle: "Parking gratuit", color: "bg-white/[0.04] text-field border-white/10" },
             { icon: Enfant, title: "Dès 6 ans", subtitle: "Encadrement adapté", color: "bg-white/[0.04] text-kick border-white/10" },
             { icon: Carte, title: "Réservation flexible", subtitle: `Jusqu’à ${DELAI_RESERVATION_HEURES}h avant`, color: "bg-white/[0.04] text-field border-white/10" },
@@ -388,35 +388,6 @@ export function Accueil({ formules }: { formules: FormuleVue[] }) {
             </StaggerItem>
           ))}
         </StaggerContainer>
-        </div>
-      </section>
-
-      {/* ══════ TESTIMONIAL ══════ */}
-      <section className="relative overflow-hidden">
-        {/* Décor : anneaux en coin + points */}
-        <div aria-hidden className="pointer-events-none absolute inset-0">
-          <div className="absolute -right-20 -top-20 w-64 h-64 rounded-full border-2 border-dashed border-field/15" />
-          <div className="absolute -right-10 -top-10 w-40 h-40 rounded-full border-2 border-field/10" />
-          <div className="absolute left-6 bottom-0 w-36 h-36 dot-grid fade-mask-radial" />
-        </div>
-        <div className="relative mx-auto max-w-3xl px-4 lg:px-8 pt-4 pb-12">
-        <FadeInView>
-          <div className="relative rounded-3xl bg-gradient-to-br from-field/5 to-kick/5 border border-field/10 p-8 md:p-12 text-center">
-            <span aria-hidden className="block font-[family-name:var(--font-heading)] text-6xl leading-none text-field/30 mb-2">&laquo;</span>
-            <blockquote className="text-lg md:text-xl font-medium leading-relaxed text-foreground/80 italic">
-              &ldquo;L&apos;anniversaire de Léa était juste parfait ! Les enfants se sont éclatés
-              avec le Bubble Foot, l&apos;équipe est super pro. On reviendra sans hésiter.&rdquo;
-            </blockquote>
-            <div className="mt-6 flex items-center justify-center gap-2">
-              <div className="flex">
-                {[...Array(5)].map((_, i) => (
-                  <Etoile key={i} className="size-4 fill-field text-field" />
-                ))}
-              </div>
-              <span className="text-sm text-muted-foreground">— Sophie D., Google</span>
-            </div>
-          </div>
-        </FadeInView>
         </div>
       </section>
 
