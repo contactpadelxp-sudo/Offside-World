@@ -22,8 +22,12 @@ const CATEGORIES: { categorie: string; finalite: string; duree: string; consente
   {
     categorie: "Mesure d'audience",
     finalite:
-      "Statistiques anonymes de fréquentation [À COMPLÉTER — ex. : Google Analytics, Plausible]",
-    duree: "[À COMPLÉTER]",
+      "Statistiques de fréquentation : pages consultées, provenance, type d'appareil, " +
+      "étapes franchies dans le parcours de réservation. Outil interne au complexe — " +
+      "aucune donnée n'est transmise à un tiers, aucune adresse IP n'est conservée, et " +
+      "l'identifiant de visite est tiré au hasard puis oublié après 30 minutes, ce qui " +
+      "rend impossible le rapprochement de deux visites.",
+    duree: "Identifiant de visite : 30 minutes. Statistiques : 13 mois.",
     consentement: "Requis",
   },
   {

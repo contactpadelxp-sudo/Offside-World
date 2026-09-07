@@ -269,6 +269,14 @@ export const Telephone: IconType = (p) => (
   </Svg>
 );
 
+/** Histogramme — section « Analyse » du back-office. */
+export const Graphique: IconType = (p) => (
+  <Svg {...p}>
+    <path d="M3 3h2.2v16.6H21V22H3V3Z" />
+    <path d="M7.4 13.2h2.8v5.2H7.4zM12.2 8.4h2.8v10h-2.8zM17 10.8h2.8v7.6H17z" />
+  </Svg>
+);
+
 export const Calendrier: IconType = (p) => (
   <Svg {...p}>
     <path d="M7.4 2h2.4v4H7.4zM14.2 2h2.4v4h-2.4z" />

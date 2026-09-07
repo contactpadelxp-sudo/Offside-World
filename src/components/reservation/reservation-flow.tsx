@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
 import { useScrollTop } from "@/lib/use-scroll-top";
 import { RESERVER_RESET_EVENT } from "@/lib/events";
+import { mesurer } from "@/lib/mesure";
 import type { CreneauVue } from "@/lib/db/creneaux";
 import type { FormuleVue, OptionVue } from "@/lib/db/referentiel";
 import type { DemiJourneeVue } from "@/lib/demi-journees";
@@ -33,6 +34,17 @@ export interface DonneesReservation {
 export function ReservationFlow({ donnees }: { donnees: DonneesReservation }) {
   const searchParams = useSearchParams();
   const [activity, setActivity] = useState<Activity>(null);
+
+  /*
+    Les étapes du tunnel sont mesurées ici, en réaction à l'état, et non sur
+    chaque bouton : les transitions sont dispersées sur une quinzaine
+    d'endroits, et une mesure posée bouton par bouton finit toujours par en
+    oublier un — silencieusement, ce qui est le pire cas pour un chiffre qu'on
+    croit juste.
+  */
+  useEffect(() => {
+    if (activity) mesurer("activite", activity);
+  }, [activity]);
 
   // Changer d'activité ramène en haut de page.
   useScrollTop(activity);

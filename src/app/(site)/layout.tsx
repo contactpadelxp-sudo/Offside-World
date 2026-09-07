@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Header } from "@/components/header";
 import { Footer } from "@/components/footer";
 import { CookieBannerWrapper } from "@/components/cookie-banner";
+import { MesurePages } from "@/components/mesure-pages";
 import { PhotosProvider } from "@/components/photos-provider";
 import { resolveLogoSrc } from "@/lib/logo";
 import { resolvePhotos } from "@/lib/photos";
@@ -53,6 +54,7 @@ export default function SiteLayout({ children }: Readonly<{ children: React.Reac
       <main className="flex-1">{children}</main>
       <Footer logoSrc={logoSrc} />
       <CookieBannerWrapper />
+      <MesurePages />
     </PhotosProvider>
   );
 }

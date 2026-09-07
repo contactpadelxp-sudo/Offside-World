@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -14,6 +14,7 @@ import { usePhoto } from "@/components/photos-provider";
 import { PhoneField } from "@/components/reservation/phone-field";
 import { isValidEmail } from "@/lib/validation";
 import { memoriserRecap } from "@/lib/reservation";
+import { mesurer } from "@/lib/mesure";
 import { useScrollTop } from "@/lib/use-scroll-top";
 import { demanderDevis, reserverBubble } from "@/lib/actions/reservation";
 import type { CreneauVue } from "@/lib/vues";
@@ -47,6 +48,12 @@ export function GroupesFlow({
   const router = useRouter();
   const [step, setStep] = useState<Step>("offre");
   const [offre, setOffre] = useState<Offre | null>(null);
+
+  // Mêmes jalons que le parcours anniversaire, voir le commentaire là-bas.
+  useEffect(() => {
+    if (step === "creneau" && offre) mesurer("formule", offre);
+    else if (step === "recap") mesurer("formulaire");
+  }, [step, offre]);
 
   const [bubbleCreneau, setBubbleCreneau] = useState<CreneauVue | null>(null);
   const [nbPersonnes, setNbPersonnes] = useState(BUBBLE_MIN_PERSONNES);
@@ -137,6 +144,7 @@ export function GroupesFlow({
       return;
     }
 
+    mesurer(offre === "bubble" ? "reservation" : "devis", offre ?? undefined);
     memoriserRecap({
       ref: resultat.reference,
       type: isBubble ? "bubble" : "team-building",

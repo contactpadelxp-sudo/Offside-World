@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { useFormStatus } from "react-dom";
 import { seDeconnecter } from "@/lib/actions/session";
 import { Voyant } from "@/components/admin/onglets";
-import { Bouclier, Calendrier, Carte, Document, PressePapier, Reglages, type IconType } from "@/components/icons";
+import { Bouclier, Calendrier, Carte, Document, Graphique, PressePapier, Reglages, type IconType } from "@/components/icons";
 
 /**
  * Barre du back-office.
@@ -20,6 +20,7 @@ const SECTIONS: { href: string; label: string; icone: IconType }[] = [
   { href: "/admin/devis", label: "Devis", icone: Document },
   { href: "/admin/creneaux", label: "Créneaux", icone: Calendrier },
   { href: "/admin/tarifs", label: "Tarifs", icone: Carte },
+  { href: "/admin/analyse", label: "Analyse", icone: Graphique },
   { href: "/admin/journal", label: "Journal", icone: Bouclier },
   { href: "/admin/reglages", label: "Réglages", icone: Reglages },
 ];

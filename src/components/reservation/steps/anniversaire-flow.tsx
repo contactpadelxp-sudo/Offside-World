@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -12,6 +12,7 @@ import { Photo } from "@/components/photo";
 import { PhoneField } from "@/components/reservation/phone-field";
 import { isValidEmail } from "@/lib/validation";
 import { memoriserRecap } from "@/lib/reservation";
+import { mesurer } from "@/lib/mesure";
 import { useScrollTop } from "@/lib/use-scroll-top";
 import { reserverAnniversaire } from "@/lib/actions/reservation";
 import type { CreneauVue, FormuleVue, OptionVue } from "@/lib/vues";
@@ -44,7 +45,19 @@ export function AnniversaireFlow({
 }) {
   const router = useRouter();
   const [step, setStep] = useState<Step>("formule");
+
   const [selectedFormule, setSelectedFormule] = useState<FormuleVue | null>(null);
+  /*
+    Deux jalons du tunnel. Arriver sur « details » suppose qu'une formule a
+    été choisie ; arriver sur « paiement » suppose qu'un créneau l'a été et
+    que le formulaire est à l'écran. La perte entre ce dernier jalon et la
+    réservation est le chiffre qui compte : ce sont les gens qui avaient tout
+    choisi et sont partis quand même.
+  */
+  useEffect(() => {
+    if (step === "details") mesurer("formule", selectedFormule?.id);
+    else if (step === "paiement") mesurer("formulaire");
+  }, [step, selectedFormule?.id]);
   const [childCount, setChildCount] = useState(10);
   const [childName, setChildName] = useState("");
   const [childAge, setChildAge] = useState("");
@@ -135,6 +148,7 @@ export function AnniversaireFlow({
       return;
     }
 
+    mesurer("reservation", "anniversaire");
     memoriserRecap({
       ref: resultat.reference,
       type: "anniversaire",

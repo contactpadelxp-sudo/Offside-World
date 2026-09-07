@@ -218,6 +218,45 @@ export type Database = {
         }
         Relationships: []
       }
+      evenements_audience: {
+        Row: {
+          appareil: string | null
+          chemin: string | null
+          detail: string | null
+          id: number
+          langue: string | null
+          nom: string
+          pays: string | null
+          provenance: string | null
+          session: string
+          survenu_le: string
+        }
+        Insert: {
+          appareil?: string | null
+          chemin?: string | null
+          detail?: string | null
+          id?: number
+          langue?: string | null
+          nom: string
+          pays?: string | null
+          provenance?: string | null
+          session: string
+          survenu_le?: string
+        }
+        Update: {
+          appareil?: string | null
+          chemin?: string | null
+          detail?: string | null
+          id?: number
+          langue?: string | null
+          nom?: string
+          pays?: string | null
+          provenance?: string | null
+          session?: string
+          survenu_le?: string
+        }
+        Relationships: []
+      }
       journal_admin: {
         Row: {
           acteur: string

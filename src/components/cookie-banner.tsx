@@ -33,6 +33,10 @@ function isConsentValid(consent: CookieConsent | null): boolean {
 
 function storeConsent(consent: CookieConsent) {
   localStorage.setItem(COOKIE_KEY, JSON.stringify({ ...consent, date: Date.now() }));
+  // La mesure d'audience écoute cet événement : sans lui, un visiteur qui
+  // accepte ne serait compté qu'à partir de la page SUIVANTE, et on perdrait
+  // la première — celle qui porte la provenance.
+  window.dispatchEvent(new Event("cookie-consent"));
 }
 
 export function CookieBanner() {
