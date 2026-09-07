@@ -119,6 +119,45 @@ majuscules, accents, espaces et tirets. Voir `src/lib/photos.ts`.
 
 ---
 
+# Décisions en attente de Mathis
+
+Questions posées, sans réponse à ce jour. Elles bloquent du travail déjà prêt
+à démarrer.
+
+- [ ] **Paiement : acompte ou montant intégral ?** Le barème d'annulation
+      existant (100 % au-delà de 7 jours, 50 % entre 7 jours et 48 h, rien en
+      deçà) se prête plutôt au paiement intégral avec remboursement partiel.
+      Un acompte non remboursable serait plus simple, mais change la promesse
+      faite au client.
+- [ ] **Le compte Stripe est-il ouvert ?** Le tunnel peut être construit sans
+      les clés, mais aucun paiement réel ne pourra être testé de bout en bout —
+      et c'est précisément là que ça casse d'habitude.
+- [ ] **« 2000+ fêtes organisées »** est toujours affiché sur la page d'accueil.
+      C'est une statistique inventée. Le faux avis a été retiré ; celle-ci
+      attend un vrai chiffre ou son retrait. Si on la retire, la rangée doit
+      passer de trois à deux colonnes, sinon elle boite sur téléphone.
+- [ ] **Passer le dépôt GitHub en privé.** Il est public : tout l'historique
+      est lisible, y compris les versions précédentes de ce fichier.
+
+---
+
+# Chantiers demandés le 7 septembre 2026
+
+## Mesure d'audience maison + section « Analyse » au back-office
+
+Le bandeau cookies demande aujourd'hui un consentement pour « Mesure
+d'audience » et « Marketing » alors qu'aucun outil n'existe derrière : le choix
+du visiteur est écrit dans son navigateur et lu par personne. La politique
+cookies annonce encore « [À COMPLÉTER — ex. : Google Analytics, Plausible] ».
+
+Décision prise : construire l'outil plutôt que retirer la demande.
+
+## Blog
+
+Articles rédigés par Brahim lui-même depuis le back-office. Suppose donc un
+éditeur utilisable sans compétence technique, et pas un fichier Markdown dans
+le dépôt.
+
 # À faire côté Mathis
 
 - [x] **Définir `ADMIN_USER` et `ADMIN_PASSWORD`** dans Vercel (type
