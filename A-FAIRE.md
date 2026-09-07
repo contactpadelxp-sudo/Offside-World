@@ -39,18 +39,41 @@ réglages y sont incohérents avec le site.
 **Décision prise :** les terrains restent sur Sport-Finder, les anniversaires sur
 le site, et les anniversaires n'occupent que des plages retirées de la location.
 
-En attendant les vraies plages, la base a été remplie avec l'hypothèse déjà
-affichée sur le site : **mercredi après-midi, samedi et dimanche**, créneaux de
-2 heures à 10 h, 12 h 30, 15 h et 17 h 30, sur les deux espaces. Le Bubble Foot
-occupe les vendredis, samedis et dimanches à 18 h, 19 h et 20 h.
+En attendant les vraies plages, la base tourne sur une hypothèse. État relevé
+en production le 7 septembre 2026, sur les deux espaces :
+
+| | Anniversaires (2 h) | Bubble Foot (1 h) |
+|---|---|---|
+| Mercredi | 13:00 · 14:00 · 15:30 · 16:30 | — |
+| Vendredi | — | 16:00 · 17:00 · 18:00 · 19:00 |
+| Samedi | 08:00 · 09:00 · 10:30 · 11:30 · 13:00 · 14:00 · 15:30 · 16:30 | 18:00 · 19:00 |
+| Dimanche | idem samedi | 18:00 · 19:00 |
+
+Les départs s'enchaînent toutes les 2 h 30 — 2 h de fête plus 30 minutes de
+battement — avec une option intermédiaire une heure après chaque départ.
 
 Ces plages sont désormais **des données, plus du code** : les corriger ne
 demande aucun redéploiement.
 
 - [ ] Jours et plages horaires réellement réservés aux anniversaires
-- [ ] Nombre d'anniversaires en parallèle par plage (deux espaces sont ouverts)
-- [ ] Jusqu'à combien de temps à l'avance on peut réserver (six mois sont
-      ouverts en base, trois mois sont affichés)
+- [x] ~~Nombre d'anniversaires en parallèle.~~ **Deux**, soit les deux espaces
+      actifs — déjà le comportement en place.
+- [x] ~~Délai minimum avant le début.~~ **Une heure**, « même en dernière minute
+      vu qu'il n'y a pas de coach » (Brahim). Déjà appliqué :
+      `DELAI_RESERVATION_HEURES = 1`, vérifié côté serveur dans
+      `src/lib/db/creneaux.ts`.
+- [ ] **Horizon de réservation** — question distincte de la précédente, et
+      toujours ouverte : jusqu'à quelle échéance accepte-t-on une réservation ?
+      Six mois sont ouverts en base (jusqu'au 3 mars 2027), trois mois sont
+      annoncés sur le site.
+- [ ] **Lever une ambiguïté sur le battement de 30 minutes.** Brahim dit « deux
+      en même temps, avec un espacement de 30 min pour le prochain ». Deux
+      lectures possibles, qui ne donnent pas la même grille :
+      *a)* le groupe suivant démarre 30 min après la fin du précédent — c'est ce
+      qui est en place (cadence de 2 h 30) ;
+      *b)* les deux groupes simultanés sont décalés de 30 min entre eux, pour
+      étaler arrivées et départs — il faudrait alors décaler l'espace 2 de
+      30 min (08:30, 11:00, 13:30, 16:00).
 
 ## Informations d'entreprise
 
