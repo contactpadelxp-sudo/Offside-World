@@ -20,7 +20,7 @@ import { URL_SITE } from "@/lib/site";
 export const metadata: Metadata = {
   title: `${NOM_COMMERCIAL} — Anniversaires foot, Bubble Foot & Team Building`,
   description:
-    "Offside Foot Indoor : le complexe de foot indoor en Belgique. Anniversaires enfants dès 180 €, Bubble Foot, location de terrain et team building.",
+    "Offside Foot Indoor : le complexe de foot indoor en Belgique. Anniversaires enfants, Bubble Foot, location de terrain et team building.",
   applicationName: NOM_COMMERCIAL,
   robots: { index: true, follow: true },
   openGraph: {
@@ -30,7 +30,7 @@ export const metadata: Metadata = {
     url: URL_SITE,
     title: `${NOM_COMMERCIAL} — Anniversaires foot, Bubble Foot & Team Building`,
     description:
-      "Le complexe de foot indoor en Belgique. Anniversaires enfants dès 180 €, Bubble Foot, location de terrain et team building.",
+      "Le complexe de foot indoor en Belgique. Anniversaires enfants, Bubble Foot, location de terrain et team building.",
     images: [
       { url: "/images/offside-foot-indoor.jpg", width: 1200, height: 630, alt: `${NOM_COMMERCIAL} — foot indoor` },
     ],
@@ -39,7 +39,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: `${NOM_COMMERCIAL} — Anniversaires foot, Bubble Foot & Team Building`,
     description:
-      "Le complexe de foot indoor en Belgique. Anniversaires enfants dès 180 €, Bubble Foot, location de terrain et team building.",
+      "Le complexe de foot indoor en Belgique. Anniversaires enfants, Bubble Foot, location de terrain et team building.",
     images: ["/images/offside-foot-indoor.jpg"],
   },
 };

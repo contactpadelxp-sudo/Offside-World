@@ -90,7 +90,7 @@ export function ReservationFlow({ donnees }: { donnees: DonneesReservation }) {
 
   return (
     <div className="mx-auto max-w-4xl px-4 pt-24 pb-8 md:pt-28 md:pb-12">
-      {!activity && <ActivityChoice onSelect={selectActivity} />}
+      {!activity && <ActivityChoice onSelect={selectActivity} formules={donnees.formules} />}
       {activity === "anniversaire" && (
         <AnniversaireFlow
           onBack={backToChoice}

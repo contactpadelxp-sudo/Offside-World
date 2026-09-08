@@ -6,6 +6,8 @@ import { Photo } from "@/components/photo";
 import { usePhoto } from "@/components/photos-provider";
 import { FlecheDroite, Gateau, Groupe, IconType, Trophee, Visuel } from "@/components/icons";
 import type { Activity } from "../reservation-flow";
+import type { FormuleVue } from "@/lib/vues";
+import { BUBBLE_PRIX_PAR_PERSONNE } from "@/data/bubble-team";
 
 type ActivityCard = {
   id: Activity;
@@ -26,7 +28,28 @@ type ActivityCard = {
 };
 
 
-export function ActivityChoice({ onSelect }: { onSelect: (a: Activity) => void }) {
+/**
+ * Prix d'appel des anniversaires, lu dans les formules de la base.
+ *
+ * Il était écrit « Dès 180 € » en dur, alors que l'en-tête de
+ * `reservation-flow.tsx` promet précisément le contraire : aucun tarif ne doit
+ * être figé côté navigateur, pour qu'un prix affiché soit toujours celui que le
+ * serveur facturera. Brahim peut changer ses tarifs depuis `/admin/tarifs` ;
+ * cette carte doit suivre, sinon elle ment dès la première modification.
+ */
+function prixDAppel(formules: FormuleVue[]): number | null {
+  const prix = formules.map((f) => f.prixBase).filter((n) => Number.isFinite(n) && n > 0);
+  return prix.length ? Math.min(...prix) : null;
+}
+
+export function ActivityChoice({
+  onSelect,
+  formules,
+}: {
+  onSelect: (a: Activity) => void;
+  formules: FormuleVue[];
+}) {
+  const depuis = prixDAppel(formules);
   const photoAnniv = usePhoto("anniversaire-carte");
   const photoBubble = usePhoto("bubble-portrait");
   const photoBallon = usePhoto("ballon-terrain");
@@ -41,7 +64,8 @@ export function ActivityChoice({ onSelect }: { onSelect: (a: Activity) => void }
       // visuel, et affichait « Photo à venir » alors que `anniv.jpg` existait
       // déjà dans public/images et qu'un emplacement lui était déclaré.
       img: photoAnniv,
-      tag: "Dès 180 €",
+      // Espace insécable : le montant ne doit pas se séparer de son symbole.
+      tag: depuis === null ? "Sur mesure" : `Dès\u00a0${depuis}\u00a0€`,
       accentText: "text-kick",
       accentBadge: "bg-kick/15 text-kick",
       iconBg: "bg-kick/15 text-kick",
@@ -65,11 +89,11 @@ export function ActivityChoice({ onSelect }: { onSelect: (a: Activity) => void }
       id: "groupes" as Activity,
       icon: Groupe,
       title: "Bubble Foot & Team Building",
-      description: "Bubble Foot à 23 €/personne, ou privatisation à la demi-journée.",
+      description: `Bubble Foot à ${BUBBLE_PRIX_PAR_PERSONNE}\u00a0€/personne, ou privatisation à la demi-journée.`,
       img: photoBubble,
       // Les bulles sont à ~54 % de la hauteur de la photo.
       imgPosition: "object-[center_54%]",
-      tag: "Dès 23 €/pers.",
+      tag: `Dès\u00a0${BUBBLE_PRIX_PAR_PERSONNE}\u00a0€/pers.`,
       accentText: "text-kick",
       accentBadge: "bg-kick/15 text-kick",
       iconBg: "bg-kick/15 text-kick",

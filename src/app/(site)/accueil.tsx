@@ -13,6 +13,10 @@ import { Ballon, Batiment, Bouclier, Carte, Coche, Document, Enfant, Epingle, Fl
 import { GATEAU_NOTE } from "@/data/formules";
 import type { FormuleVue } from "@/lib/vues";
 import { RESUME_ANNULATION, DELAI_RESERVATION_HEURES } from "@/data/reglement";
+import {
+  TEAM_BUILDING_MIN_PARTICIPANTS,
+  TEAM_BUILDING_MAX_PARTICIPANTS,
+} from "@/data/bubble-team";
 
 const MagicRings = dynamic(() => import("@/components/magic-rings"), { ssr: false });
 
@@ -317,7 +321,13 @@ export function Accueil({ formules }: { formules: FormuleVue[] }) {
               </p>
               <div className="mt-8 grid grid-cols-2 gap-4">
                 {[
-                  { icon: Groupe, label: "10 à 40 personnes" },
+                  // Annonçait « 10 à 40 personnes » alors que le formulaire en
+                  // accepte 6 à 60 : un groupe de 8 lisait qu'il était trop petit
+                  // pour venir. On lit désormais les mêmes bornes que lui.
+                  {
+                    icon: Groupe,
+                    label: `${TEAM_BUILDING_MIN_PARTICIPANTS} à ${TEAM_BUILDING_MAX_PARTICIPANTS} personnes`,
+                  },
                   { icon: Horloge, label: "À la demi-journée" },
                   { icon: Batiment, label: "Terrain privatisé" },
                   { icon: Document, label: "Devis sur mesure" },
