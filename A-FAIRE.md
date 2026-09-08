@@ -40,17 +40,30 @@ réglages y sont incohérents avec le site.
 le site, et les anniversaires n'occupent que des plages retirées de la location.
 
 En attendant les vraies plages, la base tourne sur une hypothèse. État relevé
-en production le 7 septembre 2026, sur les deux espaces :
+en production le 8 septembre 2026, **en heure belge**, sur les deux espaces :
 
 | | Anniversaires (2 h) | Bubble Foot (1 h) |
 |---|---|---|
-| Mercredi | 13:00 · 14:00 · 15:30 · 16:30 | — |
-| Vendredi | — | 16:00 · 17:00 · 18:00 · 19:00 |
-| Samedi | 08:00 · 09:00 · 10:30 · 11:30 · 13:00 · 14:00 · 15:30 · 16:30 | 18:00 · 19:00 |
-| Dimanche | idem samedi | 18:00 · 19:00 |
+| Mercredi | 15:00 · 17:30 | — |
+| Vendredi | — | 18:00 · 19:00 · 20:00 |
+| Samedi | 10:00 · 12:30 · 15:00 · 17:30 | 20:00 |
+| Dimanche | idem samedi | 20:00 |
 
-Les départs s'enchaînent toutes les 2 h 30 — 2 h de fête plus 30 minutes de
-battement — avec une option intermédiaire une heure après chaque départ.
+Les départs s'enchaînent toutes les 2 h 30 : deux heures de fête, puis trente
+minutes de battement.
+
+> **Piège de lecture, qui m'a eu.** Interroger la table sans préciser le fuseau
+> renvoie de l'UTC, et une même plage y apparaît DEUX FOIS — un créneau de
+> 10 h belge vaut 08:00 UTC en été et 09:00 UTC en hiver. On croit alors voir
+> huit départs par jour, et une « option intermédiaire » qui n'existe pas.
+> Toujours lire `debut at time zone 'Europe/Brussels'`.
+
+> **Anomalie à trancher.** Le Bubble Foot n'a qu'UN créneau le samedi et le
+> dimanche (20:00), là où le vendredi en a trois. Les 18:00 et 19:00 du week-end
+> chevauchent l'anniversaire de 17:30–19:30 dans le même espace : la contrainte
+> d'exclusion les a refusés en silence à la génération. Un client qui cherche un
+> Bubble Foot le samedi soir ne voit donc presque rien. À régler avec les vraies
+> plages de Brahim.
 
 Ces plages sont désormais **des données, plus du code** : les corriger ne
 demande aucun redéploiement.

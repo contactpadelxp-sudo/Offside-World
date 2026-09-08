@@ -142,7 +142,7 @@ export default function CGV() {
         </P>
         <P>
           Toute demande d&apos;annulation ou de modification d&apos;une formule anniversaire doit
-          être adressée à Offside dans les meilleurs délais par e-mail ou par téléphone.
+          être adressée à Offside dans les meilleurs délais par e-mail.
         </P>
         <P>
           Sauf conditions particulières communiquées au moment de la réservation, les règles

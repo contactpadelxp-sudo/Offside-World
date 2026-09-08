@@ -34,7 +34,7 @@ export default function ErreurSite({
       </h1>
       <p className="mt-3 text-muted-foreground">
         Cette page n&apos;a pas pu s&apos;afficher. Réessayez dans un instant — et si vous vouliez
-        réserver, appelez-nous, c&apos;est encore plus rapide.
+        réserver, écrivez-nous : nous répondons vite.
       </p>
 
       <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">

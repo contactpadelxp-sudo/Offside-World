@@ -27,6 +27,7 @@ type ActivityCard = {
 
 
 export function ActivityChoice({ onSelect }: { onSelect: (a: Activity) => void }) {
+  const photoAnniv = usePhoto("anniversaire-carte");
   const photoBubble = usePhoto("bubble-portrait");
   const photoBallon = usePhoto("ballon-terrain");
 
@@ -36,7 +37,10 @@ export function ActivityChoice({ onSelect }: { onSelect: (a: Activity) => void }
       icon: Gateau,
       title: "Anniversaire",
       description: "Deux formules 100 % foot — Kick-Off et Bubble — jusqu'à 10 enfants.",
-      img: null,
+      // Était à `null` : l'activité la plus vendue était la seule des trois sans
+      // visuel, et affichait « Photo à venir » alors que `anniv.jpg` existait
+      // déjà dans public/images et qu'un emplacement lui était déclaré.
+      img: photoAnniv,
       tag: "Dès 180 €",
       accentText: "text-kick",
       accentBadge: "bg-kick/15 text-kick",
