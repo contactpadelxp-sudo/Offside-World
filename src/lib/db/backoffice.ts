@@ -364,3 +364,30 @@ export async function lireRecapEmail(id: string): Promise<RecapEmail | null> {
     remarques: data.remarques,
   };
 }
+
+/**
+ * Dans combien de jours le dernier créneau ouvert tombe-t-il ?
+ *
+ * POURQUOI CETTE FONCTION EXISTE. Les créneaux sont générés par lots, à la
+ * main, depuis « Ouvrir une période ». Rien ne les prolonge tout seul — c'est
+ * un choix assumé (voir la migration 0010), mais il a un défaut : le jour où
+ * le dernier créneau est passé, la page de réservation n'affiche plus rien.
+ * Aucune erreur, aucune alerte : juste un tunnel vide, et des clients qui
+ * repartent. On ne s'en aperçoit que si quelqu'un essaie de réserver.
+ *
+ * Renvoie `null` si la base est injoignable ou s'il n'y a aucun créneau — dans
+ * ce dernier cas l'appelant décide quoi dire, « aucun créneau » et « il en
+ * reste pour six mois » n'appelant pas le même message.
+ */
+export async function joursDeCreneauxRestants(): Promise<number | null> {
+  if (!baseConfiguree()) return null;
+  const { data, error } = await base()
+    .from("creneaux")
+    .select("debut")
+    .order("debut", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (error || !data) return null;
+  const restant = new Date(data.debut).getTime() - Date.now();
+  return Math.floor(restant / 86_400_000);
+}
