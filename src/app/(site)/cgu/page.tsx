@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { MAJ_LEGALE } from "@/data/entreprise";
 
 export const metadata: Metadata = {
   title: "Conditions Générales d'Utilisation | Offside Foot Indoor",
@@ -8,7 +9,7 @@ export const metadata: Metadata = {
 export default function CGU() {
   return (
     <div className="mx-auto max-w-4xl px-4 pt-24 pb-12 md:pt-28 md:pb-20">
-      <p className="text-sm text-muted-foreground mb-8">Dernière mise à jour : [À COMPLÉTER]</p>
+      <p className="text-sm text-muted-foreground mb-8">Dernière mise à jour : {MAJ_LEGALE}</p>
       <h1 className="text-3xl font-bold">Conditions Générales d&apos;Utilisation</h1>
 
       <section className="mt-8 space-y-4">
