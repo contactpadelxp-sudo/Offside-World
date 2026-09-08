@@ -17,9 +17,6 @@
 export const SPORTFINDER_URL =
   "https://www.sport-finder.com/fr/center/offside-foot-indoor/booking/field_rental/107/book?sport=1";
 
-/** Page publique du complexe, toutes activités confondues. */
-export const SPORTFINDER_CENTRE_URL =
-  "https://www.sport-finder.com/fr/center/offside-foot-indoor";
 
 export const FOOT_INCLUS = [
   "Éclairage du terrain",

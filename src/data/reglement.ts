@@ -48,6 +48,12 @@ export const RESUME_ANNULATION =
 /**
  * Part remboursée pour une annulation intervenant `heuresAvant` heures
  * avant le début de l'activité.
+ *
+ * VOLONTAIREMENT CONSERVÉE BIEN QU'INUTILISÉE. Ce n'est pas du code mort mais
+ * du code en attente : rien ne rembourse aujourd'hui puisque rien n'encaisse.
+ * Elle traduit en calcul le barème affiché au client et repris dans les CGV —
+ * le supprimer obligerait à le réécrire au moment de brancher le paiement,
+ * avec le risque que la nouvelle version diverge de ce qui a été promis.
  */
 export function partRemboursee(heuresAvant: number): number {
   const palier = PALIERS_ANNULATION.find((p) => heuresAvant >= p.seuilHeures);

@@ -34,19 +34,6 @@ export function FadeInView({
 }
 
 /* ═══ SCALE IN ═══ */
-export function ScaleIn({
-  children, delay = 0, className,
-}: { children: ReactNode; delay?: number; className?: string }) {
-  return (
-    <motion.div
-      initial={{ opacity: 0, scale: 0.8 }}
-      whileInView={{ opacity: 1, scale: 1 }}
-      viewport={{ once: true }}
-      transition={{ duration: 0.6, delay, ease: [0.25, 0.46, 0.45, 0.94] }}
-      className={className}
-    >{children}</motion.div>
-  );
-}
 
 /* ═══ STAGGER ═══ */
 export function StaggerContainer({
@@ -75,17 +62,6 @@ export function StaggerItem({ children, className }: { children: ReactNode; clas
 }
 
 /* ═══ FLOAT ═══ */
-export function Float({
-  children, className, duration = 3,
-}: { children: ReactNode; className?: string; duration?: number }) {
-  return (
-    <motion.div
-      animate={{ y: [-10, 10, -10] }}
-      transition={{ duration, repeat: Infinity, ease: "easeInOut" }}
-      className={className}
-    >{children}</motion.div>
-  );
-}
 
 /* ═══ PULSE GLOW ═══ */
 export function PulseGlow({ children, className }: { children: ReactNode; className?: string }) {
@@ -168,30 +144,6 @@ export function MagneticButton({
 }
 
 /* ═══ TEXT REVEAL (word by word) ═══ */
-export function TextReveal({
-  text, className, delay = 0,
-}: { text: string; className?: string; delay?: number }) {
-  const words = text.split(" ");
-  return (
-    <motion.span
-      initial="hidden" whileInView="visible"
-      viewport={{ once: true, margin: "-40px" }}
-      variants={{ visible: { transition: { staggerChildren: 0.06, delayChildren: delay } } }}
-      className={className}
-    >
-      {words.map((word, i) => (
-        <motion.span
-          key={i}
-          variants={{
-            hidden: { opacity: 0, y: 20, filter: "blur(4px)" },
-            visible: { opacity: 1, y: 0, filter: "blur(0px)", transition: { duration: 0.4, ease: "easeOut" } },
-          }}
-          className="inline-block mr-[0.3em]"
-        >{word}</motion.span>
-      ))}
-    </motion.span>
-  );
-}
 
 /* ═══ COUNT UP ═══ */
 export function CountUp({
@@ -225,15 +177,6 @@ export function Marquee({
 }
 
 /* ═══ GRADIENT BORDER WRAPPER ═══ */
-export function GradientBorder({
-  children, className,
-}: { children: ReactNode; className?: string }) {
-  return (
-    <div className={`gradient-border ${className ?? ""}`}>
-      {children}
-    </div>
-  );
-}
 
 /* ═══ WAVE DIVIDER ═══ */
 export function WaveDivider({ fill = "#ffffff", flip = false, className }: { fill?: string; flip?: boolean; className?: string }) {

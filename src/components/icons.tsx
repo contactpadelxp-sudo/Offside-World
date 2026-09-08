@@ -230,12 +230,6 @@ export const Cadenas: IconType = (p) => (
   </Svg>
 );
 
-export const Etoile: IconType = (p) => (
-  <Svg {...p}>
-    <path d="m12 2 3.1 6.3 6.9 1-5 4.9 1.2 6.8L12 17.8l-6.2 3.2L7 14.2l-5-4.9 6.9-1L12 2Z" />
-  </Svg>
-);
-
 export const Ampoule: IconType = (p) => (
   <Svg {...p}>
     <path d="M12 2a7 7 0 0 0-4 12.7v2.2h8v-2.2A7 7 0 0 0 12 2Z" />
@@ -327,14 +321,6 @@ export const Carte: IconType = (p) => (
   </Svg>
 );
 
-export const Colis: IconType = (p) => (
-  <Svg {...p}>
-    <path d="M12 2 2 7l10 5 10-5-10-5Z" />
-    <path d="M2 9.3v8.2L11 22v-8.2L2 9.3Z" />
-    <path d="M13 22l9-4.5V9.3L13 13.8V22Z" />
-  </Svg>
-);
-
 export const Cookie: IconType = (p) => (
   <Svg {...p}>
     <path
@@ -367,14 +353,5 @@ export const Visuel: IconType = (p) => (
     />
     <circle cx="9" cy="10" r="1.6" />
     <path d="M6 17.5h12l-4.4-5.6-2.6 3.2-1.6-1.8L6 17.5Z" />
-  </Svg>
-);
-
-export const QrCode: IconType = (p) => (
-  <Svg {...p}>
-    <path fillRule="evenodd" clipRule="evenodd" d="M2.6 2.6h8.4V11H2.6V2.6Zm2.6 2.6v3.2h3.2V5.2H5.2Z" />
-    <path fillRule="evenodd" clipRule="evenodd" d="M13 2.6h8.4V11H13V2.6Zm2.6 2.6v3.2h3.2V5.2h-3.2Z" />
-    <path fillRule="evenodd" clipRule="evenodd" d="M2.6 13h8.4v8.4H2.6V13Zm2.6 2.6v3.2h3.2v-3.2H5.2Z" />
-    <path d="M13 13h3.6v3.6H13zM17.8 17.8h3.6v3.6h-3.6zM17.8 13h3.6v2.1h-3.6zM13 17.8h2.1v3.6H13z" />
   </Svg>
 );

@@ -23,14 +23,14 @@ export const BUBBLE_MIN_PERSONNES = 6;
 export const BUBBLE_MAX_PERSONNES = 20;
 export const BUBBLE_DUREE_MINUTES = 60;
 
-export function bubbleTotal(nbPersonnes: number): number {
-  return BUBBLE_PRIX_PAR_PERSONNE * Math.max(BUBBLE_MIN_PERSONNES, nbPersonnes);
-}
+/*
+ * Pas de `bubbleTotal()` ici. Une fonction de ce nom existait, inutilisée :
+ * le montant facturé est recalculé par le serveur au moment d'écrire la
+ * réservation. Un second calcul côté navigateur finirait par diverger du
+ * premier, et c'est le genre d'écart qu'on découvre sur une facture.
+ */
 
 // ── Team Building ────────────────────────────────────────────────────────────
-
-/** Le team building se réserve à la demi-journée, tarif sur devis. */
-export const TEAM_BUILDING_SUR_DEVIS = true;
 
 /** Participants acceptés dans une demande de devis. */
 export const TEAM_BUILDING_MIN_PARTICIPANTS = 6;

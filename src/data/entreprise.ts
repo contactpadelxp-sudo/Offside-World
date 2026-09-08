@@ -35,18 +35,21 @@ export const ADRESSE_LIGNE = `${ADRESSE.rue}, ${ADRESSE.codePostal} ${ADRESSE.vi
 
 export const EMAIL = "info@offsidefootindoor.be";
 
-/**
- * Téléphone public — retiré du site à la demande du client.
+/*
+ * Il n'y a volontairement PAS de constante « téléphone » ici.
  *
- * Tous les affichages (pied de page, pages légales, e-mails, page d'erreur)
- * sont désormais conditionnels ou reformulés autour de l'e-mail : redonner une
- * valeur à ces deux constantes ne suffirait donc PAS à le faire réapparaître,
- * il faudrait rétablir les blocs correspondants. L'e-mail reste le moyen de
- * contact direct, ce que la loi exige (Code de droit économique, art. III.74).
+ * Le numéro a été retiré du site à la demande du client, et les blocs qui
+ * l'affichaient — pied de page, pages légales, page d'erreur, modèles
+ * d'e-mail — ont été retirés avec lui. Deux constantes à `null` avaient
+ * d'abord été conservées « au cas où » : elles ne servaient à rien, puisque
+ * leur redonner une valeur n'aurait rien réaffiché.
+ *
+ * Pour remettre le téléphone : ajouter les constantes ET rétablir les blocs.
+ * `git log -S TELEPHONE_TEL` retrouve les endroits exacts.
+ *
+ * L'e-mail reste le moyen de contact direct, ce que la loi exige
+ * (Code de droit économique, art. III.74) : il ne peut pas partir, lui.
  */
-export const TELEPHONE: string | null = null;
-/** Format international, pour les liens tel:. */
-export const TELEPHONE_TEL: string | null = null;
 
 /** Date de la dernière mise à jour des documents légaux. */
 export const MAJ_LEGALE = "1er septembre 2026";
