@@ -124,10 +124,25 @@ export default function CGV() {
         </P>
       </Article>
 
+      {/*
+        CET ARTICLE NE VISAIT QUE LES ANNIVERSAIRES.
+
+        Le tunnel de réservation, lui, affiche le même barème au client qui
+        achète un Bubble Foot, et lui fait maintenant payer la totalité en
+        ligne. Le vendeur se serait donc trouvé à retenir 50 % d'une somme sur
+        la base d'un article dont le premier mot disait qu'il ne s'appliquait
+        pas — une clause qu'aucun juge n'aurait suivie, et un remboursement
+        intégral à faire après coup.
+
+        L'article couvre désormais toutes les réservations conclues sur ce
+        site, ce qui est exactement l'ensemble de ce qui est encaissé ici. La
+        réserve SportFinder reste : ces réservations-là ne passent pas par
+        nous.
+      */}
       <Article n={6} titre="Annulation ou modification par le client">
         <P>
-          Le présent article s&apos;applique uniquement aux réservations de formules anniversaires
-          organisées par Offside.
+          Le présent article s&apos;applique aux réservations conclues directement auprès
+          d&apos;Offside, notamment les formules anniversaires et le Bubble Foot.
         </P>
         <P>
           Les réservations de terrains de football effectuées via la plateforme SportFinder sont
@@ -137,12 +152,11 @@ export default function CGV() {
           contacter la plateforme selon les modalités prévues.
         </P>
         <P>
-          Une réservation d&apos;anniversaire concerne un créneau déterminé spécialement bloqué
-          pour le client.
+          Une telle réservation concerne un créneau déterminé spécialement bloqué pour le client.
         </P>
         <P>
-          Toute demande d&apos;annulation ou de modification d&apos;une formule anniversaire doit
-          être adressée à Offside dans les meilleurs délais par e-mail.
+          Toute demande d&apos;annulation ou de modification doit être adressée à Offside dans les
+          meilleurs délais par e-mail.
         </P>
         <P>
           Sauf conditions particulières communiquées au moment de la réservation, les règles
@@ -150,26 +164,30 @@ export default function CGV() {
         </P>
         <div className="space-y-3">
           <div className="rounded-xl border border-primary/20 bg-primary/5 p-4">
-            <p className="font-semibold">Plus de 7 jours calendrier avant l&apos;anniversaire</p>
+            <p className="font-semibold">Plus de 7 jours calendrier avant l&apos;activité</p>
             <p className="text-muted-foreground text-sm mt-1">
               Le client peut demander le remboursement des sommes versées ou le report de la
               réservation vers une autre date disponible.
             </p>
           </div>
           <div className="rounded-xl border border-primary/20 bg-primary/5 p-4">
-            <p className="font-semibold">Entre 7 jours et 48 heures avant l&apos;anniversaire</p>
+            <p className="font-semibold">Entre 7 jours et 48 heures avant l&apos;activité</p>
             <p className="text-muted-foreground text-sm mt-1">
               50 % du prix de la réservation reste dû. Si le montant a déjà été payé intégralement,
               50 % est remboursé.
             </p>
           </div>
           <div className="rounded-xl border border-primary/20 bg-primary/5 p-4">
-            <p className="font-semibold">Moins de 48 heures avant l&apos;anniversaire ou non-présentation</p>
+            <p className="font-semibold">Moins de 48 heures avant l&apos;activité ou non-présentation</p>
             <p className="text-muted-foreground text-sm mt-1">
               Le prix de la réservation reste intégralement dû et aucun remboursement n&apos;est prévu.
             </p>
           </div>
         </div>
+        <P>
+          Les remboursements sont effectués sur le moyen de paiement utilisé lors de la réservation,
+          dans les meilleurs délais après l&apos;acceptation de l&apos;annulation.
+        </P>
         <P>
           Lorsque cela est possible, Offside peut, à titre commercial, proposer un changement de
           date. Cette possibilité dépend toutefois des disponibilités du centre et ne constitue pas
@@ -396,11 +414,40 @@ export default function CGV() {
           E-mail : <a href={`mailto:${EMAIL}`} className="underline text-primary">{EMAIL}</a>
         </address>
         <P>Offside privilégie toujours la recherche d&apos;une solution amiable.</P>
+        {/*
+          « Le consommateur peut s'informer sur les possibilités » ne renvoyait
+          nulle part : le consommateur devait trouver seul l'organisme à saisir.
+          Le Service de médiation pour le consommateur est le point de contact
+          officiel en Belgique — c'est lui qu'il faut nommer.
+
+          La plateforme européenne de règlement en ligne des litiges (RLL/ODR)
+          n'est délibérément PAS citée : la Commission l'a fermée le 20 juillet
+          2025. Y renvoyer enverrait le client sur une page morte.
+        */}
         <P>
           Lorsqu&apos;un litige de consommation ne peut pas être réglé directement entre les
-          parties, le consommateur peut également s&apos;informer sur les possibilités de règlement
-          extrajudiciaire des litiges disponibles en Belgique.
+          parties, le consommateur peut s&apos;adresser au Service de médiation pour le
+          consommateur, point de contact officiel pour le règlement extrajudiciaire des litiges de
+          consommation en Belgique :
         </P>
+        <address className="not-italic text-muted-foreground">
+          Service de médiation pour le consommateur<br />
+          Boulevard du Roi Albert II 8, boîte 1<br />
+          1000 Bruxelles<br />
+          E-mail :{" "}
+          <a href="mailto:contact@mediationconsommateur.be" className="underline text-primary">
+            contact@mediationconsommateur.be
+          </a>
+          <br />
+          <a
+            href="https://mediationconsommateur.be"
+            className="underline text-primary"
+            target="_blank"
+            rel="noreferrer noopener"
+          >
+            mediationconsommateur.be
+          </a>
+        </address>
       </Article>
 
       <Article n={21} titre="Droit applicable">

@@ -136,7 +136,7 @@ export function ConfirmationContent() {
                 <span className="font-mono font-semibold">{reference}</span>
               </div>
               <div className="border-t pt-3 flex justify-between text-lg">
-                <span className="font-bold">{surDevis ? "Tarif" : "Montant"}</span>
+                <span className="font-bold">{surDevis ? "Tarif" : "Montant TVAC"}</span>
                 <span className="font-bold text-gradient-field">
                   {surDevis ? "Sur devis" : `${recap?.total ?? 0}€`}
                 </span>

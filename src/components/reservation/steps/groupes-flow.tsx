@@ -470,7 +470,7 @@ export function GroupesFlow({
                 <span className="font-semibold">{isBubble ? nbPersonnes : nbParticipants}</span>
               </div>
               <div className="border-t pt-3 flex justify-between text-lg">
-                <span className="font-bold">{isBubble ? "Total" : "Tarif"}</span>
+                <span className="font-bold">{isBubble ? "Total TVAC" : "Tarif"}</span>
                 <span className={`font-bold ${isBubble ? "text-field" : "text-kick"}`}>
                   {isBubble ? `${total}€` : "Sur devis"}
                 </span>

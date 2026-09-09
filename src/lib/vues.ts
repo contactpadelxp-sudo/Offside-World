@@ -82,7 +82,29 @@ export interface ReservationAdmin {
   espaceNom: string | null;
   /** Vrai si le créneau est déjà passé : on n'y propose plus d'action. */
   passee: boolean;
+  /**
+   * Argent réellement encaissé, s'il y en a. `null` pour une réservation payée
+   * autrement qu'en ligne — c'est ce qui décide si l'annulation propose un
+   * remboursement ou se contente de libérer le créneau.
+   */
+  paiement: {
+    montantCents: number;
+    rembourseCents: number;
+    /** Ce que le barème d'annulation rendrait si on annulait maintenant. */
+    baremeCents: number;
+  } | null;
 }
+
+/**
+ * Ce que l'exploitant décide de rendre en annulant.
+ *
+ * Ce type vit ici, et non dans le module de remboursement, pour une raison
+ * mécanique : ce dernier commence par `import "server-only"`, et la fiche de
+ * réservation est un composant navigateur. Un `import type` est certes effacé à
+ * la compilation, mais faire dépendre — même en apparence — du code client d'un
+ * module marqué serveur est le genre de fil qu'on finit par tirer.
+ */
+export type ChoixRemboursement = "integral" | "bareme" | "aucun";
 
 export interface DevisAdmin {
   id: string;

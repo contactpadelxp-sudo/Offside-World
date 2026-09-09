@@ -34,6 +34,26 @@ export default function CGU() {
         <p className="text-muted-foreground">
           Offside décline toute responsabilité en cas de dommages directs ou indirects résultant de l&apos;accès ou de l&apos;utilisation du site, y compris l&apos;inaccessibilité, les pertes de données ou les virus.
         </p>
+        {/*
+          LA PHRASE PRÉCÉDENTE EST UNE EXCLUSION TOTALE DE RESPONSABILITÉ.
+
+          Telle quelle, elle est nulle : l'article VI.83 du Code de droit
+          économique interdit les clauses qui écartent la responsabilité du
+          vendeur pour son dol, sa faute lourde, ou pour l'inexécution de ses
+          obligations essentielles. Et une clause abusive n'est pas seulement
+          inopposable — sa présence est en soi une infraction.
+
+          On ne la supprime pas : elle a un objet légitime pour tout le reste
+          (une panne d'hébergeur, un lien tiers cassé). On la borne, ce qui est
+          la formulation reconnue. Le même correctif existe déjà à l'article 16
+          des CGV, ce qui n'était pas le cas ici.
+        */}
+        <p className="text-muted-foreground">
+          Ces limitations ne s&apos;appliquent pas au dol, à la faute lourde ou à l&apos;inexécution
+          d&apos;une obligation essentielle d&apos;Offside, ni aux dommages corporels. Aucune
+          disposition des présentes CGU ne vise à exclure ou limiter une responsabilité qui ne
+          pourrait légalement l&apos;être, en particulier à l&apos;égard d&apos;un consommateur.
+        </p>
       </section>
 
       <section className="mt-8 space-y-4">
@@ -63,8 +83,21 @@ export default function CGU() {
 
       <section className="mt-8 space-y-4">
         <h2 className="text-xl font-bold">7. Droit applicable</h2>
+        {/*
+          « [À COMPLÉTER] » s'affichait en clair sur une page publique.
+
+          On ne le remplace pas par une clause d'attribution de compétence :
+          imposer un tribunal à un consommateur est précisément ce que l'article
+          VI.83, 23° du Code de droit économique range parmi les clauses
+          abusives, et l'article 624 du Code judiciaire fixe déjà les règles de
+          toute façon. La mention ne vaut donc que pour les clients
+          professionnels, où elle est licite.
+        */}
         <p className="text-muted-foreground">
-          Les présentes CGU sont soumises au droit belge. Tout litige sera soumis à la compétence des tribunaux de l&apos;arrondissement judiciaire de [À COMPLÉTER].
+          Les présentes CGU sont soumises au droit belge. À l&apos;égard d&apos;un consommateur, les
+          règles légales impératives de compétence territoriale s&apos;appliquent et aucune clause
+          des présentes n&apos;y déroge. Pour les autres utilisateurs, les tribunaux de
+          l&apos;arrondissement judiciaire de Namur sont compétents.
         </p>
       </section>
 

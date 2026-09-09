@@ -333,7 +333,7 @@ export function AnniversaireFlow({
                 </div>
               )}
               <div className="border-t pt-2 flex justify-between text-base">
-                <span className="font-bold">Total</span>
+                <span className="font-bold">Total TVAC</span>
                 <span className="font-bold text-field">{totalPrice}€</span>
               </div>
             </CardContent>
@@ -506,7 +506,7 @@ export function AnniversaireFlow({
                 </div>
               )}
               <div className="border-t pt-4 flex justify-between text-lg">
-                <span className="font-bold">Total</span>
+                <span className="font-bold">Total TVAC</span>
                 <span className="font-bold text-field">{totalPrice}€</span>
               </div>
               <p className="text-xs text-muted-foreground flex items-start gap-1.5">
@@ -545,7 +545,7 @@ export function AnniversaireFlow({
           <Card className="mt-6 border-2">
             <CardContent className="p-6">
               <div className="flex justify-between text-lg mb-6">
-                <span className="font-bold">Total</span>
+                <span className="font-bold">Total TVAC</span>
                 <span className="font-bold text-field">{totalPrice}€</span>
               </div>
 

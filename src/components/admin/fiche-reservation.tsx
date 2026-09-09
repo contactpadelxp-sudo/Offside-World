@@ -6,7 +6,7 @@ import {
   confirmerReservation,
   enregistrerNoteReservation,
 } from "@/lib/actions/admin";
-import type { ReservationAdmin, StatutReservation } from "@/lib/vues";
+import type { ChoixRemboursement, ReservationAdmin, StatutReservation } from "@/lib/vues";
 import {
   BOUTON_DANGER,
   BOUTON_NEUTRE,
@@ -49,6 +49,31 @@ const STATUTS: Record<StatutReservation, { label: string; classe: string }> = {
   expiree: { label: "Expirée", classe: "bg-white/5 text-muted-foreground" },
 };
 
+/** Montant en centimes vers « 180 € » / « 87,50 € ». */
+function euros(cents: number): string {
+  const u = Math.floor(cents / 100);
+  const c = cents % 100;
+  return `${c === 0 ? u : `${u},${String(c).padStart(2, "0")}`} €`;
+}
+
+/**
+ * Les trois manières d'annuler une réservation payée.
+ *
+ * « Barème » est mis en tête parce que c'est le cas courant — un client qui se
+ * désiste — mais AUCUN n'est présélectionné : rendre de l'argent est une
+ * décision, pas un défaut. Tant que rien n'est coché, le bouton annule sans
+ * rembourser, ce qui est réversible d'un clic dans Stripe ; l'inverse ne l'est
+ * pas.
+ */
+const CHOIX_REMBOURSEMENT: {
+  valeur: ChoixRemboursement;
+  libelle: (paye: number, bareme: number) => string;
+}[] = [
+  { valeur: "bareme", libelle: (_p, b) => `Barème d'annulation (${euros(b)})` },
+  { valeur: "integral", libelle: (p) => `Remboursement intégral (${euros(p)})` },
+  { valeur: "aucun", libelle: () => "Aucun remboursement" },
+];
+
 function Etiquette({ children, classe }: { children: React.ReactNode; classe: string }) {
   return (
     <span
@@ -66,6 +91,7 @@ export function FicheReservation({ r }: { r: ReservationAdmin }) {
     (_actuel, vise) => vise
   );
   const [confirmeAnnulation, setConfirmeAnnulation] = useState(false);
+  const [remboursement, setRemboursement] = useState<ChoixRemboursement>("aucun");
   const [noteOuverte, setNoteOuverte] = useState(false);
   const [texteNote, setTexteNote] = useState(r.noteInterne ?? "");
 
@@ -73,6 +99,10 @@ export function FicheReservation({ r }: { r: ReservationAdmin }) {
   const badge = STATUTS[statut];
   const Icone = type.icone;
   const active = statut === "en_attente" || statut === "confirmee";
+  // Ce qu'il resterait à rendre. Zéro quand rien n'a été payé en ligne, ou
+  // quand tout a déjà été remboursé : dans les deux cas l'annulation ne pose
+  // aucune question d'argent.
+  const reste = r.paiement ? r.paiement.montantCents - r.paiement.rembourseCents : 0;
 
   return (
     <article
@@ -175,30 +205,68 @@ export function FicheReservation({ r }: { r: ReservationAdmin }) {
 
           {active &&
             (confirmeAnnulation ? (
-              <span className="inline-flex flex-wrap items-center gap-2 rounded-lg border border-destructive/40 bg-destructive/5 px-3 py-1.5">
-                <span className="text-sm text-destructive">Annuler cette réservation ?</span>
-                <button
-                  type="button"
-                  disabled={enCours}
-                  onClick={() => {
-                    setConfirmeAnnulation(false);
-                    lancer("annuler", async () => {
-                      projeter("annulee");
-                      return annulerReservation(r.id);
-                    });
-                  }}
-                  className={BOUTON_DANGER}
-                >
-                  Oui, annuler
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setConfirmeAnnulation(false)}
-                  className={BOUTON_NEUTRE}
-                >
-                  Non
-                </button>
-              </span>
+              <div className="w-full rounded-lg border border-destructive/40 bg-destructive/5 px-3 py-2.5">
+                <p className="text-sm text-destructive">
+                  Annuler cette réservation ?
+                  {reste > 0 && " Choisissez ce qui est rendu au client."}
+                </p>
+
+                {/*
+                  LE MONTANT N'EST PAS SAISI ICI, ET CE N'EST PAS UN OUBLI.
+                  Les trois choix couvrent les trois situations réelles — le
+                  client se désiste, le complexe annule, ou la somme reste
+                  acquise —, et le serveur recalcule lui-même ce qu'il envoie
+                  chez Stripe. Un champ libre ferait de cet écran une commande
+                  de virement, à un chiffre de trop près.
+                */}
+                {reste > 0 && (
+                  <fieldset className="mt-2">
+                    <legend className="sr-only">Remboursement</legend>
+                    <div className="flex flex-wrap gap-x-4 gap-y-1.5">
+                      {CHOIX_REMBOURSEMENT.map((c) => (
+                        <label
+                          key={c.valeur}
+                          className="inline-flex min-h-8 cursor-pointer items-center gap-1.5 text-sm"
+                        >
+                          <input
+                            type="radio"
+                            name={`remb-${r.id}`}
+                            value={c.valeur}
+                            checked={remboursement === c.valeur}
+                            onChange={() => setRemboursement(c.valeur)}
+                            className="accent-destructive"
+                          />
+                          {c.libelle(reste, r.paiement?.baremeCents ?? 0)}
+                        </label>
+                      ))}
+                    </div>
+                  </fieldset>
+                )}
+
+                <div className="mt-2.5 flex flex-wrap items-center gap-2">
+                  <button
+                    type="button"
+                    disabled={enCours}
+                    onClick={() => {
+                      setConfirmeAnnulation(false);
+                      lancer("annuler", async () => {
+                        projeter("annulee");
+                        return annulerReservation(r.id, remboursement);
+                      });
+                    }}
+                    className={BOUTON_DANGER}
+                  >
+                    Oui, annuler
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setConfirmeAnnulation(false)}
+                    className={BOUTON_NEUTRE}
+                  >
+                    Non
+                  </button>
+                </div>
+              </div>
             ) : (
               <button
                 type="button"

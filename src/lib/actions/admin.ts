@@ -24,6 +24,13 @@ import {
   auClientReservationConfirmee,
   emailDeTest,
 } from "@/lib/email/modeles";
+import {
+  montantARembourser,
+  paiementRemboursable,
+  rembourser,
+  type ChoixRemboursement,
+} from "@/lib/paiement/remboursement";
+import { montantLisible } from "@/lib/tarification";
 import type { StatutDevis } from "@/lib/db/backoffice";
 
 /**
@@ -113,12 +120,38 @@ export async function confirmerReservation(id: string): Promise<Resultat> {
   }
 }
 
-export async function annulerReservation(id: string): Promise<Resultat> {
+/**
+ * Annule une réservation, et rend l'argent si l'exploitant l'a décidé.
+ *
+ * LE CHOIX EST EXPLICITE, LE MONTANT NE L'EST PAS. Le navigateur envoie
+ * « integral », « bareme » ou « aucun » ; le serveur relit le paiement et
+ * l'heure du créneau, et recalcule lui-même la somme. Accepter un montant
+ * transmis par le client rendrait le remboursement pilotable depuis la console
+ * du navigateur — sur de l'argent réel.
+ *
+ * LE REMBOURSEMENT A LIEU AVANT L'E-MAIL, et pas dans `after()` : le message
+ * annonce ce qui a été rendu, il faut donc que ce soit fait. L'exploitant, lui,
+ * doit savoir tout de suite si Stripe a refusé — c'est à lui de rattraper à la
+ * main, et le message de retour le lui dit.
+ */
+export async function annulerReservation(
+  id: string,
+  remboursement: ChoixRemboursement = "aucun"
+): Promise<Resultat> {
   const session = await garde();
   if (!session) return REFUS_SESSION;
 
   try {
     const cible = uuid(id, "Réservation");
+    const choix = choixRemboursement(remboursement);
+
+    // Lu AVANT la mise à jour : il faut l'heure du créneau pour appliquer le
+    // barème, et la vue reste lisible après, mais autant tout tenir d'un coup.
+    const { data: avant } = await base()
+      .from("reservations_detaillees")
+      .select("debut")
+      .eq("id", cible)
+      .maybeSingle();
 
     const { data, error } = await base()
       .from("reservations")
@@ -131,7 +164,29 @@ export async function annulerReservation(id: string): Promise<Resultat> {
     if (error) throw error;
     if (!data) return { ok: false, message: "Cette réservation est déjà annulée." };
 
-    await journaliser(session, "reservation.annulee", data.reference);
+    await journaliser(session, "reservation.annulee", data.reference, { remboursement: choix });
+
+    let phraseArgent = "";
+    let avertissement = "";
+    const paiement = choix === "aucun" ? null : await paiementRemboursable(cible);
+    if (paiement) {
+      const heuresAvant = avant?.debut
+        ? (new Date(avant.debut).getTime() - Date.now()) / 3_600_000
+        : 0;
+      const montant = montantARembourser(paiement, choix, heuresAvant);
+      const resultat = await rembourser(paiement, montant);
+      if (resultat.erreur) {
+        avertissement = ` ${resultat.erreur}`;
+      } else if (resultat.montantCents > 0) {
+        phraseArgent = ` ${montantLisible(resultat.montantCents)} remboursés.`;
+        await journaliser(session, "paiement.rembourse", data.reference, {
+          montant_cents: resultat.montantCents,
+        });
+      } else {
+        phraseArgent = " Le barème ne prévoit aucun remboursement à cette date.";
+      }
+    }
+
     rafraichir();
 
     // Annuler sans prévenir le client, c'est le laisser venir pour rien.
@@ -144,11 +199,18 @@ export async function annulerReservation(id: string): Promise<Resultat> {
     // redevient réservable immédiatement.
     return {
       ok: true,
-      message: `Réservation ${data.reference} annulée, le créneau est libéré. Le client en est informé par e-mail.`,
+      message:
+        `Réservation ${data.reference} annulée, le créneau est libéré.${phraseArgent}` +
+        ` Le client en est informé par e-mail.${avertissement}`,
     };
   } catch (e) {
     return echec(e);
   }
+}
+
+/** Le choix vient du navigateur : on n'accepte que les trois valeurs prévues. */
+function choixRemboursement(v: unknown): ChoixRemboursement {
+  return v === "integral" || v === "bareme" ? v : "aucun";
 }
 
 export async function enregistrerNoteReservation(id: string, note: string): Promise<Resultat> {

@@ -13,12 +13,42 @@ export const metadata: Metadata = {
   existe pour donner — tombait hors de l'écran, dans un conteneur qui défilait
   sans le dire.
 */
+/*
+  DEUX ERREURS CORRIGÉES DANS LA PREMIÈRE LIGNE, ET AUCUNE N'ÉTAIT ANODINE.
+
+  1. « 12 mois » était faux. Le choix de l'internaute est conservé six mois —
+     `CONSENT_MAX_AGE_MS` dans `components/cookie-banner.tsx` — après quoi la
+     question lui est reposée. Annoncer une durée deux fois plus longue que la
+     réalité est le genre d'écart qu'une autorité de contrôle vérifie en
+     ouvrant les outils de développement, en dix secondes.
+
+  2. « Intérêt légitime » était une confusion de régime. L'intérêt légitime est
+     une base juridique du RGPD (art. 6.1.f) ; le dépôt d'un traceur relève,
+     lui, de l'article 129 de la loi du 13 juin 2005 relative aux
+     communications électroniques, qui n'en connaît pas. Ce que cet article
+     prévoit est une EXEMPTION de consentement pour ce qui est strictement
+     nécessaire au service demandé. La conséquence pratique est nette : sous
+     l'intérêt légitime, le visiteur peut s'opposer ; sous l'exemption, il n'y
+     a rien à quoi s'opposer, puisque sans cela le site ne peut pas
+     fonctionner. Invoquer la mauvaise règle, c'est promettre un droit qui
+     n'existe pas ici.
+
+  On en profite pour dire ce qui est réellement stocké : pas un cookie, mais
+  une entrée de `localStorage`. La différence est invisible pour le visiteur et
+  la loi les traite pareil, mais la page ne doit pas décrire autre chose que ce
+  que le navigateur contient.
+*/
 const CATEGORIES: { categorie: string; finalite: string; duree: string; consentement: string }[] = [
   {
     categorie: "Nécessaires",
-    finalite: "Fonctionnement du site, mémorisation du consentement cookies, sécurité",
-    duree: "Session / 12 mois",
-    consentement: "Non requis (intérêt légitime)",
+    finalite:
+      "Mémorisation de votre choix en matière de cookies, afin de ne pas vous reposer la " +
+      "question à chaque page. Cette information reste dans votre navigateur et n'est jamais " +
+      "envoyée à nos serveurs.",
+    duree: "6 mois, après quoi le choix vous est redemandé",
+    consentement:
+      "Non requis : strictement nécessaire au service que vous demandez (exemption prévue par " +
+      "l'article 129 de la loi du 13 juin 2005 relative aux communications électroniques)",
   },
   {
     categorie: "Mesure d'audience",

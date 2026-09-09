@@ -358,6 +358,7 @@ export type Database = {
           id: string
           methode: string | null
           montant_cents: number
+          montant_rembourse_cents: number
           reservation_id: string
           statut: Database["public"]["Enums"]["statut_paiement"]
           stripe_payment_intent: string | null
@@ -370,6 +371,7 @@ export type Database = {
           id?: string
           methode?: string | null
           montant_cents: number
+          montant_rembourse_cents?: number
           reservation_id: string
           statut?: Database["public"]["Enums"]["statut_paiement"]
           stripe_payment_intent?: string | null
@@ -382,6 +384,7 @@ export type Database = {
           id?: string
           methode?: string | null
           montant_cents?: number
+          montant_rembourse_cents?: number
           reservation_id?: string
           statut?: Database["public"]["Enums"]["statut_paiement"]
           stripe_payment_intent?: string | null

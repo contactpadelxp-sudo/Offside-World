@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { enEuros, totalAnniversaireCents, totalBubbleCents } from "./tarification";
+import {
+  enEuros,
+  montantLisible,
+  totalAnniversaireCents,
+  totalBubbleCents,
+} from "./tarification";
 import { BUBBLE_PRIX_PAR_PERSONNE } from "@/data/bubble-team";
 
 /**
@@ -83,5 +88,35 @@ describe("conversion en euros", () => {
     expect(enEuros(18000)).toBe(180);
     expect(enEuros(20700)).toBe(207);
     expect(enEuros(24550)).toBe(245.5);
+  });
+});
+
+describe("montant écrit pour un client belge", () => {
+  it("omet les centimes quand il n'y en a pas", () => {
+    expect(montantLisible(18000)).toBe("180\u00a0€");
+    expect(montantLisible(0)).toBe("0\u00a0€");
+  });
+
+  it("écrit les centimes avec une virgule et deux décimales", () => {
+    // Le cas qui a motivé la fonction : la moitié de 175 €.
+    expect(montantLisible(8750)).toBe("87,50\u00a0€");
+    expect(montantLisible(24550)).toBe("245,50\u00a0€");
+    // Un seul centime ne doit pas s'écrire « 1,5 € ».
+    expect(montantLisible(105)).toBe("1,05\u00a0€");
+  });
+
+  it("sépare le nombre de son symbole par une espace insécable", () => {
+    expect(montantLisible(18000)).toContain("\u00a0€");
+    expect(montantLisible(18000)).not.toContain(" €");
+  });
+
+  it("ne laisse pas passer un flottant issu d'un calcul de remboursement", () => {
+    // 50 % de 175,01 € vaut 8750,5 centimes : on arrondit au centime plutôt
+    // que d'écrire un montant impossible à encaisser.
+    expect(montantLisible(17501 * 0.5)).toBe("87,51\u00a0€");
+  });
+
+  it("garde le signe d'un montant négatif", () => {
+    expect(montantLisible(-8750)).toBe("-87,50\u00a0€");
   });
 });

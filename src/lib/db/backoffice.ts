@@ -2,6 +2,7 @@ import "server-only";
 import { base, baseConfiguree } from "@/lib/supabase/server";
 import { heure, jourISO, jourLisible, jourLisibleCap } from "@/lib/temps";
 import { lireOptions } from "@/lib/db/referentiel";
+import { partRemboursee } from "@/data/reglement";
 import type { Database } from "@/lib/supabase/types";
 import type { RecapEmail } from "@/lib/email/modeles";
 import type {
@@ -29,6 +30,7 @@ const LIBELLES_ACTION: Record<string, string> = {
   "reservation.confirmee": "Réservation confirmée",
   "reservation.annulee": "Réservation annulée",
   "reservation.note": "Note interne modifiée",
+  "paiement.rembourse": "Remboursement effectué",
   "devis.statut": "Statut de devis modifié",
   "devis.note": "Note interne modifiée",
   "creneau.ouvert": "Créneau rouvert",
@@ -90,7 +92,7 @@ export async function lireReservations(
       console.error("Recherche impossible :", error?.message);
       return [];
     }
-    return construire(data, await lireOptions(), maintenant);
+    return construire(data, await lireOptions(), await lirePaiements(data), maintenant);
   }
 
   switch (filtre) {
@@ -128,15 +130,58 @@ export async function lireReservations(
     return [];
   }
 
-  return construire(data, options, maintenant);
+  return construire(data, options, await lirePaiements(data), maintenant);
 }
 
 type LigneReservation = Database["public"]["Views"]["reservations_detaillees"]["Row"];
+
+interface PaiementLu {
+  montantCents: number;
+  rembourseCents: number;
+}
+
+/**
+ * Les paiements encaissés des réservations affichées, en une requête.
+ *
+ * UNE REQUÊTE POUR LA PAGE, PAS UNE PAR LIGNE. La vue `reservations_detaillees`
+ * ne porte pas le paiement, et l'y ajouter aurait demandé de la recréer — donc
+ * une migration, sur une vue dont dépend déjà tout le back-office. Un `in (…)`
+ * sur les identifiants déjà en main coûte moins cher, en travail comme en
+ * risque.
+ */
+async function lirePaiements(lignes: LigneReservation[]): Promise<Map<string, PaiementLu>> {
+  const ids = lignes.map((l) => l.id).filter((id): id is string => Boolean(id));
+  const par = new Map<string, PaiementLu>();
+  if (ids.length === 0) return par;
+
+  const { data, error } = await base()
+    .from("paiements")
+    .select("reservation_id, montant_cents, montant_rembourse_cents")
+    .in("reservation_id", ids)
+    .in("statut", ["reussi", "rembourse", "partiellement_rembourse"]);
+
+  if (error || !data) {
+    // Un échec ici ne doit pas vider la liste des réservations : on affiche
+    // les fiches sans leur volet paiement, et l'annulation ne proposera pas de
+    // remboursement — le plus prudent des deux comportements.
+    console.error("Lecture des paiements impossible :", error?.message);
+    return par;
+  }
+
+  for (const p of data) {
+    par.set(p.reservation_id, {
+      montantCents: p.montant_cents,
+      rembourseCents: p.montant_rembourse_cents,
+    });
+  }
+  return par;
+}
 
 /** Traduit les lignes de la vue en fiches affichables. */
 function construire(
   data: LigneReservation[],
   options: { id: string; libelle: string }[],
+  paiements: Map<string, PaiementLu>,
   maintenant: Date
 ): ReservationAdmin[] {
   const libelles = new Map(options.map((o) => [o.id, o.libelle]));
@@ -147,6 +192,7 @@ function construire(
     // dont l'ossature manque plutôt que d'afficher des trous.
     if (!r.id || !r.reference || !r.type || !r.statut || !r.debut || !r.fin) continue;
     const debut = new Date(r.debut);
+    const paye = paiements.get(r.id);
     sortie.push({
       id: r.id,
       reference: r.reference,
@@ -171,6 +217,22 @@ function construire(
       fin: heure(new Date(r.fin)),
       espaceNom: r.espace_nom,
       passee: debut < maintenant,
+      paiement: paye
+        ? {
+            montantCents: paye.montantCents,
+            rembourseCents: paye.rembourseCents,
+            // Calculé côté serveur et affiché tel quel : le back-office montre
+            // le montant, il ne le décide pas. L'action le recalcule de son
+            // côté avant d'envoyer quoi que ce soit chez Stripe.
+            baremeCents: Math.min(
+              Math.round(
+                paye.montantCents *
+                  partRemboursee((debut.getTime() - maintenant.getTime()) / 3_600_000)
+              ),
+              paye.montantCents - paye.rembourseCents
+            ),
+          }
+        : null,
     });
   }
   return sortie;
@@ -323,13 +385,30 @@ export async function lireJournal(limite = 150): Promise<EntreeJournal[]> {
  * l'identifiant, et il faut l'horaire, l'espace et la formule pour écrire un
  * message compréhensible. Le contenu des allergies n'est PAS transmis — seul
  * un indicateur l'est, le détail restant dans le back-office.
+ *
+ * LE PAIEMENT EST RELU ICI, ET NON PASSÉ PAR L'APPELANT. Le même e-mail de
+ * confirmation part de deux endroits : le webhook Stripe, où le client vient
+ * de payer, et le back-office, où l'exploitant confirme une réservation dont
+ * le règlement a été convenu autrement. Un drapeau transmis par l'appelant
+ * aurait fini par mentir dans l'un des deux cas ; la base, elle, sait
+ * laquelle des deux situations on est en train de vivre.
  */
 export async function lireRecapEmail(id: string): Promise<RecapEmail | null> {
   if (!baseConfiguree()) return null;
 
-  const [{ data, error }, options] = await Promise.all([
+  const [{ data, error }, options, paiement] = await Promise.all([
     base().from("reservations_detaillees").select("*").eq("id", id).maybeSingle(),
     lireOptions(),
+    base()
+      .from("paiements")
+      .select("montant_cents, montant_rembourse_cents, methode")
+      .eq("reservation_id", id)
+      // « rembourse » et « partiellement_rembourse » sont inclus : l'e-mail
+      // d'annulation doit justement pouvoir dire ce qui a été rendu.
+      .in("statut", ["reussi", "rembourse", "partiellement_rembourse"])
+      .order("updated_at", { ascending: false })
+      .limit(1)
+      .maybeSingle(),
   ]);
 
   if (error || !data || !data.reference || !data.type || !data.debut || !data.fin) return null;
@@ -355,15 +434,33 @@ export async function lireRecapEmail(id: string): Promise<RecapEmail | null> {
     debut: heure(debut),
     fin: heure(new Date(data.fin)),
     espaceNom: data.espace_nom,
-    total: (data.total_cents ?? 0) / 100,
+    totalCents: data.total_cents ?? 0,
     clientNom: data.client_nom ?? "",
     clientEmail: data.client_email ?? "",
     clientTelephone: data.client_telephone ?? "",
     options: (data.options_ids ?? []).map((o) => libelles.get(o) ?? o),
     allergieSignalee: Boolean(data.allergies),
     remarques: data.remarques,
+    paiement: paiement.data
+      ? {
+          montantCents: paiement.data.montant_cents,
+          rembourseCents: paiement.data.montant_rembourse_cents,
+          methode: LIBELLES_MOYEN_PAIEMENT[paiement.data.methode ?? ""] ?? null,
+        }
+      : null,
   };
 }
+
+/**
+ * Le moyen de paiement écrit comme le client le connaît.
+ *
+ * Stripe renvoie ses propres identifiants (`bancontact`, `card`). Les recopier
+ * tels quels donnerait « Payé par card » dans un e-mail français.
+ */
+const LIBELLES_MOYEN_PAIEMENT: Record<string, string> = {
+  bancontact: "Bancontact",
+  card: "carte bancaire",
+};
 
 /**
  * Dans combien de jours le dernier créneau ouvert tombe-t-il ?

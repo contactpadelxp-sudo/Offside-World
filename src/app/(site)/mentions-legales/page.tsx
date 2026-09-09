@@ -113,11 +113,17 @@ export default function MentionsLegales() {
 
       <section className="mt-8 space-y-4">
         <h2 className="text-xl font-bold">Cookies</h2>
+        {/*
+          « De personnalisation ou liés à des services tiers » : ni l'un ni
+          l'autre n'existe sur ce site. Même correction qu'à l'article 4 de la
+          politique de confidentialité — ces trois pages doivent décrire le même
+          site, et ce site n'a que deux traceurs.
+        */}
         <p className="text-muted-foreground">
-          Le site peut utiliser des cookies et technologies similaires nécessaires à son
-          fonctionnement ainsi que, sous réserve du consentement de l&apos;utilisateur lorsque
-          celui-ci est requis, des cookies de mesure d&apos;audience, de personnalisation ou liés
-          à des services tiers.
+          Le site conserve dans le navigateur le choix de l&apos;utilisateur en matière de cookies,
+          ce qui est nécessaire à son fonctionnement, et — uniquement avec son consentement — une
+          mesure d&apos;audience interne. Aucun cookie publicitaire, aucun traceur de réseau social
+          et aucun service tiers déposant un traceur n&apos;est utilisé.
         </p>
         <p className="text-muted-foreground">
           Les utilisateurs disposent d&apos;un{" "}

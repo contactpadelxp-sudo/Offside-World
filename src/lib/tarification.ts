@@ -60,3 +60,28 @@ export function totalBubbleCents(nbPersonnes: number): number {
 export function enEuros(cents: number): number {
   return cents / 100;
 }
+
+/**
+ * Montant écrit comme on l'écrit en Belgique : « 180 € », « 87,50 € ».
+ *
+ * POURQUOI PAS `${cents / 100} €`. C'est ce que faisait le code, et cela
+ * suffisait tant que tous les prix étaient ronds. Ils ne le sont plus : un
+ * remboursement de 50 % sur 175 € vaut 87,5, que JavaScript écrit « 87.5 » —
+ * point décimal anglais et centime tronqué. Sur un e-mail qui annonce une
+ * somme d'argent à un client belge, c'est exactement le genre de détail qui
+ * fait douter du reste.
+ *
+ * La virgule et l'espace insécable sont posés à la main plutôt que par
+ * `toLocaleString('fr-BE')` : le rendu de cette dernière dépend des données de
+ * localisation présentes sur la machine, qui ne sont pas les mêmes dans le
+ * navigateur, dans Node et dans une fonction serverless.
+ */
+export function montantLisible(cents: number): string {
+  const negatif = cents < 0;
+  const absolu = Math.abs(Math.round(cents));
+  const unites = Math.floor(absolu / 100);
+  const centimes = absolu % 100;
+  const corps = centimes === 0 ? String(unites) : `${unites},${String(centimes).padStart(2, "0")}`;
+  // Espace insécable : le montant ne doit jamais être coupé de son symbole.
+  return `${negatif ? "-" : ""}${corps} €`;
+}

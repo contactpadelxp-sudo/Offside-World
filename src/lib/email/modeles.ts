@@ -2,17 +2,28 @@ import "server-only";
 import type { Message } from "@/lib/email/envoi";
 import { adresseComplexe } from "@/lib/email/envoi";
 import { urlAbsolue } from "@/lib/site";
-import { ADRESSE_LIGNE, EMAIL, NOM_COMMERCIAL } from "@/data/entreprise";
+import {
+  ADRESSE_LIGNE,
+  BCE,
+  DENOMINATION_SOCIALE,
+  EMAIL,
+  NOM_COMMERCIAL,
+  TVA,
+} from "@/data/entreprise";
 import { RESUME_ANNULATION } from "@/data/reglement";
+import { montantLisible } from "@/lib/tarification";
 
 /**
  * Messages transactionnels.
  *
- * TROIS PARTIS PRIS
+ * QUATRE PARTIS PRIS
  *
  * 1. RIEN N'EST INVENTÉ. Ces e-mails ne promettent que ce que le complexe
- *    tient réellement : une demande est enregistrée, quelqu'un rappelle. Pas de
- *    consigne d'arrivée, pas de QR code, pas de « paiement reçu ».
+ *    tient réellement : une demande enregistrée est présentée comme une
+ *    demande, un paiement encaissé comme un paiement. Pas de consigne
+ *    d'arrivée, pas de QR code, et surtout pas de « paiement reçu » quand rien
+ *    n'a été reçu — l'e-mail lit l'état réel du paiement en base plutôt que de
+ *    faire confiance à celui qui le déclenche.
  *
  * 2. LE CONTENU DES ALLERGIES NE PARTIT PAS PAR E-MAIL. L'avis interne signale
  *    qu'une allergie a été renseignée et renvoie au back-office ; il n'en
@@ -23,6 +34,15 @@ import { RESUME_ANNULATION } from "@/data/reglement";
  * 3. HTML SOBRE ET LISIBLE PARTOUT. Fond clair — un e-mail sombre passe mal
  *    dans la moitié des clients de messagerie —, styles en ligne, aucune image
  *    distante, et une version texte complète pour ceux qui refusent le HTML.
+ *
+ * 4. L'E-MAIL EST LE SUPPORT DURABLE. Quand une réservation est payée, le
+ *    contrat est conclu à distance : l'article VI.46 § 7 du Code de droit
+ *    économique impose d'en confirmer les termes « sur un support durable ».
+ *    Une page web ne l'est pas — elle change sans laisser de trace, et le
+ *    client n'en garde rien. Cet e-mail, lui, reste dans sa boîte. Il doit
+ *    donc porter lui-même l'identité du vendeur, le montant payé, l'absence de
+ *    droit de rétractation et le barème d'annulation, et pas seulement un lien
+ *    vers des pages qui les contiennent.
  */
 
 const ACCENT = "#b67c12";
@@ -43,7 +63,57 @@ interface Ligne {
   valeur: string;
 }
 
-function enveloppe(titre: string, intro: string, lignes: Ligne[], apres: string[]): string {
+/**
+ * Identité du vendeur, telle qu'elle doit figurer sur le support durable.
+ *
+ * Les champs encore inconnus sont OMIS, pas remplacés par « [à compléter] ».
+ * Les pages du site affichent ce marqueur, et c'est voulu : il s'adresse à
+ * nous. Un client, lui, ne doit pas recevoir un e-mail qui a l'air cassé. Le
+ * jour où le numéro d'entreprise sera renseigné dans `data/entreprise.ts`, il
+ * apparaîtra ici sans qu'on touche à ce fichier.
+ */
+function identiteVendeur(): string[] {
+  const lignes = [
+    DENOMINATION_SOCIALE && DENOMINATION_SOCIALE !== NOM_COMMERCIAL
+      ? `${DENOMINATION_SOCIALE} (${NOM_COMMERCIAL})`
+      : NOM_COMMERCIAL,
+    ADRESSE_LIGNE,
+  ];
+  if (BCE) lignes.push(`Numéro d'entreprise : ${BCE}`);
+  if (TVA) lignes.push(`TVA : BE ${TVA}`);
+  return lignes;
+}
+
+/** Pied de page légal, en HTML. */
+function piedLegal(): string {
+  const identite = identiteVendeur().map(ech).join("<br>");
+  const lien = (chemin: string, libelle: string) =>
+    `<a href="${urlAbsolue(chemin)}" style="color:${ACCENT};">${libelle}</a>`;
+  return `${identite}<br>
+    <a href="mailto:${ech(EMAIL)}" style="color:${ACCENT};">${ech(EMAIL)}</a><br>
+    ${lien("/cgv", "Conditions générales de vente")} ·
+    ${lien("/mentions-legales", "Mentions légales")} ·
+    ${lien("/confidentialite", "Vie privée")}`;
+}
+
+/** Le même pied, en texte brut : les URL sont écrites en toutes lettres. */
+function piedLegalTexte(): string {
+  return [
+    ...identiteVendeur(),
+    EMAIL,
+    `Conditions générales de vente : ${urlAbsolue("/cgv")}`,
+    `Mentions légales : ${urlAbsolue("/mentions-legales")}`,
+    `Vie privée : ${urlAbsolue("/confidentialite")}`,
+  ].join("\n");
+}
+
+function enveloppe(
+  titre: string,
+  intro: string,
+  lignes: Ligne[],
+  apres: string[],
+  legal = false
+): string {
   const rangs = lignes
     .map(
       (l) => `<tr>
@@ -76,15 +146,25 @@ function enveloppe(titre: string, intro: string, lignes: Ligne[], apres: string[
     <tr><td style="padding:18px 28px 4px;">${paragraphes}</td></tr>
     <tr><td style="padding:8px 28px 26px;border-top:1px solid #ececea;">
       <p style="margin:12px 0 0;font-size:12px;line-height:1.6;color:${GRIS};">
-        ${ech(NOM_COMMERCIAL)} — ${ech(ADRESSE_LIGNE)}<br>
-        <a href="mailto:${ech(EMAIL)}" style="color:${ACCENT};">${ech(EMAIL)}</a>
+        ${
+          legal
+            ? piedLegal()
+            : `${ech(NOM_COMMERCIAL)} — ${ech(ADRESSE_LIGNE)}<br>
+        <a href="mailto:${ech(EMAIL)}" style="color:${ACCENT};">${ech(EMAIL)}</a>`
+        }
       </p>
     </td></tr>
   </table>
 </body></html>`;
 }
 
-function versTexte(titre: string, intro: string, lignes: Ligne[], apres: string[]): string {
+function versTexte(
+  titre: string,
+  intro: string,
+  lignes: Ligne[],
+  apres: string[],
+  legal = false
+): string {
   const bloc = lignes.map((l) => `${l.cle} : ${l.valeur}`).join("\n");
   const sansBalises = (v: string) => v.replace(/<[^>]+>/g, "");
   return [
@@ -96,8 +176,7 @@ function versTexte(titre: string, intro: string, lignes: Ligne[], apres: string[
     bloc ? `\n${bloc}\n` : "",
     ...apres.map(sansBalises),
     "",
-    `${NOM_COMMERCIAL} — ${ADRESSE_LIGNE}`,
-    EMAIL,
+    legal ? piedLegalTexte() : `${NOM_COMMERCIAL} — ${ADRESSE_LIGNE}\n${EMAIL}`,
   ]
     .filter((l) => l !== "")
     .join("\n");
@@ -110,13 +189,15 @@ function composer(
   intro: string,
   lignes: Ligne[],
   apres: string[],
-  repondreA?: string
+  repondreA?: string,
+  /** Ajoute l'identité complète du vendeur et les liens légaux au pied. */
+  legal = false
 ): Message {
   return {
     destinataire,
     sujet,
-    texte: versTexte(titre, intro, lignes, apres),
-    html: enveloppe(titre, intro, lignes, apres),
+    texte: versTexte(titre, intro, lignes, apres, legal),
+    html: enveloppe(titre, intro, lignes, apres, legal),
     repondreA,
   };
 }
@@ -130,8 +211,12 @@ export interface RecapEmail {
   debut: string;
   fin: string;
   espaceNom?: string | null;
-  /** en euros */
-  total: number;
+  /**
+   * En CENTIMES, comme partout ailleurs dans le projet. Ce champ était en
+   * euros : c'était le seul montant du code à ne pas l'être, et il forçait un
+   * aller-retour par un flottant juste avant d'être écrit à un client.
+   */
+  totalCents: number;
   clientNom: string;
   clientEmail: string;
   clientTelephone: string;
@@ -140,6 +225,16 @@ export interface RecapEmail {
   /** Vrai si une allergie a été renseignée. Le contenu reste au back-office. */
   allergieSignalee?: boolean;
   remarques?: string | null;
+  /**
+   * Paiement encaissé, s'il y en a un. `null` tant que rien n'a été payé en
+   * ligne — c'est le cas de toutes les réservations confirmées à la main.
+   */
+  paiement?: {
+    montantCents: number;
+    /** Cumul déjà rendu au client. Zéro tant que rien n'a été remboursé. */
+    rembourseCents: number;
+    methode: string | null;
+  } | null;
 }
 
 export interface DevisEmail {
@@ -166,9 +261,36 @@ function lignesReservation(r: RecapEmail): Ligne[] {
   );
   if (r.espaceNom) lignes.push({ cle: "Espace", valeur: r.espaceNom });
   if (r.options?.length) lignes.push({ cle: "Options", valeur: r.options.join(", ") });
-  lignes.push({ cle: "Montant", valeur: `${r.total} €` });
+  // « TVAC » et non « TTC » : c'est la mention belge, et le client doit lire
+  // sans ambiguïté que le prix affiché est celui qu'il paie.
+  lignes.push({ cle: "Montant", valeur: `${montantLisible(r.totalCents)} TVAC` });
+  if (r.paiement) {
+    lignes.push({
+      cle: "Payé",
+      valeur: r.paiement.methode
+        ? `${montantLisible(r.paiement.montantCents)} par ${r.paiement.methode}`
+        : montantLisible(r.paiement.montantCents),
+    });
+    if (r.paiement.rembourseCents > 0) {
+      lignes.push({ cle: "Remboursé", valeur: montantLisible(r.paiement.rembourseCents) });
+    }
+  }
   return lignes;
 }
+
+/**
+ * Pourquoi il n'y a pas de délai de rétractation, dit une fois pour toutes.
+ *
+ * Ce n'est pas une clause qu'on s'accorde : c'est une exception légale, et
+ * elle ne joue que parce que la prestation est fournie à une date convenue.
+ * L'écrire en citant l'article permet au client de vérifier, et à l'exploitant
+ * de ne pas avoir à l'inventer au téléphone.
+ */
+const SANS_RETRACTATION =
+  "<strong>Pas de droit de rétractation.</strong> Les activités de loisirs " +
+  "fournies à une date déterminée en sont exclues par la loi (Code de droit " +
+  "économique, art. VI.53, 12°). L'annulation reste possible aux conditions " +
+  "ci-dessous.";
 
 // ── Messages au client ───────────────────────────────────────────────────────
 
@@ -181,39 +303,118 @@ export function auClientReservationEnregistree(r: RecapEmail): Message {
     lignesReservation(r),
     [
       "<strong>Ce n'est pas encore une confirmation.</strong> Le créneau vous est réservé en attendant notre appel.",
+      SANS_RETRACTATION,
       `<strong>Annulation :</strong> ${ech(RESUME_ANNULATION)}`,
       "Une erreur dans ce récapitulatif ? Répondez simplement à cet e-mail.",
     ],
-    EMAIL
+    EMAIL,
+    true
   );
 }
 
+/**
+ * Confirmation de réservation — le support durable du contrat.
+ *
+ * Ce message part de deux endroits : le webhook Stripe, quand le paiement est
+ * encaissé, et le back-office, quand l'exploitant confirme une réservation
+ * réglée autrement. Le paragraphe sur le règlement suit ce que dit la base, pas
+ * l'appelant.
+ *
+ * Il porte l'ensemble de ce que l'article VI.46 § 7 du Code de droit économique
+ * exige qu'on confirme : ce qui est vendu, à quelle date, pour quel montant
+ * TVAC, qui vend (pied de page), à quelles conditions on annule, et pourquoi il
+ * n'y a pas de rétractation.
+ */
 export function auClientReservationConfirmee(r: RecapEmail): Message {
+  const apres: string[] = [];
+
+  if (r.paiement) {
+    apres.push(
+      `<strong>Paiement reçu.</strong> ${montantLisible(r.paiement.montantCents)} TVAC` +
+        `${r.paiement.methode ? ` réglés par ${ech(r.paiement.methode)}` : " réglés"}. ` +
+        "Rien ne reste à payer sur place."
+    );
+  }
+
+  apres.push(
+    SANS_RETRACTATION,
+    `<strong>Annulation :</strong> ${ech(RESUME_ANNULATION)}` +
+      (r.paiement
+        ? " Le remboursement éventuel revient sur le moyen de paiement utilisé."
+        : ""),
+    `Le détail figure dans nos <a href="${urlAbsolue("/cgv")}" style="color:${ACCENT};">conditions générales de vente</a>, que vous avez acceptées en réservant.`,
+    "Une question d'ici là ? Répondez simplement à cet e-mail."
+  );
+
   return composer(
     r.clientEmail,
     `Réservation confirmée ${r.reference} — ${NOM_COMMERCIAL}`,
     "Votre réservation est confirmée",
     `Bonjour ${ech(r.clientNom)}, c'est noté : nous vous attendons.`,
     lignesReservation(r),
-    [
-      `<strong>Annulation :</strong> ${ech(RESUME_ANNULATION)}`,
-      `Une question d'ici là ? Répondez simplement à cet e-mail.`,
-    ],
-    EMAIL
+    apres,
+    EMAIL,
+    true
   );
 }
 
+/**
+ * Annulation.
+ *
+ * CE MESSAGE DOIT PARLER D'ARGENT. Un client qui a payé et qu'on prévient de
+ * l'annulation sans un mot sur son remboursement écrit dans l'heure pour
+ * demander où passe son argent — et il a raison de le demander. Trois cas, trois
+ * phrases différentes, aucune promesse qui ne corresponde à un mouvement réel :
+ * le montant annoncé est celui qui a effectivement été renvoyé chez Stripe.
+ */
 export function auClientReservationAnnulee(r: RecapEmail): Message {
+  const apres: string[] = [];
+
+  if (r.paiement) {
+    const rendu = r.paiement.rembourseCents;
+    if (rendu >= r.paiement.montantCents) {
+      apres.push(
+        `<strong>Vous êtes remboursé intégralement</strong> : ${montantLisible(rendu)}. ` +
+          "Le montant revient sur le moyen de paiement utilisé, sous quelques jours ouvrables selon votre banque."
+      );
+    } else if (rendu > 0) {
+      apres.push(
+        `<strong>Remboursement : ${montantLisible(rendu)}</strong> sur les ` +
+          `${montantLisible(r.paiement.montantCents)} réglés, en application du barème d'annulation ` +
+          "rappelé ci-dessous. Le montant revient sur le moyen de paiement utilisé, sous quelques " +
+          "jours ouvrables selon votre banque."
+      );
+    } else {
+      /*
+        ON N'INVOQUE PAS LE BARÈME ICI, et c'est délibéré. L'exploitant a pu
+        choisir « aucun remboursement » sur une réservation où le barème, lui,
+        en prévoyait un — pour un no-show, un litige, ou par erreur. Écrire
+        « en application du barème » ferait alors dire à cet e-mail quelque
+        chose de faux, sur de l'argent, par écrit. On énonce le fait et on
+        ouvre la porte.
+      */
+      apres.push(
+        "<strong>Aucun remboursement n'accompagne cette annulation.</strong> Si vous pensez que " +
+          "ce n'est pas justifié, répondez à cet e-mail en nous expliquant votre situation : " +
+          "nous la regarderons."
+      );
+    }
+    apres.push(`<strong>Barème d'annulation :</strong> ${ech(RESUME_ANNULATION)}`);
+  }
+
+  apres.push(
+    `Nous joindre : <a href="mailto:${ech(EMAIL)}" style="color:${ACCENT};">${ech(EMAIL)}</a>.`
+  );
+
   return composer(
     r.clientEmail,
     `Réservation annulée ${r.reference} — ${NOM_COMMERCIAL}`,
     "Votre réservation a été annulée",
     `Bonjour ${ech(r.clientNom)}, la réservation ci-dessous vient d'être annulée. Si ce n'est pas ce que vous attendiez, contactez-nous : nous trouverons une solution.`,
     lignesReservation(r),
-    [
-      `Nous joindre : <a href="mailto:${ech(EMAIL)}" style="color:${ACCENT};">${ech(EMAIL)}</a>.`,
-    ],
-    EMAIL
+    apres,
+    EMAIL,
+    true
   );
 }
 

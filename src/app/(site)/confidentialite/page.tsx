@@ -182,35 +182,51 @@ export default function Confidentialite() {
         </P>
       </Article>
 
+      {/*
+        CETTE SECTION DÉCRIVAIT DES COOKIES QUI N'EXISTENT PAS.
+
+        « Intégrer des contenus externes », « personnaliser l'expérience »,
+        « mesurer l'efficacité d'une campagne publicitaire », « fonctionnalités
+        de réseaux sociaux » : rien de tout cela n'est déposé par ce site, et
+        rien ne le sera sans qu'on réécrive cette page. C'était du texte de
+        modèle, recopié tel quel.
+
+        Ce n'est pas une exagération inoffensive. Une politique de
+        confidentialité est une déclaration : annoncer des traceurs
+        publicitaires qu'on n'a pas donne une image fausse du site — dans le
+        mauvais sens — et, le jour où un visiteur demande quelles données de
+        campagne on détient sur lui, la seule réponse honnête est qu'on lui a
+        décrit un site qui n'est pas celui-ci.
+
+        La liste ci-dessous ne contient donc que ce qui est réellement posé
+        dans le navigateur, et elle doit être modifiée en même temps que le
+        code qui le fait — pas après.
+      */}
       <Article n={4} titre="Cookies et technologies similaires">
-        <P>Le site utilise ou peut utiliser des cookies et technologies similaires.</P>
-
-        <SousTitre>Cookies strictement nécessaires</SousTitre>
         <P>
-          Ces cookies sont indispensables au fonctionnement du site ou à la fourniture d&apos;un
-          service expressément demandé par l&apos;utilisateur. Ils peuvent notamment servir à :
-        </P>
-        <Liste items={[
-          "sécuriser le site ;", "maintenir une session ;",
-          "mémoriser les choix relatifs aux cookies ;",
-          "faire fonctionner un formulaire ou un processus de réservation.",
-        ]} />
-        <P>
-          Ils ne nécessitent pas nécessairement le consentement préalable de l&apos;utilisateur
-          lorsque les conditions légales sont remplies.
+          Le site n&apos;utilise que deux traceurs, tous deux internes. Aucun cookie publicitaire,
+          aucun bouton de réseau social et aucun contenu externe déposant un traceur ne figure sur
+          ce site.
         </P>
 
-        <SousTitre>Cookies non nécessaires</SousTitre>
-        <P>D&apos;autres cookies peuvent notamment servir à :</P>
-        <Liste items={[
-          "mesurer l'audience ;", "analyser la navigation ;", "intégrer des contenus externes ;",
-          "personnaliser l'expérience ;", "mesurer l'efficacité d'une campagne publicitaire ;",
-          "permettre certaines fonctionnalités de réseaux sociaux.",
-        ]} />
+        <SousTitre>Strictement nécessaire — sans consentement</SousTitre>
         <P>
-          Lorsqu&apos;un consentement est légalement requis, ces cookies ne sont activés
-          qu&apos;après le choix positif de l&apos;utilisateur. Refuser les cookies non nécessaires
-          ne doit pas empêcher l&apos;accès normal au site.
+          Votre choix en matière de cookies est conservé dans votre navigateur pendant six mois,
+          afin de ne pas vous reposer la question à chaque page. Cette information ne quitte jamais
+          votre appareil.
+        </P>
+
+        <SousTitre>Mesure d&apos;audience — avec votre consentement</SousTitre>
+        <P>
+          Si vous l&apos;acceptez, nous comptons les pages consultées, la provenance, le type
+          d&apos;appareil et les étapes franchies dans le parcours de réservation. L&apos;outil est
+          le nôtre : aucune donnée n&apos;est transmise à un tiers, aucune adresse IP n&apos;est
+          conservée, et l&apos;identifiant de visite est tiré au hasard puis oublié après trente
+          minutes, ce qui rend impossible le rapprochement de deux visites. Les statistiques sont
+          effacées au bout de treize mois.
+        </P>
+        <P>
+          Refuser la mesure d&apos;audience n&apos;empêche l&apos;accès à aucune partie du site.
         </P>
         <P>
           L&apos;utilisateur doit pouvoir retirer son consentement ou modifier ses préférences aussi
@@ -267,7 +283,8 @@ export default function Confidentialite() {
           "Demandes de contact sans réservation : le temps nécessaire pour répondre à la demande, puis pendant une durée limitée permettant d'en assurer le suivi.",
           "Données utilisées pour le marketing avec consentement : jusqu'au retrait du consentement ou jusqu'à ce que les données ne soient plus nécessaires à cette finalité.",
           "Images et vidéos Replay : pendant la durée nécessaire à la fourniture de la fonctionnalité ou du souvenir annoncé. Offside veille à ne pas les conserver indéfiniment sans justification.",
-          "Cookies : selon la durée propre à chaque cookie indiquée dans l'outil ou la politique de gestion des cookies.",
+          "Statistiques de fréquentation : 13 mois, après quoi elles sont effacées automatiquement. L'identifiant de visite, lui, est oublié après 30 minutes.",
+          "Choix en matière de cookies : 6 mois dans votre navigateur, après quoi la question vous est reposée.",
         ]} />
         <P>
           En cas de litige, certaines informations peuvent être conservées plus longtemps dans la

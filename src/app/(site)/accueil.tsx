@@ -273,6 +273,17 @@ export function Accueil({ formules }: { formules: FormuleVue[] }) {
             ))}
           </StaggerContainer>
 
+          {/*
+            Une seule mention pour toute la grille, plutôt que « TVAC » collé à
+            chaque prix : l'article VI.2 du Code de droit économique demande que
+            le consommateur voie le prix qu'il paiera réellement, pas que le
+            sigle soit répété quatre fois. Le tunnel de réservation le redit à
+            l'endroit qui compte, juste avant le bouton de paiement.
+          */}
+          <p className="mt-6 text-sm text-muted-foreground">
+            Tous les prix sont indiqués TVAC, pour un anniversaire organisé sur place.
+          </p>
+
           <FadeInView delay={0.2}>
             <div className="mt-8 grid gap-3 sm:grid-cols-2">
               <div className="flex items-start gap-3 rounded-xl border border-white/10 bg-white/[0.04] p-4">
