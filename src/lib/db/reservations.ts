@@ -1,6 +1,7 @@
 import "server-only";
 import { base } from "@/lib/supabase/server";
 import type { Database } from "@/lib/supabase/types";
+import { paiementConfigure } from "@/lib/paiement/stripe";
 
 /**
  * Écriture des réservations et des demandes de devis.
@@ -44,8 +45,28 @@ export class CreneauDejaPris extends Error {
  * Libère les créneaux tenus par des réservations jamais confirmées.
  * Sans effet si aucune n'a expiré ; l'échec n'est pas bloquant.
  */
+/**
+ * Libère les créneaux tenus par des réservations jamais menées à terme.
+ *
+ * LE DÉLAI DÉPEND DE CE QU'ON ATTEND, et les deux situations n'ont rien à voir.
+ *
+ * Sans paiement en ligne, une réservation est une DEMANDE que le complexe
+ * confirme par téléphone : 48 heures laissent à Brahim le temps de rappeler.
+ *
+ * Avec paiement, c'est une FENÊTRE DE PAIEMENT. La session Stripe expire au
+ * bout de trente minutes ; garder le créneau bloqué deux jours pour quelqu'un
+ * qui a fermé l'onglet ferait perdre de vraies réservations un samedi
+ * après-midi.
+ *
+ * Quarante-cinq minutes et non trente : Bancontact passe par l'application
+ * bancaire du client, et sa confirmation peut arriver un peu après la fermeture
+ * de la session. Cette marge évite d'expirer une réservation dont l'argent est
+ * en train d'arriver — le pire cas possible, puisqu'on aurait encaissé sans
+ * garder le créneau.
+ */
 export async function expirerReservationsAbandonnees(): Promise<void> {
-  const { error } = await base().rpc("expirer_reservations_en_attente", {});
+  const delai = paiementConfigure() ? "45 minutes" : "48 hours";
+  const { error } = await base().rpc("expirer_reservations_en_attente", { delai });
   if (error) console.error("Expiration des réservations impossible :", error.message);
 }
 
@@ -55,16 +76,23 @@ export async function expirerReservationsAbandonnees(): Promise<void> {
  * avec un créneau déjà pris — les deux remontent le même code SQL, seul le nom
  * de l'index les distingue.
  */
+/**
+ * L'identifiant est renvoyé en plus de la référence : c'est lui qui relie la
+ * réservation à sa ligne de paiement. La référence, elle, est faite pour être
+ * lue au téléphone — elle ne sert pas de clé étrangère.
+ */
 export async function enregistrerReservation(
   donnees: Omit<InsertReservation, "reference">
-): Promise<{ reference: string }> {
+): Promise<{ reference: string; id: string }> {
   for (let essai = 0; essai < 4; essai++) {
     const ref = reference("OW");
-    const { error } = await base()
+    const { data, error } = await base()
       .from("reservations")
-      .insert({ ...donnees, reference: ref });
+      .insert({ ...donnees, reference: ref })
+      .select("id")
+      .single();
 
-    if (!error) return { reference: ref };
+    if (!error && data) return { reference: ref, id: data.id };
 
     const surCreneau =
       error.code === VIOLATION_EXCLUSION ||

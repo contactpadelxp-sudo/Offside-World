@@ -156,6 +156,18 @@ export function GroupesFlow({
         : `${demiJournee?.periodeLabel} · ${demiJournee?.debut} – ${demiJournee?.fin}`,
       surDevis: !isBubble,
     });
+    /*
+      Vers Stripe si le paiement est configuré, vers la confirmation sinon.
+
+      `window.location` et non le routeur de Next : Stripe est un autre site,
+      et une navigation côté client ne sait pas y aller. `replace` plutôt que
+      `assign` pour que le bouton « retour » du navigateur ne ramène pas sur
+      un formulaire déjà envoyé — le client croirait devoir le renvoyer.
+    */
+    if (resultat.urlPaiement) {
+      window.location.replace(resultat.urlPaiement);
+      return;
+    }
     router.push(`/confirmation?ref=${resultat.reference}`);
   }
 

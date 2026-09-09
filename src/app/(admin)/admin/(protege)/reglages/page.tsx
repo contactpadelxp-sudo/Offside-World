@@ -1,5 +1,6 @@
 import { TestEmail } from "@/components/admin/test-email";
 import { diagnosticEmail } from "@/lib/email/envoi";
+import { diagnosticPaiement } from "@/lib/paiement/stripe";
 import { baseConfiguree } from "@/lib/supabase/server";
 import { AlerteTriangle, Coche, Reglages } from "@/components/icons";
 
@@ -32,6 +33,7 @@ function Ligne({ ok, titre, detail }: { ok: boolean; titre: string; detail: stri
 
 export default async function PageReglages() {
   const email = diagnosticEmail();
+  const paiement = diagnosticPaiement();
   const base = baseConfiguree();
 
   return (
@@ -69,13 +71,56 @@ export default async function PageReglages() {
             "Absente. Renseignez EMAIL_EXPEDITEUR — elle doit être sur un domaine vérifié chez le fournisseur."
           }
         />
+        {/*
+          `modeDemonstration` est faux quand il n'y a PAS d'expéditeur du tout :
+          cette ligne s'affichait donc au vert — « possibles » — alors qu'aucun
+          e-mail ne pouvait partir. On exige la configuration complète.
+        */}
         <Ligne
-          ok={!email.modeDemonstration}
+          ok={email.configure && !email.modeDemonstration}
           titre="Envois vers les clients"
           detail={
-            email.modeDemonstration
-              ? "Impossibles : l'expéditeur est le domaine de démonstration du fournisseur."
-              : "Possibles : l'expéditeur est sur un domaine vérifié."
+            !email.configure
+              ? "Impossibles : le fournisseur n'est pas configuré."
+              : email.modeDemonstration
+                ? "Impossibles : l'expéditeur est le domaine de démonstration du fournisseur."
+                : "Possibles : l'expéditeur est sur un domaine vérifié."
+          }
+        />
+        <Ligne
+          ok={paiement.configure}
+          titre="Paiement en ligne"
+          detail={
+            paiement.configure
+              ? "Actif : les clients paient à la réservation."
+              : "Inactif. Sans STRIPE_SECRET_KEY, les réservations sont enregistrées « à confirmer » et le complexe rappelle."
+          }
+        />
+        <Ligne
+          ok={!paiement.configure || paiement.webhook}
+          titre="Confirmation des paiements"
+          detail={
+            !paiement.configure
+              ? "Sans objet tant que le paiement est inactif."
+              : paiement.webhook
+                ? "Branchée : Stripe confirme les réservations payées."
+                : "MANQUANTE. Sans STRIPE_WEBHOOK_SECRET, les clients paient mais aucune réservation n'est confirmée."
+          }
+        />
+        {/*
+          Même piège que l'expéditeur de démonstration pour les e-mails : tout
+          a l'air de fonctionner, le client voit « paiement accepté », et pas
+          un centime n'arrive. Rien ne le signale ailleurs.
+        */}
+        <Ligne
+          ok={!paiement.modeTest}
+          titre="Encaissement réel"
+          detail={
+            paiement.modeTest
+              ? "NON : les clés sont en mode test. Les paiements aboutissent sans qu'aucun argent ne soit encaissé."
+              : paiement.configure
+                ? "Oui : les clés sont celles de production."
+                : "Sans objet tant que le paiement est inactif."
           }
         />
         <Ligne

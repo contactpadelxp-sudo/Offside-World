@@ -33,6 +33,7 @@ import {
   TEAM_BUILDING_MIN_PARTICIPANTS,
 } from "@/data/bubble-team";
 import { totalAnniversaireCents, totalBubbleCents } from "@/lib/tarification";
+import { creerSessionPaiement } from "@/lib/paiement/session";
 
 /**
  * Écriture des réservations.
@@ -53,7 +54,20 @@ import { totalAnniversaireCents, totalBubbleCents } from "@/lib/tarification";
  */
 
 export type Resultat =
-  | { ok: true; reference: string; total: number }
+  | {
+      ok: true;
+      reference: string;
+      total: number;
+      /**
+       * Adresse de la page de paiement Stripe, quand le paiement en ligne est
+       * configuré. Absente sinon : le site enregistre alors la réservation
+       * « à confirmer » et le complexe rappelle, comme aujourd'hui.
+       *
+       * Le client doit y être envoyé ; la réservation n'est PAS confirmée tant
+       * qu'elle n'est pas payée.
+       */
+      urlPaiement?: string;
+    }
   | { ok: false; message: string; champ?: string };
 
 // ── Garde-fous communs ───────────────────────────────────────────────────────
@@ -170,7 +184,7 @@ export async function reserverAnniversaire(saisie: SaisieAnniversaire): Promise<
       tarifsOptions.map((o) => o.prixCents)
     );
 
-    const { reference } = await enregistrerReservation({
+    const { reference, id: reservationId } = await enregistrerReservation({
       type: "anniversaire",
       creneau_id: creneau.id,
       formule_id: formule.id,
@@ -206,11 +220,45 @@ export async function reserverAnniversaire(saisie: SaisieAnniversaire): Promise<
       allergieSignalee: Boolean(allergies),
       remarques,
     };
-    after(() =>
-      envoyerTous([auClientReservationEnregistree(recap), auComplexeNouvelleReservation(recap)])
-    );
+    /*
+      LE PAIEMENT CHANGE QUI ANNONCE QUOI, ET QUAND.
 
-    return { ok: true, reference, total: totalCents / 100 };
+      Sans paiement en ligne, la réservation est enregistrée « à confirmer » :
+      on prévient le client tout de suite, et le complexe le rappelle.
+
+      Avec paiement, envoyer « votre réservation est enregistrée » ici serait
+      faux — rien n'est acquis tant que le client n'a pas payé, et le créneau
+      sera libéré s'il abandonne. Les e-mails partent donc du webhook, une fois
+      l'argent encaissé ; c'est lui aussi qui confirme la réservation.
+
+      Si la création de la session échoue — Stripe indisponible, par exemple —
+      on ne perd pas la réservation : on retombe sur l'ancien comportement
+      plutôt que de renvoyer une erreur à un client qui a tout rempli
+      correctement.
+    */
+    const paiement = await creerSessionPaiement({
+      reservationId,
+      reference,
+      clientEmail,
+      ligne: {
+        libelle: `Anniversaire — formule ${formule.nom}`,
+        description: `${jourLisibleCap(creneau.debut)}, ${heure(creneau.debut)} – ${heure(creneau.fin)} · ${nbEnfants} enfants`,
+        montantCents: totalCents,
+      },
+    }).catch(() => null);
+
+    if (!paiement) {
+      after(() =>
+        envoyerTous([auClientReservationEnregistree(recap), auComplexeNouvelleReservation(recap)])
+      );
+    }
+
+    return {
+      ok: true,
+      reference,
+      total: totalCents / 100,
+      ...(paiement ? { urlPaiement: paiement.url } : {}),
+    };
   } catch (e) {
     return enEchec(e);
   }
@@ -265,7 +313,7 @@ export async function reserverBubble(saisie: SaisieBubble): Promise<Resultat> {
     // par le bornage ci-dessus : la multiplication suffit.
     const totalCents = totalBubbleCents(nbPersonnes);
 
-    const { reference } = await enregistrerReservation({
+    const { reference, id: reservationId } = await enregistrerReservation({
       type: "bubble",
       creneau_id: creneau.id,
       nb_personnes: nbPersonnes,
@@ -292,11 +340,45 @@ export async function reserverBubble(saisie: SaisieBubble): Promise<Resultat> {
       clientTelephone,
       remarques,
     };
-    after(() =>
-      envoyerTous([auClientReservationEnregistree(recap), auComplexeNouvelleReservation(recap)])
-    );
+    /*
+      LE PAIEMENT CHANGE QUI ANNONCE QUOI, ET QUAND.
 
-    return { ok: true, reference, total: totalCents / 100 };
+      Sans paiement en ligne, la réservation est enregistrée « à confirmer » :
+      on prévient le client tout de suite, et le complexe le rappelle.
+
+      Avec paiement, envoyer « votre réservation est enregistrée » ici serait
+      faux — rien n'est acquis tant que le client n'a pas payé, et le créneau
+      sera libéré s'il abandonne. Les e-mails partent donc du webhook, une fois
+      l'argent encaissé ; c'est lui aussi qui confirme la réservation.
+
+      Si la création de la session échoue — Stripe indisponible, par exemple —
+      on ne perd pas la réservation : on retombe sur l'ancien comportement
+      plutôt que de renvoyer une erreur à un client qui a tout rempli
+      correctement.
+    */
+    const paiement = await creerSessionPaiement({
+      reservationId,
+      reference,
+      clientEmail,
+      ligne: {
+        libelle: "Bubble Foot",
+        description: `${jourLisibleCap(creneau.debut)}, ${heure(creneau.debut)} – ${heure(creneau.fin)} · ${nbPersonnes} personnes`,
+        montantCents: totalCents,
+      },
+    }).catch(() => null);
+
+    if (!paiement) {
+      after(() =>
+        envoyerTous([auClientReservationEnregistree(recap), auComplexeNouvelleReservation(recap)])
+      );
+    }
+
+    return {
+      ok: true,
+      reference,
+      total: totalCents / 100,
+      ...(paiement ? { urlPaiement: paiement.url } : {}),
+    };
   } catch (e) {
     return enEchec(e);
   }
