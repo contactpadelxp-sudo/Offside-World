@@ -221,10 +221,56 @@ le dépôt.
 
 ---
 
+# Conformité — état au 9 septembre 2026
+
+L'audit juridique du tunnel de paiement est purgé. Ce qui a été corrigé, et
+qui est vérifiable page par page :
+
+- [x] Bouton de commande sans ambiguïté (« Payer 180 € ») et montant TVAC,
+      moyens de paiement et absence de rétractation annoncés AVANT le clic —
+      art. VI.46 § 2 et VI.45. La sanction de l'ancienne formulation était que
+      le consommateur n'était pas lié par sa commande.
+- [x] E-mail de confirmation complet : identité du vendeur, montant TVAC,
+      moyen de paiement, lien CGV, barème d'annulation, absence de
+      rétractation (art. VI.53, 12°). C'est le support durable exigé par
+      l'art. VI.46 § 7.
+- [x] Remboursements réellement possibles depuis le back-office, avec le choix
+      entre barème, intégral et aucun, et le montant écrit en base
+      (migration 0015).
+- [x] CGV art. 6 étendu au Bubble Foot : le barème s'appliquait à un acheteur
+      auquel l'article disait ne pas s'appliquer.
+- [x] CGU art. 3 : l'exclusion totale de responsabilité est bornée (art.
+      VI.83). Le « [À COMPLÉTER] » de l'art. 7 ne s'affiche plus.
+- [x] Pages cookies : les finalités inventées (publicité, réseaux sociaux,
+      contenus tiers) sont retirées, la durée du consentement passe de 12 à
+      6 mois — la vraie —, et l'« intérêt légitime » devient l'exemption de
+      l'art. 129 de la loi du 13 juin 2005.
+- [x] Prix affichés TVAC (art. VI.2).
+- [x] Service de médiation pour le consommateur nommé dans les CGV. La
+      plateforme européenne RLL n'est PAS citée : la Commission l'a fermée le
+      20 juillet 2025.
+
+Ce qui reste, et qui ne dépend plus du code :
+
+- [ ] **Les six valeurs d'identité de l'entreprise** (dénomination sociale,
+      siège, BCE, TVA, responsable de publication, et le siège s'il diffère).
+      Tant qu'elles manquent, les pages légales affichent « [à compléter] » —
+      et l'art. III.74 du Code de droit économique n'est pas respecté. C'est
+      le dernier point qui empêche formellement la mise en ligne.
+- [ ] **« 2000+ fêtes organisées »** sur la page d'accueil : chiffre non
+      vérifié. Une allégation chiffrée invérifiable est une pratique
+      trompeuse (art. VI.97). À remplacer par le vrai nombre ou à retirer.
+- [ ] **Autorisation à l'image** : aucun formulaire ne la recueille
+      aujourd'hui, alors que les CGV art. 15 annoncent un système Replay et
+      une vidéo souvenir. À brancher le jour où la fonctionnalité existe —
+      pour un mineur, c'est le représentant légal qui consent.
+
+---
+
 # État technique
 
 **Base de données** — projet `shybhkzgwxyajysjlrbv` (Offside World, eu-west-1),
-migrations `0001` à `0010` appliquées et vérifiées.
+migrations `0001` à `0015` appliquées et vérifiées.
 RLS activé et forcé sur les 8 tables, sans aucune politique : rien n'est
 accessible par les clés publiques, tout passe par le serveur.
 
