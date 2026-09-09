@@ -29,10 +29,10 @@ import { SaisieInvalide, booleen, email, entier, identifiants, jour, telephone, 
 import {
   BUBBLE_MAX_PERSONNES,
   BUBBLE_MIN_PERSONNES,
-  BUBBLE_PRIX_PAR_PERSONNE,
   TEAM_BUILDING_MAX_PARTICIPANTS,
   TEAM_BUILDING_MIN_PARTICIPANTS,
 } from "@/data/bubble-team";
+import { totalAnniversaireCents, totalBubbleCents } from "@/lib/tarification";
 
 /**
  * Écriture des réservations.
@@ -161,10 +161,14 @@ export async function reserverAnniversaire(saisie: SaisieAnniversaire): Promise<
       return { ok: false, message: "Une des options choisies n'est plus disponible.", champ: "options" };
     }
 
-    // 5. Le total, en centimes entiers.
-    const supplements = Math.max(0, nbEnfants - formule.enfantsInclus) * formule.prixEnfantSupCents;
-    const optionsCents = tarifsOptions.reduce((somme, o) => somme + o.prixCents, 0);
-    const totalCents = formule.prixBaseCents + supplements + optionsCents;
+    // 5. Le total, en centimes entiers. Le calcul vit dans `tarification.ts`
+    //    pour pouvoir être vérifié par des tests : c'est le seul endroit du
+    //    projet où une erreur se traduit directement en euros.
+    const totalCents = totalAnniversaireCents(
+      formule,
+      nbEnfants,
+      tarifsOptions.map((o) => o.prixCents)
+    );
 
     const { reference } = await enregistrerReservation({
       type: "anniversaire",
@@ -259,7 +263,7 @@ export async function reserverBubble(saisie: SaisieBubble): Promise<Resultat> {
 
     // Tarif à la personne, minimum facturé compris. Le minimum est déjà imposé
     // par le bornage ci-dessus : la multiplication suffit.
-    const totalCents = BUBBLE_PRIX_PAR_PERSONNE * 100 * nbPersonnes;
+    const totalCents = totalBubbleCents(nbPersonnes);
 
     const { reference } = await enregistrerReservation({
       type: "bubble",

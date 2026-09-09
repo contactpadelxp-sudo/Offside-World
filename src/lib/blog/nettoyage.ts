@@ -77,7 +77,14 @@ export function nettoyerCorps(html: string): string {
  * partage — où une balise s'afficherait telle quelle.
  */
 export function enTexte(html: string, max = 200): string {
-  const texte = sanitizeHtml(html, { allowedTags: [], allowedAttributes: {} })
+  // Chaque balise devient une ESPACE avant d'être retirée. Sans cela, deux
+  // blocs voisins seraient collés : « <h2>Titre</h2><p>Corps</p> » donnait
+  // « TitreCorps ». Ce résumé s'affiche dans la liste du blog et dans les
+  // aperçus de partage — c'est exactement là que ça se voit.
+  const texte = sanitizeHtml(html.replace(/<[^>]*>/g, " "), {
+    allowedTags: [],
+    allowedAttributes: {},
+  })
     .replace(/\s+/g, " ")
     .trim();
   if (texte.length <= max) return texte;
