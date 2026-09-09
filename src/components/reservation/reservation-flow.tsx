@@ -29,6 +29,8 @@ export interface DonneesReservation {
   creneauxAnniversaire: CreneauVue[];
   creneauxBubble: CreneauVue[];
   demiJournees: DemiJourneeVue[];
+  /** Le client sera-t-il redirigé vers un paiement au bout du tunnel ? */
+  paiementActif: boolean;
 }
 
 export function ReservationFlow({ donnees }: { donnees: DonneesReservation }) {
@@ -93,6 +95,7 @@ export function ReservationFlow({ donnees }: { donnees: DonneesReservation }) {
       {!activity && <ActivityChoice onSelect={selectActivity} formules={donnees.formules} />}
       {activity === "anniversaire" && (
         <AnniversaireFlow
+          paiementActif={donnees.paiementActif}
           onBack={backToChoice}
           formules={donnees.formules}
           options={donnees.options}
@@ -102,6 +105,7 @@ export function ReservationFlow({ donnees }: { donnees: DonneesReservation }) {
       {activity === "foot" && <FootFlow onBack={backToChoice} />}
       {activity === "groupes" && (
         <GroupesFlow
+          paiementActif={donnees.paiementActif}
           onBack={backToChoice}
           creneaux={donnees.creneauxBubble}
           demiJournees={donnees.demiJournees}

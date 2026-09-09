@@ -79,9 +79,24 @@ export async function POST(req: Request) {
           session.payment_method_types?.[0] ?? null
         );
 
-        // `nouveau: false` = webhook déjà traité. Stripe rejoue ses événements,
-        // et renvoyer un second e-mail au client serait le seul dégât visible.
-        if (resultat.nouveau && resultat.reservationId) {
+        /*
+          ON EXIGE `reference`, ET PAS SEULEMENT `nouveau`.
+
+          `nouveau` dit que la ligne de PAIEMENT a basculé ; `reference` n'est
+          renseignée que si la RÉSERVATION a basculé aussi. Les deux peuvent
+          diverger : un webhook qui arrive après l'expiration trouve une
+          réservation déjà `expiree`, encaisse quand même — et, avec l'ancienne
+          condition, envoyait « votre réservation est confirmée » à quelqu'un
+          dont le créneau venait d'être rendu à la vente. Argent pris, créneau
+          reperdu, client rassuré : le pire enchaînement possible.
+
+          Le cas est rare (la session Stripe expire à 30 min, la réservation à
+          45) mais il n'est pas théorique, et Bancontact peut se dénouer tard.
+          Il laisse une ligne de paiement « réussi » sans réservation
+          confirmée : c'est visible au back-office, et c'est exactement ce
+          qu'on veut voir.
+        */
+        if (resultat.nouveau && resultat.reference && resultat.reservationId) {
           after(async () => {
             const recap = await lireRecapEmail(resultat.reservationId as string);
             if (recap?.clientEmail) {
@@ -100,6 +115,36 @@ export async function POST(req: Request) {
         // « en attente » et sera libérée par l'expiration : il peut encore
         // revenir la payer si le créneau n'est pas repris.
         await echouerPaiement(evenement.data.object.id, "Session expirée");
+        break;
+      }
+
+      case "checkout.session.async_payment_succeeded": {
+        /*
+          Bancontact passe par l'application bancaire du client : le paiement
+          peut se dénouer APRÈS la fermeture de la page. Stripe envoie alors
+          cet événement, et non `checkout.session.completed`.
+
+          Il manquait, alors que son pendant en échec était traité — l'argent
+          serait parti sans que la réservation soit jamais confirmée. C'est le
+          moyen de paiement le plus utilisé en Belgique.
+        */
+        const session = evenement.data.object;
+        const resultat = await confirmerPaiement(
+          session.id,
+          typeof session.payment_intent === "string" ? session.payment_intent : null,
+          session.payment_method_types?.[0] ?? null
+        );
+        if (resultat.nouveau && resultat.reference && resultat.reservationId) {
+          after(async () => {
+            const recap = await lireRecapEmail(resultat.reservationId as string);
+            if (recap?.clientEmail) {
+              await envoyerTous([
+                auClientReservationConfirmee(recap),
+                auComplexeNouvelleReservation(recap),
+              ]);
+            }
+          });
+        }
         break;
       }
 

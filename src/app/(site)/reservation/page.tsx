@@ -5,6 +5,7 @@ import { lireFormules, lireOptions } from "@/lib/db/referentiel";
 import { expirerReservationsAbandonnees } from "@/lib/db/reservations";
 import { prochainesDemiJournees } from "@/lib/demi-journees";
 import { baseConfiguree } from "@/lib/supabase/server";
+import { paiementConfigure } from "@/lib/paiement/stripe";
 
 /**
  * Page de réservation — rendue à chaque visite.
@@ -36,6 +37,10 @@ export default async function ReservationPage() {
           creneauxAnniversaire,
           creneauxBubble,
           demiJournees: prochainesDemiJournees(),
+          // Le tunnel doit annoncer un paiement SEULEMENT s'il va vraiment
+          // avoir lieu : promettre « on vous rappelle » puis débiter le client
+          // est une pratique trompeuse, et le bouton doit dire ce qu'il fait.
+          paiementActif: paiementConfigure(),
         }}
       />
     </Suspense>

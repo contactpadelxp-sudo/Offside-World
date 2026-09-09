@@ -37,10 +37,12 @@ type Offre = "bubble" | "team-building";
 type Step = "offre" | "creneau" | "recap";
 
 export function GroupesFlow({
+  paiementActif,
   onBack,
   creneaux,
   demiJournees,
 }: {
+  paiementActif: boolean;
   onBack: () => void;
   creneaux: CreneauVue[];
   demiJournees: DemiJourneeVue[];
@@ -547,16 +549,30 @@ export function GroupesFlow({
                 {envoi ? (
                   "Envoi…"
                 ) : isBubble ? (
-                  <><Coche className="size-5" /> Confirmer ma réservation</>
+                  <>
+                    <Coche className="size-5" />
+                    {paiementActif ? `Payer\u00a0${total}\u00a0€` : "Confirmer ma réservation"}
+                  </>
                 ) : (
                   <><Document className="size-5" /> Demander un devis</>
                 )}
               </button>
-              <p className="mt-3 text-xs text-center text-muted-foreground flex items-center justify-center gap-1">
-                <Bouclier className="size-3.5" />
-                {isBubble
-                  ? "Le paiement en ligne arrive bientôt : nous vous recontactons pour confirmer."
-                  : "Nous vous répondons sous 48 heures ouvrables."}
+              {/*
+                Le team building part en DEVIS : aucun paiement, donc aucune de
+                ces mentions. Seul le Bubble Foot est encaissé ici.
+              */}
+              <p className="mt-3 text-xs text-center text-muted-foreground flex items-center justify-center gap-1.5">
+                <Bouclier className="size-3.5 shrink-0" />
+                {!isBubble ? (
+                  <span>Nous vous répondons sous 48 heures ouvrables.</span>
+                ) : paiementActif ? (
+                  <span>
+                    Paiement sécurisé de <strong>{total}&nbsp;€ TVAC</strong> par Bancontact ou carte.
+                    Activité à date déterminée : pas de droit de rétractation.
+                  </span>
+                ) : (
+                  <span>Nous vous recontactons pour confirmer votre créneau.</span>
+                )}
               </p>
             </CardContent>
           </Card>

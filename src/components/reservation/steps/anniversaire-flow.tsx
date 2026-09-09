@@ -33,11 +33,13 @@ const STEPS: { key: Step; label: string }[] = [
 const DATES_VISIBLES = 12;
 
 export function AnniversaireFlow({
+  paiementActif,
   onBack,
   formules,
   options,
   creneaux,
 }: {
+  paiementActif: boolean;
   onBack: () => void;
   formules: FormuleVue[];
   options: OptionVue[];
@@ -573,11 +575,34 @@ export function AnniversaireFlow({
                 disabled={envoi || !acceptCGV || !parentName || !emailValid || !phoneValid}
                 className="btn-glass-field w-full h-14 text-[#0a0a0b] text-lg rounded-2xl font-semibold disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center justify-center gap-2"
               >
-                <Coche className="size-5" /> {envoi ? "Enregistrement…" : "Confirmer ma réservation"}
+                <Coche className="size-5" />
+                {envoi
+                  ? "Enregistrement…"
+                  : paiementActif
+                    ? `Payer ${totalPrice}\u00a0€`
+                    : "Confirmer ma réservation"}
               </button>
-              <p className="mt-3 text-xs text-center text-muted-foreground flex items-center justify-center gap-1">
-                <Bouclier className="size-3.5" /> Le paiement en ligne arrive bientôt : nous vous recontactons
-                pour confirmer et convenir du règlement.
+              {/*
+                LE BOUTON DIT CE QU'IL FAIT. L'article VI.46 §2 du Code de droit
+                économique impose une formule dénuée d'ambiguïté sur un bouton
+                qui engage à payer, et sa sanction n'est pas symbolique : le
+                consommateur n'est pas lié par la commande. « Confirmer ma
+                réservation » au-dessus de « le paiement arrive bientôt », alors
+                que le clic débitait la carte, cochait toutes les cases de la
+                pratique trompeuse.
+              */}
+              <p className="mt-3 text-xs text-center text-muted-foreground flex items-center justify-center gap-1.5">
+                <Bouclier className="size-3.5 shrink-0" />
+                {paiementActif ? (
+                  <span>
+                    Paiement sécurisé de <strong>{totalPrice}&nbsp;€ TVAC</strong> par Bancontact ou carte.
+                    Activité à date déterminée : pas de droit de rétractation.
+                  </span>
+                ) : (
+                  <span>
+                    Nous vous recontactons pour confirmer votre créneau et convenir du règlement.
+                  </span>
+                )}
               </p>
             </CardContent>
           </Card>

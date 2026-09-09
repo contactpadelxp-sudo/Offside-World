@@ -1,5 +1,4 @@
 "use client";
-
 import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
@@ -10,13 +9,11 @@ import { FadeIn, Confetti } from "@/components/motion";
 import { lireRecap, type RecapReservation } from "@/lib/reservation";
 import { Maison, Plus } from "@/components/icons";
 import { motion } from "framer-motion";
-
 const LIBELLES_TYPE: Record<string, string> = {
   anniversaire: "Anniversaire",
   bubble: "Bubble Foot",
   "team-building": "Team Building",
 };
-
 function AnimatedCheck() {
   return (
     <div className="mx-auto flex h-24 w-24 items-center justify-center rounded-3xl bg-gradient-to-br from-field/10 to-kick/20 ring-1 ring-field/25">
@@ -47,12 +44,20 @@ function AnimatedCheck() {
     </div>
   );
 }
-
 export function ConfirmationContent() {
   const params = useSearchParams();
+  /*
+    Stripe renvoie le client ici avec `paiement=ok` après un paiement accepté
+    (voir `success_url` dans `lib/paiement/session.ts`).
+
+    Ce paramètre sert à ADAPTER LE MESSAGE, jamais à confirmer quoi que ce
+    soit : c'est le webhook qui fait foi. Quelqu'un qui ajouterait
+    `?paiement=ok` à la main verrait un autre texte, et rien de plus — sa
+    réservation resterait en attente.
+  */
+  const paye = params.get("paiement") === "ok";
   const ref = params.get("ref") || "";
   const [recap, setRecap] = useState<RecapReservation | null>(null);
-
   /**
    * Le récapitulatif est relu dans sessionStorage : aucune donnée personnelle
    * ne transite par l'URL, et la référence seule ne permet à personne d'autre
@@ -61,11 +66,9 @@ export function ConfirmationContent() {
   useEffect(() => {
     setRecap(lireRecap(ref));
   }, [ref]);
-
   const type = recap?.type ?? "anniversaire";
   const surDevis = recap?.surDevis === true;
   const reference = recap?.ref || ref;
-
   return (
     <>
       <Confetti />
@@ -74,21 +77,29 @@ export function ConfirmationContent() {
           <AnimatedCheck />
           <FadeIn delay={0.6}>
             <h1 className="mt-8 text-3xl md:text-4xl font-bold font-[family-name:var(--font-heading)] text-foreground">
-              {surDevis ? "Demande envoyée !" : "Réservation enregistrée !"}
+              {surDevis
+                ? "Demande envoyée !"
+                : paye
+                  ? "C’est réservé !"
+                  : "Réservation enregistrée !"}
             </h1>
             {/*
-              Honnêteté : rien n'est encore payé ni confirmé automatiquement.
-              À revoir le jour où le paiement en ligne et les e-mails
-              transactionnels seront branchés.
+              TROIS SITUATIONS, TROIS MESSAGES. Cette page annonçait
+              « nous vous recontactons pour convenir du règlement » à TOUT LE
+              MONDE — y compris au client qui venait de payer sur Stripe et
+              arrivait ici avec paiement=ok. Lui dire qu’il reste à payer
+              l’expose à payer deux fois, et c’est une information trompeuse
+              sur le prix.
             */}
             <p className="mt-3 text-muted-foreground text-lg">
               {surDevis
                 ? "Merci ! Nous revenons vers vous avec un devis sous 48 heures ouvrables."
-                : "Merci ! Nous vous recontactons pour confirmer votre créneau et convenir du règlement."}
+                : paye
+                  ? "Votre paiement est accepté et votre créneau est réservé. Vous recevez la confirmation par e-mail."
+                  : "Merci ! Nous vous recontactons pour confirmer votre créneau et convenir du règlement."}
             </p>
           </FadeIn>
         </div>
-
         <FadeIn delay={0.8}>
           <Card className="mt-10 border-2">
             <CardContent className="p-6 space-y-3">
@@ -133,14 +144,12 @@ export function ConfirmationContent() {
             </CardContent>
           </Card>
         </FadeIn>
-
         <FadeIn delay={1}>
           <p className="mt-6 text-center text-sm text-muted-foreground">
             Notez votre référence <span className="font-mono font-semibold text-foreground">{reference}</span> :
             elle nous permet de retrouver votre demande.
           </p>
         </FadeIn>
-
         <FadeIn delay={1.2}>
           <div className="mt-10 flex flex-col gap-3 sm:flex-row sm:justify-center">
             <Link href="/" className="btn-glass-field inline-flex items-center justify-center gap-2 text-[#0a0a0b] px-6 h-12 rounded-2xl">
