@@ -318,17 +318,53 @@ export async function genererCreneaux(du: string, au: string): Promise<Resultat>
     if (anniversaire.error) throw anniversaire.error;
     if (bubble.error) throw bubble.error;
 
-    const total = (anniversaire.data ?? 0) + (bubble.data ?? 0);
-    await journaliser(session, "creneaux.generes", null, { du: debut, au: fin, crees: total });
+    // Les deux fonctions renvoient une ligne unique : créés, déjà présents,
+    // refusés pour chevauchement. Voir la migration 0014.
+    const compte = (r: unknown) => {
+      const ligne = Array.isArray(r) ? r[0] : r;
+      const l = (ligne ?? {}) as Record<string, number>;
+      return {
+        crees: l.crees ?? 0,
+        deja: l.deja_presents ?? 0,
+        refuses: l.refuses ?? 0,
+      };
+    };
+    const a = compte(anniversaire.data);
+    const b = compte(bubble.data);
+    const crees = a.crees + b.crees;
+    const refuses = a.refuses + b.refuses;
+
+    await journaliser(session, "creneaux.generes", null, {
+      du: debut,
+      au: fin,
+      crees,
+      refuses,
+    });
     rafraichir();
 
-    return {
-      ok: true,
-      message:
-        total > 0
-          ? `${total} créneau${total > 1 ? "x" : ""} ouvert${total > 1 ? "s" : ""}.`
-          : "Aucun nouveau créneau : la période était déjà ouverte.",
-    };
+    /*
+      LES REFUS SONT DITS, ET C'EST TOUT L'INTÉRÊT DE CE BLOC. Auparavant la
+      fonction ne renvoyait qu'un nombre de créations : un créneau refusé pour
+      chevauchement comptait comme un créneau déjà présent, et l'écran
+      annonçait « la période était déjà ouverte ». C'est ainsi que les Bubble
+      Foot de 18 h et 19 h du week-end ont disparu sans que personne ne le
+      sache — ils tombent pendant l'anniversaire de 17 h 30 à 19 h 30.
+    */
+    const phrases: string[] = [];
+    if (crees > 0) {
+      phrases.push(`${crees} créneau${crees > 1 ? "x" : ""} ouvert${crees > 1 ? "s" : ""}.`);
+    }
+    if (refuses > 0) {
+      phrases.push(
+        `${refuses} créneau${refuses > 1 ? "x" : ""} non ouvert${refuses > 1 ? "s" : ""} : ` +
+          `${refuses > 1 ? "ils chevauchent" : "il chevauche"} un créneau existant dans le même espace.`
+      );
+    }
+    if (phrases.length === 0) {
+      phrases.push("Aucun nouveau créneau : la période était déjà ouverte.");
+    }
+
+    return { ok: true, message: phrases.join(" ") };
   } catch (e) {
     return echec(e);
   }

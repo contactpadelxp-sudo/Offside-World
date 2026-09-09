@@ -553,11 +553,19 @@ export type Database = {
       }
       generer_creneaux_anniversaire: {
         Args: { au: string; du: string }
-        Returns: number
+        Returns: {
+          crees: number
+          deja_presents: number
+          refuses: number
+        }[]
       }
       generer_creneaux_bubble: {
         Args: { au: string; du: string }
-        Returns: number
+        Returns: {
+          crees: number
+          deja_presents: number
+          refuses: number
+        }[]
       }
       purger_sessions_admin: {
         Args: { garde?: string }
