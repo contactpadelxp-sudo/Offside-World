@@ -191,7 +191,30 @@ le dépôt.
       messagerie de Brahim), est dans **`MISE-EN-LIGNE.md`**.
 - [ ] **Renseigner `SITE_URL`** dès que le domaine définitif remplacera
       l'adresse Vercel — les liens des e-mails et le sitemap en dépendent.
-- [ ] Ouvrir un compte **Stripe** avec Bancontact activé.
+- [ ] **Passer Supabase au plan Pro (25 $/mois) avant la mise en ligne.** Ce
+      n'est pas une question de volume — le plan gratuit tiendrait des dizaines
+      de milliers d'articles — mais de DISPONIBILITÉ. Deux limites du plan
+      gratuit, relevées dans la documentation officielle le 8 septembre 2026 :
+      - un projet gratuit est **mis en pause après 7 jours de faible activité**
+        (« quelques requêtes par jour » suffisent à l'éviter, mais un complexe
+        local peut passer sous ce seuil en janvier). Un projet en pause, ce
+        n'est pas le blog qui tombe : c'est le site entier — plus de créneaux,
+        plus de réservation, plus de back-office ;
+      - **les sauvegardes ne sont pas téléchargeables** sur le plan gratuit.
+        Les articles de Brahim, les réservations et les tarifs n'ont donc
+        aucune sauvegarde que Mathis contrôle.
+
+      Repères mesurés le 8 septembre 2026 : base à 12 Mo sur les 500 Mo
+      autorisés, 0 octet de fichiers sur 1 Go. Un article pèse environ 8 ko,
+      une photo réduite environ 150 ko. Le volume n'est donc jamais le sujet.
+
+- [ ] Ouvrir un compte **Stripe** avec Bancontact activé. **Le compte doit être
+      celui de l'exploitant, pas celui de Mathis** : c'est le titulaire du
+      compte Stripe qui est le vendeur au sens légal, qui déclare la TVA et qui
+      reçoit les virements. Si Brahim en a déjà un, il invite Mathis comme
+      membre d'équipe avec le rôle « Developer » (Settings → Team and security)
+      — aucun mot de passe n'est échangé, et ce rôle ne permet ni de changer le
+      compte bancaire ni de déclencher un virement.
 - [x] ~~Planifier les tâches d'entretien en base.~~ Fait : `pg_cron` est
       activé, l'anonymisation RGPD tourne chaque nuit à 3h30 UTC et la purge
       des sessions chaque dimanche. Voir `supabase/migrations/0010`.
