@@ -10,16 +10,17 @@ import { Logo } from "@/components/logo";
 import { cn } from "@/lib/utils";
 import { Menu } from "@/components/icons";
 import { motion, AnimatePresence } from "framer-motion";
+import { hrefActivite } from "@/data/activites";
 
 const navLinksLeft = [
   { label: "Accueil", href: "/" },
-  { label: "Anniversaires", href: "/reservation?activite=anniversaire" },
+  { label: "Anniversaires", href: hrefActivite("anniversaire") },
   { label: "Blog", href: "/blog" },
 ];
 
 const navLinksRight = [
-  { label: "Terrain", href: "/reservation?activite=foot" },
-  { label: "Bubble & Team", href: "/reservation?activite=groupes" },
+  { label: "Terrain", href: hrefActivite("foot") },
+  { label: "Bubble & Team", href: hrefActivite("groupes") },
   { label: "Réserver", href: "/reservation", cta: true },
 ];
 

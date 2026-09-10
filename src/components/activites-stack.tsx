@@ -6,6 +6,7 @@ import Lenis from "lenis";
 import { FlecheDroite, Gateau, Groupe, Trophee } from "@/components/icons";
 import { Photo } from "@/components/photo";
 import { usePhoto } from "@/components/photos-provider";
+import { hrefActivite } from "@/data/activites";
 import "./scroll-stack.css";
 
 type Card = {
@@ -30,10 +31,18 @@ const DWELL = 260;              // scroll (px) pendant lequel l'empilement compl
 export default function ActivitesStack({ children }: { children?: React.ReactNode }) {
   const photoTerrain = usePhoto("terrain-vide");
   const photoBubble = usePhoto("bubble-portrait");
+  /*
+    Cette carte affichait `/images/foot.jpeg`, écrit en dur, seule des six
+    cartes d'activité du site à contourner le système d'emplacements de
+    `lib/photos.ts`. Ce système existe pour que Brahim change une photo en
+    déposant un fichier dans `public/images` : cette carte-là ne l'écoutait pas,
+    et personne ne s'en serait aperçu avant qu'il essaie et que rien ne change.
+  */
+  const photoAnniv = usePhoto("anniversaire-carte");
 
   const cards: Card[] = [
     {
-      href: "/reservation?activite=anniversaire",
+      href: hrefActivite("anniversaire"),
       icon: Gateau,
       title: "Anniversaires",
       desc: "Deux formules 100 % foot, Kick-Off et Bubble. Décoration, boissons et vidéo souvenir de l'anniversaire comprises.",
@@ -41,10 +50,10 @@ export default function ActivitesStack({ children }: { children?: React.ReactNod
       badgeClass: "bg-black/15 text-[#0a0a0b]",
       ctaClass: "text-[#0a0a0b]",
       frameClass: "border-black/25 bg-black/10",
-      img: "/images/foot.jpeg",
+      img: photoAnniv,
     },
     {
-      href: "/reservation?activite=foot",
+      href: hrefActivite("foot"),
       icon: Trophee,
       title: "Louer un terrain",
       desc: "Terrain privé avec éclairage, ballon, chasubles et vestiaires. Réservez votre créneau entre amis.",
@@ -55,7 +64,7 @@ export default function ActivitesStack({ children }: { children?: React.ReactNod
       img: photoTerrain,
     },
     {
-      href: "/reservation?activite=groupes",
+      href: hrefActivite("groupes"),
       icon: Groupe,
       title: "Bubble Foot & Team Building",
       desc: "Le foot dans des bulles géantes entre amis, ou la privatisation du complexe à la demi-journée pour votre équipe.",

@@ -7,6 +7,7 @@ import {
   NOM_COMMERCIAL, ADRESSE, EMAIL,
 } from "@/data/entreprise";
 import { Cookie, Enveloppe, Epingle, FlecheDiagonale } from "@/components/icons";
+import { hrefActivite } from "@/data/activites";
 
 export function Footer({ logoSrc }: { logoSrc: string | null }) {
   return (
@@ -35,10 +36,10 @@ export function Footer({ logoSrc }: { logoSrc: string | null }) {
               </h4>
               <ul className="space-y-2.5">
                 {[
-                  { label: "Anniversaires", href: "/reservation?activite=anniversaire" },
-                  { label: "Bubble Foot", href: "/reservation?activite=groupes" },
-                  { label: "Louer un terrain", href: "/reservation?activite=foot" },
-                  { label: "Team Building", href: "/reservation?activite=groupes" },
+                  { label: "Anniversaires", href: hrefActivite("anniversaire") },
+                  { label: "Bubble Foot", href: hrefActivite("groupes") },
+                  { label: "Louer un terrain", href: hrefActivite("foot") },
+                  { label: "Team Building", href: hrefActivite("groupes") },
                   { label: "Blog", href: "/blog" },
                 ].map((item) => (
                   <li key={item.label}>

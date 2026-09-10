@@ -3,44 +3,20 @@
 import { Card } from "@/components/ui/card";
 import { StaggerContainer, StaggerItem, Tilt3D } from "@/components/motion";
 import { Photo } from "@/components/photo";
-import { usePhoto } from "@/components/photos-provider";
-import { FlecheDroite, Gateau, Groupe, IconType, Trophee, Visuel } from "@/components/icons";
+import { FlecheDroite, Visuel } from "@/components/icons";
+import { useActivites } from "@/components/activites/use-activites";
 import type { Activity } from "../reservation-flow";
 import type { FormuleVue } from "@/lib/vues";
-import { BUBBLE_PRIX_PAR_PERSONNE } from "@/data/bubble-team";
-
-type ActivityCard = {
-  id: Activity;
-  icon: IconType;
-  title: string;
-  description: string;
-  /** Emplacement photo : `null` tant que l'image n'est pas fournie → placeholder. */
-  img: string | null;
-  /** Cadrage dans le cadre 4/5 (utile pour les images portrait ou paysage). */
-  imgPosition?: string;
-  tag: string;
-  accentText: string;
-  accentBadge: string;
-  iconBg: string;
-  border: string;
-  /** Halo de couleur derrière l'emplacement photo. */
-  glow: string;
-};
-
 
 /**
- * Prix d'appel des anniversaires, lu dans les formules de la base.
+ * Choix de l'activité — première étape du tunnel.
  *
- * Il était écrit « Dès 180 € » en dur, alors que l'en-tête de
- * `reservation-flow.tsx` promet précisément le contraire : aucun tarif ne doit
- * être figé côté navigateur, pour qu'un prix affiché soit toujours celui que le
- * serveur facturera. Brahim peut changer ses tarifs depuis `/admin/tarifs` ;
- * cette carte doit suivre, sinon elle ment dès la première modification.
+ * LES TROIS ACTIVITÉS NE SONT PLUS DÉCRITES ICI. Elles viennent de
+ * `useActivites()`, partagé avec le hero de la page d'accueil, parce que les
+ * décrire à deux endroits les avait déjà fait diverger. Ce fichier ne garde que
+ * la MISE EN FORME de la page Réserver, qui lui est propre et qui ne doit pas
+ * bouger : le rendu de cette page est gelé, à la classe près.
  */
-function prixDAppel(formules: FormuleVue[]): number | null {
-  const prix = formules.map((f) => f.prixBase).filter((n) => Number.isFinite(n) && n > 0);
-  return prix.length ? Math.min(...prix) : null;
-}
 
 export function ActivityChoice({
   onSelect,
@@ -49,58 +25,7 @@ export function ActivityChoice({
   onSelect: (a: Activity) => void;
   formules: FormuleVue[];
 }) {
-  const depuis = prixDAppel(formules);
-  const photoAnniv = usePhoto("anniversaire-carte");
-  const photoBubble = usePhoto("bubble-portrait");
-  const photoBallon = usePhoto("ballon-terrain");
-
-  const activities: ActivityCard[] = [
-    {
-      id: "anniversaire" as Activity,
-      icon: Gateau,
-      title: "Anniversaire",
-      description: "Deux formules 100 % foot — Kick-Off et Bubble — jusqu'à 10 enfants.",
-      // Était à `null` : l'activité la plus vendue était la seule des trois sans
-      // visuel, et affichait « Photo à venir » alors que `anniv.jpg` existait
-      // déjà dans public/images et qu'un emplacement lui était déclaré.
-      img: photoAnniv,
-      // Espace insécable : le montant ne doit pas se séparer de son symbole.
-      tag: depuis === null ? "Sur mesure" : `Dès\u00a0${depuis}\u00a0€`,
-      accentText: "text-kick",
-      accentBadge: "bg-kick/15 text-kick",
-      iconBg: "bg-kick/15 text-kick",
-      border: "border-kick/20 hover:border-kick/60",
-      glow: "bg-kick/25",
-    },
-    {
-      id: "foot" as Activity,
-      icon: Trophee,
-      title: "Louer un terrain",
-      description: "Réservez un terrain privé entre amis, à l'heure.",
-      img: photoBallon,
-      tag: "Réservation en ligne",
-      accentText: "text-field",
-      accentBadge: "bg-field/15 text-field",
-      iconBg: "bg-field/15 text-field",
-      border: "border-field/20 hover:border-field/60",
-      glow: "bg-field/25",
-    },
-    {
-      id: "groupes" as Activity,
-      icon: Groupe,
-      title: "Bubble Foot & Team Building",
-      description: `Bubble Foot à ${BUBBLE_PRIX_PAR_PERSONNE}\u00a0€/personne, ou privatisation à la demi-journée.`,
-      img: photoBubble,
-      // Les bulles sont à ~54 % de la hauteur de la photo.
-      imgPosition: "object-[center_54%]",
-      tag: `Dès\u00a0${BUBBLE_PRIX_PAR_PERSONNE}\u00a0€/pers.`,
-      accentText: "text-kick",
-      accentBadge: "bg-kick/15 text-kick",
-      iconBg: "bg-kick/15 text-kick",
-      border: "border-field/20 hover:border-field/60",
-      glow: "bg-kick/20",
-    },
-  ];
+  const activities = useActivites(formules);
 
   return (
     <div>
@@ -123,7 +48,7 @@ export function ActivityChoice({
                     {act.img ? (
                       <Photo
                         src={act.img}
-                        alt={act.title}
+                        alt={act.titre}
                         sizes="(max-width: 640px) 100vw, 380px"
                         className={`object-cover ${act.imgPosition ?? "object-center"} transition-transform duration-700 group-hover:scale-105`}
                       />
@@ -133,7 +58,7 @@ export function ActivityChoice({
                         <div aria-hidden className="absolute inset-0 bg-gradient-to-b from-white/[0.035] to-transparent" />
                         <div aria-hidden className="absolute inset-0 dot-grid fade-mask-radial opacity-70" />
                         <div aria-hidden className={`absolute left-1/2 top-[46%] -translate-x-1/2 -translate-y-1/2 size-44 rounded-full blur-3xl ${act.glow}`} />
-                        <act.icon className="relative size-12 text-foreground/25" />
+                        <act.icone className="relative size-12 text-foreground/25" />
                         <span className="relative inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground/60">
                           <Visuel className="size-3.5" /> Photo à venir
                         </span>
@@ -150,9 +75,9 @@ export function ActivityChoice({
                   <div className="-mt-6 p-6 flex flex-col flex-1">
                     <div className="flex items-center gap-2.5">
                       <div className={`inline-flex items-center justify-center rounded-xl p-2.5 ${act.iconBg} group-hover:scale-110 transition-transform duration-500`}>
-                        <act.icon className="size-5" />
+                        <act.icone className="size-5" />
                       </div>
-                      <h3 className="text-xl font-bold font-[family-name:var(--font-heading)] leading-tight">{act.title}</h3>
+                      <h3 className="text-xl font-bold font-[family-name:var(--font-heading)] leading-tight">{act.titre}</h3>
                     </div>
                     <p className="mt-3 text-[15px] leading-relaxed text-muted-foreground flex-1">{act.description}</p>
                     <span className={`mt-5 inline-flex items-center gap-1.5 text-sm font-semibold ${act.accentText} group-hover:gap-2.5 transition-all duration-300`}>

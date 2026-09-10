@@ -12,10 +12,19 @@ import { ActivityChoice } from "./steps/activity-choice";
 import { AnniversaireFlow } from "./steps/anniversaire-flow";
 import { FootFlow } from "./steps/foot-flow";
 import { GroupesFlow } from "./steps/groupes-flow";
+import { estActivite, type ActiviteId } from "@/data/activites";
 
-export type Activity = "anniversaire" | "foot" | "groupes" | null;
+/*
+  Le tunnel tenait sa propre liste des activités, en double de celle du reste du
+  site. C'était la quatrième copie des mêmes trois identifiants — avec l'en-tête,
+  le pied de page et les cartes. Quatre listes qui doivent rester d'accord, et
+  aucun moyen de s'apercevoir qu'elles ne le sont plus : un identifiant qui
+  n'est plus reconnu ici ouvre simplement le tunnel sur le choix d'activité,
+  comme si le lien n'avait pas été cliqué.
+*/
+export type Activity = ActiviteId | null;
 
-const ACTIVITIES = ["anniversaire", "foot", "groupes"] as const;
+
 
 /**
  * Tout ce que le funnel affiche vient de la base, lu par le composant serveur
@@ -58,7 +67,7 @@ export function ReservationFlow({ donnees }: { donnees: DonneesReservation }) {
    */
   useEffect(() => {
     const a = searchParams.get("activite");
-    setActivity(a && (ACTIVITIES as readonly string[]).includes(a) ? (a as Activity) : null);
+    setActivity(estActivite(a) ? a : null);
   }, [searchParams]);
 
   /**

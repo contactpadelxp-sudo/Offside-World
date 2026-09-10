@@ -8,7 +8,9 @@ import {
   MagneticButton, CountUp, Marquee, Tilt3D, WaveDivider,
 } from "@/components/motion";
 import { Photo } from "@/components/photo";
-import { usePhoto } from "@/components/photos-provider";
+import { ActivitesHero } from "@/components/activites/activites-hero";
+import { useActivites } from "@/components/activites/use-activites";
+import { hrefActivite } from "@/data/activites";
 import { Ballon, Batiment, Bouclier, Carte, Coche, Document, Enfant, Epingle, FlecheDroite, Gateau, Groupe, Horloge } from "@/components/icons";
 import { GATEAU_NOTE } from "@/data/formules";
 import type { FormuleVue } from "@/lib/vues";
@@ -34,7 +36,7 @@ const marqueeItems = [
  * cette page : ils viennent de la base, jamais d'une copie codée en dur.
  */
 export function Accueil({ formules }: { formules: FormuleVue[] }) {
-  const photoHero = usePhoto("terrain-vide-2");
+  const activites = useActivites(formules);
 
   /**
    * Le fond animé doit reprendre EXACTEMENT le jaune de la charte. On lit la
@@ -85,7 +87,16 @@ export function Accueil({ formules }: { formules: FormuleVue[] }) {
         {/* Overlay radial blanc pour lisibilité au centre */}
         <div className="absolute inset-0 z-[1] bg-radial-[ellipse_at_center] from-black/65 via-black/35 to-transparent" />
 
-        <div className="relative z-10 mx-auto max-w-5xl px-4 lg:px-8 pt-24 pb-12 md:pt-28 md:pb-14 w-full text-center">
+        {/*
+          `pb-24` et non `pb-12` : l'indicateur « Scroll » est en position
+          absolue à 32 px du bas du hero. Tant que le bas du contenu était le
+          cadre photo, personne ne s'en approchait ; maintenant que les trois
+          chiffres y descendent, les deux se superposaient — mesuré, le mot
+          SCROLL tombait littéralement sur « terrains indoor », aux deux
+          tailles d'écran. Le contenu se réserve donc la place que l'indicateur
+          occupe, au lieu de la lui disputer.
+        */}
+        <div className="relative z-10 mx-auto max-w-5xl px-4 lg:px-8 pt-24 pb-24 md:pt-28 md:pb-28 w-full text-center">
           {/* Headline central */}
           <h1 className="font-[family-name:var(--font-heading)] text-[clamp(2rem,5.5vw,4.5rem)] font-bold tracking-tight leading-[1.05] text-foreground">
             <FadeIn delay={0.1} className="block md:whitespace-nowrap">
@@ -123,6 +134,40 @@ export function Accueil({ formules }: { formules: FormuleVue[] }) {
             </div>
           </FadeIn>
 
+          {/*
+            LES ACTIVITÉS PASSENT AVANT LES CHIFFRES, et ce n'est pas un
+            arbitrage esthétique. Mesuré au navigateur sur 375 × 667 — le format
+            sur lequel l'audit mobile du site a été mené — la troisième ligne
+            commençait à y = 675 : « Bubble Foot & Team Building » tombait sous
+            la ligne de flottaison. Le hero affichait donc DEUX des trois
+            activités demandées, et cachait précisément celle qu'il ne mentionne
+            nulle part ailleurs.
+
+            Les trois chiffres sont un signal de confiance : ils supportent très
+            bien d'être vus après. Les trois activités sont l'action.
+          */}
+          {/*
+            LES TROIS ACTIVITÉS, À LA PLACE DE LA PHOTO DU COMPLEXE.
+
+            Demandé par l'exploitant. Le cadre qui occupait cette place montrait
+            une vue des terrains ; il envoyait un message d'ambiance, mais ne
+            menait nulle part. Les trois activités, elles, sont des liens
+            profonds : un clic ouvre le tunnel de réservation directement sur
+            l'activité choisie, sans repasser par l'écran de sélection.
+
+            Elles sont décrites par `useActivites()`, le même module que la page
+            Réserver, pour que les deux ne puissent pas raconter deux choses
+            différentes — ce qui était déjà arrivé entre la page Réserver et la
+            section « activités » plus bas.
+
+            L'emplacement photo `terrain-vide-2` n'est plus utilisé nulle part.
+            Il reste déclaré dans `lib/photos.ts` : le supprimer obligerait à
+            tout rebrancher le jour où on veut remontrer le complexe.
+          */}
+          <FadeIn delay={1.5}>
+            <ActivitesHero activites={activites} />
+          </FadeIn>
+
           {/* Stats — espacées */}
           <FadeIn delay={1.3}>
             <div className="mt-10 grid grid-cols-3 gap-x-3 gap-y-6 sm:flex sm:flex-wrap sm:justify-center sm:gap-x-16 md:gap-x-24">
@@ -141,22 +186,6 @@ export function Accueil({ formules }: { formules: FormuleVue[] }) {
             </div>
           </FadeIn>
 
-          {/* Cadre d'aperçu du complexe */}
-          <FadeIn delay={1.5}>
-            <div className={`relative mt-8 mx-auto w-full max-w-3xl aspect-[16/9] overflow-hidden rounded-3xl border-2 bg-white/[0.04] backdrop-blur-sm shadow-2xl shadow-black/40 flex items-center justify-center ${photoHero ? "border-field/25" : "border-dashed border-field/30"}`}>
-              {photoHero ? (
-                <Photo
-                  src={photoHero}
-                  alt="Les terrains de foot indoor du complexe Offside Foot Indoor"
-                  sizes="(max-width: 768px) 100vw, 768px"
-                  className="object-cover object-[center_40%]"
-                  preload
-                />
-              ) : (
-                <span className="text-sm text-muted-foreground/70 tracking-wide">Aperçu du complexe — photo à venir</span>
-              )}
-            </div>
-          </FadeIn>
         </div>
 
         {/* Scroll hint */}
@@ -261,7 +290,7 @@ export function Accueil({ formules }: { formules: FormuleVue[] }) {
 
                     <MagneticButton className="inline-block mt-6">
                       <Link
-                        href={`/reservation?activite=anniversaire`}
+                        href={hrefActivite("anniversaire")}
                         className="btn-glass-field inline-flex items-center gap-2 text-[#0a0a0b] px-6 h-12 rounded-2xl font-semibold"
                       >
                         Réserver la formule {f.nom} <FlecheDroite className="size-4" />
@@ -353,7 +382,7 @@ export function Accueil({ formules }: { formules: FormuleVue[] }) {
               </div>
               <MagneticButton className="inline-block mt-8">
                 <Link
-                  href="/reservation?activite=groupes"
+                  href={hrefActivite("groupes")}
                   className="btn-glass-field inline-flex items-center gap-2 text-[#0a0a0b] px-7 h-13 rounded-2xl text-base"
                 >
                   Organiser mon événement <FlecheDroite className="size-5" />
