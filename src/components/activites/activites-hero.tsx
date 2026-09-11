@@ -56,8 +56,8 @@ export function ActivitesHero({ activites }: { activites: ActiviteVue[] }) {
         Le rembourrage est à `py-2` et non `py-2.5`, et le `min-h-13` ne mord
         pas : la hauteur réelle d'une ligne vient de son contenu, pas du
         minimum. C'est la mesure au navigateur qui l'a montré — baisser le
-        `min-h` de 56 à 52 n'avait rien changé du tout, les lignes faisaient
-        58 px dans les deux cas.
+        `min-h` de 56 à 52 n'a rien changé du tout, les lignes faisaient 58 px
+        dans les deux cas. Avec `py-2` elles en font 54.
 
         La cible tactile reste très au-dessus du minimum de 24 px exigé par le
         critère 2.5.8 du WCAG 2.2.
@@ -111,11 +111,21 @@ export function ActivitesHero({ activites }: { activites: ActiviteVue[] }) {
 
       {/* ── À partir de 640 px : quatre cartes ── */}
       {/*
-        Deux colonnes entre 640 et 1024 px, quatre au-delà. Quatre cartes d'un
-        coup à 640 px feraient 150 px de large : la photo n'y montrerait plus
-        rien et « Bubble Foot & Team Building » passerait sur trois lignes.
+        QUATRE COLONNES DÈS 640 PX, et non deux puis quatre.
+
+        La version à deux colonnes semblait prudente : des cartes plus larges,
+        des photos plus lisibles. Mesurée, elle coûtait beaucoup trop cher —
+        sur une tablette en portrait (768 px), les quatre cartes passaient sur
+        DEUX rangées et le hero montait à 1178 px contre 849 px sur ordinateur.
+        Les trois chiffres et l'indicateur de défilement tombaient tous les deux
+        sous la ligne de flottaison, et un seul pixel de largeur (1023 -> 1024)
+        retirait 558 px à la hauteur de la page.
+
+        Quatre colonnes tiennent sur une rangée à toutes les largeurs. Le prix à
+        payer est un titre plus petit dans la bande intermédiaire, ce qui est
+        très peu cher comparé à un hero qui double de hauteur.
       */}
-      <div className="hidden gap-3 text-left sm:grid sm:grid-cols-2 lg:grid-cols-4">
+      <div className="hidden gap-3 text-left sm:grid sm:grid-cols-4">
         {activites.map((a) => (
           <Link
             key={a.id}
@@ -134,8 +144,23 @@ export function ActivitesHero({ activites }: { activites: ActiviteVue[] }) {
               {a.img ? (
                 <Photo
                   src={a.img}
-                  alt={a.titre}
-                  sizes="(max-width: 1024px) 33vw, 320px"
+                  /*
+                    `alt` VIDE, et c'est volontaire. Le titre est déjà écrit en
+                    toutes lettres dans le même lien : le répéter ici faisait
+                    annoncer « Anniversaire Dès 180 € Anniversaire » dans la
+                    liste des liens d'un lecteur d'écran. Une image qui
+                    n'ajoute rien au texte qui l'accompagne doit être
+                    transparente (technique H67 du WCAG).
+                  */
+                  alt=""
+                  /*
+                    Décrit la grille RÉELLE. Il annonçait encore « 33vw », soit
+                    trois colonnes, alors que la grille en a quatre : le
+                    navigateur choisissait un fichier calibré pour une carte
+                    une fois et demie trop large.
+                  */
+                  sizes="(max-width: 1024px) 25vw, 240px"
+                  differe
                   className={`object-cover ${a.imgPosition ?? "object-center"} transition-transform duration-700 group-hover:scale-105`}
                 />
               ) : (
@@ -150,21 +175,34 @@ export function ActivitesHero({ activites }: { activites: ActiviteVue[] }) {
               )}
               <div className="pointer-events-none absolute inset-x-0 bottom-0 h-16 bg-gradient-to-b from-transparent to-card" />
               <div
-                className={`absolute left-3 top-3 inline-flex items-center rounded-full bg-black/65 px-2.5 py-1 text-xs font-semibold ring-1 ring-white/15 backdrop-blur-md ${a.accentText}`}
+                className={`absolute left-3 top-3 inline-flex items-center rounded-full bg-black/80 px-2.5 py-1 text-xs font-semibold ring-1 ring-white/15 backdrop-blur-md ${a.accentText}`}
               >
                 {a.tag}
               </div>
             </div>
 
-            <div className="flex items-center gap-2.5 px-4 pb-4 pt-1">
+            {/*
+              EMPILÉ SOUS 1024 PX, EN LIGNE AU-DELÀ.
+
+              Mesuré à 640 px : la carte fait 143 px, dont 32 de rembourrage,
+              32 d'icône et 16 de flèche — il restait 53 px pour le titre, et
+              « Bubble Foot & Team Building » y partait sur CINQ lignes, ce qui
+              déséquilibrait toute la rangée. Empilé, le titre dispose de la
+              largeur entière.
+
+              La flèche disparaît dans cette bande : la carte entière est déjà
+              un lien, elle ne faisait que le rappeler — et elle le rappelait au
+              prix du titre.
+            */}
+            <div className="flex flex-col gap-1.5 px-3 pb-3 pt-1 lg:flex-row lg:items-center lg:gap-2.5 lg:px-4 lg:pb-4">
               <span
-                className={`inline-flex shrink-0 items-center justify-center rounded-xl p-2 ${a.iconBg} transition-transform duration-500 group-hover:scale-110`}
+                className={`inline-flex w-fit shrink-0 items-center justify-center rounded-xl p-2 ${a.iconBg} transition-transform duration-500 group-hover:scale-110`}
               >
                 <a.icone className="size-4" />
               </span>
-              <span className="min-w-0 flex-1 text-[15px] font-bold leading-tight">{a.titre}</span>
+              <span className="min-w-0 flex-1 text-[13px] font-bold leading-tight lg:text-[15px]">{a.titre}</span>
               <FlecheDroite
-                className={`size-4 shrink-0 ${a.accentText} transition-transform duration-300 group-hover:translate-x-0.5`}
+                className={`hidden size-4 shrink-0 lg:block ${a.accentText} transition-transform duration-300 group-hover:translate-x-0.5`}
               />
             </div>
           </Link>
@@ -187,8 +225,9 @@ export function ActivitesHero({ activites }: { activites: ActiviteVue[] }) {
             {planParc ? (
               <Photo
                 src={planParc}
-                alt={`${BOUNCE_PARK.titre} — plan du futur parc gonflable`}
-                sizes="(max-width: 1024px) 50vw, 320px"
+                alt=""
+                sizes="(max-width: 1024px) 25vw, 240px"
+                differe
                 className="object-cover object-center opacity-80"
               />
             ) : (
@@ -207,11 +246,11 @@ export function ActivitesHero({ activites }: { activites: ActiviteVue[] }) {
             </div>
           </div>
 
-          <div className="flex items-center gap-2.5 px-4 pb-4 pt-1">
-            <span className="inline-flex shrink-0 items-center justify-center rounded-xl bg-white/10 p-2 text-foreground/70">
+          <div className="flex flex-col gap-1.5 px-3 pb-3 pt-1 lg:flex-row lg:items-center lg:gap-2.5 lg:px-4 lg:pb-4">
+            <span className="inline-flex w-fit shrink-0 items-center justify-center rounded-xl bg-white/10 p-2 text-foreground/70">
               <Ballon className="size-4" />
             </span>
-            <span className="min-w-0 flex-1 text-[15px] font-bold leading-tight text-foreground/85">
+            <span className="min-w-0 flex-1 text-[13px] font-bold leading-tight text-foreground/85 lg:text-[15px]">
               {BOUNCE_PARK.titre}
             </span>
           </div>
