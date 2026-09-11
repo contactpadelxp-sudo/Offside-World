@@ -25,6 +25,11 @@ const SLOTS = {
   "entree-double-ballon": ["entreedoubleballon"],
   "joueur-ballon": ["joueurballontete", "joueurballon"],
   "anniversaire-carte": ["anniversairecarte", "anniv"],
+  // Le plan 3D du futur parc. Plusieurs noms sont acceptés parce que le
+  // fichier arrivera d'un logiciel de conception, sous un nom qu'on ne choisit
+  // pas : « Bounce Park.jpg », « bounce-park-plan.png » ou « bouncepark.webp »
+  // conviennent tous.
+  "bounce-park": ["bouncepark", "bounceparkplan", "planbouncepark"],
 } as const;
 
 export type PhotoSlot = keyof typeof SLOTS;

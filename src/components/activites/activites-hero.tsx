@@ -2,7 +2,9 @@
 
 import Link from "next/link";
 import { Photo } from "@/components/photo";
-import { FlecheDroite } from "@/components/icons";
+import { FlecheDroite, Ballon } from "@/components/icons";
+import { usePhoto } from "@/components/photos-provider";
+import { BOUNCE_PARK } from "@/data/bounce-park";
 import type { ActiviteVue } from "@/components/activites/use-activites";
 
 /**
@@ -39,15 +41,33 @@ import type { ActiviteVue } from "@/components/activites/use-activites";
  * quoi le navigateur téléchargerait des images calibrées pour la pleine largeur.
  */
 export function ActivitesHero({ activites }: { activites: ActiviteVue[] }) {
+  const planParc = usePhoto("bounce-park");
+
   return (
-    <div className="mt-8">
-      {/* ── Téléphone : trois lignes, les trois visibles ── */}
-      <ul className="flex flex-col gap-2 text-left sm:hidden">
+    /*
+      `mt-6` et non `mt-8` : la quatrième carte ajoute une ligne sur téléphone,
+      et chaque pixel repris ici est un pixel qui la garde au-dessus de la
+      ligne de flottaison. Voir la mesure dans le commentaire du hero.
+    */
+    <div className="mt-6">
+      {/*
+        ── Téléphone : quatre lignes, les quatre au-dessus de la ligne ──
+
+        Le rembourrage est à `py-2` et non `py-2.5`, et le `min-h-13` ne mord
+        pas : la hauteur réelle d'une ligne vient de son contenu, pas du
+        minimum. C'est la mesure au navigateur qui l'a montré — baisser le
+        `min-h` de 56 à 52 n'avait rien changé du tout, les lignes faisaient
+        58 px dans les deux cas.
+
+        La cible tactile reste très au-dessus du minimum de 24 px exigé par le
+        critère 2.5.8 du WCAG 2.2.
+      */}
+      <ul className="flex flex-col gap-1.5 text-left sm:hidden">
         {activites.map((a) => (
           <li key={a.id}>
             <Link
               href={a.href}
-              className={`flex min-h-14 items-center gap-3 rounded-2xl border bg-white/[0.05] px-3 py-2.5 backdrop-blur-sm transition-colors duration-300 ${a.border}`}
+              className={`flex min-h-13 items-center gap-3 rounded-2xl border bg-white/[0.05] px-3 py-2 backdrop-blur-sm transition-colors duration-300 ${a.border}`}
             >
               <span
                 className={`inline-flex shrink-0 items-center justify-center rounded-xl p-2 ${a.iconBg}`}
@@ -64,10 +84,38 @@ export function ActivitesHero({ activites }: { activites: ActiviteVue[] }) {
             </Link>
           </li>
         ))}
+
+        {/*
+          LE TEASER N'EST PAS UN LIEN, sur mobile comme ailleurs. Un <li> qui
+          contient un <div> n'entre pas dans l'ordre de tabulation et n'est pas
+          annoncé comme cliquable : un lecteur d'écran dira « Bounce Park,
+          bientôt », et s'arrêtera là. C'est exactement ce qu'on veut d'une
+          annonce.
+        */}
+        <li>
+          <div className="flex min-h-13 items-center gap-3 rounded-2xl border border-dashed border-white/25 bg-white/[0.03] px-3 py-2 backdrop-blur-sm">
+            <span className="inline-flex shrink-0 items-center justify-center rounded-xl bg-white/10 p-2 text-foreground/70">
+              <Ballon className="size-5" />
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="block truncate text-[15px] font-semibold leading-tight text-foreground/85">
+                {BOUNCE_PARK.titre}
+              </span>
+              <span className="block text-xs font-medium text-muted-foreground">
+                {BOUNCE_PARK.tag}
+              </span>
+            </span>
+          </div>
+        </li>
       </ul>
 
-      {/* ── À partir de 640 px : trois cartes ── */}
-      <div className="hidden gap-4 text-left sm:grid sm:grid-cols-3">
+      {/* ── À partir de 640 px : quatre cartes ── */}
+      {/*
+        Deux colonnes entre 640 et 1024 px, quatre au-delà. Quatre cartes d'un
+        coup à 640 px feraient 150 px de large : la photo n'y montrerait plus
+        rien et « Bubble Foot & Team Building » passerait sur trois lignes.
+      */}
+      <div className="hidden gap-3 text-left sm:grid sm:grid-cols-2 lg:grid-cols-4">
         {activites.map((a) => (
           <Link
             key={a.id}
@@ -121,6 +169,53 @@ export function ActivitesHero({ activites }: { activites: ActiviteVue[] }) {
             </div>
           </Link>
         ))}
+
+        {/*
+          LA CARTE DU BOUNCE PARK — UN <div>, PAS UN <a>.
+
+          Il n'y a rien au bout : ni page, ni créneau, ni tarif. Un lien mort
+          est pire qu'une carte inerte, parce qu'il promet une réponse qu'il
+          n'a pas — et le visiteur qui clique pour rien ne reclique pas sur les
+          trois autres.
+
+          Le trait discontinu et l'absence de flèche disent la même chose que la
+          pastille « Bientôt » : ceci s'annonce, ne se réserve pas. Trois signaux
+          qui vont dans le même sens, parce qu'un seul se rate.
+        */}
+        <div className="block h-full overflow-hidden rounded-2xl border-2 border-dashed border-white/20 bg-card/60 backdrop-blur-sm">
+          <div className="relative aspect-[3/2] overflow-hidden">
+            {planParc ? (
+              <Photo
+                src={planParc}
+                alt={`${BOUNCE_PARK.titre} — plan du futur parc gonflable`}
+                sizes="(max-width: 1024px) 50vw, 320px"
+                className="object-cover object-center opacity-80"
+              />
+            ) : (
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div aria-hidden className="absolute inset-0 dot-grid fade-mask-radial opacity-70" />
+                <div
+                  aria-hidden
+                  className="absolute left-1/2 top-1/2 size-32 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white/10 blur-3xl"
+                />
+                <Ballon className="relative size-10 text-foreground/25" />
+              </div>
+            )}
+            <div className="pointer-events-none absolute inset-x-0 bottom-0 h-16 bg-gradient-to-b from-transparent to-card" />
+            <div className="absolute left-3 top-3 inline-flex items-center rounded-full bg-black/65 px-2.5 py-1 text-xs font-semibold text-foreground/80 ring-1 ring-white/15 backdrop-blur-md">
+              {BOUNCE_PARK.tag}
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2.5 px-4 pb-4 pt-1">
+            <span className="inline-flex shrink-0 items-center justify-center rounded-xl bg-white/10 p-2 text-foreground/70">
+              <Ballon className="size-4" />
+            </span>
+            <span className="min-w-0 flex-1 text-[15px] font-bold leading-tight text-foreground/85">
+              {BOUNCE_PARK.titre}
+            </span>
+          </div>
+        </div>
       </div>
     </div>
   );
