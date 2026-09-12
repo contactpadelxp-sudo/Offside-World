@@ -1,4 +1,6 @@
 import "server-only";
+import fs from "node:fs";
+import path from "node:path";
 import { PDFDocument, StandardFonts, rgb, type PDFFont, type PDFPage } from "pdf-lib";
 import {
   montantsDevis,
@@ -11,7 +13,10 @@ import {
   BCE,
   DENOMINATION_SOCIALE,
   EMAIL,
+  FORME_JURIDIQUE,
   NOM_COMMERCIAL,
+  RPM_TRIBUNAL,
+  SIEGE_SOCIAL,
   TVA,
 } from "@/data/entreprise";
 
@@ -44,6 +49,7 @@ const LARGEUR = 595; // A4 en points
 const HAUTEUR = 842;
 
 const ENCRE = rgb(0.1, 0.1, 0.11);
+const FOND_LOGO = rgb(0.055, 0.055, 0.065);
 const GRIS = rgb(0.42, 0.42, 0.44);
 const TRAIT = rgb(0.85, 0.85, 0.84);
 const ACCENT = rgb(0.71, 0.49, 0.07);
@@ -141,28 +147,67 @@ export async function genererDevisPdf(d: DevisPourPdf): Promise<Uint8Array> {
   const droite = LARGEUR - MARGE;
   let y = HAUTEUR - MARGE;
 
-  // ── Le vendeur, en tête ──────────────────────────────────────────────────
-  texte(e, NOM_COMMERCIAL.toUpperCase(), MARGE, y, { taille: 9, gras: true, couleur: ACCENT });
-  y -= 16;
-  texte(e, "DEVIS", MARGE, y, { taille: 22, gras: true });
-  texte(e, d.reference, droite, y, { taille: 11, gras: true, droite });
-  y -= 14;
-  texte(e, `Émis le ${d.emisLe}`, droite, y, { taille: 9, couleur: GRIS, droite });
+  /*
+    ── LE LOGO, DANS UN BANDEAU SOMBRE ──
 
-  y -= 22;
+    Le logo est un PNG transparent dont 40 % des pixels sont quasi blancs —
+    mesuré : l'« OFF » et le ballon. Posé tel quel sur une page blanche, cette
+    part DISPARAÎT, et il ne resterait que le « SIDE » jaune.
+
+    Deux façons de s'en sortir : fabriquer une variante sombre du logo, ou lui
+    donner un fond. La variante serait un fichier dérivé de plus, qui
+    divergerait le jour où le logo change sans que personne y pense. Le
+    bandeau, lui, n'a rien à maintenir — et il reprend le fond du site, donc il
+    a l'air voulu plutôt que subi.
+  */
+  const logo = await chargerLogo(doc);
+  const HAUT_BANDEAU = 46;
+  if (logo) {
+    const largeurLogo = Math.min(150, (logo.width / logo.height) * (HAUT_BANDEAU - 18));
+    const hauteurLogo = largeurLogo * (logo.height / logo.width);
+    page.drawRectangle({
+      x: MARGE,
+      y: y - HAUT_BANDEAU,
+      width: largeurLogo + 24,
+      height: HAUT_BANDEAU,
+      color: FOND_LOGO,
+    });
+    page.drawImage(logo, {
+      x: MARGE + 12,
+      y: y - HAUT_BANDEAU + (HAUT_BANDEAU - hauteurLogo) / 2,
+      width: largeurLogo,
+      height: hauteurLogo,
+    });
+  } else {
+    texte(e, NOM_COMMERCIAL.toUpperCase(), MARGE, y - 20, { taille: 12, gras: true, couleur: ACCENT });
+  }
+
+  // La référence et la date s'alignent à droite, à hauteur du bandeau.
+  texte(e, d.reference, droite, y - 16, { taille: 11, gras: true, droite });
+  texte(e, `Émis le ${d.emisLe}`, droite, y - 30, { taille: 9, couleur: GRIS, droite });
+
+  // « DEVIS » vient SOUS le bandeau : l'écart garantit qu'ils ne se
+  // superposent jamais, quelle que soit la taille du logo déposé.
+  y -= HAUT_BANDEAU + 26;
+  texte(e, "DEVIS", MARGE, y, { taille: 22, gras: true });
+
+  y -= 20;
   /*
     L'identité du vendeur. Les champs encore inconnus sont OMIS, comme dans le
     pied des e-mails : un client ne doit pas recevoir un document portant
     « [à compléter] ». Ils apparaîtront d'eux-mêmes quand `data/entreprise.ts`
     les portera.
   */
+  const raisonSociale = [DENOMINATION_SOCIALE, FORME_JURIDIQUE].filter(Boolean).join(" ");
   const vendeur = [
-    DENOMINATION_SOCIALE && DENOMINATION_SOCIALE !== NOM_COMMERCIAL
-      ? `${DENOMINATION_SOCIALE} (${NOM_COMMERCIAL})`
+    raisonSociale
+      ? `${raisonSociale}${raisonSociale !== NOM_COMMERCIAL ? ` — ${NOM_COMMERCIAL}` : ""}`
       : NOM_COMMERCIAL,
-    ADRESSE_LIGNE,
+    SIEGE_SOCIAL ? `Siège social : ${SIEGE_SOCIAL}` : "",
+    SIEGE_SOCIAL ? `Exploitation : ${ADRESSE_LIGNE}` : ADRESSE_LIGNE,
     BCE ? `N° d'entreprise : ${BCE}` : "",
     TVA ? `TVA : BE ${TVA}` : "",
+    RPM_TRIBUNAL ? `RPM ${RPM_TRIBUNAL}` : "",
     EMAIL,
   ].filter(Boolean);
   for (const ligne of vendeur) {
@@ -249,27 +294,67 @@ export async function genererDevisPdf(d: DevisPourPdf): Promise<Uint8Array> {
     }
   }
 
-  // ── Conditions, en pied ──────────────────────────────────────────────────
-  let bas = MARGE + 58;
+  /*
+    ── PIED DE PAGE : CE QUI ENGAGE, ET CE QUI L'ENCADRE ──
+
+    Un devis n'est pas une facture, mais il reste un document émanant d'une
+    société : l'article 2:20 du Code des sociétés et des associations impose
+    qu'il porte la dénomination, la forme légale, le siège, le numéro
+    d'entreprise et la mention « RPM » suivie du tribunal compétent. Les trois
+    premiers et le numéro figurent en tête ; ce qui manque encore est simplement
+    absent plutôt qu'inventé.
+
+    Le BLOC D'ACCEPTATION n'est imposé par aucun texte, mais c'est lui qui
+    transforme le document en offre exploitable : daté et signé, il matérialise
+    l'accord, et évite la discussion sur ce qui a été accepté et quand.
+  */
+  const X_ACCORD = 330;
+  const LARGEUR_PIED = X_ACCORD - MARGE - 20; // 20 pt de gouttière
+
+  let bas = MARGE + 96;
   page.drawLine({
-    start: { x: MARGE, y: bas + 14 },
-    end: { x: droite, y: bas + 14 },
+    start: { x: MARGE, y: bas + 16 },
+    end: { x: droite, y: bas + 16 },
     thickness: 0.5,
     color: TRAIT,
   });
+
   texte(e, `Offre valable jusqu'au ${d.validiteLisible}.`, MARGE, bas, { taille: 9, gras: true });
-  bas -= 12;
-  texte(
-    e,
-    "Passé cette date, les montants sont à reconfirmer. Pour accepter cette offre, il suffit de",
-    MARGE,
-    bas,
-    { taille: 8, couleur: GRIS }
-  );
-  bas -= 11;
-  texte(e, `répondre à ${EMAIL}. La prestation est régie par nos conditions générales de vente.`, MARGE, bas, {
-    taille: 8,
-    couleur: GRIS,
+  bas -= 13;
+
+  /*
+    LA LARGEUR EST BORNÉE, PAS ESPÉRÉE. Une première version écrivait ce
+    paragraphe sur toute la page : il passait sous le bloc « Bon pour accord »
+    posé à droite, et les deux textes se chevauchaient. On découpe donc sur la
+    largeur réellement disponible — l'espace jusqu'au bloc, moins une
+    gouttière — ce qui rend le chevauchement impossible plutôt qu'improbable.
+  */
+  const conditions =
+    "Passé cette date, les montants sont à reconfirmer. Ce devis est gratuit et ne vous engage à rien. "
+    + `La prestation est régie par nos conditions générales de vente, sur ${urlDevis()}/cgv ou sur demande.`;
+  for (const ligne of decouper(winAnsi(conditions), e.normale, 7.5, LARGEUR_PIED)) {
+    texte(e, ligne, MARGE, bas, { taille: 7.5, couleur: GRIS });
+    bas -= 10;
+  }
+
+  // ── Bloc d'acceptation, à droite ────────────────────────────────────────
+  let yAccord = MARGE + 96;
+  texte(e, "Bon pour accord", X_ACCORD, yAccord, { taille: 9, gras: true });
+  yAccord -= 20;
+  texte(e, "Date", X_ACCORD, yAccord, { taille: 8, couleur: GRIS });
+  page.drawLine({
+    start: { x: X_ACCORD + 30, y: yAccord - 3 },
+    end: { x: droite, y: yAccord - 3 },
+    thickness: 0.5,
+    color: TRAIT,
+  });
+  yAccord -= 26;
+  texte(e, "Nom et signature", X_ACCORD, yAccord, { taille: 8, couleur: GRIS });
+  page.drawLine({
+    start: { x: X_ACCORD, y: yAccord - 18 },
+    end: { x: droite, y: yAccord - 18 },
+    thickness: 0.5,
+    color: TRAIT,
   });
 
   return doc.save();
@@ -291,5 +376,32 @@ function decouper(v: string, police: PDFFont, taille: number, largeur: number): 
   }
   if (courante) lignes.push(courante);
   // Un mot d'introduction n'est pas un roman : au-delà, on coupe.
-  return lignes.slice(0, 6);
+  return lignes.slice(0, 8);
+}
+
+/** L'adresse publique du site, pour renvoyer aux conditions générales. */
+function urlDevis(): string {
+  return (process.env.SITE_URL || "https://offsidefootindoor.be").replace(/\/+$/, "");
+}
+
+/**
+ * Charge le logo depuis `public/images`, s'il existe.
+ *
+ * Même tolérance de nommage que le reste du site : n'importe quel fichier
+ * contenant « logo ». Un échec ne fait pas échouer le devis — l'en-tête
+ * retombe sur le lettrage texte, et un document sans logo reste un document
+ * valable.
+ */
+async function chargerLogo(doc: PDFDocument) {
+  try {
+    const dir = path.join(process.cwd(), "public", "images");
+    const fichier = fs
+      .readdirSync(dir)
+      .filter((n) => /logo/i.test(n) && /\.png$/i.test(n))
+      .sort()[0];
+    if (!fichier) return null;
+    return await doc.embedPng(fs.readFileSync(path.join(dir, fichier)));
+  } catch {
+    return null;
+  }
 }

@@ -99,7 +99,16 @@ demande aucun redéploiement.
 Obligatoires en Belgique (Code de droit économique, art. III.74). Elles
 s'affichent aujourd'hui « [à compléter] » sur le site public.
 
-- [ ] Dénomination sociale de l'exploitant
+- [x] ~~Dénomination sociale~~ **Belantis**, communiquée le 12 septembre 2026.
+- [ ] **La FORME JURIDIQUE** (SRL, SA, ASBL, indépendant…). L'article 2:20 du
+      Code des sociétés impose que tout document émanant d'une société porte sa
+      dénomination ET sa forme légale : « Belantis » seul ne suffit pas, il faut
+      « Belantis SRL » ou la forme réelle. Laissée vide plutôt que devinée —
+      une forme erronée sur un devis engageant serait pire qu'une absence.
+- [ ] **Le TRIBUNAL DE L'ENTREPRISE du RPM.** Même article : les documents
+      doivent porter « RPM » suivi du tribunal compétent pour le siège. Pour
+      Gembloux, c'est vraisemblablement Liège division Namur — mais
+      « vraisemblablement » ne suffit pas pour l'imprimer.
 - [x] ~~Numéro d'entreprise (BCE)~~ **1025.713.731** — déduit du numéro de TVA
       (en Belgique c'est le même nombre). **À faire confirmer par Brahim.**
 - [x] ~~Numéro de TVA~~ **BE 1025.713.731**, communiqué le 12 septembre 2026 et

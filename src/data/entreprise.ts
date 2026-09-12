@@ -9,8 +9,33 @@
 
 export const NOM_COMMERCIAL = "Offside Foot Indoor";
 
-/** Dénomination sociale (raison sociale) — à compléter. */
-export const DENOMINATION_SOCIALE: string | null = null;
+/** Dénomination sociale (raison sociale). Communiquée le 12 septembre 2026. */
+export const DENOMINATION_SOCIALE: string | null = "Belantis";
+
+/**
+ * Forme juridique — SRL, SA, ASBL, indépendant en personne physique…
+ *
+ * OBLIGATOIRE SUR LES DOCUMENTS DE LA SOCIÉTÉ. L'article 2:20 du Code des
+ * sociétés et des associations impose que tout acte, facture, bon de commande
+ * ou courrier émanant d'une société mentionne sa dénomination ET sa forme
+ * légale. « Belantis » seul ne suffit donc pas : il faut « Belantis SRL », ou
+ * la forme réelle.
+ *
+ * Laissé à `null` plutôt que deviné : inscrire une forme juridique erronée sur
+ * un devis engageant serait pire que de l'omettre.
+ */
+export const FORME_JURIDIQUE: string | null = null;
+
+/**
+ * Tribunal de l'entreprise du registre des personnes morales.
+ *
+ * Également imposé par l'article 2:20 du CSA : les documents doivent porter la
+ * mention « RPM » suivie du tribunal compétent pour le siège. Pour Gembloux,
+ * c'est selon toute vraisemblance le tribunal de l'entreprise de Liège,
+ * division Namur — mais « selon toute vraisemblance » n'est pas une base
+ * suffisante pour l'imprimer sur un document engageant. À confirmer.
+ */
+export const RPM_TRIBUNAL: string | null = null;
 
 /** Siège social s'il diffère de l'adresse d'exploitation. */
 export const SIEGE_SOCIAL: string | null = null;
