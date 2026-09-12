@@ -33,6 +33,15 @@ export interface Message {
   html: string;
   /** Adresse à laquelle le destinataire répondra s'il clique sur « Répondre ». */
   repondreA?: string;
+  /**
+   * Fichiers joints.
+   *
+   * Réservé à ce que le destinataire doit POUVOIR TRANSMETTRE : un devis
+   * circule dans l'entreprise qui le reçoit — au responsable, à la
+   * comptabilité — et ce qui circule est une pièce jointe, pas un fil de
+   * messages. Les confirmations de réservation, elles, n'en ont pas besoin.
+   */
+  piecesJointes?: { nom: string; contenu: Uint8Array }[];
 }
 
 /**
@@ -64,6 +73,16 @@ async function appelerFournisseur(message: Message): Promise<void> {
       text: message.texte,
       html: message.html,
       ...(message.repondreA ? { reply_to: message.repondreA } : {}),
+      ...(message.piecesJointes?.length
+        ? {
+            // Resend attend le contenu en base64. `Buffer` est disponible : ce
+            // module tourne exclusivement côté serveur.
+            attachments: message.piecesJointes.map((p) => ({
+              filename: p.nom,
+              content: Buffer.from(p.contenu).toString("base64"),
+            })),
+          }
+        : {}),
     }),
     // Un e-mail n'est jamais mis en cache, et on ne veut pas attendre
     // indéfiniment si le fournisseur ne répond pas.

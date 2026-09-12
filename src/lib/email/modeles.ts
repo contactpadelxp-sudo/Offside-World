@@ -12,7 +12,7 @@ import {
 } from "@/data/entreprise";
 import { RESUME_ANNULATION } from "@/data/reglement";
 import { montantLisible } from "@/lib/tarification";
-import { totalDevisCents, totalLigneCents, type LigneDevis } from "@/lib/devis";
+import { montantsDevis, totalLigneCents, type LigneDevis } from "@/lib/devis";
 
 /**
  * Messages transactionnels.
@@ -460,12 +460,22 @@ export function auClientDevisPropose(d: DevisEmail & {
   lignes: LigneDevis[];
   motDIntroduction: string;
   validiteLisible: string;
+  tvaPourcent: number | null;
+  /** Le devis en PDF, joint au message. */
+  pdf?: Uint8Array;
 }): Message {
   const lignesTableau: Ligne[] = d.lignes.map((l) => ({
     cle: l.quantite > 1 ? `${l.designation} × ${l.quantite}` : l.designation,
     valeur: montantLisible(totalLigneCents(l)),
   }));
-  lignesTableau.push({ cle: "Total TVAC", valeur: montantLisible(totalDevisCents(d.lignes)) });
+  const m = montantsDevis(d.lignes, d.tvaPourcent);
+  if (m.tvaCents === null) {
+    lignesTableau.push({ cle: "Total", valeur: montantLisible(m.totalCents) });
+  } else {
+    lignesTableau.push({ cle: "Total HTVA", valeur: montantLisible(m.baseCents) });
+    lignesTableau.push({ cle: `TVA ${d.tvaPourcent} %`, valeur: montantLisible(m.tvaCents) });
+    lignesTableau.push({ cle: "Total TVAC", valeur: montantLisible(m.totalCents) });
+  }
 
   const apres: string[] = [];
   if (d.motDIntroduction.trim()) {
@@ -474,10 +484,11 @@ export function auClientDevisPropose(d: DevisEmail & {
   apres.push(
     `<strong>Offre valable jusqu'au ${ech(d.validiteLisible)}.</strong> Passé cette date, les montants sont à reconfirmer.`,
     `Pour l'accepter, répondez simplement à cet e-mail. La prestation est régie par nos <a href="${urlAbsolue("/cgv")}" style="color:${ACCENT};">conditions générales de vente</a>.`,
+    "Le devis est également joint en PDF, à transmettre ou à archiver.",
     "Une question, un ajustement ? Répondez à ce message, nous adapterons la proposition."
   );
 
-  return composer(
+  const message = composer(
     d.contactEmail,
     `Votre devis ${d.reference} — ${NOM_COMMERCIAL}`,
     "Votre devis",
@@ -487,6 +498,9 @@ export function auClientDevisPropose(d: DevisEmail & {
     EMAIL,
     true
   );
+  return d.pdf
+    ? { ...message, piecesJointes: [{ nom: `Devis ${d.reference}.pdf`, contenu: d.pdf }] }
+    : message;
 }
 
 // ── Avis internes ────────────────────────────────────────────────────────────

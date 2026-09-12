@@ -1,9 +1,11 @@
 import { describe, expect, it } from "vitest";
 import {
   devisPreRempli,
+  montantsDevis,
   lignesDepuisJson,
   ligneValide,
   obstaclesEnvoi,
+  reservesDevis,
   totalDevisCents,
   totalLigneCents,
   type LigneDevis,
@@ -77,7 +79,7 @@ describe("validité d'une ligne", () => {
 });
 
 describe("ce qui empêche l'envoi", () => {
-  const bon = { lignes: [ligne()], message: "", validite: "2026-12-31" };
+  const bon = { lignes: [ligne()], message: "", validite: "2026-12-31", tvaPourcent: null };
 
   it("ne voit aucun obstacle à un devis complet", () => {
     expect(obstaclesEnvoi(bon)).toEqual([]);
@@ -164,5 +166,75 @@ describe("relecture des lignes venues de la base", () => {
   it("tronque des nombres décimaux venus d'une écriture antérieure", () => {
     const lues = lignesDepuisJson([{ designation: "A", quantite: 2.7, prixUnitaireCents: 100.9 }]);
     expect(lues[0]).toEqual({ designation: "A", quantite: 2, prixUnitaireCents: 100 });
+  });
+});
+
+describe("ventilation de la TVA", () => {
+  const l = [ligne({ quantite: 10, prixUnitaireCents: 5000 })]; // 500,00 €
+
+  it("NE VENTILE PAS quand le taux est inconnu", () => {
+    // Supposer 21 % et reconstituer une base serait inventer un chiffre sur un
+    // document comptable. Sans taux, le total EST le total.
+    const m = montantsDevis(l, null);
+    expect(m.baseCents).toBe(50000);
+    expect(m.tvaCents).toBeNull();
+    expect(m.totalCents).toBe(50000);
+  });
+
+  it("ajoute la TVA au taux donné", () => {
+    const m = montantsDevis(l, 21);
+    expect(m.baseCents).toBe(50000);
+    expect(m.tvaCents).toBe(10500);
+    expect(m.totalCents).toBe(60500);
+  });
+
+  it("distingue un taux de 0 — exonéré — d'un taux absent", () => {
+    const zero = montantsDevis(l, 0);
+    expect(zero.tvaCents).toBe(0);        // exonéré : la TVA existe et vaut 0
+    expect(montantsDevis(l, null).tvaCents).toBeNull(); // absent : on ne sait pas
+  });
+
+  it("gère le taux réduit belge de 6 %", () => {
+    expect(montantsDevis(l, 6).tvaCents).toBe(3000);
+  });
+
+  it("ARRONDIT SUR LE TOTAL, pas ligne à ligne", () => {
+    // Dix lignes à 3,33 € : 33,30 € de base. À 21 %, la TVA vaut 6,993 €.
+    // Arrondie une fois : 6,99 €. Arrondie dix fois (0,70 chacune) : 7,00 €.
+    // L'écart est petit mais il est faux, et il grandit avec le nombre de lignes.
+    const dix = Array.from({ length: 10 }, () => ligne({ quantite: 1, prixUnitaireCents: 333 }));
+    const m = montantsDevis(dix, 21);
+    expect(m.baseCents).toBe(3330);
+    expect(m.tvaCents).toBe(699);
+    expect(m.totalCents).toBe(4029);
+  });
+
+  it("reste en centimes entiers sur un taux qui tombe mal", () => {
+    const m = montantsDevis([ligne({ quantite: 3, prixUnitaireCents: 3333 })], 21);
+    expect(Number.isInteger(m.tvaCents!)).toBe(true);
+    expect(Number.isInteger(m.totalCents)).toBe(true);
+  });
+});
+
+describe("réserves — ce qui manque sans bloquer", () => {
+  it("signale les trois manques", () => {
+    const r = reservesDevis({ tvaPourcent: null, clientAdresse: "", clientTva: "" });
+    expect(r).toHaveLength(3);
+  });
+
+  it("ne signale rien quand tout est là", () => {
+    expect(
+      reservesDevis({ tvaPourcent: 21, clientAdresse: "Rue X 1, Namur", clientTva: "BE0123456789" })
+    ).toEqual([]);
+  });
+
+  it("ne confond pas un taux de 0 avec un taux absent", () => {
+    // Exonéré est un choix ; « non renseigné » est un oubli.
+    expect(reservesDevis({ tvaPourcent: 0, clientAdresse: "X", clientTva: "Y" })).toEqual([]);
+  });
+
+  it("ignore les espaces", () => {
+    const r = reservesDevis({ tvaPourcent: 21, clientAdresse: "   ", clientTva: "  " });
+    expect(r).toHaveLength(2);
   });
 });

@@ -26,6 +26,42 @@ export interface Devis {
   message: string;
   /** Date de fin de validité, au format ISO `AAAA-MM-JJ`. */
   validite: string;
+  /**
+   * Taux de TVA appliqué, en pourcent. `null` signifie « non renseigné » —
+   * et ce n'est PAS 0, qui signifierait exonéré. Tant qu'il est nul, le devis
+   * s'affiche en TVAC sans détail ; renseigné, il ventile base, TVA et total.
+   */
+  tvaPourcent: number | null;
+}
+
+/**
+ * Les trois montants d'un devis.
+ *
+ * QUAND LE TAUX EST INCONNU, ON NE VENTILE PAS. Il serait tentant de supposer
+ * 21 % et de reconstituer une base HTVA — c'est exactement ce qu'il ne faut
+ * pas faire. Le taux applicable à une privatisation de complexe sportif n'est
+ * pas une évidence, et un chiffre inventé sur un document comptable est pire
+ * qu'un chiffre absent. Sans taux, le total EST le total, sans décomposition.
+ */
+export interface MontantsDevis {
+  /** Somme des lignes, telle que saisie. */
+  baseCents: number;
+  /** Montant de TVA, ou `null` si le taux n'est pas renseigné. */
+  tvaCents: number | null;
+  /** Ce que le client paiera. */
+  totalCents: number;
+}
+
+export function montantsDevis(lignes: LigneDevis[], tvaPourcent: number | null): MontantsDevis {
+  const baseCents = totalDevisCents(lignes);
+  if (tvaPourcent === null || !Number.isFinite(tvaPourcent)) {
+    return { baseCents, tvaCents: null, totalCents: baseCents };
+  }
+  // Arrondi au centime sur le TOTAL de la TVA, pas ligne à ligne : c'est la
+  // règle usuelle, et arrondir chaque ligne ferait dériver le total de
+  // quelques centimes sur un devis à dix postes.
+  const tvaCents = Math.round((baseCents * tvaPourcent) / 100);
+  return { baseCents, tvaCents, totalCents: baseCents + tvaCents };
 }
 
 /** Total d'une ligne. */
@@ -82,6 +118,27 @@ export function obstaclesEnvoi(d: Devis): string[] {
 }
 
 /**
+ * Ce qui manque au devis sans l'empêcher de partir.
+ *
+ * Distinct des obstacles : un devis sans adresse de facturation ni numéro de
+ * TVA du client reste envoyable — il est simplement moins utile à la
+ * comptabilité qui le recevra. On le signale sans bloquer, parce que ces
+ * informations ne sont pas dans le formulaire public et que l'exploitant ne
+ * les a pas toujours sous la main au moment où il chiffre.
+ */
+export function reservesDevis(d: {
+  tvaPourcent: number | null;
+  clientAdresse: string;
+  clientTva: string;
+}): string[] {
+  const reserves: string[] = [];
+  if (d.tvaPourcent === null) reserves.push("le taux de TVA");
+  if (!d.clientAdresse.trim()) reserves.push("l'adresse du client");
+  if (!d.clientTva.trim()) reserves.push("le numéro de TVA du client");
+  return reserves;
+}
+
+/**
  * Le devis pré-rempli à partir de la demande.
  *
  * L'exploitant ne part jamais d'une page blanche : il reçoit une ligne déjà
@@ -114,6 +171,7 @@ export function devisPreRempli(demande: {
     ],
     message: "",
     validite: "",
+    tvaPourcent: null,
   };
 }
 

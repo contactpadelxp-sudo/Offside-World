@@ -97,12 +97,15 @@ export type Database = {
           cgv_acceptees_le: string | null
           contact_email: string
           contact_nom: string
+          client_adresse: string | null
+          client_tva: string | null
           contact_telephone: string
           created_at: string
           date_souhaitee: string | null
           devis_envoye_le: string | null
           devis_lignes: Json | null
           devis_message: string | null
+          devis_tva_pourcent: number | null
           devis_validite: string | null
           entreprise: string
           id: string
@@ -119,12 +122,15 @@ export type Database = {
           cgv_acceptees_le?: string | null
           contact_email: string
           contact_nom: string
+          client_adresse?: string | null
+          client_tva?: string | null
           contact_telephone: string
           created_at?: string
           date_souhaitee?: string | null
           devis_envoye_le?: string | null
           devis_lignes?: Json | null
           devis_message?: string | null
+          devis_tva_pourcent?: number | null
           devis_validite?: string | null
           entreprise: string
           id?: string
@@ -141,12 +147,15 @@ export type Database = {
           cgv_acceptees_le?: string | null
           contact_email?: string
           contact_nom?: string
+          client_adresse?: string | null
+          client_tva?: string | null
           contact_telephone?: string
           created_at?: string
           date_souhaitee?: string | null
           devis_envoye_le?: string | null
           devis_lignes?: Json | null
           devis_message?: string | null
+          devis_tva_pourcent?: number | null
           devis_validite?: string | null
           entreprise?: string
           id?: string

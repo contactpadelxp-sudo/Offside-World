@@ -25,13 +25,10 @@ import {
   auClientReservationConfirmee,
   emailDeTest,
 } from "@/lib/email/modeles";
-import {
-  lignesDepuisJson,
-  obstaclesEnvoi,
-  totalDevisCents,
-  type LigneDevis,
-} from "@/lib/devis";
+import { lignesDepuisJson, obstaclesEnvoi, totalDevisCents } from "@/lib/devis";
 import { jourLisibleCap } from "@/lib/temps";
+import { genererDevisPdf } from "@/lib/devis-pdf";
+import type { SaisieDevis } from "@/lib/vues";
 import {
   montantARembourser,
   paiementRemboursable,
@@ -263,10 +260,7 @@ export async function enregistrerNoteReservation(id: string, note: string): Prom
  */
 
 /** Enregistre le brouillon, sans rien envoyer. */
-export async function enregistrerDevis(
-  id: string,
-  devis: { lignes: LigneDevis[]; message: string; validite: string }
-): Promise<Resultat> {
+export async function enregistrerDevis(id: string, devis: SaisieDevis): Promise<Resultat> {
   const session = await garde();
   if (!session) return REFUS_SESSION;
 
@@ -280,6 +274,9 @@ export async function enregistrerDevis(
         devis_lignes: propre.lignes,
         devis_message: propre.message || null,
         devis_validite: propre.validite || null,
+        devis_tva_pourcent: propre.tvaPourcent,
+        client_adresse: propre.clientAdresse || null,
+        client_tva: propre.clientTva || null,
       })
       .eq("id", cible)
       .select("reference")
@@ -310,10 +307,7 @@ export async function enregistrerDevis(
  * le contraire — l'envoi EST l'action demandée, et l'exploitant doit savoir si
  * elle a échoué, sans quoi il attendrait une réponse à un devis jamais parti.
  */
-export async function envoyerDevis(
-  id: string,
-  devis: { lignes: LigneDevis[]; message: string; validite: string }
-): Promise<Resultat> {
+export async function envoyerDevis(id: string, devis: SaisieDevis): Promise<Resultat> {
   const session = await garde();
   if (!session) return REFUS_SESSION;
 
@@ -335,6 +329,9 @@ export async function envoyerDevis(
         devis_lignes: propre.lignes,
         devis_message: propre.message || null,
         devis_validite: propre.validite,
+        devis_tva_pourcent: propre.tvaPourcent,
+        client_adresse: propre.clientAdresse || null,
+        client_tva: propre.clientTva || null,
       })
       .eq("id", cible)
       .select("*")
@@ -342,6 +339,28 @@ export async function envoyerDevis(
 
     if (error) throw error;
     if (!data) return { ok: false, message: "Demande introuvable." };
+
+    /*
+      LE PDF EST GÉNÉRÉ AVANT L'ENVOI, ET SON ÉCHEC ARRÊTE TOUT. Envoyer un
+      e-mail annonçant « le devis est joint en PDF » sans la pièce jointe
+      serait pire que de ne rien envoyer : le client chercherait un fichier
+      absent et croirait à une erreur de sa messagerie.
+    */
+    const pdf = await genererDevisPdf({
+      reference: data.reference,
+      emisLe: jourLisibleCap(new Date()),
+      validiteLisible: jourLisibleCap(new Date(`${propre.validite}T12:00:00Z`)),
+      client: {
+        entreprise: data.entreprise,
+        contactNom: data.contact_nom,
+        contactEmail: data.contact_email,
+        adresse: propre.clientAdresse,
+        tva: propre.clientTva,
+      },
+      lignes: propre.lignes,
+      tvaPourcent: propre.tvaPourcent,
+      motDIntroduction: propre.message,
+    });
 
     await envoyerEnRemontantLErreur(
       auClientDevisPropose({
@@ -356,6 +375,8 @@ export async function envoyerDevis(
         lignes: propre.lignes,
         motDIntroduction: propre.message,
         validiteLisible: jourLisibleCap(new Date(`${propre.validite}T12:00:00Z`)),
+        tvaPourcent: propre.tvaPourcent,
+        pdf,
       })
     );
 
@@ -386,7 +407,7 @@ export async function envoyerDevis(
  * et on plafonne le nombre de lignes, faute de quoi un appel forgé pourrait
  * écrire un document de plusieurs mégaoctets dans la base.
  */
-function nettoyerDevis(d: { lignes: LigneDevis[]; message: string; validite: string }) {
+function nettoyerDevis(d: SaisieDevis) {
   const lignes = lignesDepuisJson(d.lignes)
     .slice(0, 30)
     .map((l) => ({
@@ -395,7 +416,20 @@ function nettoyerDevis(d: { lignes: LigneDevis[]; message: string; validite: str
       prixUnitaireCents: Math.min(100_000_000, Math.max(0, l.prixUnitaireCents)),
     }));
   const validite = /^\d{4}-\d{2}-\d{2}$/.test(d.validite ?? "") ? d.validite : "";
-  return { lignes, message: (d.message ?? "").slice(0, 2000), validite };
+  // Le taux vient d'une liste fermée à l'écran, mais une Server Action reste
+  // une URL publique : on reborne. `null` est conservé tel quel — « non
+  // renseigné » n'est pas « exonéré ».
+  const brut = Number(d.tvaPourcent);
+  const tvaPourcent =
+    d.tvaPourcent === null || !Number.isFinite(brut) ? null : Math.min(25, Math.max(0, Math.round(brut)));
+  return {
+    lignes,
+    message: (d.message ?? "").slice(0, 2000),
+    validite,
+    tvaPourcent,
+    clientAdresse: (d.clientAdresse ?? "").slice(0, 300),
+    clientTva: (d.clientTva ?? "").slice(0, 40),
+  };
 }
 
 export async function enregistrerNoteDevis(id: string, note: string): Promise<Resultat> {

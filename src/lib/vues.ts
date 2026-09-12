@@ -131,9 +131,28 @@ export interface DevisAdmin {
     validite: string;
     /** Horodatage lisible de l'envoi réel, `null` si le devis n'est pas parti. */
     envoyeLe: string | null;
+    /** Taux de TVA, `null` tant qu'il n'est pas renseigné. */
+    tvaPourcent: number | null;
   };
+  /** Coordonnées de facturation de la société cliente, saisies au back-office. */
+  client: { adresse: string; tva: string };
   /** Les valeurs brutes de la demande, pour pré-remplir un devis vierge. */
   brut: { dateSouhaitee: string | null; periode: string | null; nbParticipants: number | null };
+}
+
+/**
+ * Ce que le back-office envoie au serveur quand il enregistre ou expédie un
+ * devis. Vit ici plutôt que dans `lib/devis.ts` pour que la fiche — un
+ * composant navigateur — puisse le typer sans importer de module serveur.
+ */
+export interface SaisieDevis {
+  lignes: { designation: string; quantite: number; prixUnitaireCents: number }[];
+  message: string;
+  validite: string;
+  /** `null` = non renseigné, ce qui n'est pas 0 = exonéré. */
+  tvaPourcent: number | null;
+  clientAdresse: string;
+  clientTva: string;
 }
 
 export interface EntreeJournal {

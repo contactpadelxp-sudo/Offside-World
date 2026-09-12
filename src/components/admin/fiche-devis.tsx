@@ -5,8 +5,9 @@ import { enregistrerDevis, enregistrerNoteDevis, envoyerDevis } from "@/lib/acti
 import type { DevisAdmin } from "@/lib/vues";
 import {
   devisPreRempli,
+  montantsDevis,
   obstaclesEnvoi,
-  totalDevisCents,
+  reservesDevis,
   totalLigneCents,
   type LigneDevis,
 } from "@/lib/devis";
@@ -51,10 +52,21 @@ export function FicheDevis({ d }: { d: DevisAdmin }) {
   const [mot, setMot] = useState(d.devis.message);
   const [validite, setValidite] = useState(d.devis.validite);
   const [envoye, setEnvoye] = useState(d.devis.envoyeLe);
+  const [tva, setTva] = useState<number | null>(d.devis.tvaPourcent);
+  const [adresse, setAdresse] = useState(d.client.adresse);
+  const [tvaClient, setTvaClient] = useState(d.client.tva);
 
-  const devis = { lignes, message: mot, validite };
+  const devis = {
+    lignes,
+    message: mot,
+    validite,
+    tvaPourcent: tva,
+    clientAdresse: adresse,
+    clientTva: tvaClient,
+  };
   const obstacles = obstaclesEnvoi(devis);
-  const total = totalDevisCents(lignes);
+  const reserves = reservesDevis({ tvaPourcent: tva, clientAdresse: adresse, clientTva: tvaClient });
+  const m = montantsDevis(lignes, tva);
 
   const majLigne = (i: number, champ: keyof LigneDevis, v: string) =>
     setLignes((prev) =>
@@ -138,8 +150,44 @@ export function FicheDevis({ d }: { d: DevisAdmin }) {
       {/* ── Le devis ── */}
       <div className="mt-4 border-t border-border pt-4">
         <p className="mb-3 text-xs text-muted-foreground">
-          Le devis ci-dessous part tel quel au client. Les montants sont TVAC.
+          Le devis ci-dessous part au client, en PDF joint à l&apos;e-mail.
         </p>
+
+        {/*
+          COORDONNÉES DE FACTURATION DU CLIENT. Le formulaire public ne les
+          demande pas — réclamer une adresse complète et un numéro de TVA à un
+          prospect qui n'a pas encore vu un prix ferait fuir des demandes. Elles
+          se saisissent ici, au moment où l'exploitant est de toute façon en
+          contact avec la société.
+        */}
+        <div className="mb-4 grid gap-3 sm:grid-cols-2">
+          <div>
+            <label htmlFor={`adr-${d.id}`} className="mb-1 block text-xs text-muted-foreground">
+              Adresse du client
+            </label>
+            <input
+              id={`adr-${d.id}`}
+              value={adresse}
+              onChange={(e) => setAdresse(e.target.value)}
+              maxLength={300}
+              placeholder="Rue, numéro, code postal, ville"
+              className="w-full rounded-lg border border-border bg-input/30 px-3 py-2 text-sm outline-none focus-visible:ring-2 focus-visible:ring-field/60"
+            />
+          </div>
+          <div>
+            <label htmlFor={`tvac-${d.id}`} className="mb-1 block text-xs text-muted-foreground">
+              N° de TVA du client
+            </label>
+            <input
+              id={`tvac-${d.id}`}
+              value={tvaClient}
+              onChange={(e) => setTvaClient(e.target.value)}
+              maxLength={40}
+              placeholder="BE 0123.456.789"
+              className="w-full rounded-lg border border-border bg-input/30 px-3 py-2 text-sm outline-none focus-visible:ring-2 focus-visible:ring-field/60"
+            />
+          </div>
+        </div>
 
         <div className="space-y-2">
           {lignes.map((l, i) => (
@@ -209,12 +257,53 @@ export function FicheDevis({ d }: { d: DevisAdmin }) {
           Ajouter une ligne
         </button>
 
-        <div className="mt-4 flex items-center justify-between border-t border-border pt-3">
-          <span className="font-bold">Total TVAC</span>
-          <span className="text-lg font-bold text-field">{montantLisible(total)}</span>
+        <div className="mt-4 space-y-1 border-t border-border pt-3">
+          {m.tvaCents === null ? (
+            <div className="flex items-center justify-between">
+              <span className="font-bold">Total</span>
+              <span className="text-lg font-bold text-field">{montantLisible(m.totalCents)}</span>
+            </div>
+          ) : (
+            <>
+              <div className="flex items-center justify-between text-sm text-muted-foreground">
+                <span>Total HTVA</span>
+                <span>{montantLisible(m.baseCents)}</span>
+              </div>
+              <div className="flex items-center justify-between text-sm text-muted-foreground">
+                <span>TVA {tva} %</span>
+                <span>{montantLisible(m.tvaCents)}</span>
+              </div>
+              <div className="flex items-center justify-between pt-1">
+                <span className="font-bold">Total TVAC</span>
+                <span className="text-lg font-bold text-field">{montantLisible(m.totalCents)}</span>
+              </div>
+            </>
+          )}
         </div>
 
-        <div className="mt-4 grid gap-3 sm:grid-cols-2">
+        <div className="mt-4 grid gap-3 sm:grid-cols-3">
+          <div>
+            {/*
+              AUCUN TAUX PAR DÉFAUT. Le taux applicable à une privatisation de
+              complexe sportif n'est pas une évidence, et un défaut silencieux
+              finirait par partir tel quel sur un document comptable.
+            */}
+            <label htmlFor={`tva-${d.id}`} className="mb-1 block text-xs text-muted-foreground">
+              TVA
+            </label>
+            <select
+              id={`tva-${d.id}`}
+              value={tva === null ? "" : String(tva)}
+              onChange={(e) => setTva(e.target.value === "" ? null : Number(e.target.value))}
+              style={{ colorScheme: "dark" }}
+              className="w-full rounded-lg border border-border bg-input/30 px-3 py-2 text-sm outline-none focus-visible:ring-2 focus-visible:ring-field/60"
+            >
+              <option value="">Non renseignée</option>
+              <option value="21">21 % — taux normal</option>
+              <option value="6">6 % — taux réduit</option>
+              <option value="0">0 % — exonéré</option>
+            </select>
+          </div>
           <div>
             <label htmlFor={`val-${d.id}`} className="mb-1 block text-xs text-muted-foreground">
               Valable jusqu&apos;au
@@ -270,6 +359,26 @@ export function FicheDevis({ d }: { d: DevisAdmin }) {
             Enregistrer sans envoyer
           </button>
 
+          {/*
+            L'APERÇU OUVRE LE PDF RÉELLEMENT GÉNÉRÉ, pas une imitation en HTML.
+            Il passe par la même fonction que l'envoi : ce que Brahim voit est
+            exactement ce que le client recevra, y compris la mise en page et
+            les arrondis. Un aperçu qui ne serait pas le document lui-même ne
+            servirait qu'à rassurer à tort.
+
+            La forme est un formulaire plutôt qu'un lien : les montants en cours
+            de saisie ne sont pas encore en base, et les faire transiter par une
+            URL les exposerait dans l'historique du navigateur et les journaux
+            du serveur.
+          */}
+          <form action={`/admin/devis/${d.id}/apercu`} method="POST" target="_blank" className="contents">
+            <input type="hidden" name="devis" value={JSON.stringify(devis)} />
+            <button type="submit" className={BOUTON_NEUTRE}>
+              <Document className="size-4" />
+              Voir le PDF
+            </button>
+          </form>
+
           <button
             type="button"
             onClick={() => setNoteOuverte((v) => !v)}
@@ -289,6 +398,12 @@ export function FicheDevis({ d }: { d: DevisAdmin }) {
         {obstacles.length > 0 && (
           <p className="mt-2 text-sm text-muted-foreground">
             Pour envoyer, il manque {obstacles.join(", ")}.
+          </p>
+        )}
+
+        {obstacles.length === 0 && reserves.length > 0 && (
+          <p className="mt-2 text-sm text-muted-foreground">
+            Envoyable, mais il manque {reserves.join(", ")}. Le devis partira sans.
           </p>
         )}
 
