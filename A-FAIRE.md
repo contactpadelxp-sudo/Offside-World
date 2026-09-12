@@ -106,6 +106,34 @@ s'affichent aujourd'hui « [à compléter] » sur le site public.
 - [ ] Responsable de la publication
 - [ ] Arrondissement judiciaire compétent (pour les CGU)
 
+## Facturation électronique — à vérifier avec son comptable
+
+Depuis le **1er janvier 2026**, la facturation électronique structurée (format
+Peppol BIS) est obligatoire en Belgique pour les **factures B2B entre
+assujettis TVA belges**.
+
+**Ce qui N'EST PAS concerné :** le devis. C'est une offre précontractuelle,
+sans effet TVA, sans format imposé et sans plateforme — l'envoyer par e-mail
+depuis le back-office est parfaitement régulier. La question s'était posée, la
+réponse est claire.
+
+**Ce qui l'est :** la facture qui suit un devis de team building accepté,
+lorsque le client est une société assujettie à la TVA en Belgique. Les
+anniversaires et le Bubble Foot, vendus à des particuliers, ne le sont pas.
+
+**Le site n'émet aucune facture, et ne doit pas s'y mettre.** La conformité
+Peppol appartient au logiciel comptable de Brahim : c'est là que vivent la
+TVA, la numérotation continue et les archives. En faire une plateforme de
+facturation serait hors de proportion et mal placé.
+
+- [ ] **Demander à Brahim si son logiciel comptable émet en Peppol.** La
+      plupart le font depuis 2025 (Yuki, Exact, Odoo, Billit, WinBooks…),
+      souvent en activant une option. S'il facture sous Word ou Excel, c'est
+      là qu'est le sujet.
+- [ ] **Faire confirmer le détail par son comptable** : régime
+      d'assujettissement, exemptions de l'article 44, clients non établis en
+      Belgique. C'est du droit fiscal, pas du développement.
+
 ## Décisions à trancher
 
 - [ ] **Vidéo souvenir.** Elle est vendue dans les deux formules. La maintenir
