@@ -20,10 +20,18 @@ import { autoriser } from "@/lib/limiteur";
 import { lireRecapEmail } from "@/lib/db/backoffice";
 import { diagnosticEmail, envoyer, envoyerEnRemontantLErreur } from "@/lib/email/envoi";
 import {
+  auClientDevisPropose,
   auClientReservationAnnulee,
   auClientReservationConfirmee,
   emailDeTest,
 } from "@/lib/email/modeles";
+import {
+  lignesDepuisJson,
+  obstaclesEnvoi,
+  totalDevisCents,
+  type LigneDevis,
+} from "@/lib/devis";
+import { jourLisibleCap } from "@/lib/temps";
 import {
   montantARembourser,
   paiementRemboursable,
@@ -31,7 +39,6 @@ import {
   type ChoixRemboursement,
 } from "@/lib/paiement/remboursement";
 import { montantLisible } from "@/lib/tarification";
-import type { StatutDevis } from "@/lib/db/backoffice";
 
 /**
  * Modifications du back-office.
@@ -241,27 +248,39 @@ export async function enregistrerNoteReservation(id: string, note: string): Prom
 
 // ── Demandes de devis ────────────────────────────────────────────────────────
 
-const STATUTS_DEVIS: StatutDevis[] = [
-  "nouvelle",
-  "traitee",
-  "devis_envoye",
-  "acceptee",
-  "refusee",
-];
+/**
+ * Le devis : on l'enregistre, puis on l'envoie.
+ *
+ * POURQUOI LES CINQ BOUTONS D'ÉTAT ONT DISPARU. Le back-office proposait
+ * « Prise en charge », « Devis envoyé », « Acceptée » et « Refusée » : des
+ * cases que l'exploitant cochait pour se souvenir de ce qu'il avait fait. Un
+ * état déclaratif ne prouve rien — rien ne garantissait qu'un devis marqué
+ * « envoyé » l'ait été, ni l'inverse. Et le devis lui-même n'existait nulle
+ * part : il fallait le rédiger ailleurs, l'envoyer ailleurs, puis revenir
+ * cocher.
+ *
+ * Désormais l'envoi ÉCRIT son horodatage. L'état se lit, il ne se déclare plus.
+ */
 
-export async function changerStatutDevis(id: string, statut: string): Promise<Resultat> {
+/** Enregistre le brouillon, sans rien envoyer. */
+export async function enregistrerDevis(
+  id: string,
+  devis: { lignes: LigneDevis[]; message: string; validite: string }
+): Promise<Resultat> {
   const session = await garde();
   if (!session) return REFUS_SESSION;
 
   try {
     const cible = uuid(id, "Demande");
-    if (!STATUTS_DEVIS.includes(statut as StatutDevis)) {
-      return { ok: false, message: "Statut inconnu." };
-    }
+    const propre = nettoyerDevis(devis);
 
     const { data, error } = await base()
       .from("demandes_devis")
-      .update({ statut: statut as StatutDevis })
+      .update({
+        devis_lignes: propre.lignes,
+        devis_message: propre.message || null,
+        devis_validite: propre.validite || null,
+      })
       .eq("id", cible)
       .select("reference")
       .maybeSingle();
@@ -269,12 +288,114 @@ export async function changerStatutDevis(id: string, statut: string): Promise<Re
     if (error) throw error;
     if (!data) return { ok: false, message: "Demande introuvable." };
 
-    await journaliser(session, "devis.statut", data.reference, { statut });
+    await journaliser(session, "devis.enregistre", data.reference);
     rafraichir();
-    return { ok: true, message: "Statut mis à jour." };
+    return { ok: true, message: "Devis enregistré." };
   } catch (e) {
     return echec(e);
   }
+}
+
+/**
+ * Envoie le devis au client, puis note qu'il est parti.
+ *
+ * L'ORDRE COMPTE, et il est l'inverse de celui du remboursement. Ici on
+ * ENREGISTRE d'abord, on envoie ensuite : si l'envoi échoue, le devis rédigé
+ * est conservé et l'exploitant peut réessayer sans tout retaper. Et on n'écrit
+ * l'horodatage d'envoi qu'APRÈS un envoi réussi — c'est tout l'intérêt de le
+ * mesurer plutôt que de le déclarer.
+ *
+ * `envoyerEnRemontantLErreur` et non `envoyer` : ailleurs dans le projet un
+ * e-mail raté est avalé pour ne jamais faire échouer une réservation. Ici c'est
+ * le contraire — l'envoi EST l'action demandée, et l'exploitant doit savoir si
+ * elle a échoué, sans quoi il attendrait une réponse à un devis jamais parti.
+ */
+export async function envoyerDevis(
+  id: string,
+  devis: { lignes: LigneDevis[]; message: string; validite: string }
+): Promise<Resultat> {
+  const session = await garde();
+  if (!session) return REFUS_SESSION;
+
+  try {
+    const cible = uuid(id, "Demande");
+    const propre = nettoyerDevis(devis);
+
+    // Revalidé côté serveur : le navigateur a déjà affiché ces obstacles, mais
+    // une Server Action reste une URL publique et son appelant n'est pas
+    // forcément l'écran qu'on a écrit.
+    const obstacles = obstaclesEnvoi(propre);
+    if (obstacles.length > 0) {
+      return { ok: false, message: `Il manque ${obstacles.join(", ")}.` };
+    }
+
+    const { data, error } = await base()
+      .from("demandes_devis")
+      .update({
+        devis_lignes: propre.lignes,
+        devis_message: propre.message || null,
+        devis_validite: propre.validite,
+      })
+      .eq("id", cible)
+      .select("*")
+      .maybeSingle();
+
+    if (error) throw error;
+    if (!data) return { ok: false, message: "Demande introuvable." };
+
+    await envoyerEnRemontantLErreur(
+      auClientDevisPropose({
+        reference: data.reference,
+        entreprise: data.entreprise,
+        contactNom: data.contact_nom,
+        contactEmail: data.contact_email,
+        contactTelephone: data.contact_telephone,
+        dateSouhaitee: data.date_souhaitee ?? "",
+        periode: data.periode ?? "",
+        nbParticipants: data.nb_participants ?? 0,
+        lignes: propre.lignes,
+        motDIntroduction: propre.message,
+        validiteLisible: jourLisibleCap(new Date(`${propre.validite}T12:00:00Z`)),
+      })
+    );
+
+    // Après l'envoi seulement.
+    await base()
+      .from("demandes_devis")
+      .update({ devis_envoye_le: new Date().toISOString(), statut: "devis_envoye" })
+      .eq("id", cible);
+
+    await journaliser(session, "devis.envoye", data.reference, {
+      montant_cents: totalDevisCents(propre.lignes),
+    });
+    rafraichir();
+    return { ok: true, message: `Devis envoyé à ${data.contact_email}.` };
+  } catch (e) {
+    if (e instanceof SaisieInvalide) return { ok: false, message: e.message };
+    const detail = e instanceof Error ? e.message : String(e);
+    console.error("Envoi du devis :", e);
+    return { ok: false, message: `Refusé par le fournisseur : ${detail.slice(0, 300)}` };
+  }
+}
+
+/**
+ * Remet en forme ce que le navigateur a envoyé.
+ *
+ * Les lignes viennent d'un formulaire : ni leur nombre, ni leur contenu, ni
+ * leurs types ne sont garantis. On borne, on tronque, on écarte l'illisible —
+ * et on plafonne le nombre de lignes, faute de quoi un appel forgé pourrait
+ * écrire un document de plusieurs mégaoctets dans la base.
+ */
+function nettoyerDevis(d: { lignes: LigneDevis[]; message: string; validite: string }) {
+  const lignes = lignesDepuisJson(d.lignes)
+    .slice(0, 30)
+    .map((l) => ({
+      designation: l.designation.slice(0, 200),
+      quantite: Math.min(9999, Math.max(0, l.quantite)),
+      prixUnitaireCents: Math.min(100_000_000, Math.max(0, l.prixUnitaireCents)),
+    }));
+  const validite = /^\d{4}-\d{2}-\d{2}$/.test(d.validite ?? "") ? d.validite : "";
+  return { lignes, message: (d.message ?? "").slice(0, 2000), validite };
 }
 
 export async function enregistrerNoteDevis(id: string, note: string): Promise<Resultat> {

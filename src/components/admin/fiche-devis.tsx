@@ -1,35 +1,74 @@
 "use client";
 
-import { useOptimistic, useState } from "react";
-import { changerStatutDevis, enregistrerNoteDevis } from "@/lib/actions/admin";
-import type { DevisAdmin, StatutDevis } from "@/lib/vues";
+import { useState } from "react";
+import { enregistrerDevis, enregistrerNoteDevis, envoyerDevis } from "@/lib/actions/admin";
+import type { DevisAdmin } from "@/lib/vues";
+import {
+  devisPreRempli,
+  obstaclesEnvoi,
+  totalDevisCents,
+  totalLigneCents,
+  type LigneDevis,
+} from "@/lib/devis";
+import { montantLisible } from "@/lib/tarification";
 import {
   BOUTON_NEUTRE,
+  BOUTON_PRINCIPAL,
   MessageAction,
   Rotative,
   useAction,
 } from "@/components/admin/retour";
-import { Document, Enveloppe, Groupe, Telephone } from "@/components/icons";
+import { Coche, Croix, Document, Enveloppe, Groupe, Telephone } from "@/components/icons";
 
-/** Étapes d'une demande de devis, dans l'ordre où elles surviennent. */
-const ETAPES: { valeur: StatutDevis; label: string; classe: string }[] = [
-  { valeur: "nouvelle", label: "Nouvelle", classe: "bg-kick/15 text-kick" },
-  { valeur: "traitee", label: "Prise en charge", classe: "bg-white/10 text-foreground" },
-  { valeur: "devis_envoye", label: "Devis envoyé", classe: "bg-field/15 text-field" },
-  { valeur: "acceptee", label: "Acceptée", classe: "bg-field/15 text-field" },
-  { valeur: "refusee", label: "Refusée", classe: "bg-destructive/15 text-destructive" },
-];
-
+/**
+ * Une demande de team building, et le devis qu'on lui répond.
+ *
+ * CE QUI A DISPARU, ET POURQUOI. Cinq boutons d'état — « Prise en charge »,
+ * « Devis envoyé », « Acceptée », « Refusée » — que l'exploitant cochait pour
+ * se souvenir de ce qu'il avait fait. Le devis, lui, n'existait nulle part : il
+ * fallait le rédiger ailleurs, l'envoyer ailleurs, puis revenir cocher.
+ *
+ * Un état déclaratif ne prouve rien. Rien ne garantissait qu'un devis marqué
+ * « envoyé » l'ait été, ni qu'un devis réellement envoyé soit marqué. Ici
+ * l'envoi écrit lui-même son horodatage : l'étiquette en haut de la fiche
+ * n'est plus un choix, c'est une lecture.
+ *
+ * LE DEVIS EST PRÉ-REMPLI, PAS INVENTÉ. La ligne reprend la date, la
+ * demi-journée et le nombre de participants demandés — mais son prix reste à
+ * zéro. Aucun tarif de team building n'existe dans le projet : l'offre est
+ * « sur devis », c'est tout l'objet de cet écran. Un montant pré-rempli
+ * finirait par partir tel quel.
+ */
 export function FicheDevis({ d }: { d: DevisAdmin }) {
   const { enCours, occupe, retour, lancer } = useAction();
-  const [statut, projeter] = useOptimistic<StatutDevis, StatutDevis>(
-    d.statut,
-    (_actuel, vise) => vise
-  );
   const [noteOuverte, setNoteOuverte] = useState(false);
   const [texteNote, setTexteNote] = useState(d.noteInterne ?? "");
 
-  const badge = ETAPES.find((e) => e.valeur === statut) ?? ETAPES[0];
+  // Un devis déjà rédigé est repris tel quel ; sinon on part du pré-rempli.
+  const [lignes, setLignes] = useState<LigneDevis[]>(
+    d.devis.lignes.length > 0 ? d.devis.lignes : devisPreRempli(d.brut).lignes
+  );
+  const [mot, setMot] = useState(d.devis.message);
+  const [validite, setValidite] = useState(d.devis.validite);
+  const [envoye, setEnvoye] = useState(d.devis.envoyeLe);
+
+  const devis = { lignes, message: mot, validite };
+  const obstacles = obstaclesEnvoi(devis);
+  const total = totalDevisCents(lignes);
+
+  const majLigne = (i: number, champ: keyof LigneDevis, v: string) =>
+    setLignes((prev) =>
+      prev.map((l, j) =>
+        j !== i
+          ? l
+          : champ === "designation"
+            ? { ...l, designation: v }
+            : champ === "quantite"
+              ? { ...l, quantite: Math.max(0, Math.trunc(Number(v) || 0)) }
+              : // Saisi en euros, stocké en centimes — comme partout ailleurs.
+                { ...l, prixUnitaireCents: Math.max(0, Math.round((Number(v) || 0) * 100)) }
+      )
+    );
 
   return (
     <article
@@ -40,10 +79,16 @@ export function FicheDevis({ d }: { d: DevisAdmin }) {
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <div className="flex flex-wrap items-center gap-2">
+            {/*
+              L'étiquette est une LECTURE, plus un choix. Elle dit ce que la
+              base sait de l'envoi réel.
+            */}
             <span
-              className={`inline-flex items-center rounded-md px-2 py-0.5 text-xs font-semibold transition-colors duration-200 ${badge.classe}`}
+              className={`inline-flex items-center rounded-md px-2 py-0.5 text-xs font-semibold ${
+                envoye ? "bg-field/15 text-field" : "bg-kick/15 text-kick"
+              }`}
             >
-              {badge.label}
+              {envoye ? `Devis envoyé le ${envoye}` : "À traiter"}
             </span>
             <span className="font-mono text-xs text-muted-foreground">{d.reference}</span>
           </div>
@@ -51,12 +96,6 @@ export function FicheDevis({ d }: { d: DevisAdmin }) {
           <p className="text-sm text-muted-foreground">{d.contactNom}</p>
         </div>
 
-        {/*
-          Sur téléphone, trois lignes alignées à droite dessinent un escalier :
-          chaque ligne démarre à un retrait différent. On les met donc sur une
-          seule ligne, alignée à gauche comme le reste ; l'alignement à droite
-          ne reprend qu'à partir de deux colonnes.
-        */}
         <div className="flex flex-wrap items-center gap-x-2 text-sm sm:block sm:text-right">
           {d.dateSouhaitee && <span className="font-medium">{d.dateSouhaitee}</span>}
           {d.periode && (
@@ -96,34 +135,140 @@ export function FicheDevis({ d }: { d: DevisAdmin }) {
         <p className="mt-2 text-xs text-muted-foreground">Reçue le {d.recuLe}</p>
       </div>
 
+      {/* ── Le devis ── */}
       <div className="mt-4 border-t border-border pt-4">
-        <p className="mb-2 text-xs text-muted-foreground">Où en est cette demande ?</p>
-        <div className="flex flex-wrap items-center gap-2">
-          {ETAPES.map((e) => {
-            const actuel = e.valeur === statut;
-            return (
+        <p className="mb-3 text-xs text-muted-foreground">
+          Le devis ci-dessous part tel quel au client. Les montants sont TVAC.
+        </p>
+
+        <div className="space-y-2">
+          {lignes.map((l, i) => (
+            <div key={i} className="flex flex-wrap items-end gap-2 sm:flex-nowrap">
+              <div className="min-w-0 flex-1 basis-full sm:basis-auto">
+                <label htmlFor={`des-${d.id}-${i}`} className="mb-1 block text-xs text-muted-foreground">
+                  Désignation
+                </label>
+                <input
+                  id={`des-${d.id}-${i}`}
+                  value={l.designation}
+                  onChange={(e) => majLigne(i, "designation", e.target.value)}
+                  maxLength={200}
+                  className="w-full rounded-lg border border-border bg-input/30 px-3 py-2 text-sm outline-none focus-visible:ring-2 focus-visible:ring-field/60"
+                />
+              </div>
+              <div className="w-20">
+                <label htmlFor={`qte-${d.id}-${i}`} className="mb-1 block text-xs text-muted-foreground">
+                  Qté
+                </label>
+                <input
+                  id={`qte-${d.id}-${i}`}
+                  type="number"
+                  min={0}
+                  step={1}
+                  value={l.quantite}
+                  onChange={(e) => majLigne(i, "quantite", e.target.value)}
+                  className="w-full rounded-lg border border-border bg-input/30 px-3 py-2 text-sm outline-none focus-visible:ring-2 focus-visible:ring-field/60"
+                />
+              </div>
+              <div className="w-28">
+                <label htmlFor={`pu-${d.id}-${i}`} className="mb-1 block text-xs text-muted-foreground">
+                  Prix unit. €
+                </label>
+                <input
+                  id={`pu-${d.id}-${i}`}
+                  type="number"
+                  min={0}
+                  step="0.01"
+                  value={l.prixUnitaireCents / 100}
+                  onChange={(e) => majLigne(i, "prixUnitaireCents", e.target.value)}
+                  className="w-full rounded-lg border border-border bg-input/30 px-3 py-2 text-sm outline-none focus-visible:ring-2 focus-visible:ring-field/60"
+                />
+              </div>
+              <div className="w-24 pb-2 text-right text-sm font-semibold">
+                {montantLisible(totalLigneCents(l))}
+              </div>
               <button
-                key={e.valeur}
                 type="button"
-                disabled={enCours || actuel}
-                onClick={() =>
-                  lancer(e.valeur, async () => {
-                    projeter(e.valeur);
-                    return changerStatutDevis(d.id, e.valeur);
-                  })
-                }
-                aria-pressed={actuel}
-                className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition-all duration-150 active:scale-[0.97] disabled:cursor-default ${
-                  actuel
-                    ? "bg-field/15 text-field ring-1 ring-field/40"
-                    : "border border-border text-muted-foreground hover:border-field/40 hover:text-foreground disabled:opacity-60"
-                }`}
+                aria-label={`Retirer la ligne ${i + 1}`}
+                onClick={() => setLignes((prev) => prev.filter((_, j) => j !== i))}
+                className="mb-1 inline-flex size-9 shrink-0 items-center justify-center rounded-lg border border-border text-muted-foreground transition-colors hover:border-destructive/40 hover:text-destructive"
               >
-                {occupe(e.valeur) && <Rotative />}
-                {e.label}
+                <Croix className="size-4" />
               </button>
-            );
-          })}
+            </div>
+          ))}
+        </div>
+
+        <button
+          type="button"
+          onClick={() =>
+            setLignes((prev) => [...prev, { designation: "", quantite: 1, prixUnitaireCents: 0 }])
+          }
+          className={`mt-2 ${BOUTON_NEUTRE}`}
+        >
+          Ajouter une ligne
+        </button>
+
+        <div className="mt-4 flex items-center justify-between border-t border-border pt-3">
+          <span className="font-bold">Total TVAC</span>
+          <span className="text-lg font-bold text-field">{montantLisible(total)}</span>
+        </div>
+
+        <div className="mt-4 grid gap-3 sm:grid-cols-2">
+          <div>
+            <label htmlFor={`val-${d.id}`} className="mb-1 block text-xs text-muted-foreground">
+              Valable jusqu&apos;au
+            </label>
+            <input
+              id={`val-${d.id}`}
+              type="date"
+              value={validite}
+              onChange={(e) => setValidite(e.target.value)}
+              style={{ colorScheme: "dark" }}
+              className="w-full rounded-lg border border-border bg-input/30 px-3 py-2 text-sm outline-none focus-visible:ring-2 focus-visible:ring-field/60"
+            />
+          </div>
+          <div>
+            <label htmlFor={`mot-${d.id}`} className="mb-1 block text-xs text-muted-foreground">
+              Mot d&apos;introduction (facultatif)
+            </label>
+            <textarea
+              id={`mot-${d.id}`}
+              value={mot}
+              onChange={(e) => setMot(e.target.value)}
+              maxLength={2000}
+              rows={2}
+              className="w-full rounded-lg border border-border bg-input/30 px-3 py-2 text-sm outline-none focus-visible:ring-2 focus-visible:ring-field/60"
+            />
+          </div>
+        </div>
+
+        <div className="mt-4 flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            disabled={enCours || obstacles.length > 0}
+            onClick={() =>
+              lancer("envoyer", async () => {
+                const r = await envoyerDevis(d.id, devis);
+                if (r.ok) setEnvoye("à l'instant");
+                return r;
+              })
+            }
+            className={BOUTON_PRINCIPAL}
+          >
+            {occupe("envoyer") ? <Rotative /> : <Enveloppe className="size-4" />}
+            {envoye ? "Renvoyer le devis" : "Envoyer le devis"}
+          </button>
+
+          <button
+            type="button"
+            disabled={enCours}
+            onClick={() => lancer("brouillon", () => enregistrerDevis(d.id, devis))}
+            className={BOUTON_NEUTRE}
+          >
+            {occupe("brouillon") ? <Rotative /> : <Coche className="size-4" />}
+            Enregistrer sans envoyer
+          </button>
 
           <button
             type="button"
@@ -135,6 +280,23 @@ export function FicheDevis({ d }: { d: DevisAdmin }) {
             {d.noteInterne ? "Modifier la note" : "Note interne"}
           </button>
         </div>
+
+        {/*
+          CE QUI MANQUE, DIT AVANT LE CLIC. Même correctif que sur le bouton de
+          réservation du tunnel : un bouton désactivé qui ne dit pas pourquoi
+          oblige à deviner.
+        */}
+        {obstacles.length > 0 && (
+          <p className="mt-2 text-sm text-muted-foreground">
+            Pour envoyer, il manque {obstacles.join(", ")}.
+          </p>
+        )}
+
+        {envoye && (
+          <p className="mt-2 text-xs text-muted-foreground">
+            Un renvoi expédie à nouveau le devis au client, avec les montants actuellement affichés.
+          </p>
+        )}
 
         {noteOuverte && (
           <div className="mt-3 animate-in fade-in slide-in-from-top-1 duration-200">

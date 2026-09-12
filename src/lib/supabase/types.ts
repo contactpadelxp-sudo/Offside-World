@@ -100,6 +100,10 @@ export type Database = {
           contact_telephone: string
           created_at: string
           date_souhaitee: string | null
+          devis_envoye_le: string | null
+          devis_lignes: Json | null
+          devis_message: string | null
+          devis_validite: string | null
           entreprise: string
           id: string
           message: string | null
@@ -118,6 +122,10 @@ export type Database = {
           contact_telephone: string
           created_at?: string
           date_souhaitee?: string | null
+          devis_envoye_le?: string | null
+          devis_lignes?: Json | null
+          devis_message?: string | null
+          devis_validite?: string | null
           entreprise: string
           id?: string
           message?: string | null
@@ -136,6 +144,10 @@ export type Database = {
           contact_telephone?: string
           created_at?: string
           date_souhaitee?: string | null
+          devis_envoye_le?: string | null
+          devis_lignes?: Json | null
+          devis_message?: string | null
+          devis_validite?: string | null
           entreprise?: string
           id?: string
           message?: string | null

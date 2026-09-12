@@ -12,6 +12,7 @@ import {
 } from "@/data/entreprise";
 import { RESUME_ANNULATION } from "@/data/reglement";
 import { montantLisible } from "@/lib/tarification";
+import { totalDevisCents, totalLigneCents, type LigneDevis } from "@/lib/devis";
 
 /**
  * Messages transactionnels.
@@ -435,6 +436,56 @@ export function auClientDevisRecu(d: DevisEmail): Message {
       "<strong>Cette demande ne bloque pas encore de créneau.</strong> La date sera arrêtée avec vous au moment du devis.",
     ],
     EMAIL
+  );
+}
+
+/**
+ * Le devis chiffré, envoyé à l'entreprise.
+ *
+ * C'EST UNE OFFRE, PAS UNE INFORMATION. Elle porte un prix et une date de
+ * validité : jusqu'à cette date, l'acceptation du client suffit à former le
+ * contrat. D'où trois exigences qui ne sont pas décoratives :
+ *
+ *   - l'identité complète du vendeur, en pied (art. III.74 du Code de droit
+ *     économique) — c'est le `legal` passé à `composer` ;
+ *   - la date de validité, écrite en toutes lettres. Un devis sans limite
+ *     engage le vendeur indéfiniment sur son prix ;
+ *   - le détail ligne par ligne. Un total seul ne permet pas au client de
+ *     vérifier ce qu'il achète, ni de discuter un poste.
+ *
+ * Le lien vers les CGV est là aussi : elles régissent la prestation si l'offre
+ * est acceptée.
+ */
+export function auClientDevisPropose(d: DevisEmail & {
+  lignes: LigneDevis[];
+  motDIntroduction: string;
+  validiteLisible: string;
+}): Message {
+  const lignesTableau: Ligne[] = d.lignes.map((l) => ({
+    cle: l.quantite > 1 ? `${l.designation} × ${l.quantite}` : l.designation,
+    valeur: montantLisible(totalLigneCents(l)),
+  }));
+  lignesTableau.push({ cle: "Total TVAC", valeur: montantLisible(totalDevisCents(d.lignes)) });
+
+  const apres: string[] = [];
+  if (d.motDIntroduction.trim()) {
+    apres.push(ech(d.motDIntroduction.trim()).replace(/\n/g, "<br>"));
+  }
+  apres.push(
+    `<strong>Offre valable jusqu'au ${ech(d.validiteLisible)}.</strong> Passé cette date, les montants sont à reconfirmer.`,
+    `Pour l'accepter, répondez simplement à cet e-mail. La prestation est régie par nos <a href="${urlAbsolue("/cgv")}" style="color:${ACCENT};">conditions générales de vente</a>.`,
+    "Une question, un ajustement ? Répondez à ce message, nous adapterons la proposition."
+  );
+
+  return composer(
+    d.contactEmail,
+    `Votre devis ${d.reference} — ${NOM_COMMERCIAL}`,
+    "Votre devis",
+    `Bonjour ${ech(d.contactNom)}, voici notre proposition pour ${ech(d.entreprise)}.`,
+    lignesTableau,
+    apres,
+    EMAIL,
+    true
   );
 }
 

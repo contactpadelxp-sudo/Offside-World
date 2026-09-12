@@ -120,6 +120,20 @@ export interface DevisAdmin {
   noteInterne: string | null;
   statut: StatutDevis;
   recuLe: string;
+  /**
+   * Le devis rédigé pour cette demande. Ses lignes sont vides tant que rien
+   * n'a été écrit ; `envoyeLe` est `null` tant que rien n'est parti.
+   */
+  devis: {
+    lignes: { designation: string; quantite: number; prixUnitaireCents: number }[];
+    message: string;
+    /** Date de validité au format ISO, pour alimenter un champ date. */
+    validite: string;
+    /** Horodatage lisible de l'envoi réel, `null` si le devis n'est pas parti. */
+    envoyeLe: string | null;
+  };
+  /** Les valeurs brutes de la demande, pour pré-remplir un devis vierge. */
+  brut: { dateSouhaitee: string | null; periode: string | null; nbParticipants: number | null };
 }
 
 export interface EntreeJournal {

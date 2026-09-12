@@ -3,6 +3,7 @@ import { base, baseConfiguree } from "@/lib/supabase/server";
 import { heure, jourISO, jourLisible, jourLisibleCap } from "@/lib/temps";
 import { lireOptions } from "@/lib/db/referentiel";
 import { partRemboursee } from "@/data/reglement";
+import { lignesDepuisJson } from "@/lib/devis";
 import type { Database } from "@/lib/supabase/types";
 import type { RecapEmail } from "@/lib/email/modeles";
 import type {
@@ -31,7 +32,8 @@ const LIBELLES_ACTION: Record<string, string> = {
   "reservation.annulee": "Réservation annulée",
   "reservation.note": "Note interne modifiée",
   "paiement.rembourse": "Remboursement effectué",
-  "devis.statut": "Statut de devis modifié",
+  "devis.enregistre": "Devis enregistré",
+  "devis.envoye": "Devis envoyé au client",
   "devis.note": "Note interne modifiée",
   "creneau.ouvert": "Créneau rouvert",
   "creneau.ferme": "Créneau fermé",
@@ -286,6 +288,19 @@ export async function lireDevis(inclureTraites = false): Promise<DevisAdmin[]> {
     noteInterne: d.note_interne,
     statut: d.statut,
     recuLe: jourLisible(new Date(d.created_at)),
+    devis: {
+      lignes: lignesDepuisJson(d.devis_lignes),
+      message: d.devis_message ?? "",
+      validite: d.devis_validite ?? "",
+      envoyeLe: d.devis_envoye_le ? jourLisible(new Date(d.devis_envoye_le)) : null,
+    },
+    brut: {
+      dateSouhaitee: d.date_souhaitee
+        ? jourLisibleCap(new Date(`${d.date_souhaitee}T12:00:00Z`))
+        : null,
+      periode: d.periode === "matin" ? "le matin" : d.periode === "apres-midi" ? "l'après-midi" : null,
+      nbParticipants: d.nb_participants,
+    },
   }));
 }
 
