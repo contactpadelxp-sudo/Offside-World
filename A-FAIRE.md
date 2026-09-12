@@ -100,8 +100,10 @@ Obligatoires en Belgique (Code de droit économique, art. III.74). Elles
 s'affichent aujourd'hui « [à compléter] » sur le site public.
 
 - [ ] Dénomination sociale de l'exploitant
-- [ ] Numéro d'entreprise (BCE)
-- [ ] Numéro de TVA
+- [x] ~~Numéro d'entreprise (BCE)~~ **1025.713.731** — déduit du numéro de TVA
+      (en Belgique c'est le même nombre). **À faire confirmer par Brahim.**
+- [x] ~~Numéro de TVA~~ **BE 1025.713.731**, communiqué le 12 septembre 2026 et
+      validé par sa clé de contrôle modulo 97 avant d'être inscrit.
 - [ ] Siège social, s'il diffère de Gembloux
 - [ ] Responsable de la publication
 - [ ] Arrondissement judiciaire compétent (pour les CGU)

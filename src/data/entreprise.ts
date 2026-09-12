@@ -15,11 +15,26 @@ export const DENOMINATION_SOCIALE: string | null = null;
 /** Siège social s'il diffère de l'adresse d'exploitation. */
 export const SIEGE_SOCIAL: string | null = null;
 
-/** Numéro d'entreprise à la Banque-Carrefour des Entreprises. */
-export const BCE: string | null = null;
+/**
+ * Numéro d'entreprise à la Banque-Carrefour des Entreprises.
+ *
+ * DÉDUIT DU NUMÉRO DE TVA, et ce n'est pas un raccourci : en Belgique, le
+ * numéro d'entreprise et le numéro de TVA sont le MÊME nombre — la TVA n'est
+ * que le numéro d'entreprise préfixé de « BE ». Communiqué
+ * « BE1025713731 » le 12 septembre 2026.
+ */
+export const BCE: string | null = "1025.713.731";
 
-/** Numéro de TVA (sans le préfixe « BE »). */
-export const TVA: string | null = null;
+/**
+ * Numéro de TVA, sans le préfixe « BE » — les pages l'ajoutent à l'affichage.
+ *
+ * Validé par sa clé de contrôle avant d'être inscrit ici : la règle belge veut
+ * que les deux derniers chiffres valent `97 − (les huit premiers mod 97)`. Ici
+ * 97 − (10257137 mod 97) = 97 − 66 = 31, et le numéro finit bien par 31. Un
+ * numéro mal recopié aurait échoué ce test, au lieu de s'afficher des mois
+ * durant sur des pages légales et dans chaque e-mail envoyé.
+ */
+export const TVA: string | null = "1025.713.731";
 
 /** Responsable de la publication du site. */
 export const RESPONSABLE_PUBLICATION: string | null = null;
