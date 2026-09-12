@@ -15,10 +15,16 @@ la mémoire d'une conversation.
 Sa page publique est le seul canal de réservation des terrains ; plusieurs
 réglages y sont incohérents avec le site.
 
-- [ ] **Aligner les prix.** Sport-Finder annonce 140 €/session pour
-      l'anniversaire et 20 €/pers. pour le Bubble Foot ; les prix retenus sont
-      **180 €** et **23 €/pers.** Un client qui compare les deux pages verra deux
-      tarifs pour la même prestation et pourra exiger le moins cher.
+- [ ] **Aligner les prix de Sport-Finder sur ceux du site** — et non
+      l'inverse. **Décision prise le 12 septembre 2026 :** les tarifs qui font
+      foi sont ceux que Brahim a donnés, déjà en base et déjà affichés partout
+      sur le site — Kick-Off **180 €**, Bubble **290 €**, Bubble Foot
+      **23 €/pers.** Sport-Finder annonce encore 140 €/session et 20 €/pers. :
+      ce sont ces deux valeurs-là qu'il faut corriger chez eux.
+
+      L'écart n'est pas seulement gênant commercialement. Un client qui compare
+      les deux pages voit deux prix pour la même prestation et peut exiger le
+      moins cher : une offre au rabais publiée par le vendeur l'engage.
 - [ ] **Désactiver ou clarifier les entrées « Anniversaire de Football » et
       « Activité de groupe de Bubble Foot ».** Ces prestations se réservent sur
       le site : les laisser sur Sport-Finder crée deux canaux pour la même

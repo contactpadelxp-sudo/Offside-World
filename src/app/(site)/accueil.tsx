@@ -96,7 +96,7 @@ export function Accueil({ formules }: { formules: FormuleVue[] }) {
           tailles d'écran. Le contenu se réserve donc la place que l'indicateur
           occupe, au lieu de la lui disputer.
         */}
-        <div className="relative z-10 mx-auto max-w-5xl px-4 lg:px-8 pt-24 pb-24 md:pt-28 md:pb-28 w-full text-center">
+        <div className="relative z-10 mx-auto max-w-5xl px-4 lg:px-8 pt-28 pb-24 md:pt-32 md:pb-28 w-full text-center">
           {/* Headline central */}
           <h1 className="font-[family-name:var(--font-heading)] text-[clamp(2rem,5.5vw,4.5rem)] font-bold tracking-tight leading-[1.05] text-foreground">
             <FadeIn delay={0.1} className="block md:whitespace-nowrap">

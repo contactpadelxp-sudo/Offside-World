@@ -120,24 +120,56 @@ export function CookieBanner() {
           exit={{ y: 100, opacity: 0 }}
           transition={{ type: "spring", damping: 25, stiffness: 200 }}
           ref={bandeau}
-          className="fixed inset-x-0 bottom-0 z-50 p-4"
+          className="fixed inset-x-0 bottom-0 z-50 p-2.5 sm:p-4"
         >
-          <div className="mx-auto max-w-2xl rounded-2xl border bg-card/95 backdrop-blur-xl p-5 shadow-2xl">
+          {/*
+            COMPACT SUR TÉLÉPHONE, ET CE N'EST PAS UNE QUESTION DE GOÛT.
+
+            Le panneau faisait 282 à 346 px de haut. Mesuré à la première
+            visite, c'est-à-dire la seule où ce bandeau existe : en 320, 360 et
+            375 px de large, AUCUNE des quatre activités du hero n'était
+            visible. Le visiteur arrivait sur une page dont toute l'offre était
+            masquée par une demande de consentement.
+
+            Ce qui a été retiré ne l'est que sous 640 px, et rien de ce que la
+            loi impose n'en fait partie : « Tout accepter » et « Tout refuser »
+            gardent exactement le même poids visuel — même taille, même
+            largeur, côte à côte —, « Personnaliser » reste accessible d'un
+            clic, et le lien vers la politique cookies reste là. Ce qui part,
+            c'est l'icône décorative et une phrase d'explication que la page
+            liée développe bien mieux.
+          */}
+          <div className="mx-auto max-w-2xl rounded-2xl border bg-card/95 backdrop-blur-xl p-3.5 shadow-2xl sm:p-5">
             <div className="flex items-start gap-3">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-kick/10 text-kick">
+              <div className="hidden h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-kick/10 text-kick sm:flex">
                 <Cookie className="size-5" />
               </div>
               <div>
-                <h3 className="text-base font-semibold">Ce site utilise des cookies</h3>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  Nous utilisons des cookies pour améliorer votre expérience. Vous pouvez
-                  accepter, refuser ou personnaliser vos choix.{" "}
+                <h3 className="text-[15px] font-semibold sm:text-base">Ce site utilise des cookies</h3>
+                <p className="mt-0.5 text-[13px] leading-snug text-muted-foreground sm:mt-1 sm:text-sm">
+                  <span className="hidden sm:inline">
+                    Nous utilisons des cookies pour améliorer votre expérience. Vous pouvez
+                    accepter, refuser ou personnaliser vos choix.{" "}
+                  </span>
+                  <span className="sm:hidden">Mesure d&apos;audience anonyme, à votre choix. </span>
                   <a
                     href="/politique-cookies"
                     className="inline-flex min-h-6 items-center underline hover:text-primary transition-colors"
                   >
                     En savoir plus
                   </a>
+                  {!showDetails && (
+                    <>
+                      <span className="sm:hidden"> · </span>
+                      <button
+                        type="button"
+                        onClick={() => setShowDetails(true)}
+                        className="inline-flex min-h-6 items-center underline transition-colors hover:text-primary sm:hidden"
+                      >
+                        Personnaliser
+                      </button>
+                    </>
+                  )}
                 </p>
               </div>
             </div>
@@ -172,35 +204,42 @@ export function CookieBanner() {
               )}
             </AnimatePresence>
 
-            <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:flex-wrap">
-              {/* Refuser et Accepter ont volontairement le même poids visuel (conformité RGPD/CNIL) */}
-              {/*
-                `flex-1` s'applique à l'axe principal : en colonne (téléphone),
-                il pilotait la HAUTEUR et écrasait les deux boutons à 22 px,
-                sous le minimum tactile — alors que « Personnaliser », qui ne
-                l'a pas, gardait ses 32 px. On ne l'active donc qu'à partir de
-                `sm:`, là où la rangée passe à l'horizontale et où il sert
-                vraiment à égaliser les largeurs.
-              */}
-              <Button onClick={acceptAll} className="sm:flex-1 btn-glass-field text-[#0a0a0b] border-0 gap-1.5">
-                <Coche className="size-4" />
+            {/*
+              Refuser et Accepter ont le même poids visuel — même taille, même
+              largeur, côte à côte. C'est une exigence, pas une préférence : un
+              refus rendu plus difficile qu'une acceptation vicie le
+              consentement.
+
+              La rangée est HORIZONTALE dès le téléphone. Elle était en colonne,
+              et `flex-1` y pilotait alors la hauteur : les deux boutons étaient
+              écrasés à 22 px, sous le minimum tactile. En ligne, `flex-1`
+              égalise les largeurs — ce qu'on veut — et `min-h-10` garantit la
+              hauteur.
+            */}
+            <div className="mt-3 flex flex-wrap gap-2 sm:mt-4">
+              <Button onClick={acceptAll} className="min-h-10 flex-1 btn-glass-field text-[#0a0a0b] border-0 gap-1.5 px-2 text-[13px] sm:px-4 sm:text-sm">
+                <Coche className="size-4 shrink-0" />
                 Tout accepter
               </Button>
-              <Button onClick={refuseAll} className="sm:flex-1 bg-[#ece7de] text-[#0a0a0b] hover:bg-[#f6f2ea] gap-1.5">
-                <Croix className="size-4" />
+              <Button onClick={refuseAll} className="min-h-10 flex-1 bg-[#ece7de] text-[#0a0a0b] hover:bg-[#f6f2ea] gap-1.5 px-2 text-[13px] sm:px-4 sm:text-sm">
+                <Croix className="size-4 shrink-0" />
                 Tout refuser
               </Button>
-              {!showDetails ? (
-                <Button variant="outline" onClick={() => setShowDetails(true)} className="gap-1.5 sm:basis-full sm:flex-none">
-                  <Reglages className="size-4" />
-                  Personnaliser
-                </Button>
-              ) : (
-                <Button variant="outline" onClick={saveChoices} className="gap-1.5 sm:basis-full sm:flex-none">
-                  <Coche className="size-4" />
-                  Enregistrer mes choix
-                </Button>
-              )}
+              {/*
+                Sur téléphone ce bouton passe SOUS les deux autres plutôt qu'à
+                côté : à trois de front, chacun tombait à 95 px de large et les
+                intitulés se coupaient. Une première version le réduisait à sa
+                seule icône — un bouton sans intitulé, donc sans nom pour un
+                lecteur d'écran, et indéchiffrable pour tout le monde.
+              */}
+              <Button
+                variant="outline"
+                onClick={showDetails ? saveChoices : () => setShowDetails(true)}
+                className={`order-last min-h-10 w-full basis-full gap-1.5 text-[13px] sm:order-none sm:flex sm:text-sm ${showDetails ? "flex" : "hidden"}`}
+              >
+                {showDetails ? <Coche className="size-4 shrink-0" /> : <Reglages className="size-4 shrink-0" />}
+                {showDetails ? "Enregistrer mes choix" : "Personnaliser"}
+              </Button>
             </div>
           </div>
         </motion.div>

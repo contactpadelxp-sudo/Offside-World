@@ -120,14 +120,30 @@ export function Header({ logoSrc }: { logoSrc: string | null }) {
             transition={{ duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] }}
             className="pointer-events-none pt-4 px-4 lg:px-6"
           >
-            <div className="pointer-events-auto mx-auto max-w-5xl flex items-center justify-center h-[4.5rem] rounded-2xl bg-[#121214]/70 backdrop-blur-xl border border-white/10 shadow-[0_1px_12px_rgba(0,0,0,0.4)] px-6 lg:px-8 gap-2">
+            {/*
+              PLUS HAUTE ET PLUS AFFIRMÉE TOUT EN HAUT DE LA PAGE.
+
+              C'est le premier écran : la barre y a la place de se déployer, et
+              les rubriques méritent d'être lisibles d'un coup d'œil plutôt que
+              de s'excuser en 13 px à 70 % d'opacité. Dès que le visiteur
+              défile, la barre compacte reprend la main et s'efface — les deux
+              états ont des rôles opposés, ils n'ont pas à se ressembler.
+
+              La hauteur passe de 4,5 à 5,5 rem partout ; l'agrandissement des
+              TEXTES, lui, n'arrive qu'à 1024 px. Mesuré : en portant les
+              rubriques à 15 px dès 768 px, la rangée devenait plus large que sa
+              barre et « Accueil » comme « Réserver » se retrouvaient coupés aux
+              deux bouts. Le rembourrage haut du hero suit dans `accueil.tsx`,
+              sans quoi le titre passerait sous la barre.
+            */}
+            <div className="pointer-events-auto mx-auto max-w-5xl flex items-center justify-center h-[5.5rem] rounded-2xl bg-[#121214]/70 backdrop-blur-xl border border-white/10 shadow-[0_1px_12px_rgba(0,0,0,0.4)] px-6 lg:px-8 gap-2">
               {/* Left nav */}
               <nav className="hidden md:flex items-center gap-1 flex-1 justify-end">
                 {navLinksLeft.map((link) => (
                   <Link
                     key={link.href}
                     href={link.href}
-                    className="relative px-3 py-2 text-[13px] font-medium text-foreground/70 hover:text-foreground rounded-xl hover:bg-white/10 transition-all duration-200 group"
+                    className="relative whitespace-nowrap px-2.5 py-2 text-[13px] font-semibold text-foreground/90 hover:text-foreground rounded-xl hover:bg-white/10 transition-all duration-200 group lg:px-3.5 lg:text-[15px]"
                   >
                     {link.label}
                     <span className="absolute bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-field scale-0 group-hover:scale-100 transition-transform duration-200" />
@@ -137,7 +153,7 @@ export function Header({ logoSrc }: { logoSrc: string | null }) {
 
               {/* Logo central */}
               <Link href="/" aria-label="Offside Foot Indoor — accueil" className="shrink-0 mx-4 lg:mx-6 flex items-center">
-                <Logo src={logoSrc} height={44} className="h-8 md:h-9 lg:h-11" textClassName="text-lg lg:text-xl" />
+                <Logo src={logoSrc} height={56} className="h-10 md:h-9 lg:h-14" textClassName="text-lg lg:text-2xl" />
               </Link>
 
               {/* Right nav */}
@@ -148,7 +164,7 @@ export function Header({ logoSrc }: { logoSrc: string | null }) {
                       key={link.href}
                       href={link.href}
                       onClick={handleReserver}
-                      className="inline-flex items-center gap-1.5 text-[#0a0a0b] font-semibold bg-gradient-to-r from-field to-field-dark px-5 h-9 rounded-xl text-[13px] ml-2 hover:shadow-lg hover:shadow-field/20 transition-shadow duration-300"
+                      className="inline-flex items-center gap-1.5 whitespace-nowrap text-[#0a0a0b] font-bold bg-gradient-to-r from-field to-field-dark px-4 h-10 rounded-xl text-[13px] ml-2 lg:px-6 lg:h-11 lg:text-[15px] hover:shadow-lg hover:shadow-field/20 transition-shadow duration-300"
                     >
                       Réserver
                     </Link>
@@ -156,7 +172,7 @@ export function Header({ logoSrc }: { logoSrc: string | null }) {
                     <Link
                       key={link.href}
                       href={link.href}
-                      className="relative px-3 py-2 text-[13px] font-medium text-foreground/70 hover:text-foreground rounded-xl hover:bg-white/10 transition-all duration-200 group"
+                      className="relative whitespace-nowrap px-2.5 py-2 text-[13px] font-semibold text-foreground/90 hover:text-foreground rounded-xl hover:bg-white/10 transition-all duration-200 group lg:px-3.5 lg:text-[15px]"
                     >
                       {link.label}
                       <span className="absolute bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-field scale-0 group-hover:scale-100 transition-transform duration-200" />
