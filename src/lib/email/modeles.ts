@@ -491,9 +491,35 @@ export function auClientDevisPropose(d: DevisEmail & {
 
 // ── Avis internes ────────────────────────────────────────────────────────────
 
+/**
+ * L'avis interne : ce qui arrive, et ce qu'il reste à faire.
+ *
+ * IL EXISTE DEUX PARCOURS, ET CET E-MAIL DOIT DIRE LEQUEL.
+ *
+ *   - SANS paiement en ligne, la réservation est enregistrée « en attente ».
+ *     Quelqu'un doit la confirmer, et le back-office affiche un bouton pour
+ *     cela. L'avis dit donc « à confirmer », ce qui est vrai.
+ *
+ *   - AVEC paiement, le client a déjà payé : le webhook a confirmé la
+ *     réservation tout seul, et le bouton « Confirmer » n'apparaît même plus
+ *     dans le back-office puisqu'il ne s'affiche que sur une réservation en
+ *     attente.
+ *
+ * Envoyer « Nouvelle réservation à confirmer » dans le second cas ferait
+ * chercher à l'exploitant un bouton qui n'existe pas, sur une réservation qui
+ * n'attend rien de lui. C'est le même défaut que celui trouvé dans le tunnel :
+ * la mécanique du paiement avait été branchée sans que les textes suivent.
+ *
+ * L'état est lu dans `r.paiement`, renseigné par la base — jamais deviné.
+ */
 export function auComplexeNouvelleReservation(r: RecapEmail): Message {
+  const paye = Boolean(r.paiement);
+
   const apres = [
-    `<a href="${urlAbsolue("/admin")}" style="color:${ACCENT};font-weight:600;">Ouvrir le back-office</a> pour confirmer ou annuler.`,
+    paye
+      ? `<strong>Rien à faire : le client a payé et sa réservation est confirmée.</strong> ` +
+        `<a href="${urlAbsolue("/admin")}" style="color:${ACCENT};font-weight:600;">Ouvrir le back-office</a> pour la consulter ou l'annuler.`
+      : `<a href="${urlAbsolue("/admin")}" style="color:${ACCENT};font-weight:600;">Ouvrir le back-office</a> pour confirmer ou annuler.`,
   ];
   if (r.allergieSignalee) {
     // On signale, on ne recopie pas : donnée de santé concernant un mineur.
@@ -505,8 +531,8 @@ export function auComplexeNouvelleReservation(r: RecapEmail): Message {
 
   return composer(
     adresseComplexe(),
-    `Nouvelle réservation ${r.reference} — ${r.jourLabel} ${r.debut}`,
-    "Nouvelle réservation à confirmer",
+    `${paye ? "Réservation payée" : "Nouvelle réservation"} ${r.reference} — ${r.jourLabel} ${r.debut}`,
+    paye ? "Réservation payée et confirmée" : "Nouvelle réservation à confirmer",
     `${ech(r.clientNom)} · ${ech(r.clientTelephone)} · ${ech(r.clientEmail)}`,
     lignesReservation(r),
     apres,
