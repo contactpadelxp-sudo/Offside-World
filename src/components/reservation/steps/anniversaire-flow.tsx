@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { ChampNombre } from "@/components/reservation/champ-nombre";
 import { Checkbox } from "@/components/ui/checkbox";
 import { FadeIn } from "@/components/motion";
 import { Photo } from "@/components/photo";
@@ -18,7 +19,7 @@ import { reserverAnniversaire } from "@/lib/actions/reservation";
 import type { CreneauVue, FormuleVue, OptionVue } from "@/lib/vues";
 import { GATEAU_NOTE, OPTION_IMAGES } from "@/data/formules";
 import { RESUME_ANNULATION, DELAI_RESERVATION_HEURES } from "@/data/reglement";
-import { AlerteCercle, Ballon, Bouclier, Calendrier, Coche, FlecheDroite, FlecheGauche, Gateau, Groupe, Info } from "@/components/icons";
+import { AlerteCercle, Ballon, Bouclier, Calendrier, ChevronBas, Coche, FlecheDroite, FlecheGauche, Gateau, Groupe, Info } from "@/components/icons";
 
 type Step = "formule" | "details" | "creneau" | "paiement";
 
@@ -62,7 +63,9 @@ export function AnniversaireFlow({
   }, [step, selectedFormule?.id]);
   const [childCount, setChildCount] = useState(10);
   const [childName, setChildName] = useState("");
-  const [childAge, setChildAge] = useState("");
+  // 0 signifie « pas encore choisi » : la liste s'ouvre sur un intitulé
+  // explicite plutôt que sur un âge présélectionné au hasard.
+  const [childAge, setChildAge] = useState(0);
   const [selectedOptions, setSelectedOptions] = useState<string[]>([]);
   const [toutesLesDates, setToutesLesDates] = useState(false);
   const [parentName, setParentName] = useState("");
@@ -120,6 +123,25 @@ export function AnniversaireFlow({
   // Chaque changement d'étape repart du haut de la page.
   useScrollTop(step);
 
+  /*
+    CE QUI MANQUE, DIT EN TOUTES LETTRES.
+
+    Le bouton final dépend de cinq conditions. Désactivé, il ne disait rien :
+    on cliquait, rien ne se passait, et il fallait deviner laquelle des cinq
+    bloquait. Le cas le plus fréquent est la case des CGV — obligatoire, et
+    facile à manquer puisqu'elle est sous le récapitulatif.
+
+    On liste donc ce qui reste à faire. C'est aussi un garde-fou pour nous : le
+    jour où une condition est ajoutée au bouton sans être ajoutée ici, le
+    message redevient incomplet, et ça se voit tout de suite à l'écran.
+  */
+  const manquants = [
+    !parentName && "votre nom",
+    !emailValid && "une adresse e-mail valide",
+    !phoneValid && "un numéro de téléphone valide",
+    !acceptCGV && "l'acceptation des conditions générales",
+  ].filter(Boolean) as string[];
+
   async function envoyer() {
     if (!selectedFormule || !selectedCreneau) return;
     setEnvoi(true);
@@ -130,7 +152,7 @@ export function AnniversaireFlow({
       formuleId: selectedFormule.id,
       nbEnfants: childCount,
       enfantPrenom: childName,
-      enfantAge: Number(childAge),
+      enfantAge: childAge,
       optionsIds: selectedOptions,
       clientNom: parentName,
       clientEmail: parentEmail,
@@ -291,22 +313,31 @@ export function AnniversaireFlow({
             </div>
             <div>
               <Label htmlFor="childAge">Âge</Label>
-              <Input id="childAge" type="number" min={1} max={17} value={childAge} onChange={(e) => setChildAge(e.target.value)} placeholder="Ex. : 9" />
+              <div className="relative">
+                <select
+                  id="childAge"
+                  value={childAge}
+                  onChange={(e) => setChildAge(Number(e.target.value))}
+                  style={{ colorScheme: "dark" }}
+                  className="h-10 w-full min-w-0 appearance-none rounded-lg border border-input bg-transparent px-2.5 py-1 pr-9 text-base outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 md:text-sm dark:bg-input/30"
+                >
+                  <option value={0}>Choisir l&apos;âge</option>
+                  {Array.from({ length: 17 }, (_, i) => i + 1).map((n) => (
+                    <option key={n} value={n}>{n} ans</option>
+                  ))}
+                </select>
+                <ChevronBas aria-hidden className="pointer-events-none absolute right-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+              </div>
             </div>
-            <div>
-              <Label htmlFor="childCount">Nombre d&apos;enfants</Label>
-              <Input
-                id="childCount"
-                type="number"
-                min={1}
-                max={selectedFormule.enfantsMax}
-                value={childCount}
-                onChange={(e) => setChildCount(Math.min(selectedFormule.enfantsMax, Math.max(1, Number(e.target.value))))}
-              />
-              <p className="mt-1 text-xs text-muted-foreground">
-                Forfait jusqu&apos;à {selectedFormule.enfantsInclus} enfants — maximum {selectedFormule.enfantsMax}.
-              </p>
-            </div>
+            <ChampNombre
+              id="childCount"
+              label="Nombre d'enfants"
+              min={1}
+              max={selectedFormule.enfantsMax}
+              valeur={childCount}
+              onChange={setChildCount}
+              aide={`Forfait jusqu'à ${selectedFormule.enfantsInclus} enfants — maximum ${selectedFormule.enfantsMax}.`}
+            />
           </div>
 
           {/* Détail du prix */}
@@ -582,6 +613,17 @@ export function AnniversaireFlow({
                     ? `Payer ${totalPrice}\u00a0€`
                     : "Confirmer ma réservation"}
               </button>
+
+              {manquants.length > 0 && (
+                <p className="mt-3 flex items-start justify-center gap-2 text-center text-sm text-muted-foreground">
+                  <AlerteCercle className="mt-0.5 size-4 shrink-0 text-kick" />
+                  <span>
+                    Il manque {manquants.length > 1
+                      ? `${manquants.slice(0, -1).join(", ")} et ${manquants[manquants.length - 1]}`
+                      : manquants[0]}.
+                  </span>
+                </p>
+              )}
               {/*
                 LE BOUTON DIT CE QU'IL FAIT. L'article VI.46 §2 du Code de droit
                 économique impose une formule dénuée d'ambiguïté sur un bouton

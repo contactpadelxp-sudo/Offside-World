@@ -7,6 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { ChampNombre } from "@/components/reservation/champ-nombre";
 import { Checkbox } from "@/components/ui/checkbox";
 import { FadeIn, StaggerContainer, StaggerItem, Tilt3D } from "@/components/motion";
 import { Photo } from "@/components/photo";
@@ -107,6 +108,33 @@ export function GroupesFlow({
       demiJournees: liste,
     }));
   }, [demiJournees]);
+
+  /*
+
+    CE QUI MANQUE, DIT EN TOUTES LETTRES. Même correctif que sur le tunnel
+
+    anniversaire : le bouton final dépend de plusieurs conditions et,
+
+    désactivé, il ne disait pas laquelle. La case des CGV est le cas le plus
+
+    fréquent, et la moins visible.
+
+  */
+
+  const manquants = [
+
+    !nom && "votre nom",
+
+    !isBubble && !entreprise && "le nom de votre entreprise",
+
+    !emailValid && "une adresse e-mail valide",
+
+    !phoneValid && "un numéro de téléphone valide",
+
+    !acceptCGV && "l'acceptation des conditions générales",
+
+  ].filter(Boolean) as string[];
+
 
   async function envoyer() {
     setEnvoi(true);
@@ -319,27 +347,14 @@ export function GroupesFlow({
 
           {bubbleCreneau && (
             <div className="mt-6 max-w-xs">
-              <Label htmlFor="nbPersonnes">Nombre de personnes</Label>
-              <Input
+              <ChampNombre
                 id="nbPersonnes"
-                type="number"
+                label="Nombre de personnes"
                 min={BUBBLE_MIN_PERSONNES}
                 max={Math.min(BUBBLE_MAX_PERSONNES, bubbleCreneau.capacite)}
-                value={nbPersonnes}
-                onChange={(e) =>
-                  setNbPersonnes(
-                    Math.min(
-                      Math.min(BUBBLE_MAX_PERSONNES, bubbleCreneau.capacite),
-                      Math.max(BUBBLE_MIN_PERSONNES, Number(e.target.value))
-                    )
-                  )
-                }
+                valeur={nbPersonnes}
+                onChange={setNbPersonnes}
               />
-              <p className="mt-1 text-xs text-muted-foreground">
-                De {BUBBLE_MIN_PERSONNES} à {Math.min(BUBBLE_MAX_PERSONNES, bubbleCreneau.capacite)} personnes.
-              </p>
-              <p className="mt-3 text-2xl font-bold text-field">{total}€</p>
-              <p className="text-xs text-muted-foreground">{nbPersonnes} × {BUBBLE_PRIX_PAR_PERSONNE}€</p>
             </div>
           )}
 
@@ -395,26 +410,15 @@ export function GroupesFlow({
             ))}
           </ul>
 
-          <div className="mt-6">
-            <Label htmlFor="nbParticipants">Nombre de participants</Label>
-            <Input
+          <div className="mt-6 max-w-xs">
+            <ChampNombre
               id="nbParticipants"
-              type="number"
+              label="Nombre de participants"
               min={TEAM_BUILDING_MIN_PARTICIPANTS}
               max={TEAM_BUILDING_MAX_PARTICIPANTS}
-              value={nbParticipants}
-              onChange={(e) =>
-                setNbParticipants(
-                  Math.min(
-                    TEAM_BUILDING_MAX_PARTICIPANTS,
-                    Math.max(TEAM_BUILDING_MIN_PARTICIPANTS, Number(e.target.value))
-                  )
-                )
-              }
+              valeur={nbParticipants}
+              onChange={setNbParticipants}
             />
-            <p className="mt-1 text-xs text-muted-foreground">
-              De {TEAM_BUILDING_MIN_PARTICIPANTS} à {TEAM_BUILDING_MAX_PARTICIPANTS} personnes.
-            </p>
           </div>
 
           <div className="mt-6 rounded-xl border border-kick/20 bg-kick/5 p-4">
@@ -557,6 +561,17 @@ export function GroupesFlow({
                   <><Document className="size-5" /> Demander un devis</>
                 )}
               </button>
+
+              {manquants.length > 0 && (
+                <p className="mt-3 flex items-start justify-center gap-2 text-center text-sm text-muted-foreground">
+                  <AlerteCercle className="mt-0.5 size-4 shrink-0 text-kick" />
+                  <span>
+                    Il manque {manquants.length > 1
+                      ? `${manquants.slice(0, -1).join(", ")} et ${manquants[manquants.length - 1]}`
+                      : manquants[0]}.
+                  </span>
+                </p>
+              )}
               {/*
                 Le team building part en DEVIS : aucun paiement, donc aucune de
                 ces mentions. Seul le Bubble Foot est encaissé ici.
