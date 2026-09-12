@@ -185,11 +185,21 @@ le dépôt.
       Brahim.
 - [ ] **Passer le dépôt GitHub en privé.** Tant qu'il est public, l'historique
       reste lisible, y compris les versions précédentes de ce fichier.
-- [ ] **Ouvrir un compte Resend** (choix acté), y vérifier le domaine, puis
-      renseigner `RESEND_API_KEY`, `EMAIL_EXPEDITEUR` et `EMAIL_COMPLEXE` dans
-      Vercel. **Tant que ces variables sont absentes, aucun e-mail ne part** —
-      le site fonctionne, mais personne n'est prévenu de rien. Détail dans
-      `MISE-EN-LIGNE.md`.
+- [x] ~~**Ouvrir un compte Resend**, y vérifier le domaine, renseigner les
+      variables.~~ **Fait le 12 septembre 2026.** Domaine `offsidefootindoor.be`
+      vérifié chez Resend (région Ireland, eu-west-1 — les données restent dans
+      l'UE), DKIM et DMARC publiés, les 5 MX de Google et le SPF racine
+      vérifiés intacts après l'opération. Expéditeur :
+      `reservations@offsidefootindoor.be`.
+
+      ⚠️ **Un seul point reste à confirmer** : que `EMAIL_EXPEDITEUR` ne
+      contienne pas encore l'adresse de démonstration `onboarding@resend.dev`.
+      Dans cet état, Brahim reçoit bien ses avis — ils partent vers l'adresse du
+      titulaire du compte — mais **les clients ne reçoivent rien**, et l'échec
+      est avalé par conception pour qu'un problème d'e-mail ne fasse jamais
+      échouer une réservation. `/admin/reglages` l'affiche en rouge, et le test
+      qui tranche est celui envoyé vers une adresse qui n'est PAS celle du
+      compte Resend.
 - [ ] **Basculer le domaine et activer les e-mails.** Le domaine appartient à
       Brahim ; il sert encore le site Wix, et rien n'autorise encore l'envoi
       d'e-mails automatiques. La marche à suivre complète, avec l'état DNS

@@ -8,17 +8,56 @@ Deux opérations distinctes, à ne pas confondre :
 Elles se font au même endroit mais ne touchent pas aux mêmes enregistrements.
 On peut faire l'une sans l'autre.
 
-> **État relevé le 4 septembre 2026.** À revérifier avant d'agir : ces valeurs
-> auront peut-être changé.
+> **État relevé le 12 septembre 2026**, après la mise en place de l'envoi
+> d'e-mails. À revérifier avant d'agir.
 >
 > | | |
 > |---|---|
 > | Zone DNS | **Wix** — `ns10.wixdns.net`, `ns11.wixdns.net` |
-> | Site actuel | Wix — A vers `185.230.63.107/171/186`, `www` vers `cdn1.wixdns.net` |
-> | Messagerie | **Google Workspace** — MX `aspmx.l.google.com` et suivants |
-> | SPF | présent — `v=spf1 include:_spf.google.com ~all` |
-> | DKIM | **absent**, y compris pour Google |
-> | DMARC | **absent** |
+> | Site actuel | **encore Wix** — A vers `185.230.63.107/171/186`, `www` vers `cdn1.wixdns.net` |
+> | Messagerie | **Google Workspace** — les 5 MX `aspmx.l.google.com` et suivants, **intacts** |
+> | SPF racine | un seul — `v=spf1 include:_spf.google.com ~all`, **inchangé** |
+> | DKIM Resend | ✅ `resend._domainkey` — clé RSA vérifiée complète (216 caractères, base64 et ASN.1 valides) |
+> | DKIM Google | **toujours absent** — demande la console d'admin Google, donc Brahim |
+> | DMARC | ✅ `v=DMARC1; p=none; rua=mailto:info@offsidefootindoor.be; fo=1` |
+> | Envoi Resend | ✅ CNAME `rsend` et `send` vers `forge.rmta.net`, domaine vérifié |
+
+---
+
+## ✅ Ce qui est fait — 12 septembre 2026
+
+**L'envoi d'e-mails est en place sur le domaine nu**, donc l'expéditeur est
+`reservations@offsidefootindoor.be` et non un sous-domaine.
+
+Ce choix avait d'abord été écarté par prudence, à tort : Resend ne demande
+**aucun TXT SPF sur le domaine racine**. Sa section « SPF » passe par deux
+CNAME (`rsend`, `send`) vers `forge.rmta.net`, qui portent le chemin de retour.
+L'enregistrement SPF de Google n'est donc jamais touché, et l'objection qui
+justifiait le sous-domaine tombe. Vérifié après coup : il n'y a toujours qu'UN
+seul SPF à la racine, et c'est celui de Google.
+
+**Le piège de cette page, lui, reste entier** : le bouton « Enable Receiving »
+de Resend ajoute des enregistrements **MX** sur le domaine — exactement là où
+sont ceux de Google Workspace. Il doit rester désactivé. On n'a besoin que
+d'envoyer.
+
+**Ce qui a été contrôlé après coup**, et qu'il faut refaire à chaque
+changement DNS :
+
+1. les 4 enregistrements vus depuis trois résolveurs différents, dont les
+   serveurs faisant autorité de Wix — un enregistrement visible chez Google
+   mais pas chez l'autorité signale une saisie qui n'a pas été enregistrée ;
+2. la **clé DKIM décodée**, pas seulement constatée présente. Une clé tronquée
+   reste un TXT parfaitement valide : elle s'affiche, elle a l'air correcte, et
+   elle échoue à chaque signature. On vérifie que le base64 se décode et que la
+   structure ASN.1 est celle d'une clé RSA ;
+3. les **5 MX de Google** et l'**unicité du SPF racine**. C'est le seul vrai
+   danger de l'opération, et c'est la seule vérification qui protège la
+   messagerie de Brahim.
+
+Reste à faire côté e-mails : **le DKIM de Google Workspace**, qui ne concerne
+pas le site mais le courrier que Brahim envoie à la main — aujourd'hui signé
+par rien. Cinq minutes dans sa console d'administration.
 
 ---
 
@@ -82,7 +121,7 @@ l'authentification ».
 Cela ne concerne pas le site : c'est le courrier que Brahim envoie déjà à la
 main, aujourd'hui signé par rien du tout.
 
-### b. Ajouter le domaine chez Resend
+### b. Ajouter le domaine chez Resend — ✅ fait le 12 septembre 2026
 
 [resend.com](https://resend.com) → Domains → Add Domain.
 
