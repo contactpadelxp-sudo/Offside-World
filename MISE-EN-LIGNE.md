@@ -218,3 +218,97 @@ celle du compte Resend.
 
 Si un e-mail arrive en indésirable, ouvrir son en-tête complet et chercher
 `spf=`, `dkim=` et `dmarc=` : les trois doivent afficher `pass`.
+
+---
+
+## 4. Brancher le paiement en ligne
+
+**Le code est écrit et testé ; il ne manque que les deux clés.** Tant que
+`STRIPE_SECRET_KEY` est absente, le site se comporte comme aujourd'hui : la
+réservation part « à confirmer » et Brahim la valide à la main. Dès que la clé
+existe, le tunnel bascule tout seul — le bouton final devient « Payer 290 € »,
+et c'est le paiement qui confirme.
+
+### a. Le compte doit être celui de Brahim
+
+C'est le titulaire du compte Stripe qui est **le vendeur au sens légal** : c'est
+lui qui déclare la TVA et qui reçoit les virements. Le compte doit donc être au
+nom de l'exploitant, jamais à celui du développeur.
+
+Brahim invite ensuite Mathis dans **Settings → Team and security**, avec le
+rôle **Developer** : aucun mot de passe n'est échangé, et ce rôle ne permet ni
+de changer le compte bancaire ni de déclencher un virement.
+
+**Activer Bancontact** dans Settings → Payment methods. C'est le moyen de
+paiement dominant en Belgique, et le tunnel le propose en premier.
+
+### b. Les deux variables dans Vercel
+
+| Variable | Où la trouver | Type |
+|----------|---------------|------|
+| `STRIPE_SECRET_KEY` | Stripe → Developers → API keys → *Secret key* (`sk_test_…` en test, `sk_live_…` en production) | **Sensitive** |
+| `STRIPE_WEBHOOK_SECRET` | donnée à la création du webhook, voir ci-dessous (`whsec_…`) | **Sensitive** |
+
+La clé **publiable** (`pk_…`) n'est pas utilisée : le client est redirigé vers
+la page de paiement hébergée par Stripe, aucun formulaire de carte ne vit sur
+le site. C'est aussi ce qui fait qu'aucune donnée de carte ne transite ici.
+
+### c. Créer le webhook
+
+Stripe → Developers → Webhooks → **Add endpoint**.
+
+- **URL** : `https://offsidefootindoor.be/api/stripe/webhook`
+- **Événements à écouter** — les quatre, pas moins :
+
+  | Événement | Pourquoi il est indispensable |
+  |---|---|
+  | `checkout.session.completed` | le paiement a réussi : c'est lui qui confirme la réservation |
+  | `checkout.session.expired` | le client n'a pas payé dans les 30 minutes |
+  | `checkout.session.async_payment_succeeded` | **Bancontact se dénoue dans l'application bancaire**, souvent après la fermeture de la page. Sans cet événement, l'argent part sans que la réservation soit confirmée — sur le moyen de paiement le plus utilisé en Belgique |
+  | `checkout.session.async_payment_failed` | le paiement différé a été refusé |
+
+Copier le **Signing secret** affiché après création : c'est
+`STRIPE_WEBHOOK_SECRET`. Sans lui, le site **refuse** de traiter les
+notifications — l'adresse est publique, et la signature est la seule chose qui
+distingue Stripe d'un inconnu qui enverrait un faux « paiement réussi ».
+
+### d. Ce qui change dans le fonctionnement
+
+- **La réservation n'est plus confirmée par Brahim, mais par le paiement.** Il
+  garde l'annulation, et le remboursement lui est proposé au moment où il
+  annule.
+- **Le créneau n'est plus tenu 48 heures mais 45 minutes.** Tant que le
+  paiement n'existait pas, une réservation était une demande et Brahim avait
+  besoin de temps pour répondre ; avec le paiement, c'est une fenêtre de
+  paiement. Le site fait ce changement tout seul en voyant la clé Stripe — il
+  n'y a rien à régler.
+- **La réservation est confirmée par le webhook, jamais par la page de retour.**
+  Un client qui paie puis ferme l'onglet, perd le réseau ou tombe en panne de
+  batterie n'atteindra jamais la page de retour ; il a pourtant payé.
+
+### e. Tester AVANT de passer en production
+
+Les clés `sk_test_…` permettent de tout essayer sans qu'un centime bouge.
+
+1. Mettre la clé de test dans Vercel, créer un webhook de test vers la même URL.
+2. Réserver un anniversaire sur le site jusqu'au paiement.
+3. Payer avec la carte de test **4242 4242 4242 4242**, n'importe quelle date
+   future, n'importe quel CVC.
+4. Vérifier, dans l'ordre :
+   - le client reçoit « Votre réservation est confirmée » ;
+   - Brahim reçoit son avis de nouvelle réservation ;
+   - `/admin` montre la réservation en **Confirmée**, pas en « À confirmer » ;
+   - la fiche affiche le montant payé.
+5. Annuler la réservation depuis le back-office en choisissant
+   **« Remboursement intégral »**, puis vérifier dans Stripe → Payments que le
+   remboursement y figure.
+
+**Le test qui compte vraiment est celui de Bancontact**, pas celui de la carte :
+c'est lui qui emprunte le chemin asynchrone. Stripe fournit un Bancontact de
+test qui permet de simuler la réussite comme l'échec.
+
+### f. Passer en production
+
+Remplacer les deux variables par les valeurs `live`, recréer le webhook sur le
+compte de production — **le secret de signature est différent** —, redéployer,
+et faire une vraie réservation à petit montant qu'on rembourse ensuite.

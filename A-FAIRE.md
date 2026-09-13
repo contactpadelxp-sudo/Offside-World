@@ -214,14 +214,17 @@ Questions posées, sans réponse à ce jour. Elles bloquent du travail déjà pr
       - **Réglages > Affichage > Taille du texte**, poussé au maximum : rien ne
         doit sortir de son cadre.
 
-- [ ] **Paiement : acompte ou montant intégral ?** Le barème d'annulation
-      existant (100 % au-delà de 7 jours, 50 % entre 7 jours et 48 h, rien en
-      deçà) se prête plutôt au paiement intégral avec remboursement partiel.
-      Un acompte non remboursable serait plus simple, mais change la promesse
-      faite au client.
-- [ ] **Le compte Stripe est-il ouvert ?** Le tunnel peut être construit sans
-      les clés, mais aucun paiement réel ne pourra être testé de bout en bout —
-      et c'est précisément là que ça casse d'habitude.
+- [x] ~~Paiement : acompte ou montant intégral ?~~ **MONTANT INTÉGRAL**,
+      décidé par Mathis le 13 septembre 2026. C'est ce que le code fait déjà :
+      la session Stripe est créée pour le total, et le barème d'annulation
+      (100 % au-delà de 7 jours, 50 % entre 7 jours et 48 h, rien en deçà)
+      rembourse depuis ce total. Aucune modification n'a été nécessaire, et les
+      CGV n'ont pas à être retouchées.
+- [ ] **OUVRIR LE COMPTE STRIPE — c'est désormais le seul point bloquant du
+      paiement.** Le code est écrit, branché et testé ; il ne manque que les
+      deux clés. La marche à suivre complète — rôle d'équipe, activation de
+      Bancontact, les quatre événements du webhook, les tests en clés `test`,
+      le passage en `live` — est dans **`MISE-EN-LIGNE.md`, section 4**.
 - [x] ~~« 2000+ fêtes organisées »~~ **RETIRÉ le 13 septembre 2026**, sur
       décision de Mathis. La rangée du hero est passée de trois à deux colonnes.
       Les deux chiffres restants se vérifient : les terrains existent, et le
@@ -400,13 +403,25 @@ interne ressort dans la vue, et une session révoquée le reste. Le linter de
 sécurité Supabase ne remonte aucun avertissement — les 9 avis « RLS activé sans
 politique » sont le comportement voulu.
 
-**Ce qui reste à construire, par ordre d'urgence :**
+**Le paiement en ligne est ÉCRIT, branché et testé — il attend deux clés.**
 
-1. **Le paiement en ligne** (Stripe + Bancontact). C'est le dernier morceau
-   qui demande du développement. Le tunnel s'y prépare déjà : `paiementConfigure()`
-   ne teste que la présence de `STRIPE_SECRET_KEY`, et bascule tout seul le
-   bouton final de « Confirmer ma réservation » vers « Payer 290 € » le jour où
-   la clé existe.
+Audité ligne à ligne le 13 septembre 2026. Ce qui existe :
+- création de la session Checkout, Bancontact en premier, expiration à 30 min,
+  clé d'idempotence pour que deux clics ne créent pas deux paiements ;
+- webhook à signature vérifiée, corps lu brut, e-mails envoyés après la réponse,
+  et les quatre événements traités — dont `async_payment_succeeded`, sans lequel
+  un paiement Bancontact partirait sans confirmer la réservation ;
+- confirmation idempotente : deux livraisons du même événement ne confirment pas
+  deux fois et n'envoient pas deux e-mails ;
+- la réservation est confirmée par le WEBHOOK, jamais par la page de retour ;
+- remboursement depuis le back-office, avec le choix entre barème, intégral et
+  aucun, le montant recalculé côté serveur et le cumul écrit en base ;
+- le délai qui tient un créneau passe seul de 48 h à 45 min dès que la clé
+  Stripe existe — une fenêtre de paiement, non plus un délai de traitement ;
+- repli propre : si Stripe est indisponible au moment de créer la session, la
+  réservation n'est pas perdue, on retombe sur le comportement « à confirmer ».
+
+Il ne reste donc aucun développement. Voir `MISE-EN-LIGNE.md` section 4.
 
 **Adaptation aux écrans — état au 13 septembre 2026**
 
