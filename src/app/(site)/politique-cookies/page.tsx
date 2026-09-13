@@ -65,7 +65,7 @@ const CATEGORIES: { categorie: string; finalite: string; duree: string; consente
 
 export default function PolitiqueCookies() {
   return (
-    <div className="mx-auto max-w-4xl px-4 pt-24 pb-12 md:pt-28 md:pb-20">
+    <div className="page-legale mx-auto max-w-4xl px-4 pt-32 pb-12 md:pb-20">
       <p className="text-sm text-muted-foreground mb-8">Dernière mise à jour : {MAJ_LEGALE}</p>
       <h1 className="text-3xl font-bold">Politique cookies</h1>
       <p className="mt-4 text-muted-foreground">

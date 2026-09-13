@@ -46,13 +46,20 @@ export function Recherche({ valeur }: { valeur: string }) {
         onChange={(e) => setTexte(e.target.value)}
         placeholder="Référence, nom, e-mail, téléphone…"
         maxLength={80}
-        className="h-9 w-full rounded-lg border border-border bg-input/30 px-3 pr-9 text-sm outline-none transition-colors placeholder:text-muted-foreground/70 focus-visible:ring-2 focus-visible:ring-field/60"
+        className="h-10 w-full rounded-lg border border-border bg-input/30 px-3 pr-10 text-sm outline-none transition-colors placeholder:text-muted-foreground/70 focus-visible:ring-2 focus-visible:ring-field/60 sm:h-9"
       />
-      <span className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground">
+      <span className="absolute right-1 top-1/2 -translate-y-1/2 text-muted-foreground">
         {enCours ? (
           <Rotative />
         ) : (
           valeur && (
+            /*
+              La croix faisait 20 px de côté — sous le minimum de 24 px du
+              critère 2.5.8 du WCAG 2.2, et à quelques pixels du champ de
+              saisie : la rater remettait le clavier à l'écran au lieu d'effacer.
+              Le dessin de la croix ne change pas, c'est la zone sensible autour
+              qui s'élargit à 32 px.
+            */
             <button
               type="button"
               aria-label="Effacer la recherche"
@@ -60,7 +67,7 @@ export function Recherche({ valeur }: { valeur: string }) {
                 setTexte("");
                 chercher("");
               }}
-              className="inline-flex size-5 items-center justify-center rounded hover:text-foreground"
+              className="inline-flex size-8 items-center justify-center rounded hover:text-foreground"
             >
               <Croix className="size-4" />
             </button>

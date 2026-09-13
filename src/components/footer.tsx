@@ -16,10 +16,24 @@ export function Footer({ logoSrc }: { logoSrc: string | null }) {
       <div className="h-px bg-gradient-to-r from-transparent via-field/60 to-transparent" />
 
       <div className="bg-[#050506] text-white grain">
-        <div className="mx-auto max-w-7xl px-4 lg:px-8 py-16">
-          <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="mx-auto max-w-7xl px-4 lg:px-8 py-12 sm:py-16">
+          {/*
+            DEUX COLONNES DÈS LE TÉLÉPHONE.
+
+            En une seule, le pied de page faisait près de 1200 px — deux écrans
+            entiers de liens à faire défiler avant d'atteindre les mentions. Les
+            deux listes de liens (Activités, Légal) tiennent côte à côte même à
+            320 px ; la marque et le bloc Contact, eux, gardent toute la largeur
+            parce que l'adresse et l'e-mail ne se replient pas proprement dans
+            une demi-colonne.
+
+            L'ordre du DOM suit l'ordre visible — on n'utilise pas `order-*` —
+            pour qu'un lecteur d'écran parcoure le pied de page dans l'ordre où
+            il s'affiche.
+          */}
+          <div className="grid grid-cols-2 gap-x-6 gap-y-10 lg:grid-cols-4">
             {/* Marque */}
-            <div className="lg:col-span-1">
+            <div className="col-span-2 lg:col-span-1">
               <Link href="/" aria-label={`${NOM_COMMERCIAL} — accueil`} className="inline-flex items-center">
                 <Logo src={logoSrc} height={44} className="h-10 md:h-11" textClassName="text-lg" />
               </Link>
@@ -52,26 +66,6 @@ export function Footer({ logoSrc }: { logoSrc: string | null }) {
               </ul>
             </div>
 
-            {/* Contact */}
-            <div>
-              <h4 className="mb-4 text-xs font-bold uppercase tracking-[0.2em] text-white/80">
-                Contact
-              </h4>
-              <ul className="space-y-2.5 text-sm text-white/60">
-                <li className="flex items-start gap-2.5">
-                  <Epingle className="size-4 text-white/60 shrink-0 mt-0.5" />
-                  <address className="not-italic">
-                    {ADRESSE.rue}<br />
-                    {ADRESSE.codePostal} {ADRESSE.ville}, {ADRESSE.pays}
-                  </address>
-                </li>
-                <li className="flex items-center gap-2.5">
-                  <Enveloppe className="size-4 text-white/60 shrink-0" />
-                  <a href={`mailto:${EMAIL}`} className="inline-flex min-h-6 items-center py-0.5 hover:text-white transition-colors">{EMAIL}</a>
-                </li>
-              </ul>
-            </div>
-
             {/* Légal */}
             <div>
               <h4 className="mb-4 text-xs font-bold uppercase tracking-[0.2em] text-white/80">
@@ -90,16 +84,36 @@ export function Footer({ logoSrc }: { logoSrc: string | null }) {
                   </li>
                 ))}
                 <li>
-                  <button onClick={openCookieSettings} className="inline-flex min-h-6 items-center gap-1.5 py-0.5 text-sm text-white/60 hover:text-white transition-colors duration-300">
-                    <Cookie className="size-3.5" /> Gérer mes cookies
+                  <button onClick={openCookieSettings} className="inline-flex min-h-6 items-center gap-1.5 py-0.5 text-left text-sm text-white/60 hover:text-white transition-colors duration-300">
+                    <Cookie className="size-3.5 shrink-0" /> Gérer mes cookies
                   </button>
+                </li>
+              </ul>
+            </div>
+
+            {/* Contact */}
+            <div className="col-span-2 lg:col-span-1">
+              <h4 className="mb-4 text-xs font-bold uppercase tracking-[0.2em] text-white/80">
+                Contact
+              </h4>
+              <ul className="space-y-2.5 text-sm text-white/60">
+                <li className="flex items-start gap-2.5">
+                  <Epingle className="size-4 text-white/60 shrink-0 mt-0.5" />
+                  <address className="not-italic">
+                    {ADRESSE.rue}<br />
+                    {ADRESSE.codePostal} {ADRESSE.ville}, {ADRESSE.pays}
+                  </address>
+                </li>
+                <li className="flex items-center gap-2.5">
+                  <Enveloppe className="size-4 text-white/60 shrink-0" />
+                  <a href={`mailto:${EMAIL}`} className="inline-flex min-h-6 items-center py-0.5 break-all hover:text-white transition-colors">{EMAIL}</a>
                 </li>
               </ul>
             </div>
           </div>
 
           {/* Bas de page */}
-          <div className="mt-14 pt-6 border-t border-white/10 flex flex-col sm:flex-row justify-between items-center gap-3 text-xs text-white/60">
+          <div className="mt-10 sm:mt-14 pt-6 border-t border-white/10 flex flex-col sm:flex-row justify-between items-center gap-3 text-center text-xs text-white/60 sm:text-left">
             <p>© {new Date().getFullYear()} {NOM_COMMERCIAL}. Tous droits réservés.</p>
             <p>
               Droits RGPD :{" "}

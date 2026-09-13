@@ -31,7 +31,7 @@ const Liste = ({ items }: { items: string[] }) => (
 
 export default function CGV() {
   return (
-    <div className="mx-auto max-w-4xl px-4 pt-24 pb-12 md:pt-28 md:pb-20">
+    <div className="page-legale mx-auto max-w-4xl px-4 pt-32 pb-12 md:pb-20">
       <p className="text-sm text-muted-foreground mb-8">Version du {MAJ_LEGALE}</p>
       <h1 className="text-3xl font-bold">Conditions Générales de Vente</h1>
       <p className="mt-2 text-muted-foreground">{NOM_COMMERCIAL}</p>

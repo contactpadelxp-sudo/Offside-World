@@ -109,6 +109,11 @@
   html {
     @apply font-sans scroll-smooth;
     color-scheme: dark;
+    /* La barre de navigation est en position fixe : un saut vers une ancre
+       (« Découvrir » → #activites, un sommaire d'article de blog…) amenait la
+       cible pile sous elle, et le titre visé restait caché. La barre compacte
+       occupe 60 px du haut de l'écran ; on réserve 5 rem pour garder de l'air. */
+    scroll-padding-top: 5rem;
   }
 }
 
@@ -486,3 +491,37 @@
 .prose-article img { border-radius: 0.75rem; max-width: 100%; height: auto; }
 /* Un paragraphe vide laissé par l'éditeur ne doit pas creuser un trou. */
 .prose-article p:empty { display: none; }
+
+/* ══════════════════════════════════════════
+   PAGES LÉGALES
+   Mentions, CGV, CGU, confidentialité, cookies.
+   ══════════════════════════════════════════ */
+
+/*
+   Ces cinq pages sont les seules du site à être faites de longs blocs de texte
+   suivi, et elles se lisent le plus souvent sur un téléphone — c'est là qu'on
+   coche « j'accepte les conditions ». On leur donne donc un interlignage plus
+   généreux que celui du reste du site : 1,7 au lieu de 1,5, soit une ligne
+   d'air tous les quatre paragraphes, ce qui change beaucoup sur trois pages
+   d'affilée.
+*/
+.page-legale p,
+.page-legale li {
+  line-height: 1.7;
+}
+
+/*
+   Les liens au fil du texte — l'adresse e-mail, les renvois vers la politique
+   de confidentialité — mesuraient 194 × 21 px : assez larges, mais trop bas
+   pour un doigt. Le rembourrage vertical sur un élément EN LIGNE agrandit la
+   zone sensible sans toucher à la hauteur de ligne : le texte ne bouge pas
+   d'un pixel, la cible passe de 21 à 29 px.
+
+   (Le critère 2.5.8 du WCAG 2.2 dispense les liens insérés dans une phrase de
+   son minimum de 24 px. On le respecte quand même : la dispense dit qu'on n'a
+   pas le droit de refuser la page pour ce motif, pas que viser est agréable.)
+*/
+.page-legale a {
+  padding-block: 0.25rem;
+}
+

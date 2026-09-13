@@ -38,11 +38,18 @@ function Interrupteur({
 }) {
   return (
     <label className="inline-flex min-h-8 cursor-pointer items-center gap-2 py-1 text-sm">
+      {/*
+        `size-6` et non `size-5` : la case mesurait 20 px, sous le minimum de
+        24 px du critère 2.5.8 du WCAG 2.2. Elle décide si une formule est en
+        vente ou retirée du site — la rater d'un pixel se paie en réservations
+        que personne ne peut plus prendre. (L'étiquette entière est cliquable,
+        mais elle ne l'est que pour qui sait que c'est un <label>.)
+      */}
       <input
         type="checkbox"
         checked={actif}
         onChange={(e) => onChange(e.target.checked)}
-        className="size-5 accent-[var(--color-field)]"
+        className="size-6 accent-[var(--color-field)]"
       />
       {libelle}
     </label>
@@ -107,9 +114,17 @@ export function FicheFormule({ f }: { f: FormuleAdmin }) {
         </div>
       </div>
 
+      {/*
+        Trois lignes, pas deux. À deux, le champ coupait la description en plein
+        milieu d'une troisième ligne à demi visible : on ne savait plus si le
+        texte continuait ou si le champ était mal rendu. Trois lignes affichent
+        la description type en entier sur un téléphone, et `resize-y` laisse
+        agrandir le champ pour les plus longues.
+      */}
       <div className="mt-4">
         <label className={ETIQUETTE} htmlFor={`desc-${f.id}`}>Description</label>
-        <textarea id={`desc-${f.id}`} className={CHAMP} rows={2} value={v.description} maxLength={800}
+        <textarea id={`desc-${f.id}`} className={`${CHAMP} resize-y leading-snug`} rows={3}
+          value={v.description} maxLength={800}
           onChange={(e) => setV({ ...v, description: e.target.value })} />
       </div>
 
@@ -145,7 +160,7 @@ export function FicheFormule({ f }: { f: FormuleAdmin }) {
         <label className={ETIQUETTE} htmlFor={`liste-${f.id}`}>
           Ce qui est compris — une ligne par élément, affiché tel quel sur le site
         </label>
-        <textarea id={`liste-${f.id}`} className={CHAMP} rows={6} value={v.inclus}
+        <textarea id={`liste-${f.id}`} className={`${CHAMP} resize-y leading-snug`} rows={6} value={v.inclus}
           onChange={(e) => setV({ ...v, inclus: e.target.value })} />
       </div>
 
@@ -234,10 +249,18 @@ export function FicheOption({ o }: { o: OptionAdmin }) {
         </div>
       </div>
 
+      {/*
+        Une description de 300 caractères ne tient pas dans un champ d'une
+        ligne : sur un écran de 375 px, il en manquait 184 et l'on modifiait à
+        l'aveugle un texte que le client lira sur le tunnel de réservation. Deux
+        lignes visibles, qui se replient au-delà.
+      */}
       <div className="mt-4">
         <label className={ETIQUETTE} htmlFor={`descopt-${o.id}`}>Description</label>
-        <input id={`descopt-${o.id}`} className={CHAMP} value={v.description} maxLength={300}
-          onChange={(e) => setV({ ...v, description: e.target.value })} />
+        <textarea id={`descopt-${o.id}`} className={`${CHAMP} resize-y leading-snug`} rows={2}
+          value={v.description} maxLength={300}
+          onChange={(e) => setV({ ...v, description: e.target.value.replace(/\s*\n\s*/g, " ") })}
+          onKeyDown={(e) => { if (e.key === "Enter") e.preventDefault(); }} />
       </div>
 
       <div className="mt-4">

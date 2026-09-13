@@ -78,13 +78,33 @@ export function BarreAdmin({
         </div>
 
         {/*
-          La barre défilait à l'horizontale sur téléphone : « Créneaux »,
-          « Tarifs », « Journal » et « Réglages » étaient hors de l'écran, sans
-          rien pour indiquer qu'on pouvait faire défiler. On préfère deux lignes
-          visibles à une ligne tronquée — c'est un outil de travail, pas une
-          vitrine.
+          UNE GRILLE DE DEUX COLONNES SUR TÉLÉPHONE, UNE RANGÉE À PARTIR DE `sm:`.
+
+          La barre a d'abord défilé à l'horizontale : « Créneaux », « Tarifs »,
+          « Journal » et « Réglages » étaient hors de l'écran, sans rien pour
+          signaler qu'on pouvait balayer. On est passé au repli libre
+          (`flex-wrap`), qui montrait bien les huit rubriques — mais à des
+          positions dictées par la longueur des mots : deux sur la première
+          rangée, trois sur la deuxième, deux sur la troisième, une seule sur la
+          quatrième, et rien qui s'aligne d'une ligne à l'autre.
+
+          En grille, les huit pavés ont la même largeur et forment un bloc
+          régulier de 4 × 2. On retrouve une rubrique à sa place, pas là où le
+          repli l'a laissée ; et la cible tactile monte à 40 px de haut sur
+          toute la demi-largeur de l'écran, au lieu de la largeur du mot.
+
+          Le compteur est poussé à droite par `ml-auto` : sur téléphone il se
+          cale donc au bord du pavé, aligné avec celui du pavé voisin.
         */}
-        <nav className="order-3 flex w-full flex-wrap items-center gap-2 sm:order-none sm:w-auto sm:flex-nowrap sm:gap-1">
+        {/*
+          `sm:flex-wrap` et non `sm:flex-nowrap` : mis bout à bout, les huit
+          pavés mesurent 956 px. Sur une tablette de 768 px, la rangée unique
+          sortait donc de la barre par la droite, et « Journal » comme
+          « Réglages » n'étaient plus atteignables du tout — le conteneur ne
+          défile pas. On les laisse se replier ; à partir de 1024 px, la place
+          existe et la rangée redevient unique d'elle-même.
+        */}
+        <nav className="order-3 grid w-full grid-cols-1 gap-1.5 min-[360px]:grid-cols-2 sm:order-none sm:flex sm:w-auto sm:flex-wrap sm:items-center sm:gap-1">
           {SECTIONS.map((s) => {
             const actif = s.href === "/admin" ? chemin === "/admin" : chemin.startsWith(s.href);
             const n = pastille(s.href);
@@ -93,16 +113,16 @@ export function BarreAdmin({
                 key={s.href}
                 href={s.href}
                 aria-current={actif ? "page" : undefined}
-                className={`inline-flex shrink-0 items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition-all duration-150 active:scale-[0.97] ${
+                className={`inline-flex min-h-10 shrink-0 items-center gap-1 rounded-lg px-2.5 py-1.5 text-[13px] font-medium transition-all duration-150 active:scale-[0.97] sm:min-h-0 sm:gap-1.5 sm:px-3 sm:text-sm ${
                   actif
                     ? "bg-field/15 text-field"
                     : "text-muted-foreground hover:bg-white/5 hover:text-foreground"
                 }`}
               >
-                <s.icone className="size-4" />
-                {s.label}
+                <s.icone className="size-4 shrink-0" />
+                <span className="truncate">{s.label}</span>
                 {n > 0 && (
-                  <span className="ml-0.5 inline-flex min-w-5 items-center justify-center rounded-full bg-kick px-1.5 text-[11px] font-bold text-[#0a0a0b]">
+                  <span className="ml-auto inline-flex min-w-5 shrink-0 items-center justify-center rounded-full bg-kick px-1.5 text-[11px] font-bold text-[#0a0a0b] sm:ml-0.5">
                     {n}
                   </span>
                 )}

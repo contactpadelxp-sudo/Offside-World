@@ -34,11 +34,24 @@
   height: 1px;
 }
 
-/* Mobile : cartes plus compactes (padding 3rem et 40px de rayon trop grands) */
+/*
+  Mobile : les cartes ne sont plus empilées par défilement (voir le commentaire
+  de `SEUIL_EMPILEMENT` dans activites-stack.tsx), elles se suivent dans le flux.
+
+  La hauteur devient donc `auto`. Elle était fixée à 22rem — 352 px — pour que
+  les trois cartes superposées coïncident ; hors empilement, ce forçage laissait
+  environ 150 px de vide sous le bouton « Réserver » de CHAQUE carte, la photo
+  qui remplit la moitié droite étant masquée sous `md:`.
+
+  Les marges verticales partent aussi : l'espacement est tenu par le `gap-4` du
+  conteneur, et deux mécanismes concurrents donnent des écarts imprévisibles.
+*/
 @media (max-width: 767px) {
   .scroll-stack-card {
-    height: 22rem;
+    height: auto;
+    margin: 0;
     padding: 1.25rem;
     border-radius: 24px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
   }
 }

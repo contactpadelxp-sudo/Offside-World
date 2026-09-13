@@ -196,12 +196,30 @@ export function FicheDevis({ d }: { d: DevisAdmin }) {
                 <label htmlFor={`des-${d.id}-${i}`} className="mb-1 block text-xs text-muted-foreground">
                   Désignation
                 </label>
-                <input
+                {/*
+                  UN CHAMP QUI SE REPLIE, PAS UN CHAMP QUI DÉFILE.
+
+                  La désignation est pré-remplie — « Team building —
+                  privatisation, jeudi 15 octobre 2026, après-midi,
+                  42 participants ». Dans un <input> d'une ligne sur un écran de
+                  375 px, il en manquait 146 : Brahim relisait « Team building —
+                  privatisation, Jeudi 15 oct » et devait faire défiler à
+                  l'horizontale, à l'aveugle, un texte qui part chez un client
+                  sur un document engageant. Mesuré à 320 px, il en manquait 201.
+
+                  Un <textarea> de deux lignes le montre en entier. `rows` est un
+                  minimum : le champ se replie au-delà si la ligne est longue,
+                  et le retour à la ligne est neutralisé plus bas puisque la
+                  désignation d'une ligne de devis reste une seule phrase.
+                */}
+                <textarea
                   id={`des-${d.id}-${i}`}
                   value={l.designation}
-                  onChange={(e) => majLigne(i, "designation", e.target.value)}
+                  onChange={(e) => majLigne(i, "designation", e.target.value.replace(/\s*\n\s*/g, " "))}
+                  onKeyDown={(e) => { if (e.key === "Enter") e.preventDefault(); }}
                   maxLength={200}
-                  className="w-full rounded-lg border border-border bg-input/30 px-3 py-2 text-sm outline-none focus-visible:ring-2 focus-visible:ring-field/60"
+                  rows={2}
+                  className="w-full resize-y rounded-lg border border-border bg-input/30 px-3 py-2 text-sm leading-snug outline-none focus-visible:ring-2 focus-visible:ring-field/60"
                 />
               </div>
               <div className="w-20">

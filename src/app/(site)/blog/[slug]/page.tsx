@@ -41,7 +41,7 @@ export default async function Article({ params }: { params: Promise<{ slug: stri
   if (!a) notFound();
 
   return (
-    <article className="mx-auto max-w-3xl px-4 pt-24 pb-12 md:pt-28 md:pb-20">
+    <article className="mx-auto max-w-3xl px-4 pt-32 pb-12 md:pb-20">
       <Link
         href="/blog"
         className="inline-flex min-h-8 items-center gap-1.5 text-sm text-muted-foreground hover:text-field"

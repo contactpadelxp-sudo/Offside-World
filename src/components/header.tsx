@@ -133,8 +133,17 @@ export function Header({ logoSrc }: { logoSrc: string | null }) {
               TEXTES, lui, n'arrive qu'à 1024 px. Mesuré : en portant les
               rubriques à 15 px dès 768 px, la rangée devenait plus large que sa
               barre et « Accueil » comme « Réserver » se retrouvaient coupés aux
-              deux bouts. Le rembourrage haut du hero suit dans `accueil.tsx`,
-              sans quoi le titre passerait sous la barre.
+              deux bouts.
+
+              ATTENTION — CETTE BARRE FIXE LE REMBOURRAGE HAUT DE TOUTES LES
+              PAGES. Elle est en `position: fixed` et son bord inférieur tombe à
+              104 px (`pt-4` + 5,5 rem). Toute page qui démarre plus haut voit
+              son titre passer dessous : c'est ce qui est arrivé à /reservation,
+              au blog et aux cinq pages légales, restées à `pt-24` (96 px) après
+              l'agrandissement — le mot « Réserver » y était coupé en deux sur
+              téléphone. Elles sont toutes à `pt-32` (128 px) désormais. Si la
+              hauteur change encore ici, il faut les reprendre :
+              `grep -rn "pt-32" src/app/\(site\)`.
             */}
             <div className="pointer-events-auto mx-auto max-w-5xl flex items-center justify-center h-[5.5rem] rounded-2xl bg-[#121214]/70 backdrop-blur-xl border border-white/10 shadow-[0_1px_12px_rgba(0,0,0,0.4)] px-6 lg:px-8 gap-2">
               {/* Left nav */}
@@ -209,7 +218,15 @@ function MobileMenu({ open, setOpen }: { open: boolean; setOpen: (v: boolean) =>
       */}
       <SheetContent side="right" className="w-72">
         <SheetTitle className="sr-only">Menu de navigation</SheetTitle>
-        <nav className="mt-8 flex flex-col gap-3 px-6 pb-6">
+        {/*
+          Les rubriques faisaient 32 px de haut (`py-1` sous un texte de 16 px),
+          serrées les unes contre les autres : c'est le seul moyen de naviguer
+          sur téléphone, et il demandait de viser. Chaque ligne occupe désormais
+          toute la largeur du panneau sur 48 px de haut — la cible recommandée
+          pour le doigt — et se teinte au contact pour qu'on voie ce qu'on
+          touche.
+        */}
+        <nav className="mt-8 flex flex-col gap-1 px-4 pb-6">
           {navLinks.map((link, i) => (
             <motion.div
               key={link.href}
@@ -220,7 +237,7 @@ function MobileMenu({ open, setOpen }: { open: boolean; setOpen: (v: boolean) =>
               <Link
                 href={link.href}
                 onClick={() => setOpen(false)}
-                className="text-base font-medium text-foreground block py-1"
+                className="flex min-h-12 items-center rounded-xl px-3 text-base font-medium text-foreground transition-colors active:bg-white/10"
               >
                 {link.label}
               </Link>
@@ -229,7 +246,7 @@ function MobileMenu({ open, setOpen }: { open: boolean; setOpen: (v: boolean) =>
           <Link
             href="/reservation"
             onClick={() => setOpen(false)}
-            className="mt-4 inline-flex items-center justify-center gap-2 text-[#0a0a0b] w-full h-12 rounded-2xl font-semibold bg-gradient-to-r from-field to-kick"
+            className="mt-4 mx-3 inline-flex items-center justify-center gap-2 text-[#0a0a0b] h-12 rounded-2xl font-semibold bg-gradient-to-r from-field to-kick"
           >
             Réserver
           </Link>

@@ -17,7 +17,7 @@ export default async function PageBlog() {
   const articles = await lireArticlesPublies();
 
   return (
-    <div className="mx-auto max-w-4xl px-4 pt-24 pb-12 md:pt-28 md:pb-20">
+    <div className="mx-auto max-w-4xl px-4 pt-32 pb-12 md:pb-20">
       <h1 className="font-[family-name:var(--font-heading)] text-3xl font-bold md:text-4xl">
         Le blog
       </h1>

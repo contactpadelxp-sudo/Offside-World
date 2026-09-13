@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import Lenis from "lenis";
 import { FlecheDroite, Gateau, Groupe, Trophee } from "@/components/icons";
@@ -27,6 +27,42 @@ type Card = {
 const ITEM_STACK_DISTANCE = 30; // décalage en escalier entre cartes posées
 const SCALE_STEP = 0.05;        // réduction des cartes du dessous à chaque pose
 const DWELL = 260;              // scroll (px) pendant lequel l'empilement complet reste affiché
+
+/*
+  L'EMPILEMENT NE S'ACTIVE QU'À PARTIR DE `md:` (768 px), ET C'EST MESURÉ.
+
+  Sur un écran de 375 px, la mécanique coûtait 2152 px de hauteur pour trois
+  cartes qui en font 350 : le panneau épinglé réserve un écran entier plus la
+  course d'arrivée de chaque carte, soit près de 1700 px de noir vide qu'il faut
+  traverser au doigt. La section pesait à elle seule un quart de la page.
+
+  S'y ajoutait Lenis, instancié ici mais branché sur `window` : il remplaçait le
+  défilement natif de TOUTE la page par un défilement interpolé, y compris au
+  doigt (`syncTouch`). Sur téléphone c'est un net recul — le pouce pousse, la
+  page suit avec un temps de retard, et l'inertie du système ne s'applique plus.
+
+  En dessous de 768 px, les cartes sont donc empilées normalement, dans le flux,
+  et le défilement reste celui du navigateur.
+*/
+const SEUIL_EMPILEMENT = "(min-width: 768px)";
+
+/** `true` si l'écran est assez large pour l'empilement épinglé. */
+function useEmpilement(): boolean {
+  // Ce composant est monté avec `ssr: false` : `window` existe toujours ici.
+  const [actif, setActif] = useState(
+    () => typeof window !== "undefined" && window.matchMedia(SEUIL_EMPILEMENT).matches,
+  );
+
+  useEffect(() => {
+    const mq = window.matchMedia(SEUIL_EMPILEMENT);
+    const suivre = () => setActif(mq.matches);
+    suivre();
+    mq.addEventListener("change", suivre);
+    return () => mq.removeEventListener("change", suivre);
+  }, []);
+
+  return actif;
+}
 
 export default function ActivitesStack({ children }: { children?: React.ReactNode }) {
   const photoTerrain = usePhoto("terrain-vide");
@@ -83,10 +119,22 @@ export default function ActivitesStack({ children }: { children?: React.ReactNod
   const areaRef = useRef<HTMLDivElement>(null);
   const cardRefs = useRef<(HTMLDivElement | null)[]>([]);
 
+  const empile = useEmpilement();
+  const nbCartes = cards.length;
+
   useEffect(() => {
+    if (!empile) return;
     const wrapper = wrapperRef.current;
     const area = areaRef.current;
     if (!wrapper || !area) return;
+
+    /*
+      Le tableau de références est capturé ICI, pas dans le nettoyage. React
+      remplace `cardRefs.current` à chaque rendu : le nettoyage, qui s'exécute
+      plus tard, y trouverait un autre tableau que celui dont il doit défaire
+      les transformations.
+    */
+    const cartes = cardRefs.current;
 
     let travel = 0;
 
@@ -107,7 +155,7 @@ export default function ActivitesStack({ children }: { children?: React.ReactNod
       // distance qu'une carte parcourt du bas de l'écran à sa position posée
       travel = Math.max(vh - areaTop - 40, 200);
       // hauteur totale = 1 écran + l'arrivée des cartes 2 et 3 + temps de pause
-      wrapper.style.height = `${vh + (cards.length - 1) * travel + DWELL}px`;
+      wrapper.style.height = `${vh + (nbCartes - 1) * travel + DWELL}px`;
     };
 
     const update = () => {
@@ -115,7 +163,7 @@ export default function ActivitesStack({ children }: { children?: React.ReactNod
       const range = wrapper.offsetHeight - vh;
       const y = Math.min(Math.max(window.scrollY - cumOffsetTop(wrapper), 0), range);
 
-      cardRefs.current.forEach((card, i) => {
+      cartes.forEach((card, i) => {
         if (!card) return;
         const rest = i * ITEM_STACK_DISTANCE;
         // progression d'arrivée de la carte i (carte 0 déjà posée)
@@ -123,7 +171,7 @@ export default function ActivitesStack({ children }: { children?: React.ReactNod
         const ty = rest + (1 - p) * travel;
         // les cartes du dessous se réduisent quand les suivantes se posent
         let scale = 1;
-        for (let j = i + 1; j < cards.length; j++) {
+        for (let j = i + 1; j < nbCartes; j++) {
           const pj = Math.min(Math.max((y - (j - 1) * travel) / travel, 0), 1);
           scale -= SCALE_STEP * pj;
         }
@@ -165,13 +213,21 @@ export default function ActivitesStack({ children }: { children?: React.ReactNod
       lenis.destroy();
       window.removeEventListener("resize", onResize);
       wrapper.style.height = "";
+      // En repassant sous 768 px, les cartes doivent retrouver leur place dans
+      // le flux : la dernière transformation posée les laisserait décalées.
+      cartes.forEach((card) => { if (card) card.style.transform = ""; });
     };
-  }, []);
+  }, [empile, nbCartes]);
 
   return (
     <div ref={wrapperRef} className="relative">
-      {/* Panneau épinglé : toute la section se fige pendant l'empilement */}
-      <div className="sticky top-0 h-screen overflow-hidden flex flex-col justify-start pt-24 md:pt-28">
+      {/*
+        Panneau épinglé à partir de `md:` : la section s'y fige pendant
+        l'empilement. En dessous, c'est un bloc ordinaire — mais `overflow-hidden`
+        reste dans tous les cas, sinon les ronds décoratifs débordant à droite
+        (`-right-48`) feraient défiler la page à l'horizontale sur téléphone.
+      */}
+      <div className="relative overflow-hidden flex flex-col justify-start py-14 md:sticky md:top-0 md:h-screen md:py-0 md:pt-28">
         {/* Décor graphique de fond (rond central, points, halos) */}
         <div aria-hidden className="pointer-events-none absolute inset-0">
           <div className="absolute -right-48 top-16 w-[30rem] h-[30rem] rounded-full border-2 border-field/15" />
@@ -182,31 +238,37 @@ export default function ActivitesStack({ children }: { children?: React.ReactNod
           <div className="absolute -left-16 -top-16 w-56 h-56 rounded-full border-2 border-dashed border-field/20" />
         </div>
         {children}
-        <div ref={areaRef} className="relative mx-auto w-full max-w-6xl px-4 lg:px-8 mt-4">
+        <div
+          ref={areaRef}
+          className="relative mx-auto flex w-full max-w-6xl flex-col gap-4 px-4 mt-8 md:mt-4 md:block md:gap-0 lg:px-8"
+        >
           {cards.map((card, i) => (
             <div
               key={card.href}
               ref={(el) => { cardRefs.current[i] = el; }}
-              className={`scroll-stack-card ${i > 0 ? "inset-x-4 lg:inset-x-8" : ""} ${card.itemClassName}`}
+              className={`scroll-stack-card ${empile && i > 0 ? "inset-x-4 lg:inset-x-8" : ""} ${card.itemClassName}`}
               style={{
                 transformOrigin: "top center",
-                willChange: "transform",
+                // `will-change: transform` réserve une couche de composition. Sur
+                // téléphone plus rien ne bouge : la réserver coûterait de la
+                // mémoire graphique pour une animation qui n'a pas lieu.
+                willChange: empile ? "transform" : undefined,
                 zIndex: i + 1,
                 // inline pour battre le position:relative de .scroll-stack-card
-                position: i > 0 ? "absolute" : undefined,
-                top: i > 0 ? 0 : undefined,
+                position: empile && i > 0 ? "absolute" : undefined,
+                top: empile && i > 0 ? 0 : undefined,
                 // hors écran avant la 1re mesure pour éviter tout flash au chargement
-                transform: i > 0 ? "translate3d(0, 120vh, 0)" : undefined,
+                transform: empile && i > 0 ? "translate3d(0, 120vh, 0)" : undefined,
               }}
             >
               <div className="flex h-full items-stretch gap-4 md:gap-8">
-                <div className="flex h-full flex-1 flex-col justify-between min-w-0">
-                  <div className="flex items-start gap-4 md:gap-6">
-                    <div className={`flex h-12 w-12 md:h-16 md:w-16 shrink-0 items-center justify-center rounded-xl md:rounded-2xl ${card.badgeClass}`}>
+                <div className="flex h-full flex-1 flex-col justify-between gap-5 min-w-0">
+                  <div className="flex items-start gap-3.5 md:gap-6">
+                    <div className={`flex h-11 w-11 md:h-16 md:w-16 shrink-0 items-center justify-center rounded-xl md:rounded-2xl ${card.badgeClass}`}>
                       <card.icon className="size-6 md:size-8" />
                     </div>
-                    <div>
-                      <h2 className="text-xl sm:text-2xl md:text-3xl font-bold font-[family-name:var(--font-heading)]">
+                    <div className="min-w-0">
+                      <h2 className="text-xl sm:text-2xl md:text-3xl font-bold font-[family-name:var(--font-heading)] text-balance">
                         {card.title}
                       </h2>
                       <p className="mt-2 md:mt-3 text-sm sm:text-base md:text-lg opacity-90 leading-relaxed max-w-xl">
@@ -216,7 +278,7 @@ export default function ActivitesStack({ children }: { children?: React.ReactNod
                   </div>
                   <Link
                     href={card.href}
-                    className={`inline-flex items-center gap-2 font-semibold text-base md:text-lg ${card.ctaClass} hover:gap-4 transition-all duration-300 self-start`}
+                    className={`inline-flex min-h-11 items-center gap-2 font-semibold text-base md:text-lg ${card.ctaClass} hover:gap-4 transition-all duration-300 self-start`}
                   >
                     Réserver <FlecheDroite className="size-5" />
                   </Link>

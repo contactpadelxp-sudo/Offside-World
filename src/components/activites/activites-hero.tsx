@@ -75,7 +75,16 @@ export function ActivitesHero({ activites }: { activites: ActiviteVue[] }) {
                 <a.icone className="size-5" />
               </span>
               <span className="min-w-0 flex-1">
-                <span className="block truncate text-[15px] font-semibold leading-tight">
+                {/*
+                  DEUX LIGNES PLUTÔT QU'UNE COUPURE. Le titre était `truncate` :
+                  à 320 px, « Bubble Foot & Team Building » perdait 19 px et
+                  s'affichait « Bubble Foot & Team Buil… ». C'est précisément
+                  l'activité que le hero ne nomme nulle part ailleurs — la
+                  tronquer, c'est la faire disparaître. `line-clamp-2` laisse le
+                  titre se replier sur une deuxième ligne quand il le faut, et
+                  garde la garantie que rien ne s'emballe au-delà.
+                */}
+                <span className="block line-clamp-2 text-[15px] font-semibold leading-tight">
                   {a.titre}
                 </span>
                 <span className={`block text-xs font-medium ${a.accentText}`}>{a.tag}</span>
@@ -98,7 +107,7 @@ export function ActivitesHero({ activites }: { activites: ActiviteVue[] }) {
               <Ballon className="size-5" />
             </span>
             <span className="min-w-0 flex-1">
-              <span className="block truncate text-[15px] font-semibold leading-tight text-foreground/85">
+              <span className="block line-clamp-2 text-[15px] font-semibold leading-tight text-foreground/85">
                 {BOUNCE_PARK.titre}
               </span>
               <span className="block text-xs font-medium text-muted-foreground">

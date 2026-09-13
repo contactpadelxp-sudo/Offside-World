@@ -7,6 +7,7 @@ import {
   enregistrerNoteReservation,
 } from "@/lib/actions/admin";
 import type { ChoixRemboursement, ReservationAdmin, StatutReservation } from "@/lib/vues";
+import { montantLisible } from "@/lib/tarification";
 import {
   BOUTON_DANGER,
   BOUTON_NEUTRE,
@@ -49,12 +50,14 @@ const STATUTS: Record<StatutReservation, { label: string; classe: string }> = {
   expiree: { label: "Expirée", classe: "bg-white/5 text-muted-foreground" },
 };
 
-/** Montant en centimes vers « 180 € » / « 87,50 € ». */
-function euros(cents: number): string {
-  const u = Math.floor(cents / 100);
-  const c = cents % 100;
-  return `${c === 0 ? u : `${u},${String(c).padStart(2, "0")}`} €`;
-}
+/*
+  Le formatage des montants vient de `lib/tarification.ts`, comme partout
+  ailleurs. Cette fiche portait sa propre copie de la fonction — même règle,
+  même résultat, mais rien ne garantissait qu'elles le restent, et c'est
+  exactement ce qui s'est produit : le total en haut de la fiche ne passait par
+  aucune des deux et s'affichait « 245.5€ », avec un point décimal anglais et
+  le symbole collé, à côté de montants écrits « 245,50 € » deux lignes plus bas.
+*/
 
 /**
  * Les trois manières d'annuler une réservation payée.
@@ -69,8 +72,8 @@ const CHOIX_REMBOURSEMENT: {
   valeur: ChoixRemboursement;
   libelle: (paye: number, bareme: number) => string;
 }[] = [
-  { valeur: "bareme", libelle: (_p, b) => `Barème d'annulation (${euros(b)})` },
-  { valeur: "integral", libelle: (p) => `Remboursement intégral (${euros(p)})` },
+  { valeur: "bareme", libelle: (_p, b) => `Barème d'annulation (${montantLisible(b)})` },
+  { valeur: "integral", libelle: (p) => `Remboursement intégral (${montantLisible(p)})` },
   { valeur: "aucun", libelle: () => "Aucun remboursement" },
 ];
 
@@ -142,7 +145,7 @@ export function FicheReservation({ r }: { r: ReservationAdmin }) {
           Même correction que sur la fiche de devis.
         */}
         <div className="flex flex-wrap items-baseline gap-x-2 sm:block sm:text-right">
-          <p className="text-lg font-bold text-field">{r.total}€</p>
+          <p className="text-lg font-bold text-field">{montantLisible(Math.round(r.total * 100))}</p>
           <p className="text-sm font-medium">{r.jourLabel}</p>
           <p className="text-sm text-muted-foreground">
             {r.debut} – {r.fin}
@@ -169,10 +172,29 @@ export function FicheReservation({ r }: { r: ReservationAdmin }) {
           )}
         </div>
 
-        {(r.allergies || r.remarques) && (
+        {/*
+          DEUX CHAMPS, DEUX BLOCS. Les allergies et les remarques étaient
+          recollées en une seule phrase, sous le triangle d'alerte et en orange :
+          « Allergie aux arachides — Merci de prévoir une table pour le gâteau »
+          se lisait comme un seul avertissement sanitaire. Le client les a saisies
+          dans deux champs distincts parce qu'elles ne pèsent pas pareil : l'une
+          peut envoyer un enfant à l'hôpital, l'autre demande une table. Signaler
+          les deux au même niveau finit par n'en signaler aucune.
+        */}
+        {r.allergies && (
           <p className="mt-2 flex items-start gap-1.5 text-sm font-medium text-kick">
             <AlerteTriangle className="mt-0.5 size-4 shrink-0" />
-            {[r.allergies, r.remarques].filter(Boolean).join(" — ")}
+            <span>
+              <span className="sr-only">Allergies : </span>
+              {r.allergies}
+            </span>
+          </p>
+        )}
+
+        {r.remarques && (
+          <p className="mt-2 text-sm">
+            <span className="text-muted-foreground">Remarques : </span>
+            {r.remarques}
           </p>
         )}
 

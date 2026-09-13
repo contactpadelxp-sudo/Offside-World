@@ -263,8 +263,16 @@ export function Accueil({ formules }: { formules: FormuleVue[] }) {
                   <div className="h-full flex flex-col rounded-3xl border border-white/10 bg-white/[0.04] p-7 hover:border-field/40 transition-colors duration-500">
                     <div className="flex items-baseline justify-between gap-3">
                       <h3 className="font-[family-name:var(--font-heading)] text-2xl font-bold">{f.nom}</h3>
+                      {/*
+                        Espace insécable avant le « € » : c'est la typographie
+                        française, et c'est surtout ce qu'affichent déjà le hero
+                        (« Dès 180 € ») et tout le tunnel de réservation, qui
+                        passent par `montantLisible()`. Ici le prix était collé
+                        au signe — deux écritures du même montant sur la même
+                        page.
+                      */}
                       <p className="font-[family-name:var(--font-heading)] text-3xl font-bold text-field whitespace-nowrap">
-                        {f.prixBase}€
+                        {f.prixBase}&nbsp;€
                       </p>
                     </div>
                     <p className="mt-1 text-sm font-medium text-kick">{f.accroche}</p>
@@ -272,7 +280,7 @@ export function Accueil({ formules }: { formules: FormuleVue[] }) {
 
                     <p className="mt-4 text-sm text-muted-foreground">
                       Jusqu&apos;à <strong className="text-foreground">{f.enfantsInclus} enfants</strong>
-                      {" · "}+{f.prixEnfantSup}€ par enfant supplémentaire
+                      {" · "}+{f.prixEnfantSup}&nbsp;€ par enfant supplémentaire
                     </p>
 
                     <ul className="mt-5 space-y-2 flex-1">
@@ -288,12 +296,21 @@ export function Accueil({ formules }: { formules: FormuleVue[] }) {
                       <Gateau className="size-3.5 mt-0.5 shrink-0 text-kick" /> {GATEAU_NOTE}
                     </p>
 
-                    <MagneticButton className="inline-block mt-6">
+                    {/*
+                      Sur téléphone, le bouton portait « Réserver la formule
+                      Kick-Off » sur deux lignes alignées à gauche, la flèche
+                      restant seule au milieu de la hauteur, très à droite : le
+                      libellé et son signe ne se lisaient plus ensemble. Il
+                      occupe désormais toute la largeur de la carte, centré, et
+                      sa hauteur s'adapte au repli du texte (`min-h` et non `h`,
+                      sinon la deuxième ligne déborde du fond).
+                    */}
+                    <MagneticButton className="mt-6 block sm:inline-block">
                       <Link
                         href={hrefActivite("anniversaire")}
-                        className="btn-glass-field inline-flex items-center gap-2 text-[#0a0a0b] px-6 h-12 rounded-2xl font-semibold"
+                        className="btn-glass-field flex w-full items-center justify-center gap-2 text-center text-[#0a0a0b] px-5 py-3 min-h-12 rounded-2xl font-semibold text-sm sm:w-auto sm:px-6 sm:text-base"
                       >
-                        Réserver la formule {f.nom} <FlecheDroite className="size-4" />
+                        Réserver la formule {f.nom} <FlecheDroite className="size-4 shrink-0" />
                       </Link>
                     </MagneticButton>
                   </div>
@@ -427,13 +444,30 @@ export function Accueil({ formules }: { formules: FormuleVue[] }) {
             { icon: Enfant, title: "Dès 6 ans", subtitle: "Encadrement adapté", color: "bg-white/[0.04] text-kick border-white/10" },
             { icon: Carte, title: "Réservation flexible", subtitle: `Jusqu’à ${DELAI_RESERVATION_HEURES}h avant`, color: "bg-white/[0.04] text-field border-white/10" },
           ].map((item) => (
-            <StaggerItem key={item.title}>
-              <div className={`text-center p-6 rounded-2xl border ${item.color} group hover:shadow-lg transition-all duration-500`}>
-                <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-white/10 shadow-sm group-hover:scale-110 transition-transform duration-500">
-                  <item.icon className="size-7" />
+            /*
+              `h-full` sur les deux niveaux : sans lui, chaque carte se calait
+              sur son propre texte. « Facile d'accès » tient sur une ligne,
+              « Réservation flexible » sur deux — les quatre encadrés d'une même
+              rangée finissaient à des hauteurs différentes, avec un décrochage
+              de 90 px mesuré sur téléphone, où la grille est en 2 × 2.
+            */
+            <StaggerItem key={item.title} className="h-full">
+              {/*
+                Rembourrage et corps réduits sous `sm:`. En 2 × 2 sur un écran
+                de 320 px, chaque encadré n'offrait que 86 px de texte utile
+                entre ses marges intérieures de 24 px : « Réservation », un seul
+                mot de 18 px en gras, en réclame 115 et débordait. On rend 16 px
+                de rembourrage, on descend le titre à 16 px, et on autorise la
+                césure — la page est en français (`lang="fr"`), le navigateur
+                sait donc couper « Réser-vation » au bon endroit plutôt que de
+                laisser le mot sortir de son cadre.
+              */}
+              <div className={`h-full text-center p-4 sm:p-6 rounded-2xl border ${item.color} group hover:shadow-lg transition-all duration-500`}>
+                <div className="mx-auto flex h-12 w-12 sm:h-14 sm:w-14 items-center justify-center rounded-2xl bg-white/10 shadow-sm group-hover:scale-110 transition-transform duration-500">
+                  <item.icon className="size-6 sm:size-7" />
                 </div>
-                <p className="mt-4 text-lg font-bold font-[family-name:var(--font-heading)]">{item.title}</p>
-                <p className="text-sm text-muted-foreground mt-1">{item.subtitle}</p>
+                <p className="mt-3 sm:mt-4 text-base sm:text-lg font-bold font-[family-name:var(--font-heading)] hyphens-auto text-balance">{item.title}</p>
+                <p className="text-sm text-muted-foreground mt-1 hyphens-auto text-balance">{item.subtitle}</p>
               </div>
             </StaggerItem>
           ))}
