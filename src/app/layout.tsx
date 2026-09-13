@@ -41,6 +41,16 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   themeColor: "#0a0a0b",
   colorScheme: "dark",
+  /*
+    `viewportFit: "cover"` étend la page sous l'encoche et sous l'indicateur
+    d'accueil des iPhone — et, surtout, c'est la CONDITION pour que les
+    variables `env(safe-area-inset-*)` reçoivent une valeur. Sans elle, elles
+    valent zéro en silence, et le bandeau cookies posait ses boutons sur la
+    barre noire du bas, là où le doigt vise mal et où le geste de retour à
+    l'accueil passe. Les éléments qui touchent les bords compensent eux-mêmes
+    avec ces variables ; `grep -rn "safe-area" src/` les retrouve.
+  */
+  viewportFit: "cover",
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {

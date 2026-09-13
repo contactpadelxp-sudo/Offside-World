@@ -4,6 +4,7 @@ import { Footer } from "@/components/footer";
 import { CookieBannerWrapper } from "@/components/cookie-banner";
 import { MesurePages } from "@/components/mesure-pages";
 import { PhotosProvider } from "@/components/photos-provider";
+import { ReglagesMouvement } from "@/components/motion";
 import { resolveLogoSrc } from "@/lib/logo";
 import { resolvePhotos } from "@/lib/photos";
 import { NOM_COMMERCIAL } from "@/data/entreprise";
@@ -50,11 +51,19 @@ export default function SiteLayout({ children }: Readonly<{ children: React.Reac
 
   return (
     <PhotosProvider value={photos}>
-      <Header logoSrc={logoSrc} />
-      <main className="flex-1">{children}</main>
-      <Footer logoSrc={logoSrc} />
-      <CookieBannerWrapper />
-      <MesurePages />
+      {/*
+        `ReglagesMouvement` enveloppe TOUT le site public : les apparitions au
+        défilement, les compteurs, les cartes inclinables et les boutons
+        magnétiques vivent dans les pages, pas ici, et framer-motion ne consulte
+        pas la préférence système sans qu'on le lui dise.
+      */}
+      <ReglagesMouvement>
+        <Header logoSrc={logoSrc} />
+        <main className="flex-1">{children}</main>
+        <Footer logoSrc={logoSrc} />
+        <CookieBannerWrapper />
+        <MesurePages />
+      </ReglagesMouvement>
     </PhotosProvider>
   );
 }

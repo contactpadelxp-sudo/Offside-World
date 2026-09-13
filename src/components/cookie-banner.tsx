@@ -120,7 +120,20 @@ export function CookieBanner() {
           exit={{ y: 100, opacity: 0 }}
           transition={{ type: "spring", damping: 25, stiffness: 200 }}
           ref={bandeau}
-          className="fixed inset-x-0 bottom-0 z-50 p-2.5 sm:p-4"
+          /*
+            `pb-[calc(...)]` : sur un iPhone à indicateur d'accueil — la barre
+            noire du bas depuis l'iPhone X — les 34 px du bas de l'écran ne sont
+            pas utilisables. Un bandeau collé à `bottom-0` y place ses boutons
+            « Tout accepter » et « Tout refuser », que le doigt atteint mal et
+            que le geste de retour à l'accueil intercepte.
+
+            `env(safe-area-inset-bottom)` donne cette hauteur, et vaut 0 partout
+            ailleurs — donc aucune conséquence sur les autres appareils. Il
+            fallait pour cela que le document déclare `viewportFit: "cover"`,
+            ajouté dans src/app/layout.tsx : sans lui, iOS ne remplit jamais
+            cette variable et elle reste à zéro en silence.
+          */
+          className="fixed inset-x-0 bottom-0 z-50 p-2.5 pb-[calc(0.625rem+env(safe-area-inset-bottom))] sm:p-4 sm:pb-[calc(1rem+env(safe-area-inset-bottom))]"
         >
           {/*
             COMPACT SUR TÉLÉPHONE, ET CE N'EST PAS UNE QUESTION DE GOÛT.

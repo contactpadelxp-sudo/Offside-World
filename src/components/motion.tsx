@@ -1,8 +1,27 @@
 "use client";
 
-import { motion, useMotionValue, useSpring, useTransform, useInView } from "framer-motion";
+import { MotionConfig, motion, useMotionValue, useSpring, useTransform, useInView } from "framer-motion";
 import type { HTMLMotionProps } from "framer-motion";
 import { useRef, useEffect, useState, type ReactNode, type MouseEvent } from "react";
+
+/* ═══ RÉGLAGES DE MOUVEMENT ═══ */
+
+/**
+ * Enveloppe le site public et transmet à framer-motion la préférence système
+ * « réduire les animations ».
+ *
+ * `reducedMotion="user"` est le réglage recommandé par framer-motion : quand la
+ * préférence est active, il neutralise les animations de POSITION et d'ÉCHELLE
+ * — celles qui donnent le tournis — et laisse passer les fondus d'opacité, qui
+ * ne bougent rien à l'écran. Les apparitions au défilement restent donc
+ * perceptibles sans déplacer quoi que ce soit.
+ *
+ * Sans cette enveloppe, la préférence n'avait AUCUN effet sur les composants de
+ * ce fichier : framer-motion ne la consulte pas de lui-même.
+ */
+export function ReglagesMouvement({ children }: { children: ReactNode }) {
+  return <MotionConfig reducedMotion="user">{children}</MotionConfig>;
+}
 
 /* ═══ FADE IN ═══ */
 export function FadeIn({

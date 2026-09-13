@@ -210,7 +210,7 @@ export default function MagicRings({
     mount.addEventListener("mouseleave", onMouseLeave);
     mount.addEventListener("click", onClick);
 
-    let frameId: number;
+    let frameId = 0;
     const animate = (t: number) => {
       frameId = requestAnimationFrame(animate);
       const p = propsRef.current!;
@@ -249,7 +249,26 @@ export default function MagicRings({
 
       renderer.render(scene, camera);
     };
-    frameId = requestAnimationFrame(animate);
+
+    /*
+      MOUVEMENT RÉDUIT : ON REND UNE IMAGE, ET ON S'ARRÊTE.
+
+      Ce fond est la première chose que voit un visiteur : des anneaux qui
+      pulsent en continu derrière le titre, soixante fois par seconde, sans
+      jamais s'interrompre. C'est précisément ce que le réglage « réduire les
+      animations » d'iOS et d'Android demande de supprimer.
+
+      On ne masque pas le fond pour autant — le hero perdrait son décor et son
+      contraste. On dessine UNE image fixe, à t = 0, et on ne relance pas la
+      boucle. Bénéfice secondaire : plus de GPU sollicité en permanence sur un
+      téléphone, donc moins de batterie.
+    */
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      animate(0);
+      cancelAnimationFrame(frameId);
+    } else {
+      frameId = requestAnimationFrame(animate);
+    }
 
     return () => {
       cancelAnimationFrame(frameId);

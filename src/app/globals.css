@@ -542,3 +542,59 @@
   padding-block: 0.25rem;
 }
 
+
+/* ══════════════════════════════════════════
+   MOUVEMENT RÉDUIT
+   ══════════════════════════════════════════ */
+
+/*
+   « Réduire les animations » n'est pas une préférence esthétique.
+
+   Pour une partie des gens — troubles vestibulaires, migraines, épilepsie
+   photosensible — une image qui bouge en continu provoque des nausées ou pire.
+   iOS (Réglages > Accessibilité > Mouvement) et Android (Accessibilité >
+   Supprimer les animations) exposent ce réglage, le navigateur le transmet, et
+   le critère 2.3.3 du WCAG demande qu'on l'écoute.
+
+   Ce site est très animé : halos « aurora » du bandeau final, bandeau défilant
+   des activités, dégradé tournant, confettis de la page de confirmation,
+   apparitions au défilement, empilement de cartes piloté au scroll, fond WebGL
+   du hero. RIEN n'était gardé, à une exception : `.shimmer`, dans la base
+   shadcn. Le réglage n'avait donc aucun effet sur ce site.
+
+   Ce bloc arrête tout ce qui tourne en boucle sans interaction. Les autres
+   pièces sont traitées à la source, là où CSS ne peut rien :
+     - framer-motion  → `MotionConfig reducedMotion="user"` dans le layout du
+       site : les apparitions gardent leur fondu mais ne se déplacent plus.
+     - Lenis          → le défilement interpolé est désactivé, on rend la main
+       au défilement natif (activites-stack.tsx).
+     - MagicRings     → sa boucle `requestAnimationFrame` ne démarre pas.
+
+   `animation: none` plutôt qu'une durée nulle : une durée nulle laisse
+   l'élément à la première image de l'animation, ce qui, pour le bandeau
+   défilant, le laisserait décalé.
+*/
+@media (prefers-reduced-motion: reduce) {
+  .aurora-bg::before,
+  .aurora-bg::after,
+  .aurora-orb-3,
+  .marquee-track,
+  .confetti-piece,
+  .animate-pulse {
+    animation: none !important;
+  }
+
+  /* Le bandeau défilant n'a plus de raison de dépasser : on le recentre. */
+  .marquee-track {
+    width: 100%;
+    justify-content: center;
+  }
+
+  /* Les transitions de survol restent, mais instantanées. */
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

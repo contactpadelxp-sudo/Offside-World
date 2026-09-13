@@ -160,9 +160,21 @@ export function FicheReservation({ r }: { r: ReservationAdmin }) {
             <Telephone className="size-3.5 text-muted-foreground" />
             {r.clientTelephone}
           </a>
-          <a href={`mailto:${r.clientEmail}`} className="inline-flex min-h-8 items-center gap-1.5 py-0.5 hover:text-field">
-            <Enveloppe className="size-3.5 text-muted-foreground" />
-            {r.clientEmail}
+          {/*
+            L'ADRESSE EST ENVELOPPÉE, ET C'EST NÉCESSAIRE.
+
+            `overflow-wrap: break-word`, posé sur le corps du document, ne
+            traverse pas un conteneur `inline-flex` : le texte nu y devient un
+            élément flex anonyme dont la largeur minimale vaut son contenu, et
+            une adresse de 40 caractères refuse alors de se couper. Mesuré à
+            280 px — l'écran de couverture d'un Galaxy Fold —, elle sortait de
+            26 px et emportait la page entière avec elle. Le `<span>` lui rend
+            le droit de se replier ; `break-all` autorise la coupure ailleurs
+            qu'aux tirets, seul moyen de découper une adresse e-mail.
+          */}
+          <a href={`mailto:${r.clientEmail}`} className="inline-flex min-h-8 min-w-0 items-center gap-1.5 py-0.5 hover:text-field">
+            <Enveloppe className="size-3.5 shrink-0 text-muted-foreground" />
+            <span className="min-w-0 break-all">{r.clientEmail}</span>
           </a>
           {r.options.length > 0 && (
             <span>

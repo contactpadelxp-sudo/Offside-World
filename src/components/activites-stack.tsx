@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useReducedMotion } from "framer-motion";
 import Link from "next/link";
 import Lenis from "lenis";
 import { FlecheDroite, Gateau, Groupe, Trophee } from "@/components/icons";
@@ -29,8 +30,9 @@ const SCALE_STEP = 0.05;        // réduction des cartes du dessous à chaque po
 const DWELL = 260;              // scroll (px) pendant lequel l'empilement complet reste affiché
 
 /*
-  L'EMPILEMENT NE S'ACTIVE QU'À PARTIR DE `md:` (768 px), ET C'EST MESURÉ.
+  L'EMPILEMENT DEMANDE DE LA LARGEUR **ET** DE LA HAUTEUR. LES DEUX SONT MESURÉES.
 
+  ── La largeur : 768 px ──
   Sur un écran de 375 px, la mécanique coûtait 2152 px de hauteur pour trois
   cartes qui en font 350 : le panneau épinglé réserve un écran entier plus la
   course d'arrivée de chaque carte, soit près de 1700 px de noir vide qu'il faut
@@ -41,12 +43,33 @@ const DWELL = 260;              // scroll (px) pendant lequel l'empilement compl
   doigt (`syncTouch`). Sur téléphone c'est un net recul — le pouce pousse, la
   page suit avec un temps de retard, et l'inertie du système ne s'applique plus.
 
-  En dessous de 768 px, les cartes sont donc empilées normalement, dans le flux,
-  et le défilement reste celui du navigateur.
-*/
-const SEUIL_EMPILEMENT = "(min-width: 768px)";
+  ── La hauteur : 700 px ──
+  Ce panneau est `h-screen overflow-hidden`. Quand la fenêtre est BASSE, il ne
+  déborde pas : il COUPE. Et comme il est épinglé, défiler ne fait pas
+  descendre ce qui est coupé — ça fait avancer l'animation. Le contenu perdu
+  est donc perdu pour de bon.
 
-/** `true` si l'écran est assez large pour l'empilement épinglé. */
+  Mesuré au navigateur : le contenu tient à partir de 660 px de haut, et pas en
+  dessous — 640 px en perd 12, 600 px en perd 52, 560 px en perd 92. Le seuil
+  est identique à 768, 1024 et 1280 px de large : c'est bien la hauteur seule
+  qui décide. On prend 700 px pour garder de la marge si le titre se replie
+  autrement.
+
+  Ce que ça change concrètement : un téléphone tenu à l'horizontale fait 375 à
+  430 px de haut pour 667 à 932 px de large. Il passait donc la condition de
+  largeur, et la section « Nos activités » s'y résumait à son titre et au liseré
+  supérieur d'une carte — les trois activités, leurs descriptions et leurs
+  boutons « Réserver » étaient invisibles et inatteignables. Idem pour toute
+  fenêtre de bureau réduite en hauteur.
+
+  ── Une seule source de vérité ──
+  Les classes `md:sticky md:h-screen` ont disparu du JSX au profit de cette
+  condition : une media query CSS ne peut pas exprimer la même règle sans la
+  recopier, et deux copies d'un seuil finissent toujours par diverger.
+*/
+const SEUIL_EMPILEMENT = "(min-width: 768px) and (min-height: 700px)";
+
+/** `true` si l'écran a la place — en largeur et en hauteur — pour l'empilement épinglé. */
 function useEmpilement(): boolean {
   // Ce composant est monté avec `ssr: false` : `window` existe toujours ici.
   const [actif, setActif] = useState(
@@ -121,6 +144,16 @@ export default function ActivitesStack({ children }: { children?: React.ReactNod
 
   const empile = useEmpilement();
   const nbCartes = cards.length;
+  /*
+    Lenis remplace le défilement natif de TOUTE la page par un défilement
+    interpolé : la page continue de glisser après que le doigt ou la molette
+    se sont arrêtés. C'est exactement le genre de mouvement que le réglage
+    « réduire les animations » demande de supprimer — et c'est aussi celui qui
+    désoriente le plus, puisqu'il détourne un geste que l'utilisateur croit
+    contrôler. On rend alors la main au navigateur ; l'empilement, lui, continue
+    de fonctionner, simplement piloté par le défilement natif.
+  */
+  const moinsDeMouvement = useReducedMotion();
 
   useEffect(() => {
     if (!empile) return;
@@ -182,7 +215,7 @@ export default function ActivitesStack({ children }: { children?: React.ReactNod
     layout();
     update();
 
-    const lenis = new Lenis({
+    const lenis = moinsDeMouvement ? null : new Lenis({
       duration: 1.2,
       easing: (t: number) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
       smoothWheel: true,
@@ -193,14 +226,17 @@ export default function ActivitesStack({ children }: { children?: React.ReactNod
       syncTouch: true,
       syncTouchLerp: 0.075,
     });
-    lenis.on("scroll", update);
+    if (lenis) lenis.on("scroll", update);
+    else window.addEventListener("scroll", update, { passive: true });
 
     let rafId = 0;
-    const raf = (time: number) => {
-      lenis.raf(time);
+    if (lenis) {
+      const raf = (time: number) => {
+        lenis.raf(time);
+        rafId = requestAnimationFrame(raf);
+      };
       rafId = requestAnimationFrame(raf);
-    };
-    rafId = requestAnimationFrame(raf);
+    }
 
     const onResize = () => {
       layout();
@@ -210,24 +246,32 @@ export default function ActivitesStack({ children }: { children?: React.ReactNod
 
     return () => {
       cancelAnimationFrame(rafId);
-      lenis.destroy();
+      if (lenis) lenis.destroy();
+      else window.removeEventListener("scroll", update);
       window.removeEventListener("resize", onResize);
       wrapper.style.height = "";
       // En repassant sous 768 px, les cartes doivent retrouver leur place dans
       // le flux : la dernière transformation posée les laisserait décalées.
       cartes.forEach((card) => { if (card) card.style.transform = ""; });
     };
-  }, [empile, nbCartes]);
+  }, [empile, nbCartes, moinsDeMouvement]);
 
   return (
     <div ref={wrapperRef} className="relative">
       {/*
-        Panneau épinglé à partir de `md:` : la section s'y fige pendant
-        l'empilement. En dessous, c'est un bloc ordinaire — mais `overflow-hidden`
-        reste dans tous les cas, sinon les ronds décoratifs débordant à droite
-        (`-right-48`) feraient défiler la page à l'horizontale sur téléphone.
+        Le panneau ne s'épingle QUE si `empile` le permet — pas sur un simple
+        `md:`. Voir `SEUIL_EMPILEMENT` : épingler sans avoir la hauteur revient
+        à couper le contenu sans aucun moyen d'y accéder.
+
+        `overflow-hidden` reste dans les deux cas : sans lui, les ronds
+        décoratifs qui débordent à droite (`-right-48`) feraient défiler la page
+        à l'horizontale.
       */}
-      <div className="relative overflow-hidden flex flex-col justify-start py-14 md:sticky md:top-0 md:h-screen md:py-0 md:pt-28">
+      <div
+        className={`relative overflow-hidden flex flex-col justify-start ${
+          empile ? "sticky top-0 h-screen pt-28" : "py-14"
+        }`}
+      >
         {/* Décor graphique de fond (rond central, points, halos) */}
         <div aria-hidden className="pointer-events-none absolute inset-0">
           <div className="absolute -right-48 top-16 w-[30rem] h-[30rem] rounded-full border-2 border-field/15" />
@@ -240,7 +284,9 @@ export default function ActivitesStack({ children }: { children?: React.ReactNod
         {children}
         <div
           ref={areaRef}
-          className="relative mx-auto flex w-full max-w-6xl flex-col gap-4 px-4 mt-8 md:mt-4 md:block md:gap-0 lg:px-8"
+          className={`relative mx-auto w-full max-w-6xl px-4 lg:px-8 ${
+            empile ? "mt-4 block" : "mt-8 flex flex-col gap-4"
+          }`}
         >
           {cards.map((card, i) => (
             <div
