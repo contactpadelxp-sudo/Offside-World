@@ -99,6 +99,23 @@
   }
   body {
     @apply bg-background text-foreground;
+    /*
+      UN MOT NE SORT JAMAIS DE SON CADRE.
+
+      Par défaut, un mot plus long que son conteneur déborde au lieu de se
+      couper — le navigateur préfère un débordement à une césure. Sur un site
+      français lu sur un téléphone, ça arrive vite : « Anniversaires »,
+      « Réservation », « Conditions », « confidentialité ». C'était sans
+      conséquence tant que le texte gardait sa taille, et ça ne l'était plus dès
+      qu'on l'agrandissait : avec la police doublée — ce que propose le réglage
+      « taille du texte » d'Android et ce qu'exige le critère 1.4.4 du WCAG —
+      une dizaine de textes sortaient de leur carte sur la page d'accueil, dont
+      le titre « Anniversaires » de 144 px.
+
+      `break-word` ne coupe QUE lorsque le mot ne tient pas autrement : aucun
+      texte qui se replie normalement aujourd'hui ne change d'aspect.
+    */
+    overflow-wrap: break-word;
     /* Place réservée au bandeau cookies, qui est en position fixe : sans elle,
        il recouvre le bas de la page et rend inatteignables les boutons qui s'y
        trouvent. La variable est posée par le bandeau lui-même, qui mesure sa

@@ -11,6 +11,7 @@ import { Photo } from "@/components/photo";
 import { ActivitesHero } from "@/components/activites/activites-hero";
 import { useActivites } from "@/components/activites/use-activites";
 import { hrefActivite } from "@/data/activites";
+import { euros } from "@/lib/tarification";
 import { Ballon, Batiment, Bouclier, Carte, Coche, Document, Enfant, Epingle, FlecheDroite, Gateau, Groupe, Horloge } from "@/components/icons";
 import { GATEAU_NOTE } from "@/data/formules";
 import type { FormuleVue } from "@/lib/vues";
@@ -118,16 +119,27 @@ export function Accueil({ formules }: { formules: FormuleVue[] }) {
 
           {/* CTAs */}
           <FadeIn delay={1.1}>
+            {/*
+              `min-h-14` et non `h-14`, `px-6` et non `px-8` sur téléphone.
+
+              Une hauteur fixe interdit au libellé de se replier : il déborde à
+              la place. Mesuré avec la police doublée — le réglage « taille du
+              texte » d'Android, et le critère 1.4.4 du WCAG —, il manquait
+              28 px à « Réserver maintenant », qui est le bouton principal du
+              site. Le rembourrage horizontal en rendait 32 à lui seul.
+            */}
             <div className="mt-8 flex flex-col sm:flex-row sm:flex-wrap justify-center gap-4 px-2">
               <Link
                 href="/reservation"
-                className="btn-glass-field inline-flex items-center justify-center gap-2 text-[#0a0a0b] text-lg px-8 h-14 rounded-2xl"
+                className="btn-glass-field inline-flex min-h-14 items-center justify-center gap-2 text-center text-[#0a0a0b] text-lg px-6 py-3 sm:px-8 rounded-2xl"
               >
-                Réserver maintenant
+                {/* Enveloppé : un nœud de texte nu devient un élément flex
+                    anonyme dont la largeur minimale ne cède pas. */}
+                <span className="min-w-0">Réserver maintenant</span>
               </Link>
               <Link
                 href="#activites"
-                className="btn-outline-light inline-flex items-center justify-center gap-2 text-lg px-8 h-14 rounded-2xl"
+                className="btn-outline-light inline-flex min-h-14 items-center justify-center gap-2 text-center text-lg px-6 py-3 sm:px-8 rounded-2xl"
               >
                 Découvrir
               </Link>
@@ -272,7 +284,7 @@ export function Accueil({ formules }: { formules: FormuleVue[] }) {
                         page.
                       */}
                       <p className="font-[family-name:var(--font-heading)] text-3xl font-bold text-field whitespace-nowrap">
-                        {f.prixBase}&nbsp;€
+                        {euros(f.prixBase)}
                       </p>
                     </div>
                     <p className="mt-1 text-sm font-medium text-kick">{f.accroche}</p>
@@ -280,7 +292,7 @@ export function Accueil({ formules }: { formules: FormuleVue[] }) {
 
                     <p className="mt-4 text-sm text-muted-foreground">
                       Jusqu&apos;à <strong className="text-foreground">{f.enfantsInclus} enfants</strong>
-                      {" · "}+{f.prixEnfantSup}&nbsp;€ par enfant supplémentaire
+                      {" · "}+{euros(f.prixEnfantSup)} par enfant supplémentaire
                     </p>
 
                     <ul className="mt-5 space-y-2 flex-1">

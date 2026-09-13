@@ -2,6 +2,7 @@ import { FicheFormule, FicheOption } from "@/components/admin/fiche-tarif";
 import { lireTarifsAdmin } from "@/lib/db/tarifs";
 import { BUBBLE_MIN_PERSONNES, BUBBLE_PRIX_PAR_PERSONNE } from "@/data/bubble-team";
 import { Carte, Info } from "@/components/icons";
+import { euros } from "@/lib/tarification";
 
 export default async function PageTarifs() {
   const { formules, options } = await lireTarifsAdmin();
@@ -64,7 +65,7 @@ export default async function PageTarifs() {
       */}
       <div className="rounded-2xl border border-border bg-card p-5">
         <p className="text-sm">
-          <strong>{BUBBLE_PRIX_PAR_PERSONNE} € par personne</strong>, à partir de{" "}
+          <strong>{euros(BUBBLE_PRIX_PAR_PERSONNE)} par personne</strong>, à partir de{" "}
           {BUBBLE_MIN_PERSONNES} personnes.
         </p>
         <p className="mt-2 text-sm text-muted-foreground">

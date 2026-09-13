@@ -20,6 +20,7 @@ import type { CreneauVue, FormuleVue, OptionVue } from "@/lib/vues";
 import { GATEAU_NOTE, OPTION_IMAGES } from "@/data/formules";
 import { RESUME_ANNULATION, DELAI_RESERVATION_HEURES } from "@/data/reglement";
 import { AlerteCercle, Ballon, Bouclier, Calendrier, ChevronBas, Coche, FlecheDroite, FlecheGauche, Gateau, Groupe, Info } from "@/components/icons";
+import { euros } from "@/lib/tarification";
 
 type Step = "formule" | "details" | "creneau" | "paiement";
 
@@ -265,10 +266,10 @@ export function AnniversaireFlow({
                     {f.accroche && <p className="text-sm text-field font-medium">{f.accroche}</p>}
                     <p className="mt-2 text-sm text-muted-foreground">{f.description}</p>
                     <p className="mt-3 text-3xl font-bold font-[family-name:var(--font-heading)] text-field">
-                      {f.prixBase}€
+                      {euros(f.prixBase)}
                     </p>
                     <p className="text-xs text-muted-foreground">
-                      Jusqu&apos;à {f.enfantsInclus} enfants • +{f.prixEnfantSup}€ par enfant supplémentaire
+                      Jusqu&apos;à {f.enfantsInclus} enfants • +{euros(f.prixEnfantSup)} par enfant supplémentaire
                     </p>
                     <ul className="mt-3 space-y-1">
                       {f.inclus.map((inc) => (
@@ -302,7 +303,7 @@ export function AnniversaireFlow({
           </h2>
           <p className="mt-1 text-muted-foreground">
             Quelques infos sur l&apos;enfant fêté, puis personnalisez avec nos extras.{" "}
-            <a href="/confidentialite" className="underline">Politique de confidentialité</a>
+            <a href="/confidentialite" className="underline py-1">Politique de confidentialité</a>
           </p>
 
           {/* Infos enfant */}
@@ -347,25 +348,25 @@ export function AnniversaireFlow({
                 <span className="text-muted-foreground">
                   Formule {selectedFormule.nom} (jusqu&apos;à {selectedFormule.enfantsInclus} enfants)
                 </span>
-                <span className="font-semibold whitespace-nowrap ml-3">{selectedFormule.prixBase}€</span>
+                <span className="font-semibold whitespace-nowrap ml-3">{euros(selectedFormule.prixBase)}</span>
               </div>
               {extraChildren > 0 && (
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">
-                    {extraChildren} enfant{extraChildren > 1 ? "s" : ""} supplémentaire{extraChildren > 1 ? "s" : ""} × {selectedFormule.prixEnfantSup}€
+                    {extraChildren} enfant{extraChildren > 1 ? "s" : ""} supplémentaire{extraChildren > 1 ? "s" : ""} × {euros(selectedFormule.prixEnfantSup)}
                   </span>
-                  <span className="font-semibold whitespace-nowrap ml-3">+{extraChildren * selectedFormule.prixEnfantSup}€</span>
+                  <span className="font-semibold whitespace-nowrap ml-3">+{euros(extraChildren * selectedFormule.prixEnfantSup)}</span>
                 </div>
               )}
               {optionsTotal > 0 && (
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Options</span>
-                  <span className="font-semibold whitespace-nowrap ml-3">+{optionsTotal}€</span>
+                  <span className="font-semibold whitespace-nowrap ml-3">+{euros(optionsTotal)}</span>
                 </div>
               )}
               <div className="border-t pt-2 flex justify-between text-base">
                 <span className="font-bold">Total TVAC</span>
-                <span className="font-bold text-field">{totalPrice}€</span>
+                <span className="font-bold text-field">{euros(totalPrice)}</span>
               </div>
             </CardContent>
           </Card>
@@ -385,17 +386,36 @@ export function AnniversaireFlow({
                     <Card className={`border-2 transition-all duration-300 ${
                       selectedOptions.includes(opt.id) ? "border-field ring-2 ring-field/20" : "hover:border-field/40 card-hover"
                     }`}>
-                      <CardContent className="flex items-center justify-between p-4">
-                        <div className="flex items-center gap-3">
-                          <div className="relative h-14 w-20 shrink-0 overflow-hidden rounded-xl bg-field/5">
-                            {OPTION_IMAGES[opt.id] && <Photo src={OPTION_IMAGES[opt.id]} alt={opt.libelle} sizes="80px" className="object-cover" />}
-                          </div>
-                          <div>
+                      {/*
+                        LA VIGNETTE N'EXISTE QUE S'IL Y A UNE IMAGE.
+
+                        Le cadre de 80 × 56 était rendu dans tous les cas, et
+                        `OPTION_IMAGES` est une table écrite en dur, indexée par
+                        l'identifiant de l'option : toute option créée depuis le
+                        back-office reçoit un identifiant de base qui n'y figure
+                        pas. Elle s'affichait donc avec un rectangle teinté vide
+                        qui mangeait 92 px — presque un tiers de la largeur d'un
+                        téléphone de 375 px —, et « Photographe professionnel
+                        sur toute la durée » partait sur quatre lignes dans ce
+                        qu'il en restait.
+
+                        `min-w-0` sur la colonne de texte : sans lui, un libellé
+                        d'un seul mot long refuserait de se replier et pousserait
+                        le prix hors de la carte.
+                      */}
+                      <CardContent className="flex items-center justify-between gap-3 p-4">
+                        <div className="flex min-w-0 items-center gap-3">
+                          {OPTION_IMAGES[opt.id] && (
+                            <div className="relative h-14 w-20 shrink-0 overflow-hidden rounded-xl bg-field/5">
+                              <Photo src={OPTION_IMAGES[opt.id]} alt="" sizes="80px" className="object-cover" />
+                            </div>
+                          )}
+                          <div className="min-w-0">
                             <p className="font-semibold">{opt.libelle}</p>
                             {opt.description && <p className="text-sm text-muted-foreground">{opt.description}</p>}
                           </div>
                         </div>
-                        <p className="text-lg font-bold text-field whitespace-nowrap ml-4">+{opt.prix}€</p>
+                        <p className="text-lg font-bold text-field whitespace-nowrap">+{euros(opt.prix)}</p>
                       </CardContent>
                     </Card>
                   </button>
@@ -538,7 +558,7 @@ export function AnniversaireFlow({
               )}
               <div className="border-t pt-4 flex justify-between text-lg">
                 <span className="font-bold">Total TVAC</span>
-                <span className="font-bold text-field">{totalPrice}€</span>
+                <span className="font-bold text-field">{euros(totalPrice)}</span>
               </div>
               <p className="text-xs text-muted-foreground flex items-start gap-1.5">
                 <Gateau className="size-3.5 mt-0.5 shrink-0 text-kick" /> {GATEAU_NOTE}
@@ -557,7 +577,7 @@ export function AnniversaireFlow({
             <h3 className="font-bold">Vos coordonnées</h3>
             <p className="text-xs text-muted-foreground">
               Ces données sont utilisées uniquement pour la gestion de votre réservation.{" "}
-              <a href="/confidentialite" className="underline">Politique de confidentialité</a>
+              <a href="/confidentialite" className="underline py-1">Politique de confidentialité</a>
             </p>
             <div><Label htmlFor="parentName">Nom complet</Label><Input id="parentName" value={parentName} onChange={(e) => setParentName(e.target.value)} maxLength={120} /></div>
             <div>
@@ -577,14 +597,14 @@ export function AnniversaireFlow({
             <CardContent className="p-6">
               <div className="flex justify-between text-lg mb-6">
                 <span className="font-bold">Total TVAC</span>
-                <span className="font-bold text-field">{totalPrice}€</span>
+                <span className="font-bold text-field">{euros(totalPrice)}</span>
               </div>
 
               <div className="space-y-4 mb-6">
                 <div className="flex items-start gap-3">
                   <Checkbox id="acceptCGV" checked={acceptCGV} onCheckedChange={(v) => setAcceptCGV(v === true)} />
                   <Label htmlFor="acceptCGV" className="block text-sm leading-relaxed">
-                    J&apos;accepte les <a href="/cgv" target="_blank" rel="noopener noreferrer" className="underline text-field">Conditions Générales de Vente</a> et la <a href="/confidentialite" target="_blank" rel="noopener noreferrer" className="underline text-field">Politique de confidentialité</a>. <span className="text-destructive">*</span>
+                    J&apos;accepte les <a href="/cgv" target="_blank" rel="noopener noreferrer" className="underline text-field py-1">Conditions Générales de Vente</a> et la <a href="/confidentialite" target="_blank" rel="noopener noreferrer" className="underline text-field py-1">Politique de confidentialité</a>. <span className="text-destructive">*</span>
                   </Label>
                 </div>
                 <div className="flex items-start gap-3">
@@ -610,7 +630,7 @@ export function AnniversaireFlow({
                 {envoi
                   ? "Enregistrement…"
                   : paiementActif
-                    ? `Payer ${totalPrice}\u00a0€`
+                    ? `Payer ${euros(totalPrice)}`
                     : "Confirmer ma réservation"}
               </button>
 
@@ -637,7 +657,7 @@ export function AnniversaireFlow({
                 <Bouclier className="size-3.5 shrink-0" />
                 {paiementActif ? (
                   <span>
-                    Paiement sécurisé de <strong>{totalPrice}&nbsp;€ TVAC</strong> par Bancontact ou carte.
+                    Paiement sécurisé de <strong>{euros(totalPrice)} TVAC</strong> par Bancontact ou carte.
                     Activité à date déterminée : pas de droit de rétractation.
                   </span>
                 ) : (

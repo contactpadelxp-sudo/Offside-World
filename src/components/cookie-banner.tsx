@@ -183,18 +183,31 @@ export function CookieBanner() {
                   transition={{ duration: 0.3 }}
                   className="overflow-hidden"
                 >
-                  <div className="mt-4 space-y-3 text-sm">
-                    <label className="flex items-center gap-2">
-                      <input type="checkbox" checked disabled className="accent-primary" />
+                  {/*
+                    LES CASES DE CONSENTEMENT FAISAIENT 13 PX DE CÔTÉ.
+
+                    C'est la taille par défaut d'une case à cocher du
+                    navigateur, jamais redressée ici — soit la moitié du minimum
+                    de 24 px du critère 2.5.8 du WCAG 2.2, sur les deux seuls
+                    contrôles par lesquels le visiteur exprime un choix que la
+                    loi du 13 juin 2005 exige libre et éclairé. Une case qu'on
+                    rate n'est pas un choix.
+
+                    `size-6` sur la case, et l'étiquette entière portée à 44 px
+                    de haut : on peut viser le mot plutôt que le carré.
+                  */}
+                  <div className="mt-4 space-y-1 text-sm">
+                    <label className="flex min-h-11 flex-wrap items-center gap-x-2 gap-y-0.5 rounded-lg py-1">
+                      <input type="checkbox" checked disabled className="size-6 shrink-0 accent-primary" />
                       <span className="font-medium">Nécessaires</span>
                       <span className="text-muted-foreground">(toujours actifs)</span>
                     </label>
-                    <label className="flex items-center gap-2 cursor-pointer">
+                    <label className="flex min-h-11 flex-wrap items-center gap-x-2 gap-y-0.5 rounded-lg py-1 cursor-pointer transition-colors active:bg-white/5">
                       <input
                         type="checkbox"
                         checked={analytics}
                         onChange={(e) => setAnalytics(e.target.checked)}
-                        className="accent-primary"
+                        className="size-6 shrink-0 accent-primary"
                       />
                       <span className="font-medium">Mesure d&apos;audience</span>
                       <span className="text-muted-foreground">(anonyme)</span>

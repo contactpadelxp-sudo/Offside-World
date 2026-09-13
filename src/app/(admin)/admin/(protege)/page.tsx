@@ -4,6 +4,7 @@ import { Recherche } from "@/components/admin/recherche";
 import { lireReservations } from "@/lib/db/backoffice";
 import type { FiltreReservations, ReservationAdmin } from "@/lib/vues";
 import { PressePapier } from "@/components/icons";
+import { euros } from "@/lib/tarification";
 
 const FILTRES: { valeur: FiltreReservations; label: string }[] = [
   { valeur: "a-venir", label: "À venir" },
@@ -51,7 +52,7 @@ export default async function PageReservations({
         </h1>
         {montantAffiche && (
           <p className="text-sm text-muted-foreground">
-            Montant attendu <span className="font-bold text-foreground">{total}€</span>
+            Montant attendu <span className="font-bold text-foreground">{euros(total)}</span>
           </p>
         )}
       </div>

@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   enEuros,
+  euros,
   montantLisible,
   totalAnniversaireCents,
   totalBubbleCents,
@@ -118,5 +119,39 @@ describe("montant écrit pour un client belge", () => {
 
   it("garde le signe d'un montant négatif", () => {
     expect(montantLisible(-8750)).toBe("-87,50\u00a0€");
+  });
+});
+
+describe("montant donné en euros plutôt qu'en centimes", () => {
+  /*
+    `euros()` sert les vues d'affichage — `FormuleVue.prixBase`,
+    `OptionVue.prix`, `ReservationAdmin.total` — qui portent des euros. Sans
+    elle, une quinzaine d'endroits écrivaient `{prix}€` à la main, et le
+    back-office affichait « 245.5€ » dès qu'un remboursement partiel produisait
+    un montant non rond.
+  */
+  it("écrit un prix rond sans centimes", () => {
+    expect(euros(180)).toBe("180\u00a0€");
+    expect(euros(0)).toBe("0\u00a0€");
+  });
+
+  it("écrit un prix à virgule à la française", () => {
+    expect(euros(245.5)).toBe("245,50\u00a0€");
+    expect(euros(87.5)).toBe("87,50\u00a0€");
+  });
+
+  it("ne laisse jamais passer le point décimal anglais", () => {
+    expect(euros(245.5)).not.toContain(".");
+  });
+
+  it("absorbe l'imprécision des flottants", () => {
+    // 0,1 + 0,2 vaut 0,30000000000000004 en virgule flottante.
+    expect(euros(0.1 + 0.2)).toBe("0,30\u00a0€");
+    // 23 × 3 sur des prix par personne.
+    expect(euros(23 * 3)).toBe("69\u00a0€");
+  });
+
+  it("dit la même chose que montantLisible sur le même montant", () => {
+    expect(euros(245.5)).toBe(montantLisible(24550));
   });
 });

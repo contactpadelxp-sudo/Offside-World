@@ -56,12 +56,13 @@ export function BarreAdmin({
   return (
     /*
       Épinglée, cette barre confisquait 183 px — 27 % d'un écran de téléphone —
-      en permanence, sur toutes les pages. Les six sections ont besoin de trois
-      rangées pour rester lisibles (on refuse de tronquer, voir plus bas), donc
-      la barre restera haute : autant la laisser défiler. Sur téléphone, la
-      liste de travail occupe tout l'écran ; il faut remonter pour changer de
-      section, ce qui est un geste, quand l'ancien réglage coûtait un quart de
-      l'écran à chaque instant. Dès `sm:`, la place existe : on ré-épingle.
+      en permanence, sur toutes les pages. Les huit rubriques ont besoin de
+      plusieurs rangées pour rester lisibles (on refuse de tronquer, voir plus
+      bas), donc la barre restera haute : autant la laisser défiler. Sur
+      téléphone, la liste de travail occupe tout l'écran ; il faut remonter pour
+      changer de section, ce qui est un geste, quand l'ancien réglage coûtait un
+      quart de l'écran à chaque instant. Dès `sm:`, la place existe : on
+      ré-épingle.
     */
     <header className="relative z-30 border-b border-border bg-[#0a0a0b]/95 backdrop-blur sm:sticky sm:top-0">
       {/* Bandeau de couleur : on voit d'un coup d'œil qu'on n'est pas sur le site public. */}
@@ -95,14 +96,18 @@ export function BarreAdmin({
 
           Le compteur est poussé à droite par `ml-auto` : sur téléphone il se
           cale donc au bord du pavé, aligné avec celui du pavé voisin.
-        */}
-        {/*
+
           `sm:flex-wrap` et non `sm:flex-nowrap` : mis bout à bout, les huit
           pavés mesurent 956 px. Sur une tablette de 768 px, la rangée unique
-          sortait donc de la barre par la droite, et « Journal » comme
-          « Réglages » n'étaient plus atteignables du tout — le conteneur ne
-          défile pas. On les laisse se replier ; à partir de 1024 px, la place
-          existe et la rangée redevient unique d'elle-même.
+          sortait de la barre par la droite, et « Journal » comme « Réglages »
+          n'étaient plus atteignables du tout — le conteneur ne défile pas. On
+          les laisse se replier ; à partir de 1024 px, la place existe et la
+          rangée redevient unique d'elle-même.
+
+          Le libellé N'EST PAS tronqué. Il l'a été le temps d'un essai : avec la
+          police doublée, « Réservations » y perdait 82 px et le pavé ne disait
+          plus où il menait. Une rubrique de navigation se replie sur deux
+          lignes, elle ne se coupe pas.
         */}
         <nav className="order-3 grid w-full grid-cols-1 gap-1.5 min-[360px]:grid-cols-2 sm:order-none sm:flex sm:w-auto sm:flex-wrap sm:items-center sm:gap-1">
           {SECTIONS.map((s) => {
@@ -120,7 +125,7 @@ export function BarreAdmin({
                 }`}
               >
                 <s.icone className="size-4 shrink-0" />
-                <span className="truncate">{s.label}</span>
+                <span>{s.label}</span>
                 {n > 0 && (
                   <span className="ml-auto inline-flex min-w-5 shrink-0 items-center justify-center rounded-full bg-kick px-1.5 text-[11px] font-bold text-[#0a0a0b] sm:ml-0.5">
                     {n}

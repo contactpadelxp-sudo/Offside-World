@@ -9,6 +9,7 @@ import { FadeIn, Confetti } from "@/components/motion";
 import { lireRecap, type RecapReservation } from "@/lib/reservation";
 import { Maison, Plus } from "@/components/icons";
 import { motion } from "framer-motion";
+import { euros } from "@/lib/tarification";
 const LIBELLES_TYPE: Record<string, string> = {
   anniversaire: "Anniversaire",
   bubble: "Bubble Foot",
@@ -138,7 +139,7 @@ export function ConfirmationContent() {
               <div className="border-t pt-3 flex justify-between text-lg">
                 <span className="font-bold">{surDevis ? "Tarif" : "Montant TVAC"}</span>
                 <span className="font-bold text-gradient-field">
-                  {surDevis ? "Sur devis" : `${recap?.total ?? 0}€`}
+                  {surDevis ? "Sur devis" : euros(recap?.total ?? 0)}
                 </span>
               </div>
             </CardContent>

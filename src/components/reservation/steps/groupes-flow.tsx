@@ -30,6 +30,7 @@ import {
   TEAM_BUILDING_MIN_PARTICIPANTS,
 } from "@/data/bubble-team";
 import { RESUME_ANNULATION } from "@/data/reglement";
+import { euros } from "@/lib/tarification";
 import {
   AlerteCercle, Ballon, Batiment, Bouclier, Coche, Document, FlecheDroite, FlecheGauche, Groupe, Horloge, Info, Visuel,
 } from "@/components/icons";
@@ -110,31 +111,18 @@ export function GroupesFlow({
   }, [demiJournees]);
 
   /*
-
     CE QUI MANQUE, DIT EN TOUTES LETTRES. Même correctif que sur le tunnel
-
     anniversaire : le bouton final dépend de plusieurs conditions et,
-
     désactivé, il ne disait pas laquelle. La case des CGV est le cas le plus
-
     fréquent, et la moins visible.
-
   */
-
   const manquants = [
-
     !nom && "votre nom",
-
     !isBubble && !entreprise && "le nom de votre entreprise",
-
     !emailValid && "une adresse e-mail valide",
-
     !phoneValid && "un numéro de téléphone valide",
-
     !acceptCGV && "l'acceptation des conditions générales",
-
   ].filter(Boolean) as string[];
-
 
   async function envoyer() {
     setEnvoi(true);
@@ -210,8 +198,10 @@ export function GroupesFlow({
       img: photoBubble,
       // Les bulles sont à ~54 % de la hauteur de la photo.
       imgPosition: "object-[center_54%]",
-      // Même libellé que sur la page de choix d'activité, espace insécable comprise.
-      tag: `Dès ${BUBBLE_PRIX_PAR_PERSONNE} €/pers.`,
+      // Même libellé que sur la page de choix d'activité. Le montant passe par
+      // `euros()`, comme partout ailleurs : une seule fonction écrit les prix du
+      // site, et c'est elle qui garantit la virgule et l'espace insécable.
+      tag: `Dès ${euros(BUBBLE_PRIX_PAR_PERSONNE)}/pers.`,
       detail: `${BUBBLE_DUREE_MINUTES} minutes • à partir de ${BUBBLE_MIN_PERSONNES} personnes`,
       accentText: "text-field",
       accentBadge: "bg-field/15 text-field",
@@ -476,7 +466,7 @@ export function GroupesFlow({
               <div className="border-t pt-3 flex justify-between text-lg">
                 <span className="font-bold">{isBubble ? "Total TVAC" : "Tarif"}</span>
                 <span className={`font-bold ${isBubble ? "text-field" : "text-kick"}`}>
-                  {isBubble ? `${total}€` : "Sur devis"}
+                  {isBubble ? euros(total) : "Sur devis"}
                 </span>
               </div>
             </CardContent>
@@ -492,7 +482,7 @@ export function GroupesFlow({
           <div className="mt-6 space-y-4 max-w-md">
             <h3 className="font-bold">Vos coordonnées</h3>
             <p className="text-xs text-muted-foreground">
-              <a href="/confidentialite" className="underline">Politique de confidentialité</a>
+              <a href="/confidentialite" className="underline py-1">Politique de confidentialité</a>
             </p>
             {!isBubble && (
               <div>
@@ -530,7 +520,7 @@ export function GroupesFlow({
                 <div className="flex items-start gap-3">
                   <Checkbox id="cgv" checked={acceptCGV} onCheckedChange={(v) => setAcceptCGV(v === true)} />
                   <Label htmlFor="cgv" className="block text-sm leading-relaxed">
-                    J&apos;accepte les <a href="/cgv" target="_blank" rel="noopener noreferrer" className="underline text-field">CGV</a> et la <a href="/confidentialite" target="_blank" rel="noopener noreferrer" className="underline text-field">Politique de confidentialité</a>. <span className="text-destructive">*</span>
+                    J&apos;accepte les <a href="/cgv" target="_blank" rel="noopener noreferrer" className="underline text-field py-1">CGV</a> et la <a href="/confidentialite" target="_blank" rel="noopener noreferrer" className="underline text-field py-1">Politique de confidentialité</a>. <span className="text-destructive">*</span>
                   </Label>
                 </div>
                 <div className="flex items-start gap-3">
@@ -555,7 +545,7 @@ export function GroupesFlow({
                 ) : isBubble ? (
                   <>
                     <Coche className="size-5" />
-                    {paiementActif ? `Payer\u00a0${total}\u00a0€` : "Confirmer ma réservation"}
+                    {paiementActif ? `Payer ${euros(total)}` : "Confirmer ma réservation"}
                   </>
                 ) : (
                   <><Document className="size-5" /> Demander un devis</>
@@ -582,7 +572,7 @@ export function GroupesFlow({
                   <span>Nous vous répondons sous 48 heures ouvrables.</span>
                 ) : paiementActif ? (
                   <span>
-                    Paiement sécurisé de <strong>{total}&nbsp;€ TVAC</strong> par Bancontact ou carte.
+                    Paiement sécurisé de <strong>{euros(total)} TVAC</strong> par Bancontact ou carte.
                     Activité à date déterminée : pas de droit de rétractation.
                   </span>
                 ) : (

@@ -5,6 +5,7 @@ import { Gateau, Groupe, Trophee, type IconType } from "@/components/icons";
 import { BUBBLE_PRIX_PAR_PERSONNE } from "@/data/bubble-team";
 import { hrefActivite, type ActiviteId } from "@/data/activites";
 import type { FormuleVue } from "@/lib/vues";
+import { euros } from "@/lib/tarification";
 
 /**
  * Les trois activités, décrites une seule fois.
@@ -88,8 +89,10 @@ export function useActivites(formules: FormuleVue[]): ActiviteVue[] {
       description: "Deux formules 100 % foot — Kick-Off et Bubble — jusqu'à 10 enfants.",
       href: hrefActivite("anniversaire"),
       img: photoAnniv,
-      // Espace insécable : le montant ne doit pas se séparer de son symbole.
-      tag: depuis === null ? "Sur mesure" : `Dès\u00a0${depuis}\u00a0€`,
+      // `euros()` plutôt qu'un montant recollé à la main : le prix vient de la
+      // base, rien ne garantit qu'il soit rond, et « Dès 87.5 € » serait la
+      // seule écriture anglaise du site.
+      tag: depuis === null ? "Sur mesure" : `Dès\u00a0${euros(depuis)}`,
       accentText: "text-kick",
       accentBadge: "bg-kick/15 text-kick",
       iconBg: "bg-kick/15 text-kick",
@@ -114,12 +117,12 @@ export function useActivites(formules: FormuleVue[]): ActiviteVue[] {
       id: "groupes",
       icone: Groupe,
       titre: "Bubble Foot & Team Building",
-      description: `Bubble Foot à ${BUBBLE_PRIX_PAR_PERSONNE}\u00a0€/personne, ou privatisation à la demi-journée.`,
+      description: `Bubble Foot à ${euros(BUBBLE_PRIX_PAR_PERSONNE)}/personne, ou privatisation à la demi-journée.`,
       href: hrefActivite("groupes"),
       img: photoBubble,
       // Les bulles sont à ~54 % de la hauteur de la photo.
       imgPosition: "object-[center_54%]",
-      tag: `Dès\u00a0${BUBBLE_PRIX_PAR_PERSONNE}\u00a0€/pers.`,
+      tag: `Dès\u00a0${euros(BUBBLE_PRIX_PAR_PERSONNE)}/pers.`,
       accentText: "text-kick",
       accentBadge: "bg-kick/15 text-kick",
       iconBg: "bg-kick/15 text-kick",

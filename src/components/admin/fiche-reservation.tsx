@@ -7,7 +7,7 @@ import {
   enregistrerNoteReservation,
 } from "@/lib/actions/admin";
 import type { ChoixRemboursement, ReservationAdmin, StatutReservation } from "@/lib/vues";
-import { montantLisible } from "@/lib/tarification";
+import { euros, montantLisible } from "@/lib/tarification";
 import {
   BOUTON_DANGER,
   BOUTON_NEUTRE,
@@ -145,7 +145,7 @@ export function FicheReservation({ r }: { r: ReservationAdmin }) {
           Même correction que sur la fiche de devis.
         */}
         <div className="flex flex-wrap items-baseline gap-x-2 sm:block sm:text-right">
-          <p className="text-lg font-bold text-field">{montantLisible(Math.round(r.total * 100))}</p>
+          <p className="text-lg font-bold text-field">{euros(r.total)}</p>
           <p className="text-sm font-medium">{r.jourLabel}</p>
           <p className="text-sm text-muted-foreground">
             {r.debut} – {r.fin}

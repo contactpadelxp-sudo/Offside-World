@@ -75,8 +75,15 @@ export function Header({ logoSrc }: { logoSrc: string | null }) {
                 ))}
               </div>
 
-              {/* Logo central */}
-              <Link href="/" aria-label="Offside Foot Indoor — accueil" className="shrink-0 mx-3 flex items-center">
+              {/*
+                `min-h-11` : le logo de la barre compacte est le lien « retour à
+                l'accueil ». Il suivait la hauteur de son image — 23,4 px, juste
+                sous le minimum de 24 px du critère 2.5.8 du WCAG 2.2, et une
+                cible étroite au milieu d'une barre où le doigt vise mal. Le
+                dessin ne bouge pas ; c'est la zone sensible qui prend les 44 px
+                de haut que la barre de 48 px peut lui offrir.
+              */}
+              <Link href="/" aria-label="Offside Foot Indoor — accueil" className="shrink-0 mx-3 flex min-h-11 items-center">
                 <Logo src={logoSrc} height={28} className="h-6 sm:h-7" textClassName="text-base" />
               </Link>
 

@@ -85,3 +85,18 @@ export function montantLisible(cents: number): string {
   // Espace insécable : le montant ne doit jamais être coupé de son symbole.
   return `${negatif ? "-" : ""}${corps} €`;
 }
+
+/**
+ * Le même montant, mais donné en EUROS plutôt qu'en centimes.
+ *
+ * Les vues destinées à l'affichage — `FormuleVue.prixBase`, `OptionVue.prix`,
+ * `ReservationAdmin.total` — portent des euros, pas des centimes. Faute d'un
+ * point d'entrée pour elles, une quinzaine d'endroits écrivaient le montant à
+ * la main, `{prix}€`, et le résultat ne ressemblait à rien de commun : « 180€ »
+ * dans le choix de formule, « 180 € TVAC » deux étapes plus loin sur le même
+ * écran de paiement, et « 245.5€ » dans le back-office dès qu'un remboursement
+ * partiel produisait un montant non rond.
+ */
+export function euros(montant: number): string {
+  return montantLisible(Math.round(montant * 100));
+}

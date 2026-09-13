@@ -182,11 +182,17 @@ export function FormulaireArticle({ a }: { a: ArticleComplet }) {
       <div className="rounded-2xl border border-border bg-card p-5">
         <div className="flex flex-wrap items-end gap-4">
           <label className="inline-flex min-h-8 cursor-pointer items-center gap-2 py-1 text-sm">
+            {/*
+              `size-6` : la case mesurait 20 px, sous le minimum de 24 px du
+              critère 2.5.8 du WCAG 2.2. C'est elle qui décide si l'article est
+              en ligne ou reste un brouillon — la même correction que sur la
+              case « Proposée sur le site » des tarifs.
+            */}
             <input
               type="checkbox"
               checked={v.publie}
               onChange={(e) => setV({ ...v, publie: e.target.checked })}
-              className="size-5 accent-[var(--color-field)]"
+              className="size-6 accent-[var(--color-field)]"
             />
             Visible sur le site
           </label>
