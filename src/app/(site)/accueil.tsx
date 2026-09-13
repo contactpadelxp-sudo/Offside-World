@@ -5,7 +5,7 @@ import Link from "next/link";
 import dynamic from "next/dynamic";
 import {
   FadeIn, FadeInView, StaggerContainer, StaggerItem, PulseGlow,
-  MagneticButton, CountUp, Marquee, Tilt3D, WaveDivider,
+  MagneticButton, Marquee, Tilt3D, WaveDivider,
 } from "@/components/motion";
 import { Photo } from "@/components/photo";
 import { ActivitesHero } from "@/components/activites/activites-hero";
@@ -56,7 +56,24 @@ export function Accueil({ formules }: { formules: FormuleVue[] }) {
   return (
     <>
       {/* ══════ HERO ══════ */}
-      <section className="relative min-h-[88vh] flex items-center justify-center overflow-hidden bg-[#0a0a0b]">
+      {/*
+        PLANCHER À 80vh, ET NON 88vh.
+
+        Ce plancher ne sert que sur les écrans HAUTS : partout ailleurs, le
+        contenu est plus grand que lui et c'est le contenu qui décide. À 88vh,
+        sur une tablette de 1024 px de haut, il réclamait 901 px pour un contenu
+        qui en occupe 817 — le bloc se centrait, et il restait 140 px de vide
+        entre la dernière carte d'activité et l'indicateur « Scroll », lequel
+        est ancré au bas de la SECTION et non au bas du contenu. Sur un écran de
+        1080 px, même trou : 121 px.
+
+        À 80vh, l'écart retombe entre 40 et 58 px sur tous les formats mesurés —
+        375, 390, 768, 1280, 1440 et 1920. C'est ça, « bien positionné » : le
+        même équilibre partout, pas un hero qui se distend dès qu'on lui donne
+        de la place. Le hero occupe toujours 80 à 82 % de la hauteur visible,
+        donc il reste dominant.
+      */}
+      <section className="relative min-h-[80vh] flex items-center justify-center overflow-hidden bg-[#0a0a0b]">
         {/* MagicRings background */}
         <div className="absolute inset-0 z-0">
           <MagicRings
@@ -89,15 +106,26 @@ export function Accueil({ formules }: { formules: FormuleVue[] }) {
         <div className="absolute inset-0 z-[1] bg-radial-[ellipse_at_center] from-black/65 via-black/35 to-transparent" />
 
         {/*
-          `pb-24` et non `pb-12` : l'indicateur « Scroll » est en position
-          absolue à 32 px du bas du hero. Tant que le bas du contenu était le
-          cadre photo, personne ne s'en approchait ; maintenant que les
-          chiffres y descendent, les deux se superposaient — mesuré, le mot
-          SCROLL tombait littéralement sur « terrains indoor », aux deux
-          tailles d'écran. Le contenu se réserve donc la place que l'indicateur
-          occupe, au lieu de la lui disputer.
+          LE REMBOURRAGE DU BAS RÉSERVE LA PLACE DE L'INDICATEUR « SCROLL ».
+
+          Celui-ci est en position ABSOLUE, à 32 px du bas du hero : il ne pousse
+          rien, il se superpose. C'est donc au contenu de lui laisser la place,
+          sinon il vient s'écraser sur le dernier élément — ce qui est arrivé
+          deux fois.
+
+          Mesuré après le retrait de la rangée de chiffres : avec `pb-24`, il ne
+          restait plus que 8 px entre la dernière carte d'activité et
+          l'indicateur sur un écran de 375 px, et 23 px sur un 1280. Les deux se
+          lisaient comme une collision. `pb-32` (128 px) — l'indicateur en
+          occupe 88 à lui seul, 32 de décalage plus 56 de hauteur — ramène
+          l'écart à 40 px sur téléphone et 56 sur ordinateur.
+
+          Sur les écrans hauts, le hero atteint son plancher de 88vh avant que le
+          contenu ne le remplisse : celui-ci se centre alors, et l'écart grandit
+          de lui-même. C'est le bon sens de variation — on serre quand la place
+          manque, jamais l'inverse.
         */}
-        <div className="relative z-10 mx-auto max-w-5xl px-4 lg:px-8 pt-28 pb-24 md:pt-32 md:pb-28 w-full text-center">
+        <div className="relative z-10 mx-auto max-w-5xl px-4 lg:px-8 pt-28 pb-32 md:pt-32 md:pb-36 w-full text-center">
           {/* Headline central */}
           <h1 className="font-[family-name:var(--font-heading)] text-[clamp(2rem,5.5vw,4.5rem)] font-bold tracking-tight leading-[1.05] text-foreground">
             <FadeIn delay={0.1} className="block md:whitespace-nowrap">
@@ -147,16 +175,19 @@ export function Accueil({ formules }: { formules: FormuleVue[] }) {
           </FadeIn>
 
           {/*
-            LES ACTIVITÉS PASSENT AVANT LES CHIFFRES, et ce n'est pas un
-            arbitrage esthétique. Mesuré au navigateur sur 375 × 667 — le format
-            sur lequel l'audit mobile du site a été mené — la troisième ligne
-            commençait à y = 675 : « Bubble Foot & Team Building » tombait sous
-            la ligne de flottaison. Le hero affichait donc DEUX des trois
-            activités demandées, et cachait précisément celle qu'il ne mentionne
-            nulle part ailleurs.
+            LA RANGÉE DE CHIFFRES A ÉTÉ RETIRÉE — le 13 septembre 2026, sur
+            décision de Mathis.
 
-            Les chiffres sont un signal de confiance : ils supportent très bien
-            d'être vus après. Les activités, elles, sont l'action.
+            Elle en annonçait trois. « 2000+ fêtes organisées » était inventé et
+            a sauté le premier : une allégation chiffrée invérifiable est une
+            pratique commerciale trompeuse (art. VI.97 du Code de droit
+            économique). Restaient « 2 terrains indoor » et « 2 formules
+            anniversaire » — vrais tous les deux, mais deux fois le chiffre 2
+            côte à côte ne prouvent pas grand-chose, et ils coûtaient une
+            centaine de pixels au moment précis où le hero doit convaincre.
+
+            La preuve, désormais, ce sont les quatre cartes d'activités
+            juste au-dessus : elles disent ce qu'on peut faire ET y mènent.
           */}
           {/*
             LES TROIS ACTIVITÉS, À LA PLACE DE LA PHOTO DU COMPLEXE.
@@ -180,40 +211,6 @@ export function Accueil({ formules }: { formules: FormuleVue[] }) {
             <ActivitesHero activites={activites} />
           </FadeIn>
 
-          {/*
-            DEUX CHIFFRES, ET ILS SONT VRAIS.
-
-            Il y en avait trois. Le premier annonçait « 2000+ fêtes
-            organisées » — un nombre inventé, que personne n'a jamais compté.
-            Une allégation chiffrée invérifiable sur la page d'accueil est une
-            pratique commerciale trompeuse au sens de l'article VI.97 du Code de
-            droit économique ; et devant un parent qui hésite, un chiffre rond
-            sorti de nulle part fait moins bien son travail qu'un chiffre modeste
-            et exact.
-
-            Les deux qui restent se vérifient : les terrains existent, et le
-            nombre de formules est LU EN BASE (`formules.length`) — il suivra
-            tout seul le jour où Brahim en ajoutera une depuis le back-office.
-
-            La grille passe donc de trois à deux colonnes. Sans ça, la rangée
-            boitait sur téléphone : deux chiffres dans une grille prévue pour
-            trois laissent une colonne vide à droite et décentrent l'ensemble.
-          */}
-          <FadeIn delay={1.3}>
-            <div className="mt-10 grid grid-cols-2 gap-x-3 gap-y-6 sm:flex sm:flex-wrap sm:justify-center sm:gap-x-16 md:gap-x-24">
-              {[
-                { value: 2, suffix: "", label: "terrains indoor" },
-                { value: formules.length, suffix: "", label: "formules anniversaire" },
-              ].map((stat) => (
-                <div key={stat.label} className="text-center">
-                  <p className="text-3xl md:text-4xl font-bold font-[family-name:var(--font-heading)] text-foreground">
-                    <CountUp target={stat.value} suffix={stat.suffix} />
-                  </p>
-                  <p className="text-xs md:text-sm text-muted-foreground mt-1">{stat.label}</p>
-                </div>
-              ))}
-            </div>
-          </FadeIn>
 
         </div>
 

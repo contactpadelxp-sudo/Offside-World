@@ -45,11 +45,20 @@ export function ActivitesHero({ activites }: { activites: ActiviteVue[] }) {
 
   return (
     /*
-      `mt-6` et non `mt-8` : la quatrième carte ajoute une ligne sur téléphone,
-      et chaque pixel repris ici est un pixel qui la garde au-dessus de la
-      ligne de flottaison. Voir la mesure dans le commentaire du hero.
+      L'ÉCART AU-DESSUS DES CARTES N'EST PAS LE MÊME PARTOUT, ET C'EST VOULU.
+
+      Sur téléphone, `mt-6` plutôt que `mt-8` : la quatrième carte ajoute une
+      ligne, et chaque pixel repris ici est un pixel qui la garde au-dessus de
+      la ligne de flottaison.
+
+      Sur grand écran, l'inverse. La rangée de chiffres qui suivait les cartes a
+      été retirée ; sans compensation, tout le contenu du hero remontait et
+      laissait un large blanc entre la dernière carte et l'indicateur de
+      défilement. On rend donc aux cartes une partie de la place libérée :
+      elles redescendent vers le centre optique du hero au lieu de se tasser
+      sous les boutons.
     */
-    <div className="mt-6">
+    <div className="mt-6 sm:mt-8 lg:mt-12">
       {/*
         ── Téléphone : quatre lignes, les quatre au-dessus de la ligne ──
 
