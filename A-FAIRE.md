@@ -182,6 +182,38 @@ majuscules, accents, espaces et tirets. Voir `src/lib/photos.ts`.
 Questions posées, sans réponse à ce jour. Elles bloquent du travail déjà prêt
 à démarrer.
 
+- [ ] **TESTER LE SITE SUR UN VRAI IPHONE.** Mathis s'y est engagé le
+      13 septembre 2026 ; ce point est à lui rappeler tant qu'il n'est pas coché.
+
+      Tout l'audit mobile a été mené sous **Chromium**, piloté au pixel. Trois
+      choses ne s'y voient pas, et aucune mesure ne les remplacera :
+
+      1. **Safari iOS a son propre moteur.** Sur iPhone, tous les navigateurs —
+         Chrome et Firefox compris — utilisent WebKit. Un défaut propre à WebKit
+         est donc invisible ici et universel là-bas.
+      2. **La zone sûre du bas.** `viewportFit: "cover"` et
+         `env(safe-area-inset-bottom)` viennent d'être posés pour que le bandeau
+         cookies ne pose plus ses boutons sur l'indicateur d'accueil. Sous
+         Chromium cette variable vaut 0 : le correctif est **écrit mais jamais
+         constaté**. Il faut un iPhone X ou plus récent pour le voir.
+      3. **La barre d'URL qui se rétracte.** Elle change la hauteur visible en
+         cours de défilement, ce qu'un navigateur de bureau ne simule pas.
+
+      À regarder en priorité, dans cet ordre :
+      - **le bandeau cookies** à la première visite : ses boutons sont-ils bien
+        au-dessus de la barre du bas, atteignables sans gêne ?
+      - **le téléphone à l'horizontale** sur la page d'accueil, section
+        « Nos activités » : les trois cartes doivent défiler normalement. C'est
+        la correction du 13 septembre — avant, la section s'y résumait à son
+        titre et le reste était inatteignable.
+      - **le tunnel de réservation en entier**, jusqu'au récapitulatif : le
+        clavier ne doit masquer aucun champ ni aucun bouton.
+      - **Réglages > Accessibilité > Mouvement > Réduire les animations** : le
+        bandeau défilant, les halos du bas de page et le fond animé du hero
+        doivent s'arrêter.
+      - **Réglages > Affichage > Taille du texte**, poussé au maximum : rien ne
+        doit sortir de son cadre.
+
 - [ ] **Paiement : acompte ou montant intégral ?** Le barème d'annulation
       existant (100 % au-delà de 7 jours, 50 % entre 7 jours et 48 h, rien en
       deçà) se prête plutôt au paiement intégral avec remboursement partiel.
@@ -325,7 +357,8 @@ Ce qui reste, et qui ne dépend plus du code :
 # État technique
 
 **Base de données** — projet `shybhkzgwxyajysjlrbv` (Offside World, eu-west-1),
-migrations `0001` à `0015` appliquées et vérifiées.
+migrations `0001` à `0017` appliquées et vérifiées (les trois dernières :
+remboursements, devis modifiable, coordonnées et TVA du client sur le devis).
 RLS activé et forcé sur les 8 tables, sans aucune politique : rien n'est
 accessible par les clés publiques, tout passe par le serveur.
 
@@ -358,7 +391,35 @@ politique » sont le comportement voulu.
 **Ce qui reste à construire, par ordre d'urgence :**
 
 1. **Le paiement en ligne** (Stripe + Bancontact). C'est le dernier morceau
-   qui demande du développement.
+   qui demande du développement. Le tunnel s'y prépare déjà : `paiementConfigure()`
+   ne teste que la présence de `STRIPE_SECRET_KEY`, et bascule tout seul le
+   bouton final de « Confirmer ma réservation » vers « Payer 290 € » le jour où
+   la clé existe.
+
+**Adaptation aux écrans — état au 13 septembre 2026**
+
+Trois passages successifs, chacun mesuré au navigateur et non jugé à l'œil.
+
+Ce qui est vérifié, et sur quoi :
+- **Largeur** : balayage continu de 280 px (écran de couverture d'un Galaxy Z
+  Fold) à 2560 px — 56 largeurs, avec un arrêt un pixel avant et un pixel après
+  chaque seuil de Tailwind, sur 14 pages. Aucun débordement, aucune troncature,
+  aucune cible tactile sous 24 px.
+- **Hauteur** : 16 formats de 360 à 900 px, téléphone à l'horizontale compris.
+- **Tunnel de réservation** : les trois parcours, étape par étape jusqu'au
+  récapitulatif, sur 5 largeurs.
+- **Texte agrandi à 200 %**, le réglage « taille du texte » d'Android.
+- **Mouvement réduit** : 5 animations en cours → 0, fond WebGL figé.
+
+Ce qui ne l'est PAS, et ne peut pas l'être depuis ici :
+- **Safari iOS** — voir le point « tester sur un vrai iPhone » plus haut.
+- **Les listes réelles du back-office et du tunnel**, avec les données de
+  production. La base n'est pas joignable en local, et la connexion au
+  back-office écrit sa session EN BASE : l'écran de connexion répond
+  « Back-office indisponible » avant même d'afficher un formulaire. Les
+  composants ont donc été mesurés un par un sur des données fabriquées,
+  volontairement plus longues que la moyenne ; les pages qui les assemblent
+  restent à mesurer une fois le site en ligne.
 
 **Les tarifs sont modifiables** depuis l'onglet « Tarifs » du back-office :
 prix des formules, supplément par enfant, nombre d'enfants couverts, durée,
