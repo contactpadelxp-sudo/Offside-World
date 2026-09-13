@@ -91,7 +91,7 @@ export function Accueil({ formules }: { formules: FormuleVue[] }) {
         {/*
           `pb-24` et non `pb-12` : l'indicateur « Scroll » est en position
           absolue à 32 px du bas du hero. Tant que le bas du contenu était le
-          cadre photo, personne ne s'en approchait ; maintenant que les trois
+          cadre photo, personne ne s'en approchait ; maintenant que les
           chiffres y descendent, les deux se superposaient — mesuré, le mot
           SCROLL tombait littéralement sur « terrains indoor », aux deux
           tailles d'écran. Le contenu se réserve donc la place que l'indicateur
@@ -155,8 +155,8 @@ export function Accueil({ formules }: { formules: FormuleVue[] }) {
             activités demandées, et cachait précisément celle qu'il ne mentionne
             nulle part ailleurs.
 
-            Les trois chiffres sont un signal de confiance : ils supportent très
-            bien d'être vus après. Les trois activités sont l'action.
+            Les chiffres sont un signal de confiance : ils supportent très bien
+            d'être vus après. Les activités, elles, sont l'action.
           */}
           {/*
             LES TROIS ACTIVITÉS, À LA PLACE DE LA PHOTO DU COMPLEXE.
@@ -180,11 +180,28 @@ export function Accueil({ formules }: { formules: FormuleVue[] }) {
             <ActivitesHero activites={activites} />
           </FadeIn>
 
-          {/* Stats — espacées */}
+          {/*
+            DEUX CHIFFRES, ET ILS SONT VRAIS.
+
+            Il y en avait trois. Le premier annonçait « 2000+ fêtes
+            organisées » — un nombre inventé, que personne n'a jamais compté.
+            Une allégation chiffrée invérifiable sur la page d'accueil est une
+            pratique commerciale trompeuse au sens de l'article VI.97 du Code de
+            droit économique ; et devant un parent qui hésite, un chiffre rond
+            sorti de nulle part fait moins bien son travail qu'un chiffre modeste
+            et exact.
+
+            Les deux qui restent se vérifient : les terrains existent, et le
+            nombre de formules est LU EN BASE (`formules.length`) — il suivra
+            tout seul le jour où Brahim en ajoutera une depuis le back-office.
+
+            La grille passe donc de trois à deux colonnes. Sans ça, la rangée
+            boitait sur téléphone : deux chiffres dans une grille prévue pour
+            trois laissent une colonne vide à droite et décentrent l'ensemble.
+          */}
           <FadeIn delay={1.3}>
-            <div className="mt-10 grid grid-cols-3 gap-x-3 gap-y-6 sm:flex sm:flex-wrap sm:justify-center sm:gap-x-16 md:gap-x-24">
+            <div className="mt-10 grid grid-cols-2 gap-x-3 gap-y-6 sm:flex sm:flex-wrap sm:justify-center sm:gap-x-16 md:gap-x-24">
               {[
-                { value: 2000, suffix: "+", label: "fêtes organisées" },
                 { value: 2, suffix: "", label: "terrains indoor" },
                 { value: formules.length, suffix: "", label: "formules anniversaire" },
               ].map((stat) => (

@@ -15,12 +15,12 @@ la mémoire d'une conversation.
 Sa page publique est le seul canal de réservation des terrains ; plusieurs
 réglages y sont incohérents avec le site.
 
-- [ ] **Aligner les prix de Sport-Finder sur ceux du site** — et non
-      l'inverse. **Décision prise le 12 septembre 2026 :** les tarifs qui font
-      foi sont ceux que Brahim a donnés, déjà en base et déjà affichés partout
-      sur le site — Kick-Off **180 €**, Bubble **290 €**, Bubble Foot
-      **23 €/pers.** Sport-Finder annonce encore 140 €/session et 20 €/pers. :
-      ce sont ces deux valeurs-là qu'il faut corriger chez eux.
+- [x] ~~**Quels prix font foi ?**~~ **TRANCHÉ, ET ON N'Y REVIENT PLUS.** Ce
+      sont ceux que Brahim a donnés à Mathis — Kick-Off **180 €**, Bubble
+      **290 €**, Bubble Foot **23 €/pers.** Ils sont en base et affichés partout
+      sur le site ; côté site, il n'y a rien à faire.
+- [ ] **Corriger les deux prix chez Sport-Finder** — action de Brahim, sur leur
+      plateforme. Ils y annoncent encore 140 €/session et 20 €/pers.
 
       L'écart n'est pas seulement gênant commercialement. Un client qui compare
       les deux pages voit deux prix pour la même prestation et peut exiger le
@@ -222,12 +222,18 @@ Questions posées, sans réponse à ce jour. Elles bloquent du travail déjà pr
 - [ ] **Le compte Stripe est-il ouvert ?** Le tunnel peut être construit sans
       les clés, mais aucun paiement réel ne pourra être testé de bout en bout —
       et c'est précisément là que ça casse d'habitude.
-- [ ] **« 2000+ fêtes organisées »** est toujours affiché sur la page d'accueil.
-      C'est une statistique inventée. Le faux avis a été retiré ; celle-ci
-      attend un vrai chiffre ou son retrait. Si on la retire, la rangée doit
-      passer de trois à deux colonnes, sinon elle boite sur téléphone.
-- [ ] **Passer le dépôt GitHub en privé.** Il est public : tout l'historique
-      est lisible, y compris les versions précédentes de ce fichier.
+- [x] ~~« 2000+ fêtes organisées »~~ **RETIRÉ le 13 septembre 2026**, sur
+      décision de Mathis. La rangée du hero est passée de trois à deux colonnes.
+      Les deux chiffres restants se vérifient : les terrains existent, et le
+      nombre de formules est lu en base. Plus aucune allégation chiffrée
+      invérifiable sur le site — le faux avis « 4.8/5 » et le témoignage signé
+      « Sophie D. » avaient été retirés plus tôt.
+- [x] ~~Passer le dépôt GitHub en privé.~~ **DÉCIDÉ LE 13 SEPTEMBRE 2026 :
+      on le laisse public.** Mathis n'en voit pas le besoin. Conséquence à
+      connaître, sans y revenir : tout l'historique reste lisible, y compris les
+      versions précédentes de ce fichier — donc rien de confidentiel ne doit
+      jamais être commité ici. Les identifiants et les clés vivent dans les
+      variables d'environnement Vercel, jamais dans le dépôt ; c'est déjà le cas.
 
 ---
 
@@ -254,8 +260,8 @@ le dépôt.
       « Sensitive » pour le mot de passe). Sans ces deux variables, `/admin`
       répond 404 : c'est voulu, mais le back-office reste alors inaccessible à
       Brahim.
-- [ ] **Passer le dépôt GitHub en privé.** Tant qu'il est public, l'historique
-      reste lisible, y compris les versions précédentes de ce fichier.
+- [x] ~~Passer le dépôt GitHub en privé.~~ **Décidé le 13 septembre 2026 : on
+      le laisse public.** Voir la note en « Décisions en attente de Mathis ».
 - [x] ~~**Ouvrir un compte Resend**, y vérifier le domaine, renseigner les
       variables.~~ **Fait le 12 septembre 2026.** Domaine `offsidefootindoor.be`
       vérifié chez Resend (région Ireland, eu-west-1 — les données restent dans
@@ -271,14 +277,21 @@ le dépôt.
       échouer une réservation. `/admin/reglages` l'affiche en rouge, et le test
       qui tranche est celui envoyé vers une adresse qui n'est PAS celle du
       compte Resend.
-- [ ] **Basculer le domaine et activer les e-mails.** Le domaine appartient à
+- [ ] **EN TOUT DERNIER — basculer le domaine et activer les e-mails.**
+      Ordre fixé par Mathis le 13 septembre 2026 : c'est la toute dernière
+      étape, après le paiement. Tant que le domaine sert le site Wix de Brahim,
+      rien ne presse, et déplacer les serveurs de noms trop tôt couperait sa
+      messagerie. Le domaine appartient à
       Brahim ; il sert encore le site Wix, et rien n'autorise encore l'envoi
       d'e-mails automatiques. La marche à suivre complète, avec l'état DNS
       relevé et le piège à éviter (déplacer les serveurs de noms couperait la
       messagerie de Brahim), est dans **`MISE-EN-LIGNE.md`**.
 - [ ] **Renseigner `SITE_URL`** dès que le domaine définitif remplacera
       l'adresse Vercel — les liens des e-mails et le sitemap en dépendent.
-- [ ] **Passer Supabase au plan Pro (25 $/mois) avant la mise en ligne.** Ce
+- [ ] **À LA FIN — passer Supabase au plan Pro (25 $/mois).** Ordre fixé par
+      Mathis le 13 septembre 2026 : à faire au moment de la mise en ligne, pas
+      avant — inutile de payer un abonnement tant que le site n'a pas de public.
+      Ce
       n'est pas une question de volume — le plan gratuit tiendrait des dizaines
       de milliers d'articles — mais de DISPONIBILITÉ. Deux limites du plan
       gratuit, relevées dans la documentation officielle le 8 septembre 2026 :
@@ -344,9 +357,8 @@ Ce qui reste, et qui ne dépend plus du code :
       Tant qu'elles manquent, les pages légales affichent « [à compléter] » —
       et l'art. III.74 du Code de droit économique n'est pas respecté. C'est
       le dernier point qui empêche formellement la mise en ligne.
-- [ ] **« 2000+ fêtes organisées »** sur la page d'accueil : chiffre non
-      vérifié. Une allégation chiffrée invérifiable est une pratique
-      trompeuse (art. VI.97). À remplacer par le vrai nombre ou à retirer.
+- [x] ~~« 2000+ fêtes organisées »~~ **Retiré le 13 septembre 2026.** Plus
+      aucune allégation chiffrée invérifiable sur le site (art. VI.97).
 - [ ] **Autorisation à l'image** : aucun formulaire ne la recueille
       aujourd'hui, alors que les CGV art. 15 annoncent un système Replay et
       une vidéo souvenir. À brancher le jour où la fonctionnalité existe —

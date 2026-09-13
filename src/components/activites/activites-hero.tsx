@@ -15,7 +15,7 @@ import type { ActiviteVue } from "@/components/activites/use-activites";
  * laissant la page Réserver telle quelle. Reprendre son JSX aurait été le plus
  * flatteur à raconter, et le plus mauvais à l'usage : ces cartes sont en 4/5,
  * format portrait, pensées pour une page où elles sont le seul contenu. Empilées
- * dans un hero qui porte déjà un titre, un sous-titre, deux boutons et trois
+ * dans un hero qui porte déjà un titre, un sous-titre, deux boutons et deux
  * chiffres, elles poussaient tout le reste hors de l'écran sur un téléphone.
  *
  * Ce qui doit être commun entre les deux endroits, c'est CE QU'ON DIT — titres,
@@ -126,7 +126,7 @@ export function ActivitesHero({ activites }: { activites: ActiviteVue[] }) {
         des photos plus lisibles. Mesurée, elle coûtait beaucoup trop cher —
         sur une tablette en portrait (768 px), les quatre cartes passaient sur
         DEUX rangées et le hero montait à 1178 px contre 849 px sur ordinateur.
-        Les trois chiffres et l'indicateur de défilement tombaient tous les deux
+        Les chiffres et l'indicateur de défilement tombaient tous les deux
         sous la ligne de flottaison, et un seul pixel de largeur (1023 -> 1024)
         retirait 558 px à la hauteur de la page.
 
