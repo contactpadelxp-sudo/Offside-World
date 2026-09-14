@@ -113,6 +113,24 @@ s'affichent aujourd'hui « [à compléter] » sur le site public.
       (en Belgique c'est le même nombre). **À faire confirmer par Brahim.**
 - [x] ~~Numéro de TVA~~ **BE 1025.713.731**, communiqué le 12 septembre 2026 et
       validé par sa clé de contrôle modulo 97 avant d'être inscrit.
+- [ ] **LE COMPTE STRIPE N'EST PAS AU NOM DE BELANTIS.** Constaté le
+      14 septembre 2026 : le compte Stripe de Brahim — qui a déjà servi, avec
+      des configurations d'août 2024 et mai 2025 — est enregistré sous une
+      autre entité. Mathis a tranché : c'est Brahim qui gère cette partie.
+
+      Ce qu'il reste à aligner, et qui est de notre côté : le titulaire du
+      compte Stripe est LE VENDEUR au sens légal — c'est lui qui encaisse et
+      qui déclare la TVA. Or le site annonce « Belantis / BE 1025.713.731 »
+      dans les mentions légales, les CGV et les devis PDF. Les deux doivent
+      finir par désigner la même personne morale.
+
+      Deux issues possibles, à trancher avec Brahim :
+      *a)* l'encaissement passe finalement par Belantis — rien à changer sur le
+      site ; *b)* il reste sur l'autre entité — il faut alors corriger
+      `src/data/entreprise.ts` et tout ce qui en découle.
+
+      **Sans conséquence tant qu'on est en clés de test.** Bloquant avant le
+      premier paiement réel.
 - [ ] Siège social, s'il diffère de Gembloux
 - [ ] Responsable de la publication
 - [ ] Arrondissement judiciaire compétent (pour les CGU)
