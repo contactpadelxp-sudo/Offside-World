@@ -244,6 +244,12 @@ paiement dominant en Belgique, et le tunnel le propose en premier.
 
 ### b. Les deux variables dans Vercel
 
+⚠ **Les deux, ou rien.** `STRIPE_SECRET_KEY` seule suffit à faire apparaître le
+bouton « Payer » et à encaisser — mais sans `STRIPE_WEBHOOK_SECRET`, le site
+REFUSE de traiter la notification de Stripe, et la réservation n'est jamais
+confirmée. Argent pris, créneau non réservé, client sans e-mail. Renseigner les
+deux avant le premier essai.
+
 | Variable | Où la trouver | Type |
 |----------|---------------|------|
 | `STRIPE_SECRET_KEY` | Stripe → Developers → API keys → *Secret key* (`sk_test_…` en test, `sk_live_…` en production) | **Sensitive** |
@@ -257,7 +263,19 @@ le site. C'est aussi ce qui fait qu'aucune donnée de carte ne transite ici.
 
 Stripe → Developers → Webhooks → **Add endpoint**.
 
-- **URL** : `https://offsidefootindoor.be/api/stripe/webhook`
+- **URL** : `<adresse actuelle du site>/api/stripe/webhook`
+
+  ⚠ **L'ADRESSE DU JOUR, PAS LE DOMAINE FINAL.** Tant que le domaine n'est pas
+  basculé — et il l'est en tout dernier, par décision de Mathis —, le site est
+  servi par son adresse Vercel. Un webhook pointé sur `offsidefootindoor.be`
+  n'arriverait nulle part : Stripe encaisserait, et aucune réservation ne serait
+  jamais confirmée. C'est la panne la plus coûteuse possible, et la plus
+  silencieuse.
+
+  **Le jour du basculement du domaine, il faudra revenir ici** changer l'URL du
+  webhook, en même temps que `SITE_URL`. Les deux vont ensemble : `SITE_URL`
+  décide où le client est renvoyé après avoir payé.
+
 - **Événements à écouter** — les quatre, pas moins :
 
   | Événement | Pourquoi il est indispensable |
