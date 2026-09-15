@@ -16,14 +16,33 @@ import { Rotative } from "@/components/admin/retour";
  * La navigation passe par l'URL plutôt que par un état local : le résultat est
  * partageable, et le bouton « retour » du navigateur fonctionne.
  */
-export function Recherche({ valeur }: { valeur: string }) {
+export function Recherche({
+  valeur,
+  filtre,
+}: {
+  valeur: string;
+  /** L'onglet affiché avant la recherche, pour y revenir en l'effaçant. */
+  filtre?: string;
+}) {
   const router = useRouter();
   const [enCours, demarrer] = useTransition();
   const [texte, setTexte] = useState(valeur);
 
+  /*
+    EFFACER LA RECHERCHE RAMÈNE OÙ L'ON ÉTAIT.
+
+    Le retour se faisait vers `/admin` tout court, donc toujours vers « À
+    venir ». Quelqu'un qui cherchait une référence depuis « À confirmer » et
+    touchait la croix repartait dans un autre onglet sans s'en apercevoir — et
+    pouvait croire que les réservations à confirmer avaient été traitées.
+  */
   const chercher = (q: string) => {
     demarrer(() => {
-      router.push(q.trim() ? `/admin?q=${encodeURIComponent(q.trim())}` : "/admin");
+      if (q.trim()) {
+        router.push(`/admin?q=${encodeURIComponent(q.trim())}`);
+        return;
+      }
+      router.push(filtre && filtre !== "a-venir" ? `/admin?filtre=${filtre}` : "/admin");
     });
   };
 

@@ -100,7 +100,16 @@ export function FicheDevis({ d }: { d: DevisAdmin }) {
                 envoye ? "bg-field/15 text-field" : "bg-kick/15 text-kick"
               }`}
             >
-              {envoye ? `Devis envoyé le ${envoye}` : "À traiter"}
+              {/*
+                Après un envoi réussi, l'état passe à « à l'instant » — le
+                gabarit affichait alors « Devis envoyé le à l'instant ». On
+                n'ajoute « le » que devant une vraie date.
+              */}
+              {!envoye
+                ? "À traiter"
+                : envoye === "à l'instant"
+                  ? "Devis envoyé à l'instant"
+                  : `Devis envoyé le ${envoye}`}
             </span>
             <span className="font-mono text-xs text-muted-foreground">{d.reference}</span>
           </div>

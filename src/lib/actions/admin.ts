@@ -747,15 +747,24 @@ export async function genererCreneaux(du: string, au: string): Promise<Resultat>
  * Les réservations déjà enregistrées ne bougent pas : leur montant a été figé
  * au moment de l'écriture. Un changement de tarif ne vaut que pour la suite.
  */
+/**
+ * Ce que le formulaire de tarifs envoie.
+ *
+ * LES NOMBRES ARRIVENT EN TEXTE, comme les montants. Un champ de saisie
+ * contient toujours du texte, y compris vide ; le convertir à chaque frappe
+ * transformait un champ effacé en « 0 » — il fallait alors tout sélectionner
+ * pour retaper. `entier()` et `montantEnCents()` font la conversion ICI, au
+ * moment où l'on écrit en base, et refusent proprement une valeur absurde.
+ */
 export interface SaisieFormule {
   nom: string;
   accroche: string;
   description: string;
   prixBase: string;
-  enfantsInclus: number;
+  enfantsInclus: string | number;
   prixEnfantSup: string;
-  enfantsMax: number;
-  dureeMinutes: number;
+  enfantsMax: string | number;
+  dureeMinutes: string | number;
   inclus: string;
   actif: boolean;
 }

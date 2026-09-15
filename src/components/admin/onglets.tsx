@@ -30,11 +30,14 @@ export function Voyant() {
 export function LienOnglet({
   href,
   actif,
+  desactive = false,
   children,
   className = "",
 }: {
   href: string;
   actif: boolean;
+  /** Grisé ET inerte : ni cliquable, ni atteignable au clavier. */
+  desactive?: boolean;
   children: React.ReactNode;
   className?: string;
 }) {
@@ -42,6 +45,8 @@ export function LienOnglet({
     <Link
       href={href}
       aria-current={actif ? "page" : undefined}
+      aria-disabled={desactive || undefined}
+      tabIndex={desactive ? -1 : undefined}
       className={`inline-flex shrink-0 items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition-all duration-150 active:scale-[0.97] ${
         actif
           ? "bg-field/15 text-field ring-1 ring-field/40"
@@ -64,6 +69,18 @@ export function OngletsFiltres({
   /** Vrai pendant une recherche : les filtres ne s'appliquent plus. */
   desactives: boolean;
 }) {
+  /*
+    GRISÉS ET RÉELLEMENT INERTES.
+
+    Pendant une recherche, les onglets pâlissaient mais restaient cliquables.
+    Sur un écran tactile on touche ce qu'on voit : le lien menait alors à
+    `/admin?filtre=...` SANS le `q`, la recherche disparaissait d'un coup et la
+    liste du filtre revenait. Rien n'expliquait ce qui venait de se passer, et
+    on pouvait croire avoir perdu la fiche du client qu'on a au téléphone.
+
+    `pointer-events-none` fait correspondre le comportement à l'apparence, et
+    `aria-disabled` le dit aux lecteurs d'écran.
+  */
   return (
     <nav className={`flex flex-wrap gap-2 ${desactives ? "opacity-50" : ""}`}>
       {filtres.map((f) => (
@@ -71,6 +88,8 @@ export function OngletsFiltres({
           key={f.valeur}
           href={f.valeur === "a-venir" ? "/admin" : `/admin?filtre=${f.valeur}`}
           actif={!desactives && f.valeur === actif}
+          desactive={desactives}
+          className={desactives ? "pointer-events-none" : ""}
         >
           {f.label}
         </LienOnglet>

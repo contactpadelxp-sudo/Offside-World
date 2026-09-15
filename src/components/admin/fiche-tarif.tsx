@@ -63,10 +63,10 @@ export function FicheFormule({ f }: { f: FormuleAdmin }) {
     accroche: f.accroche,
     description: f.description,
     prixBase: String(f.prixBase),
-    enfantsInclus: f.enfantsInclus,
+    enfantsInclus: String(f.enfantsInclus),
     prixEnfantSup: String(f.prixEnfantSup),
-    enfantsMax: f.enfantsMax,
-    dureeMinutes: f.dureeMinutes,
+    enfantsMax: String(f.enfantsMax),
+    dureeMinutes: String(f.dureeMinutes),
     inclus: f.inclus.join("\n"),
     actif: f.actif,
   });
@@ -76,10 +76,10 @@ export function FicheFormule({ f }: { f: FormuleAdmin }) {
     v.accroche !== f.accroche ||
     v.description !== f.description ||
     v.prixBase !== String(f.prixBase) ||
-    v.enfantsInclus !== f.enfantsInclus ||
+    v.enfantsInclus !== String(f.enfantsInclus) ||
     v.prixEnfantSup !== String(f.prixEnfantSup) ||
-    v.enfantsMax !== f.enfantsMax ||
-    v.dureeMinutes !== f.dureeMinutes ||
+    v.enfantsMax !== String(f.enfantsMax) ||
+    v.dureeMinutes !== String(f.dureeMinutes) ||
     v.inclus !== f.inclus.join("\n") ||
     v.actif !== f.actif;
 
@@ -89,8 +89,30 @@ export function FicheFormule({ f }: { f: FormuleAdmin }) {
         enCours ? "opacity-70" : ""
       }`}
     >
+      {/*
+        « NON ENREGISTRÉ », EN HAUT, DÈS QUE QUELQUE CHOSE A CHANGÉ.
+
+        L'interrupteur « Proposée sur le site » est en haut de la fiche ; le
+        bouton « Enregistrer » est tout en bas, après cinq champs de prix et
+        deux grands champs de texte — hors écran sur un téléphone. Décocher
+        l'interrupteur ne retire donc RIEN de la vente tant qu'on n'a pas
+        redescendu jusqu'au bouton. On croit avoir retiré une formule, on quitte
+        la page, elle est toujours en vente.
+
+        Le même piège vaut pour un prix modifié en haut de fiche. Le repère
+        couvre donc la fiche entière et pas le seul interrupteur : il apparaît
+        dès que l'état diffère de ce qui est en base, et disparaît à
+        l'enregistrement.
+      */}
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h3 className="font-bold">{f.nom}</h3>
+        <div className="flex flex-wrap items-center gap-2">
+          <h3 className="font-bold">{f.nom}</h3>
+          {modifie && (
+            <span className="rounded-md bg-kick/15 px-2 py-0.5 text-xs font-semibold text-kick">
+              non enregistré
+            </span>
+          )}
+        </div>
         <div className="flex items-center gap-3">
           <span className="font-mono text-xs text-muted-foreground">{f.id}</span>
           <Interrupteur
@@ -136,8 +158,14 @@ export function FicheFormule({ f }: { f: FormuleAdmin }) {
         </div>
         <div>
           <label className={ETIQUETTE} htmlFor={`inclus-nb-${f.id}`}>Enfants compris dans le forfait</label>
+          {/*
+            `e.target.value` et non `Number(...)` : `Number("")` vaut 0, donc
+            effacer le champ pour retaper y écrivait « 0 » et il fallait
+            sélectionner avant de saisir. La valeur est convertie à
+            l'enregistrement, pas à chaque frappe.
+          */}
           <input id={`inclus-nb-${f.id}`} className={CHAMP} type="number" min={1} max={100} value={v.enfantsInclus}
-            onChange={(e) => setV({ ...v, enfantsInclus: Number(e.target.value) })} />
+            onChange={(e) => setV({ ...v, enfantsInclus: e.target.value })} />
         </div>
         <div>
           <label className={ETIQUETTE} htmlFor={`sup-${f.id}`}>Par enfant supplémentaire (€)</label>
@@ -147,12 +175,12 @@ export function FicheFormule({ f }: { f: FormuleAdmin }) {
         <div>
           <label className={ETIQUETTE} htmlFor={`max-${f.id}`}>Enfants maximum</label>
           <input id={`max-${f.id}`} className={CHAMP} type="number" min={1} max={100} value={v.enfantsMax}
-            onChange={(e) => setV({ ...v, enfantsMax: Number(e.target.value) })} />
+            onChange={(e) => setV({ ...v, enfantsMax: e.target.value })} />
         </div>
         <div>
           <label className={ETIQUETTE} htmlFor={`duree-${f.id}`}>Durée (minutes)</label>
           <input id={`duree-${f.id}`} className={CHAMP} type="number" min={15} max={600} step={15} value={v.dureeMinutes}
-            onChange={(e) => setV({ ...v, dureeMinutes: Number(e.target.value) })} />
+            onChange={(e) => setV({ ...v, dureeMinutes: e.target.value })} />
         </div>
       </div>
 
@@ -183,10 +211,10 @@ export function FicheFormule({ f }: { f: FormuleAdmin }) {
                 accroche: f.accroche,
                 description: f.description,
                 prixBase: String(f.prixBase),
-                enfantsInclus: f.enfantsInclus,
+                enfantsInclus: String(f.enfantsInclus),
                 prixEnfantSup: String(f.prixEnfantSup),
-                enfantsMax: f.enfantsMax,
-                dureeMinutes: f.dureeMinutes,
+                enfantsMax: String(f.enfantsMax),
+                dureeMinutes: String(f.dureeMinutes),
                 inclus: f.inclus.join("\n"),
                 actif: f.actif,
               })
@@ -273,6 +301,27 @@ export function FicheOption({ o }: { o: OptionAdmin }) {
           {occupe("option") && <Rotative />}
           Enregistrer
         </button>
+        {/*
+          Une formule modifiée par erreur peut être rétablie d'un clic ; une
+          option, non — il fallait recharger la page en devinant les anciennes
+          valeurs. Même bouton, même comportement.
+        */}
+        {modifie && (
+          <button
+            type="button"
+            onClick={() =>
+              setV({
+                libelle: o.libelle,
+                description: o.description,
+                prix: String(o.prix),
+                actif: o.actif,
+              })
+            }
+            className={BOUTON_NEUTRE}
+          >
+            Annuler les modifications
+          </button>
+        )}
       </div>
 
       <MessageAction retour={retour} />

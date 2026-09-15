@@ -52,7 +52,16 @@ export default async function PageReservations({
         </h1>
         {montantAffiche && (
           <p className="text-sm text-muted-foreground">
-            Montant attendu <span className="font-bold text-foreground">{euros(total)}</span>
+            {/*
+              « Total des réservations » et non « Montant attendu » : ce chiffre
+              est la somme des PRIX affichés, encaissements compris. Il ne dit
+              pas ce qu'il reste à recevoir, alors que son ancien nom le
+              promettait — et il change de sens d'un onglet à l'autre, « À
+              venir » mêlant confirmées et en attente là où « À confirmer » ne
+              compte que les secondes.
+            */}
+            Total des réservations{" "}
+            <span className="font-bold text-foreground">{euros(total)}</span>
           </p>
         )}
       </div>
@@ -62,7 +71,7 @@ export default async function PageReservations({
 
       <div className="mt-4 flex flex-wrap items-center gap-3">
         <OngletsFiltres filtres={FILTRES} actif={actif} desactives={Boolean(recherche)} />
-        <Recherche valeur={recherche} />
+        <Recherche valeur={recherche} filtre={actif} />
       </div>
 
       {recherche && (

@@ -255,7 +255,14 @@ export function FicheReservation({ r }: { r: ReservationAdmin }) {
           <p className="mt-2 flex items-start gap-1.5 text-sm font-medium text-kick">
             <AlerteTriangle className="mt-0.5 size-4 shrink-0" />
             <span>
-              <span className="sr-only">Allergies : </span>
+              {/*
+                L'ÉTIQUETTE ÉTAIT RÉSERVÉE AUX LECTEURS D'ÉCRAN.
+                La ligne affichait un triangle puis le texte brut, quand la
+                ligne « Remarques : » juste en dessous, moins critique, portait
+                la sienne en clair. Le seul champ qui peut envoyer un enfant à
+                l'hôpital était le seul à ne pas être nommé.
+              */}
+              <span className="font-semibold">Allergies : </span>
               {r.allergies}
             </span>
           </p>
@@ -372,11 +379,7 @@ export function FicheReservation({ r }: { r: ReservationAdmin }) {
                   </button>
                 </div>
 
-                {reste > 0 && remboursement === null && (
-                  <p className="mt-2 text-xs text-muted-foreground">
-                    Choisissez ce qui est rendu au client pour pouvoir annuler.
-                  </p>
-                )}
+
               </div>
             ) : (
               <button
@@ -454,6 +457,12 @@ export function FicheReservation({ r }: { r: ReservationAdmin }) {
                     {occupe("rembourser") ? <Rotative /> : <Coche className="size-4" />}
                     Rembourser
                   </button>
+                  {/*
+                    « Fermer » et non « Annuler » : le bouton qui annule la
+                    RÉSERVATION du client est à quelques centimètres, dans le
+                    même style. La note interne avait déjà reçu cette correction ;
+                    elle manquait ici, sur le bloc qui manipule de l'argent.
+                  */}
                   <button
                     type="button"
                     onClick={() => {
@@ -462,7 +471,7 @@ export function FicheReservation({ r }: { r: ReservationAdmin }) {
                     }}
                     className={BOUTON_NEUTRE}
                   >
-                    Annuler
+                    Fermer
                   </button>
                 </div>
 
