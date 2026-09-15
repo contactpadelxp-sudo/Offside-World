@@ -168,18 +168,20 @@ facturation serait hors de proportion et mal placé.
 - [ ] **Vidéo souvenir.** Elle est vendue dans les deux formules. La maintenir
       suppose de pouvoir la produire, la livrer, et recueillir l'autorisation
       parentale pour filmer des enfants. Sinon, la retirer des formules.
-- [ ] **Réservations sans paiement.** Une réservation validée sur le site est
-      enregistrée en « à confirmer » : elle bloque le créneau, et le site
-      annonce au client qu'on le recontacte. Sans confirmation, elle est
-      libérée au bout de 48 heures. À valider : est-ce le fonctionnement voulu
-      en attendant Stripe, et 48 heures est-il le bon délai ?
-- [ ] **Chiffres et avis affichés.** Trois contenus ne correspondent à rien de
-      réel, et un avis inventé est en outre interdit par le droit de la
-      consommation (pratique commerciale trompeuse) :
-      - « 2000+ fêtes organisées » (page d'accueil)
-      - « 4.8/5 sur Google (200+ avis) » (section « Pourquoi Offside »)
-      - le témoignage signé « Sophie D., Google »
-      Fournir les vrais chiffres et un vrai avis, ou retirer les trois.
+- [x] ~~Réservations sans paiement : 48 heures est-il le bon délai ?~~
+      **SANS OBJET dès que Stripe encaisse.** Le branchement est en cours
+      (14-15 septembre 2026) ; le délai qui tient un créneau passe alors seul de
+      48 h à 45 min, et la réservation est confirmée par le paiement, pas par
+      Brahim. La question ne se reposera que si on revenait en arrière.
+- [x] ~~Chiffres et avis inventés.~~ **LES TROIS SONT RETIRÉS.** « 4.8/5 sur
+      Google » et le témoignage signé « Sophie D. » l'avaient été plus tôt ;
+      « 2000+ fêtes organisées » l'a été le 13 septembre 2026. Vérifié par
+      recherche dans les sources : le site ne porte plus aucune allégation
+      chiffrée invérifiable (art. VI.97 du Code de droit économique).
+
+      Reste une OPPORTUNITÉ, pas une obligation : si Brahim a de vrais chiffres
+      — nombre d'anniversaires depuis l'ouverture, note Google réelle — ils
+      auraient plus de poids que ce qui a été retiré. Sinon on reste comme ça.
 
 ## Contenus manquants
 
