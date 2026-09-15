@@ -5,6 +5,7 @@ import {
   annulerReservation,
   confirmerReservation,
   enregistrerNoteReservation,
+  rembourserReservation,
 } from "@/lib/actions/admin";
 import type { ChoixRemboursement, ReservationAdmin, StatutReservation } from "@/lib/vues";
 import { euros, montantLisible } from "@/lib/tarification";
@@ -19,6 +20,7 @@ import {
 import {
   AlerteTriangle,
   Ballon,
+  Carte,
   Coche,
   Croix,
   Document,
@@ -108,6 +110,13 @@ export function FicheReservation({ r }: { r: ReservationAdmin }) {
     la somme.
   */
   const [remboursement, setRemboursement] = useState<ChoixRemboursement | null>(null);
+  /*
+    Le remboursement HORS ANNULATION a son propre état : c'est une autre
+    décision, prise à un autre moment, et mélanger les deux ferait qu'ouvrir
+    l'un préremplirait l'autre.
+  */
+  const [remboursementOuvert, setRemboursementOuvert] = useState(false);
+  const [choixRemb, setChoixRemb] = useState<ChoixRemboursement | null>(null);
   const [noteOuverte, setNoteOuverte] = useState(false);
   const [texteNote, setTexteNote] = useState(r.noteInterne ?? "");
 
@@ -231,6 +240,35 @@ export function FicheReservation({ r }: { r: ReservationAdmin }) {
         )}
       </div>
 
+      {/*
+        L'ÉTAT DE L'ARGENT, VISIBLE SANS CLIQUER.
+
+        La fiche affichait le prix de la réservation et rien d'autre : ni si
+        elle avait été payée, ni combien avait déjà été rendu. Brahim devait
+        ouvrir Stripe pour le savoir — donc, en pratique, ne le savait pas. Sur
+        une réservation remboursée à moitié, c'est pourtant le seul chiffre qui
+        compte avant de décider quoi que ce soit.
+      */}
+      {r.paiement && (
+        <p className="mt-3 flex flex-wrap items-baseline gap-x-2 gap-y-0.5 text-sm">
+          <span className="font-medium">
+            Payé {montantLisible(r.paiement.montantCents)}
+          </span>
+          {r.paiement.rembourseCents > 0 && (
+            <>
+              <span className="text-muted-foreground">·</span>
+              <span className="text-destructive">
+                remboursé {montantLisible(r.paiement.rembourseCents)}
+              </span>
+              <span className="text-muted-foreground">·</span>
+              <span className={reste > 0 ? "text-muted-foreground" : "font-medium text-muted-foreground"}>
+                {reste > 0 ? `reste ${montantLisible(reste)}` : "intégralement remboursé"}
+              </span>
+            </>
+          )}
+        </p>
+      )}
+
       <div className="mt-4 border-t border-border pt-4">
         <div className="flex flex-wrap items-center gap-2">
           {statut === "en_attente" && !r.passee && (
@@ -342,6 +380,100 @@ export function FicheReservation({ r }: { r: ReservationAdmin }) {
               >
                 {occupe("annuler") ? <Rotative /> : <Croix className="size-4" />}
                 Annuler
+              </button>
+            ))}
+
+          {/*
+            REMBOURSER SANS ANNULER — le cas qui manquait.
+
+            Rendre de l'argent n'était possible qu'à la seconde exacte de
+            l'annulation. Passé ce moment, plus aucun bouton : Brahim qui avait
+            coché « aucun remboursement » puis dont le client rappelait n'avait
+            plus que Stripe — où le montant serait parti sans jamais être écrit
+            chez nous, laissant la fiche affirmer « 0 € remboursé ».
+
+            Le bouton apparaît dès qu'il reste quelque chose à rendre, quel que
+            soit le statut. Sur une réservation encore active, il ne l'annule
+            pas : le créneau reste réservé, et le bloc le dit en toutes lettres
+            pour qu'on ne s'en serve pas par erreur à la place d'« Annuler ».
+          */}
+          {reste > 0 &&
+            (remboursementOuvert ? (
+              <div className="w-full rounded-lg border border-border bg-muted/40 px-3 py-2.5">
+                <p className="text-sm font-medium">
+                  Rembourser {montantLisible(reste)} au maximum
+                </p>
+                <p className="mt-0.5 text-xs text-muted-foreground">
+                  {active
+                    ? "La réservation N'EST PAS annulée : le créneau reste réservé au client."
+                    : "La réservation reste annulée. Seul l'argent est rendu."}
+                </p>
+
+                <fieldset className="mt-2">
+                  <legend className="sr-only">Montant à rembourser</legend>
+                  <div className="flex flex-col gap-1">
+                    {CHOIX_REMBOURSEMENT.filter((c) => c.valeur !== "aucun").map((c) => (
+                      <label
+                        key={c.valeur}
+                        className="inline-flex min-h-9 cursor-pointer items-center gap-2 text-sm"
+                      >
+                        <input
+                          type="radio"
+                          name={`remb-hors-${r.id}`}
+                          value={c.valeur}
+                          checked={choixRemb === c.valeur}
+                          onChange={() => setChoixRemb(c.valeur)}
+                          className="size-4 shrink-0 accent-field"
+                        />
+                        {c.libelle(reste, r.paiement?.baremeCents ?? 0)}
+                      </label>
+                    ))}
+                  </div>
+                </fieldset>
+
+                <div className="mt-2.5 flex flex-wrap items-center gap-2">
+                  <button
+                    type="button"
+                    disabled={enCours || choixRemb === null}
+                    onClick={() => {
+                      const choix = choixRemb;
+                      if (!choix) return;
+                      setRemboursementOuvert(false);
+                      setChoixRemb(null);
+                      lancer("rembourser", () => rembourserReservation(r.id, choix));
+                    }}
+                    className={BOUTON_PRINCIPAL}
+                  >
+                    {occupe("rembourser") ? <Rotative /> : <Coche className="size-4" />}
+                    Rembourser
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setRemboursementOuvert(false);
+                      setChoixRemb(null);
+                    }}
+                    className={BOUTON_NEUTRE}
+                  >
+                    Annuler
+                  </button>
+                </div>
+
+                {choixRemb === null && (
+                  <p className="mt-2 text-xs text-muted-foreground">
+                    Choisissez un montant pour pouvoir rembourser.
+                  </p>
+                )}
+              </div>
+            ) : (
+              <button
+                type="button"
+                disabled={enCours}
+                onClick={() => setRemboursementOuvert(true)}
+                className={BOUTON_NEUTRE}
+              >
+                {occupe("rembourser") ? <Rotative /> : <Carte className="size-4" />}
+                Rembourser
               </button>
             ))}
 

@@ -1,6 +1,6 @@
 import "server-only";
 import { base, baseConfiguree } from "@/lib/supabase/server";
-import { heure, jourISO, jourLisible, jourLisibleCap } from "@/lib/temps";
+import { heure, heuresAvant, jourISO, jourLisible, jourLisibleCap } from "@/lib/temps";
 import { lireOptions } from "@/lib/db/referentiel";
 import { partRemboursee } from "@/data/reglement";
 import { lignesDepuisJson } from "@/lib/devis";
@@ -229,7 +229,10 @@ function construire(
             baremeCents: Math.min(
               Math.round(
                 paye.montantCents *
-                  partRemboursee((debut.getTime() - maintenant.getTime()) / 3_600_000)
+                  // Même fonction que l'action qui rembourse pour de vrai :
+                  // le montant montré et le montant envoyé ne peuvent pas
+                  // diverger. Voir `heuresAvant` dans `lib/temps.ts`.
+                  partRemboursee(heuresAvant(debut, maintenant))
               ),
               paye.montantCents - paye.rembourseCents
             ),

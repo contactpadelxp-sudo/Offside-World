@@ -21,6 +21,7 @@ import { lireRecapEmail } from "@/lib/db/backoffice";
 import { diagnosticEmail, envoyer, envoyerEnRemontantLErreur } from "@/lib/email/envoi";
 import {
   auClientDevisPropose,
+  auClientRemboursement,
   auClientReservationAnnulee,
   auClientReservationConfirmee,
   emailDeTest,
@@ -249,6 +250,108 @@ export async function annulerReservation(
       message:
         `Réservation ${data.reference} annulée, le créneau est libéré.${phraseArgent}` +
         `${phraseClient}${avertissement}`,
+    };
+  } catch (e) {
+    return echec(e);
+  }
+}
+
+/**
+ * Rembourse une réservation SANS CHANGER SON STATUT.
+ *
+ * LE CAS QUE ÇA COUVRE, ET POURQUOI IL FALLAIT LE COUVRIR. Jusqu'ici, rendre
+ * de l'argent n'était possible qu'à la seconde exacte de l'annulation : passé
+ * ce moment, plus aucun bouton. Brahim qui annule en cochant « aucun
+ * remboursement », puis dont le client rappelle et s'explique, n'avait plus
+ * que le tableau de bord Stripe — où le montant serait parti sans jamais être
+ * écrit dans notre base. La fiche aurait continué d'afficher « 0 € remboursé »,
+ * et l'historique aurait été faux.
+ *
+ * Les garanties sont exactement celles de l'annulation, parce que c'est le même
+ * code dessous : le navigateur envoie un CHOIX, jamais un montant ; le serveur
+ * relit le paiement et la date du créneau et recalcule ; le cumul déjà rendu
+ * plafonne l'opération, donc un double clic ne rend pas deux fois.
+ *
+ * La réservation garde son statut : rembourser n'est pas annuler. Une
+ * réservation confirmée et honorée peut être remboursée — un geste commercial,
+ * un incident — sans que le créneau ne soit rendu à la vente.
+ */
+export async function rembourserReservation(
+  id: string,
+  remboursement: ChoixRemboursement
+): Promise<Resultat> {
+  const session = await garde();
+  if (!session) return REFUS_SESSION;
+
+  try {
+    const cible = uuid(id, "Réservation");
+    const choix = choixRemboursement(remboursement);
+    if (choix === "aucun") {
+      return { ok: false, message: "Choisissez ce qui doit être rendu au client." };
+    }
+
+    const paiement = await paiementRemboursable(cible);
+    if (!paiement) {
+      return {
+        ok: false,
+        message:
+          "Aucun paiement remboursable sur cette réservation : rien n'a été encaissé en ligne, " +
+          "ou tout a déjà été rendu.",
+      };
+    }
+
+    const { data: creneau } = await base()
+      .from("reservations_detaillees")
+      .select("debut, reference")
+      .eq("id", cible)
+      .maybeSingle();
+
+    // Même refus que pour l'annulation : sans la date, le barème placerait
+    // l'opération dans le dernier palier et ne rendrait rien, en silence.
+    if (choix === "bareme" && !creneau?.debut) {
+      return {
+        ok: false,
+        message:
+          "Impossible de lire la date du créneau : le barème ne peut pas être appliqué " +
+          "sans elle. Réessayez, ou choisissez « remboursement intégral ».",
+      };
+    }
+
+    const montant = montantARembourser(
+      paiement,
+      choix,
+      creneau?.debut ? heuresAvant(creneau.debut) : 0
+    );
+    if (montant <= 0) {
+      return {
+        ok: false,
+        message: "Le barème ne prévoit aucun remboursement à cette date. Rien n'a été envoyé.",
+      };
+    }
+
+    const resultat = await rembourser(paiement, montant);
+    if (resultat.erreur) return { ok: false, message: resultat.erreur };
+
+    await journaliser(session, "paiement.rembourse", creneau?.reference ?? cible, {
+      montant_cents: resultat.montantCents,
+      hors_annulation: true,
+    });
+    rafraichir();
+
+    const recap = await lireRecapEmail(cible);
+    let phraseClient: string;
+    if (!recap?.clientEmail) {
+      phraseClient = " ⚠ Aucune adresse e-mail pour ce client : prévenez-le vous-même.";
+    } else {
+      const envoi = await envoyer(auClientRemboursement(recap, resultat.montantCents));
+      phraseClient = envoi.ok
+        ? " Le client en est informé par e-mail."
+        : " ⚠ L'e-mail au client N'EST PAS parti : prévenez-le vous-même.";
+    }
+
+    return {
+      ok: true,
+      message: `${montantLisible(resultat.montantCents)} remboursés.${phraseClient}`,
     };
   } catch (e) {
     return echec(e);

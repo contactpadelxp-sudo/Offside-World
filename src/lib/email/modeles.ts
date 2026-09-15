@@ -419,6 +419,54 @@ export function auClientReservationAnnulee(r: RecapEmail): Message {
   );
 }
 
+/**
+ * Remboursement effectué après coup, sans nouvelle annulation.
+ *
+ * POURQUOI CE MESSAGE EXISTE. Le remboursement n'était possible qu'au moment
+ * exact de l'annulation. Si Brahim annulait en cochant « aucun remboursement »
+ * puis changeait d'avis — le client rappelle, s'explique, et il accepte —, il
+ * ne pouvait plus rien faire depuis son back-office. Ce cas est désormais
+ * traité, et il appelle son propre e-mail : le client a déjà reçu un message
+ * d'annulation qui lui disait, à l'époque, qu'il ne serait pas remboursé.
+ * Lui renvoyer ce même message serait incompréhensible.
+ *
+ * `montantCents` est la somme DE CE REMBOURSEMENT-CI, pas le cumul : c'est
+ * celle que le client verra apparaître sur son relevé.
+ */
+export function auClientRemboursement(r: RecapEmail, montantCents: number): Message {
+  const apres: string[] = [
+    `<strong>Remboursement de ${montantLisible(montantCents)}.</strong> Le montant revient sur ` +
+      "le moyen de paiement utilisé lors de la réservation, sous quelques jours ouvrables " +
+      "selon votre banque.",
+  ];
+
+  /*
+    On ne dit « sur les N € réglés » que s'il reste effectivement quelque chose :
+    sur un remboursement intégral, la précision n'apporte rien et alourdit.
+  */
+  if (r.paiement && r.paiement.montantCents > montantCents) {
+    apres.push(
+      `Pour mémoire, la réservation avait été réglée ${montantLisible(r.paiement.montantCents)}.`
+    );
+  }
+
+  apres.push(
+    `Une question sur ce remboursement ? Répondez à cet e-mail, ou écrivez-nous à ` +
+      `<a href="mailto:${ech(EMAIL)}" style="color:${ACCENT};">${ech(EMAIL)}</a>.`
+  );
+
+  return composer(
+    r.clientEmail,
+    `Remboursement ${r.reference} — ${NOM_COMMERCIAL}`,
+    "Vous avez été remboursé",
+    `Bonjour ${ech(r.clientNom)}, nous venons de procéder au remboursement de votre réservation.`,
+    lignesReservation(r),
+    apres,
+    EMAIL,
+    true
+  );
+}
+
 export function auClientDevisRecu(d: DevisEmail): Message {
   return composer(
     d.contactEmail,
