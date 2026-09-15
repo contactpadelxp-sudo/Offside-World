@@ -96,21 +96,41 @@ async function appelerFournisseur(message: Message): Promise<void> {
   }
 }
 
+/** Ce qu'il est advenu d'un envoi. */
+export interface ResultatEnvoi {
+  ok: boolean;
+  /** Pourquoi ça a échoué, en une phrase montrable à l'exploitant. */
+  raison?: string;
+}
+
 /**
- * Envoie un message. Ne lève jamais : l'échec est journalisé côté serveur, et
- * l'opération qui l'a déclenché reste valide.
+ * Envoie un message. NE LÈVE JAMAIS : l'échec est journalisé côté serveur, et
+ * l'opération qui l'a déclenché reste valide. Une réservation ne doit pas
+ * échouer parce qu'un fournisseur d'e-mails est en panne.
+ *
+ * ELLE RENVOIE MAINTENANT CE QUI S'EST PASSÉ, et c'est un correctif.
+ * L'ancienne version renvoyait `void` : l'appelant ne pouvait pas distinguer
+ * un envoi réussi d'un envoi avalé. L'annulation d'une réservation en profitait
+ * pour annoncer à Brahim « Le client en est informé par e-mail » sans rien en
+ * savoir — un message rassurant, parfois faux, sur le seul écran qui lui dit
+ * s'il doit décrocher son téléphone.
+ *
+ * Les appelants qui ignorent la valeur renvoyée se comportent exactement comme
+ * avant.
  */
-export async function envoyer(message: Message): Promise<void> {
+export async function envoyer(message: Message): Promise<ResultatEnvoi> {
   if (!emailConfigure()) {
     console.warn(
       `E-mail non envoyé (fournisseur non configuré) : « ${message.sujet} » à ${message.destinataire}`
     );
-    return;
+    return { ok: false, raison: "le fournisseur d'e-mails n'est pas configuré" };
   }
   try {
     await appelerFournisseur(message);
+    return { ok: true };
   } catch (e) {
     console.error("Envoi d'e-mail impossible :", e);
+    return { ok: false, raison: e instanceof Error ? e.message : "erreur inconnue" };
   }
 }
 

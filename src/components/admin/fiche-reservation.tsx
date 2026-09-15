@@ -63,10 +63,9 @@ const STATUTS: Record<StatutReservation, { label: string; classe: string }> = {
  * Les trois manières d'annuler une réservation payée.
  *
  * « Barème » est mis en tête parce que c'est le cas courant — un client qui se
- * désiste — mais AUCUN n'est présélectionné : rendre de l'argent est une
- * décision, pas un défaut. Tant que rien n'est coché, le bouton annule sans
- * rembourser, ce qui est réversible d'un clic dans Stripe ; l'inverse ne l'est
- * pas.
+ * désiste. Aucun des trois n'est présélectionné : rendre de l'argent, ou le
+ * garder, sont deux décisions, et ni l'une ni l'autre ne doit être prise par
+ * défaut. Tant qu'aucune n'est cochée, l'annulation est bloquée.
  */
 const CHOIX_REMBOURSEMENT: {
   valeur: ChoixRemboursement;
@@ -94,7 +93,21 @@ export function FicheReservation({ r }: { r: ReservationAdmin }) {
     (_actuel, vise) => vise
   );
   const [confirmeAnnulation, setConfirmeAnnulation] = useState(false);
-  const [remboursement, setRemboursement] = useState<ChoixRemboursement>("aucun");
+  /*
+    `null` AU DÉPART, ET C'EST LE CŒUR DE LA CORRECTION.
+
+    L'état partait de `"aucun"`, ce qui cochait « Aucun remboursement » à
+    l'ouverture du bloc. Brahim pouvait donc annuler une réservation payée trois
+    semaines à l'avance et garder les 180 € du client sans avoir rien décidé —
+    il suffisait de ne pas remarquer les trois options. Le commentaire du code
+    affirmait l'inverse (« AUCUN n'est présélectionné »), ce qui est précisément
+    la manière dont ce genre de piège survit à une relecture.
+
+    Tant qu'il reste de l'argent à rendre, le bouton « Oui, annuler » est
+    maintenant inerte : on ne peut pas annuler sans avoir dit ce qu'on fait de
+    la somme.
+  */
+  const [remboursement, setRemboursement] = useState<ChoixRemboursement | null>(null);
   const [noteOuverte, setNoteOuverte] = useState(false);
   const [texteNote, setTexteNote] = useState(r.noteInterne ?? "");
 
@@ -253,14 +266,20 @@ export function FicheReservation({ r }: { r: ReservationAdmin }) {
                   chez Stripe. Un champ libre ferait de cet écran une commande
                   de virement, à un chiffre de trop près.
                 */}
+                {/*
+                  Les trois choix sont EMPILÉS, un par ligne, et non alignés en
+                  rangée : c'est une décision sur de l'argent, pas une barre
+                  d'outils. Chacun porte la somme qu'il engage, calculée sur le
+                  paiement réel.
+                */}
                 {reste > 0 && (
                   <fieldset className="mt-2">
                     <legend className="sr-only">Remboursement</legend>
-                    <div className="flex flex-wrap gap-x-4 gap-y-1.5">
+                    <div className="flex flex-col gap-1">
                       {CHOIX_REMBOURSEMENT.map((c) => (
                         <label
                           key={c.valeur}
-                          className="inline-flex min-h-8 cursor-pointer items-center gap-1.5 text-sm"
+                          className="inline-flex min-h-9 cursor-pointer items-center gap-2 text-sm"
                         >
                           <input
                             type="radio"
@@ -268,7 +287,7 @@ export function FicheReservation({ r }: { r: ReservationAdmin }) {
                             value={c.valeur}
                             checked={remboursement === c.valeur}
                             onChange={() => setRemboursement(c.valeur)}
-                            className="accent-destructive"
+                            className="size-4 shrink-0 accent-destructive"
                           />
                           {c.libelle(reste, r.paiement?.baremeCents ?? 0)}
                         </label>
@@ -280,12 +299,14 @@ export function FicheReservation({ r }: { r: ReservationAdmin }) {
                 <div className="mt-2.5 flex flex-wrap items-center gap-2">
                   <button
                     type="button"
-                    disabled={enCours}
+                    disabled={enCours || (reste > 0 && remboursement === null)}
                     onClick={() => {
+                      const choix = remboursement ?? "aucun";
                       setConfirmeAnnulation(false);
+                      setRemboursement(null);
                       lancer("annuler", async () => {
                         projeter("annulee");
-                        return annulerReservation(r.id, remboursement);
+                        return annulerReservation(r.id, choix);
                       });
                     }}
                     className={BOUTON_DANGER}
@@ -294,12 +315,23 @@ export function FicheReservation({ r }: { r: ReservationAdmin }) {
                   </button>
                   <button
                     type="button"
-                    onClick={() => setConfirmeAnnulation(false)}
+                    onClick={() => {
+                      setConfirmeAnnulation(false);
+                      // Sans ça, un choix fait puis abandonné resterait coché à
+                      // la réouverture du bloc, sur une décision d'argent.
+                      setRemboursement(null);
+                    }}
                     className={BOUTON_NEUTRE}
                   >
                     Non
                   </button>
                 </div>
+
+                {reste > 0 && remboursement === null && (
+                  <p className="mt-2 text-xs text-muted-foreground">
+                    Choisissez ce qui est rendu au client pour pouvoir annuler.
+                  </p>
+                )}
               </div>
             ) : (
               <button

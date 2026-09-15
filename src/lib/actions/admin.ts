@@ -193,11 +193,34 @@ export async function annulerReservation(
 
     rafraichir();
 
-    // Annuler sans prévenir le client, c'est le laisser venir pour rien.
-    after(async () => {
-      const recap = await lireRecapEmail(cible);
-      if (recap?.clientEmail) await envoyer(auClientReservationAnnulee(recap));
-    });
+    /*
+      L'E-MAIL PART ICI, ATTENDU, ET PAS DANS `after()`.
+
+      Annuler sans prévenir le client, c'est le laisser venir pour rien — et
+      quand de l'argent a été rendu, c'est le laisser sans trace écrite de ce
+      remboursement. Cet e-mail n'est donc pas un accessoire.
+
+      Il partait auparavant en tâche de fond, et `envoyer()` avalait ses
+      erreurs : le message de retour affirmait « Le client en est informé par
+      e-mail » sans rien en savoir. Brahim pouvait donc lire une confirmation
+      rassurante alors que personne n'avait été prévenu — exactement le cas où
+      il aurait fallu décrocher son téléphone.
+
+      On attend l'envoi et on DIT CE QUI S'EST PASSÉ. Le coût est de quelques
+      centaines de millisecondes sur un écran d'administration où l'on vient de
+      cliquer « Oui, annuler » : c'est le bon endroit pour attendre. Le webhook
+      Stripe, lui, garde `after()` — là, une réponse lente fait tout réessayer.
+    */
+    const recap = await lireRecapEmail(cible);
+    let phraseClient: string;
+    if (!recap?.clientEmail) {
+      phraseClient = " ⚠ Aucune adresse e-mail pour ce client : prévenez-le vous-même.";
+    } else {
+      const envoi = await envoyer(auClientReservationAnnulee(recap));
+      phraseClient = envoi.ok
+        ? " Le client en est informé par e-mail."
+        : " ⚠ L'e-mail au client N'EST PAS parti : prévenez-le vous-même.";
+    }
 
     // L'annulation retire la ligne de l'index unique partiel : le créneau
     // redevient réservable immédiatement.
@@ -205,7 +228,7 @@ export async function annulerReservation(
       ok: true,
       message:
         `Réservation ${data.reference} annulée, le créneau est libéré.${phraseArgent}` +
-        ` Le client en est informé par e-mail.${avertissement}`,
+        `${phraseClient}${avertissement}`,
     };
   } catch (e) {
     return echec(e);
