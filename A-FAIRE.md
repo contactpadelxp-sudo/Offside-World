@@ -182,6 +182,17 @@ facturation serait hors de proportion et mal placé.
 
 ## Décisions à trancher
 
+- [ ] **Onglet « Réglages » : retirer ce qui ne sert à rien à Brahim.**
+      Décidé le 15 septembre 2026 par Mathis : à faire, mais **plus tard**, une
+      fois qu'on saura ce dont Brahim se sert réellement.
+
+      Le problème constaté : la page lui donne des instructions qu'il ne peut
+      pas exécuter — des variables d'environnement Vercel, qu'il n'a ni les
+      accès ni les raisons de toucher. Ce qui lui est utile, c'est de savoir si
+      une chose est configurée ou non, pas comment la configurer.
+
+      À trancher le moment venu : tout retirer, ou n'en garder qu'un état
+      « configuré / pas configuré » sans mode d'emploi.
 - [ ] **Vidéo souvenir.** Elle est vendue dans les deux formules. La maintenir
       suppose de pouvoir la produire, la livrer, et recueillir l'autorisation
       parentale pour filmer des enfants. Sinon, la retirer des formules.

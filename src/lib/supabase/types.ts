@@ -575,6 +575,10 @@ export type Database = {
         Args: { delai?: string }
         Returns: number
       }
+      expirer_reservations_passees: {
+        Args: never
+        Returns: number
+      }
       generer_creneaux_anniversaire: {
         Args: { au: string; du: string }
         Returns: {

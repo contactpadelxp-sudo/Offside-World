@@ -155,13 +155,39 @@ export interface SaisieDevis {
   clientTva: string;
 }
 
+/**
+ * Les familles d'actions du journal.
+ *
+ * Elles servent à filtrer, et surtout à sortir les connexions du flux : sur
+ * quatorze entrées réelles, quatre étaient des connexions. Elles doivent être
+ * conservées — c'est une trace d'accès à des données d'enfants — mais elles ne
+ * sont jamais ce qu'on cherche quand on ouvre le journal pour comprendre ce qui
+ * est arrivé à une réservation.
+ */
+export type FamilleJournal = "reservations" | "devis" | "catalogue" | "acces";
+
 export interface EntreeJournal {
   id: number;
   acteur: string;
+  /** La clé brute (`reservation.annulee`), pour regrouper et filtrer. */
   action: string;
+  famille: FamilleJournal;
+  /** Le libellé en français, affiché. */
+  libelle: string;
   cible: string | null;
-  detail: string | null;
-  quand: string;
+  /**
+   * Le complément d'information, écrit en français.
+   *
+   * La colonne `detail` de la base contient du JSON — `{"montant_cents":18000}`,
+   * `{"statut":"acceptee"}`, `{"remboursement":"aucun"}`. Il était sérialisé
+   * puis jamais affiché : la seule donnée qui distingue « devis envoyé » à 180 €
+   * de « devis envoyé » à 1 800 € était lue, transportée, et jetée.
+   */
+  precision: string | null;
+  /** Vers quoi pointer pour voir la chose concernée, ou `null`. */
+  lien: string | null;
+  jourLabel: string;
+  heure: string;
 }
 
 export interface CreneauAdmin {
