@@ -108,10 +108,20 @@ export function FicheDevis({ d }: { d: DevisAdmin }) {
           <p className="text-sm text-muted-foreground">{d.contactNom}</p>
         </div>
 
+        {/*
+          `sm:block` SUR CHAQUE LIGNE, et pas seulement sur le conteneur.
+
+          Le conteneur passait bien en `block` à partir de `sm:`, mais ses
+          enfants restaient des `span` en ligne : la date et la période se
+          collaient l'une à l'autre, et l'écran affichait « Jeudi 15 octobre
+          2026Après-midi ». Le séparateur « · » ne rattrapait rien, puisqu'il
+          est justement masqué à cette taille — il n'existe que pour la version
+          téléphone, où tout tient sur une ligne.
+        */}
         <div className="flex flex-wrap items-center gap-x-2 text-sm sm:block sm:text-right">
-          {d.dateSouhaitee && <span className="font-medium">{d.dateSouhaitee}</span>}
+          {d.dateSouhaitee && <span className="font-medium sm:block">{d.dateSouhaitee}</span>}
           {d.periode && (
-            <span className="text-muted-foreground">
+            <span className="text-muted-foreground sm:block">
               <span className="sm:hidden">· </span>
               {d.periode}
             </span>

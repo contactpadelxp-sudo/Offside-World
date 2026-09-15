@@ -129,6 +129,27 @@ export function FicheReservation({ r }: { r: ReservationAdmin }) {
   // aucune question d'argent.
   const reste = r.paiement ? r.paiement.montantCents - r.paiement.rembourseCents : 0;
 
+  /*
+    Ce que la fiche dit de l'argent, en une ligne. On ne répète le montant que
+    lorsqu'il diffère du prix affiché juste au-dessus — c'est-à-dire presque
+    jamais, sauf si le tarif a changé depuis la réservation.
+  */
+  const etatArgent = (() => {
+    if (!r.paiement) return { texte: "non payé", classe: "text-muted-foreground" };
+    const memeMontant = Math.round(r.total * 100) === r.paiement.montantCents;
+    if (r.paiement.rembourseCents <= 0) {
+      return {
+        texte: memeMontant ? "payé" : `payé ${montantLisible(r.paiement.montantCents)}`,
+        classe: "text-field",
+      };
+    }
+    if (reste <= 0) return { texte: "remboursé en entier", classe: "text-destructive" };
+    return {
+      texte: `remboursé ${montantLisible(r.paiement.rembourseCents)} · reste ${montantLisible(reste)}`,
+      classe: "text-destructive",
+    };
+  })();
+
   return (
     <article
       className={`rounded-2xl border border-border bg-card p-5 transition-opacity duration-200 ${
@@ -168,7 +189,22 @@ export function FicheReservation({ r }: { r: ReservationAdmin }) {
         */}
         <div className="flex flex-wrap items-baseline gap-x-2 sm:block sm:text-right">
           <p className="text-lg font-bold text-field">{euros(r.total)}</p>
-          <p className="text-sm font-medium">{r.jourLabel}</p>
+          {/*
+            L'ÉTAT DE L'ARGENT EST COLLÉ AU PRIX, et il n'apparaît que s'il
+            apprend quelque chose.
+
+            Il vivait sur une ligne à part, sous le bloc de coordonnées :
+            « Payé 200 € » répétait donc le « 200 € » affiché trois lignes plus
+            haut, sans rien ajouter. Et sur une réservation NON payée — un
+            paiement abandonné, ou une réservation antérieure à Stripe — la
+            fiche ne disait rien du tout : Brahim ne pouvait pas distinguer
+            « réglée » de « pas réglée » sans ouvrir Stripe.
+
+            Quatre états, une ligne, jamais de redondance : non payé, payé,
+            remboursé en partie, remboursé en entier.
+          */}
+          <p className={`text-xs font-medium ${etatArgent.classe}`}>{etatArgent.texte}</p>
+          <p className="mt-1 text-sm font-medium">{r.jourLabel}</p>
           <p className="text-sm text-muted-foreground">
             {r.debut} – {r.fin}
           </p>
@@ -239,35 +275,6 @@ export function FicheReservation({ r }: { r: ReservationAdmin }) {
           </p>
         )}
       </div>
-
-      {/*
-        L'ÉTAT DE L'ARGENT, VISIBLE SANS CLIQUER.
-
-        La fiche affichait le prix de la réservation et rien d'autre : ni si
-        elle avait été payée, ni combien avait déjà été rendu. Brahim devait
-        ouvrir Stripe pour le savoir — donc, en pratique, ne le savait pas. Sur
-        une réservation remboursée à moitié, c'est pourtant le seul chiffre qui
-        compte avant de décider quoi que ce soit.
-      */}
-      {r.paiement && (
-        <p className="mt-3 flex flex-wrap items-baseline gap-x-2 gap-y-0.5 text-sm">
-          <span className="font-medium">
-            Payé {montantLisible(r.paiement.montantCents)}
-          </span>
-          {r.paiement.rembourseCents > 0 && (
-            <>
-              <span className="text-muted-foreground">·</span>
-              <span className="text-destructive">
-                remboursé {montantLisible(r.paiement.rembourseCents)}
-              </span>
-              <span className="text-muted-foreground">·</span>
-              <span className={reste > 0 ? "text-muted-foreground" : "font-medium text-muted-foreground"}>
-                {reste > 0 ? `reste ${montantLisible(reste)}` : "intégralement remboursé"}
-              </span>
-            </>
-          )}
-        </p>
-      )}
 
       <div className="mt-4 border-t border-border pt-4">
         <div className="flex flex-wrap items-center gap-2">
