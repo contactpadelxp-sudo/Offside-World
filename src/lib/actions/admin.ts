@@ -174,6 +174,26 @@ export async function annulerReservation(
     let avertissement = "";
     const paiement = choix === "aucun" ? null : await paiementRemboursable(cible);
     if (paiement) {
+      /*
+        SANS LA DATE DU CRÉNEAU, ON NE CALCULE PAS LE BARÈME — ON REFUSE.
+
+        Le repli valait `0` heure, ce qui plaçait l'annulation dans le dernier
+        palier : « moins de 48 heures, aucun remboursement ». Si la lecture du
+        créneau échouait, le client ne touchait donc rien, et Brahim lisait
+        « Le barème ne prévoit aucun remboursement à cette date » — une réponse
+        fausse, présentée comme le résultat normal du barème.
+
+        Un remboursement intégral, lui, ne dépend pas de la date : il reste
+        possible. Seul le barème exige de savoir quand tombe l'activité.
+      */
+      if (choix === "bareme" && !avant?.debut) {
+        return {
+          ok: false,
+          message:
+            "Impossible de lire la date du créneau : le barème ne peut pas être appliqué " +
+            "sans elle. Réessayez, ou choisissez « remboursement intégral » ou « aucun ».",
+        };
+      }
       const heuresAvant = avant?.debut
         ? (new Date(avant.debut).getTime() - Date.now()) / 3_600_000
         : 0;

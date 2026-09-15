@@ -49,11 +49,14 @@ export const RESUME_ANNULATION =
  * Part remboursée pour une annulation intervenant `heuresAvant` heures
  * avant le début de l'activité.
  *
- * VOLONTAIREMENT CONSERVÉE BIEN QU'INUTILISÉE. Ce n'est pas du code mort mais
- * du code en attente : rien ne rembourse aujourd'hui puisque rien n'encaisse.
- * Elle traduit en calcul le barème affiché au client et repris dans les CGV —
- * le supprimer obligerait à le réécrire au moment de brancher le paiement,
- * avec le risque que la nouvelle version diverge de ce qui a été promis.
+ * ELLE EST DÉSORMAIS EN SERVICE. Écrite avant que rien n'encaisse, elle est
+ * appelée depuis le 15 septembre 2026 par `montantARembourser()`, donc par
+ * chaque annulation faite au barème depuis le back-office. C'est elle qui
+ * décide de la somme réellement renvoyée chez Stripe.
+ *
+ * Elle traduit en calcul le barème affiché au client et repris dans les CGV.
+ * `reglement.test.ts` verrouille les deux ensemble : la phrase publiée et les
+ * paliers calculés ne peuvent plus diverger sans faire échouer un test.
  */
 export function partRemboursee(heuresAvant: number): number {
   const palier = PALIERS_ANNULATION.find((p) => heuresAvant >= p.seuilHeures);

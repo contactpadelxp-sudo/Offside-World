@@ -54,6 +54,50 @@ export function modeTest(): boolean {
   return (process.env.STRIPE_SECRET_KEY ?? "").startsWith("sk_test_");
 }
 
+/**
+ * Le moyen de paiement RÉELLEMENT utilisé par le client.
+ *
+ * POURQUOI CETTE FONCTION EXISTE, ET CE QU'ELLE RÉPARE.
+ *
+ * Le webhook lisait `session.payment_method_types[0]`. Ce champ est la liste
+ * des moyens PROPOSÉS au client, pas celui qu'il a choisi — et comme la session
+ * est créée avec `["bancontact", "card"]`, le premier élément valait toujours
+ * « bancontact ». Tout paiement par carte était donc enregistré, puis annoncé
+ * au client, comme un paiement Bancontact. Constaté en test le 15 septembre
+ * 2026 : « 200 € TVAC réglés par Bancontact » sur un paiement fait à la carte.
+ *
+ * Ce n'est pas un détail cosmétique. L'e-mail de confirmation est le support
+ * durable exigé par l'article VI.46 § 7 du Code de droit économique, et
+ * l'e-mail d'annulation promet que « le remboursement revient sur le moyen de
+ * paiement utilisé » — en le nommant. Se tromper de moyen, c'est écrire au
+ * client quelque chose de faux sur son argent.
+ *
+ * Le moyen réellement employé ne figure ni sur la session ni sur l'événement :
+ * il vit sur l'imputation (`charge`) rattachée au paiement. D'où cet appel
+ * supplémentaire, fait avant d'écrire en base.
+ *
+ * EN CAS D'ÉCHEC, ON RENVOIE `null` PLUTÔT QU'UNE SUPPOSITION. Les e-mails
+ * savent se passer du nom du moyen de paiement — ils écrivent « 200 € réglés »
+ * au lieu de « 200 € réglés par carte bancaire ». Une phrase moins précise vaut
+ * mieux qu'une phrase fausse.
+ */
+export async function moyenDePaiementUtilise(
+  paymentIntentId: string | null
+): Promise<string | null> {
+  if (!paymentIntentId || !paiementConfigure()) return null;
+  try {
+    const paiement = await stripe().paymentIntents.retrieve(paymentIntentId, {
+      expand: ["latest_charge"],
+    });
+    const imputation = paiement.latest_charge;
+    if (!imputation || typeof imputation === "string") return null;
+    return imputation.payment_method_details?.type ?? null;
+  } catch (e) {
+    console.error("Moyen de paiement illisible :", e);
+    return null;
+  }
+}
+
 export function stripe(): Stripe {
   if (instance) return instance;
 

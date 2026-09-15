@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { PALIERS_ANNULATION, partRemboursee } from "./reglement";
+import { PALIERS_ANNULATION, RESUME_ANNULATION, partRemboursee } from "./reglement";
 
 /**
  * Le barème d'annulation, tel qu'il est PROMIS au client : la phrase est
@@ -57,6 +57,40 @@ describe("barème d'annulation", () => {
       const part = partRemboursee(h);
       expect(part).toBeGreaterThanOrEqual(0);
       expect(part).toBeLessThanOrEqual(1);
+    }
+  });
+
+  /*
+    LE VERROU ENTRE CE QUI EST PROMIS ET CE QUI EST CALCULÉ.
+
+    La phrase `RESUME_ANNULATION` s'affiche dans le tunnel de réservation, dans
+    les CGV et dans l'e-mail d'annulation. Les paliers, eux, décident de la
+    somme réellement renvoyée chez Stripe. Rien, jusqu'ici, n'empêchait l'un de
+    changer sans l'autre : quelqu'un qui ferait passer le seuil de 48 h à 24 h
+    aurait un site qui promet une chose et un remboursement qui en fait une
+    autre. Sur de l'argent, cet écart n'est pas un bug, c'est un litige.
+
+    Ces deux tests échouent au premier désaccord.
+  */
+  it("la phrase publiée cite chacun des seuils calculés", () => {
+    for (const palier of PALIERS_ANNULATION) {
+      if (palier.seuilHeures === 0) continue; // le dernier palier n'a pas de borne à citer
+      const enJours = `${palier.seuilHeures / 24} jour`;
+      const enHeures = `${palier.seuilHeures} heure`;
+      const cite = RESUME_ANNULATION.includes(enJours) || RESUME_ANNULATION.includes(enHeures);
+      expect(cite, `le seuil de ${palier.seuilHeures} h n'apparaît pas dans « ${RESUME_ANNULATION} »`).toBe(true);
+    }
+  });
+
+  it("la phrase publiée cite le pourcentage de tout palier partiel", () => {
+    for (const palier of PALIERS_ANNULATION) {
+      if (palier.remboursement <= 0 || palier.remboursement >= 1) continue;
+      // Espace insécable : c'est ainsi que le pourcentage est écrit partout.
+      const pourcentage = `${palier.remboursement * 100}\u00a0%`;
+      expect(
+        RESUME_ANNULATION,
+        `le palier à ${palier.remboursement * 100} % n'apparaît pas dans la phrase publiée`
+      ).toContain(pourcentage);
     }
   });
 

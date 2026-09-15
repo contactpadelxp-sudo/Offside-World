@@ -1,6 +1,11 @@
 import type Stripe from "stripe";
 import { after } from "next/server";
-import { stripe, paiementConfigure, webhookConfigure } from "@/lib/paiement/stripe";
+import {
+  stripe,
+  paiementConfigure,
+  webhookConfigure,
+  moyenDePaiementUtilise,
+} from "@/lib/paiement/stripe";
 import { confirmerPaiement, echouerPaiement } from "@/lib/db/paiements";
 import { lireRecapEmail } from "@/lib/db/backoffice";
 import { envoyerTous } from "@/lib/email/envoi";
@@ -73,10 +78,15 @@ export async function POST(req: Request) {
         // « complete » avec un paiement encore en attente selon le moyen.
         if (session.payment_status !== "paid") break;
 
+        const intention =
+          typeof session.payment_intent === "string" ? session.payment_intent : null;
         const resultat = await confirmerPaiement(
           session.id,
-          typeof session.payment_intent === "string" ? session.payment_intent : null,
-          session.payment_method_types?.[0] ?? null
+          intention,
+          // Le moyen RÉELLEMENT utilisé, lu sur l'imputation. Surtout pas
+          // `session.payment_method_types[0]` : c'est la liste des moyens
+          // proposés, dont le premier est toujours « bancontact » ici.
+          await moyenDePaiementUtilise(intention)
         );
 
         /*
@@ -129,10 +139,15 @@ export async function POST(req: Request) {
           moyen de paiement le plus utilisé en Belgique.
         */
         const session = evenement.data.object;
+        const intention =
+          typeof session.payment_intent === "string" ? session.payment_intent : null;
         const resultat = await confirmerPaiement(
           session.id,
-          typeof session.payment_intent === "string" ? session.payment_intent : null,
-          session.payment_method_types?.[0] ?? null
+          intention,
+          // Le moyen RÉELLEMENT utilisé, lu sur l'imputation. Surtout pas
+          // `session.payment_method_types[0]` : c'est la liste des moyens
+          // proposés, dont le premier est toujours « bancontact » ici.
+          await moyenDePaiementUtilise(intention)
         );
         if (resultat.nouveau && resultat.reference && resultat.reservationId) {
           after(async () => {

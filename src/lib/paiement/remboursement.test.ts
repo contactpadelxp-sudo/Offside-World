@@ -127,3 +127,59 @@ describe("montant à rembourser — un paiement à zéro", () => {
     expect(montantARembourser(p, "aucun", PLUS_DE_7_JOURS)).toBe(0);
   });
 });
+
+describe("la politique d'annulation de Brahim, en euros", () => {
+  /*
+    LE BARÈME TEL QU'IL EST AFFICHÉ AU CLIENT, VÉRIFIÉ SUR DE VRAIS MONTANTS.
+
+      « Gratuite jusqu'à 7 jours avant. Entre 7 jours et 48 heures : 50 %
+        remboursés. Moins de 48 heures : aucun remboursement. »
+
+    `reglement.test.ts` vérifie les paliers et interdit à cette phrase de
+    diverger d'eux. Ici on vérifie le dernier maillon : la somme en euros qui
+    part réellement chez Stripe quand Brahim clique « Barème d'annulation ».
+
+    Le montant de 200 € est celui du paiement de test du 15 septembre 2026.
+  */
+  const DEUX_CENTS_EUROS = paiement(20000);
+  const jours = (n: number) => n * 24;
+
+  it("annulation à plus de 7 jours : tout est rendu", () => {
+    expect(montantARembourser(DEUX_CENTS_EUROS, "bareme", jours(30))).toBe(20000);
+    expect(montantARembourser(DEUX_CENTS_EUROS, "bareme", jours(8))).toBe(20000);
+    // La borne est inclusive : « jusqu'à 7 jours avant ».
+    expect(montantARembourser(DEUX_CENTS_EUROS, "bareme", jours(7))).toBe(20000);
+  });
+
+  it("annulation entre 7 jours et 48 heures : la moitié", () => {
+    expect(montantARembourser(DEUX_CENTS_EUROS, "bareme", jours(6))).toBe(10000);
+    expect(montantARembourser(DEUX_CENTS_EUROS, "bareme", jours(3))).toBe(10000);
+    expect(montantARembourser(DEUX_CENTS_EUROS, "bareme", 49)).toBe(10000);
+    expect(montantARembourser(DEUX_CENTS_EUROS, "bareme", 48)).toBe(10000);
+  });
+
+  it("annulation à moins de 48 heures : rien", () => {
+    expect(montantARembourser(DEUX_CENTS_EUROS, "bareme", 47)).toBe(0);
+    expect(montantARembourser(DEUX_CENTS_EUROS, "bareme", 2)).toBe(0);
+    expect(montantARembourser(DEUX_CENTS_EUROS, "bareme", 0)).toBe(0);
+  });
+
+  it("le choix de Brahim prime sur le barème quand il annule lui-même", () => {
+    /*
+      Le barème s'applique au client qui se désiste. Si c'est le complexe qui
+      annule — terrain indisponible, animateur malade —, retenir la moitié
+      serait indéfendable : c'est le vendeur qui n'exécute pas. D'où
+      « remboursement intégral », qui ignore la date.
+    */
+    expect(montantARembourser(DEUX_CENTS_EUROS, "integral", 2)).toBe(20000);
+    expect(montantARembourser(DEUX_CENTS_EUROS, "integral", 0)).toBe(20000);
+  });
+
+  it("une heure de décalage ne change rien loin des bornes", () => {
+    // Garde-fou contre une erreur d'unité : si `heuresAvant` était calculé en
+    // minutes ou en jours, ces trois appels ne donneraient pas le même montant.
+    for (const h of [jours(10), jours(10) + 1, jours(10) - 1]) {
+      expect(montantARembourser(DEUX_CENTS_EUROS, "bareme", h)).toBe(20000);
+    }
+  });
+});
