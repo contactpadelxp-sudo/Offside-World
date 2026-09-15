@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { montantLisible } from "@/lib/tarification";
-import { lireAudience } from "@/lib/db/audience";
+import { lireAudience, type ResumeAudience } from "@/lib/db/audience";
 import { Graphique } from "@/components/icons";
 
 /**
@@ -44,6 +44,56 @@ function Carte({
       <div className="mt-4">{children}</div>
     </section>
   );
+}
+
+/**
+ * LA PHRASE DU TAUX DE CONVERSION, ÉCRITE AVEC SON ÉCHANTILLON.
+ *
+ * Un pourcentage nu se lit comme un jugement sur le site. « 0,0 % » affiché le
+ * 15 septembre 2026 a fait conclure à un bug : une réservation venait d'être
+ * payée. Elle l'avait été par un visiteur ayant refusé la mesure — donc absent
+ * des DEUX termes de la division, qui portait en réalité sur cinq visiteurs.
+ *
+ * Le calcul était juste ; c'est la phrase qui mentait par omission. On écrit
+ * donc toujours le numérateur et le dénominateur, on ne sort le pourcentage
+ * que lorsqu'il repose sur assez de monde pour vouloir dire quelque chose, et
+ * on nomme explicitement l'écart avec les réservations réelles quand il existe.
+ */
+const ECHANTILLON_MINIMAL = 30;
+
+function conversionLisible(a: ResumeAudience): string {
+  const socle =
+    "Chaque étape compte des visites distinctes, pas des clics. Uniquement les " +
+    "visiteurs ayant accepté la mesure — ceux qui refusent réservent aussi, sans " +
+    "apparaître ici.";
+
+  if (a.ouvertParcours === 0) {
+    return `${socle} Aucun visiteur mesuré n’a encore ouvert « Réserver » sur cette période.`;
+  }
+
+  const visiteurs = `${NOMBRE.format(a.ouvertParcours)} visiteur${a.ouvertParcours > 1 ? "s" : ""} mesuré${a.ouvertParcours > 1 ? "s" : ""}`;
+
+  // Le cas qui a induit en erreur : rien de mesuré au bout, mais des
+  // réservations bien réelles. Annoncer « 0 % » ici serait faux dans l'esprit.
+  if (a.reservationsMesurees === 0 && a.reservations > 0) {
+    const r = `${NOMBRE.format(a.reservations)} réservation${a.reservations > 1 ? "s" : ""}`;
+    return (
+      `${socle} Sur ${visiteurs} ayant ouvert « Réserver », aucun n’est allé au bout ` +
+      `de la mesure — alors que ${r} ${a.reservations > 1 ? "ont" : "a"} bien été ` +
+      `enregistrée${a.reservations > 1 ? "s" : ""} sur la période. Elle${a.reservations > 1 ? "s viennent" : " vient"} ` +
+      `de visiteurs ayant refusé la mesure : il n’y a donc pas de taux à en tirer.`
+    );
+  }
+
+  const aboutis = `${NOMBRE.format(a.reservationsMesurees)} ${a.reservationsMesurees > 1 ? "sont allés" : "est allé"} jusqu’au bout`;
+
+  // Sous une trentaine de visiteurs, un pourcentage bouge de dizaines de
+  // points pour une personne de plus : on donne les nombres, pas le taux.
+  if (a.ouvertParcours < ECHANTILLON_MINIMAL) {
+    return `${socle} Sur ${visiteurs} ayant ouvert « Réserver », ${aboutis} — trop peu de monde pour en tirer un pourcentage.`;
+  }
+
+  return `${socle} Sur ${visiteurs} ayant ouvert « Réserver », ${aboutis}, soit ${a.tauxConversion?.toFixed(1)} %.`;
 }
 
 /** Grand chiffre. Pas un graphique : une seule valeur ne se dessine pas. */
@@ -178,17 +228,7 @@ export default async function PageAnalyse({
             <Journalier points={a.parJour} />
           </Carte>
 
-          <Carte
-            titre="Où les gens abandonnent"
-            aide={
-              "Chaque étape compte des visites distinctes, pas des clics. Uniquement " +
-              "les visiteurs ayant accepté la mesure — ceux qui refusent réservent " +
-              "aussi, sans apparaître ici." +
-              (a.tauxConversion !== null
-                ? ` Parmi eux, ${a.tauxConversion.toFixed(1)} % de ceux qui ouvrent « Réserver » vont jusqu'au bout.`
-                : "")
-            }
-          >
+          <Carte titre="Où les gens abandonnent" aide={conversionLisible(a)}>
             <Tunnel etapes={a.tunnel} />
           </Carte>
 

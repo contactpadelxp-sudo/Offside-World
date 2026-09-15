@@ -128,6 +128,21 @@ export interface ResumeAudience {
    * sens, et pourrait dépasser 100 %.
    */
   tauxConversion: number | null;
+  /**
+   * LES DEUX TERMES DE LA DIVISION, POUR POUVOIR LES ÉCRIRE.
+   *
+   * Un pourcentage seul ment par omission. « 0,0 % » sur cinq visiteurs
+   * mesurés dont aucun n'a réservé ne dit pas la même chose que « 0,0 % » sur
+   * mille : le premier est un échantillon vide, le second une catastrophe
+   * commerciale. Le 15 septembre 2026 l'exploitant a lu « 0 % » alors qu'une
+   * réservation venait d'être payée — elle venait d'un visiteur qui avait
+   * refusé la mesure, donc invisible des deux côtés du calcul.
+   *
+   * On expose donc le numérateur et le dénominateur, et c'est la page qui
+   * écrit la phrase honnête.
+   */
+  ouvertParcours: number;
+  reservationsMesurees: number;
   parJour: { jour: string; visites: number }[];
   pages: Comptage[];
   provenances: Comptage[];
@@ -264,6 +279,8 @@ export async function lireAudience(jours = 30): Promise<ResumeAudience | null> {
     reservations: reservations ?? 0,
     encaisseCents,
     tauxConversion: depart > 0 ? (reservationsMesurees / depart) * 100 : null,
+    ouvertParcours: depart,
+    reservationsMesurees,
     parJour,
     pages: compter(pagesVues.map((l) => l.chemin)),
     provenances: compter(lignes.map((l) => l.provenance)),
