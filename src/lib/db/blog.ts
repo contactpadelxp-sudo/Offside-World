@@ -26,6 +26,25 @@ export interface ArticleListe {
 
 export interface ArticleComplet extends ArticleListe {
   corps: string;
+  /**
+   * Le résumé RÉELLEMENT ENREGISTRÉ, sans le repli sur le début du corps.
+   *
+   * `chapo` porte toujours quelque chose : le résumé saisi, ou à défaut les
+   * 180 premiers caractères de l'article. C'est ce qu'il faut pour AFFICHER —
+   * une liste sans résumé serait trouée — mais c'est un piège pour ÉDITER.
+   *
+   * Le formulaire d'administration recevait ce `chapo` dérivé. Quelqu'un qui
+   * ouvrait un article pour corriger une faute voyait un « Résumé » déjà
+   * rempli, qu'il n'avait pas écrit et qui ressemblait à un texte à lui. Le
+   * premier « Enregistrer » le figeait en base : à partir de là, retoucher le
+   * début de l'article ne changeait plus le résumé, qui divergeait en silence.
+   * Et cette coupe à 180 caractères, souvent en plein mot, part aussi dans
+   * l'aperçu des réseaux sociaux (`description` des métadonnées).
+   *
+   * `null` quand rien n'a été saisi : le champ reste vide, et son texte
+   * indicatif montre ce qui sera pris à la place.
+   */
+  chapoSaisi: string | null;
 }
 
 interface LigneArticle {
@@ -89,7 +108,7 @@ export async function lireArticlePublie(slug: string): Promise<ArticleComplet | 
     .maybeSingle();
   if (error || !data) return null;
   const l = data as LigneArticle;
-  return { ...versListe(l), corps: nettoyerCorps(l.corps) };
+  return { ...versListe(l), corps: nettoyerCorps(l.corps), chapoSaisi: l.chapo };
 }
 
 // ---------------------------------------------------------------------------
@@ -122,7 +141,7 @@ export async function lireArticle(id: string): Promise<ArticleComplet | null> {
   // Le corps n'est PAS nettoyé ici : l'éditeur doit récupérer exactement ce
   // qui est stocké, sans quoi une simple ouverture-fermeture modifierait
   // l'article. Le nettoyage a lieu à l'enregistrement et à l'affichage public.
-  return { ...versListe(l), corps: l.corps };
+  return { ...versListe(l), corps: l.corps, chapoSaisi: l.chapo };
 }
 
 /** Le slug est-il déjà pris par un AUTRE article ? */

@@ -69,15 +69,38 @@ export function FormulaireArticle({ a }: { a: ArticleComplet }) {
     }
   };
 
-  const [v, setV] = useState({
+  const depart = {
     titre: a.titre,
     slug: a.slug,
-    chapo: a.chapo === "" ? "" : a.chapo,
+    /*
+      LE RÉSUMÉ ENREGISTRÉ, PAS CELUI QUI EST DÉDUIT DE L'ARTICLE.
+
+      `a.chapo` porte toujours un texte — le résumé saisi, ou à défaut le début
+      du corps. Le remettre dans le champ affichait un « Résumé » déjà rempli
+      que personne n'avait écrit : au premier enregistrement il se figeait en
+      base, et retoucher le début de l'article ne le mettait plus à jour.
+    */
+    chapo: a.chapoSaisi ?? "",
     corps: a.corps,
     image: a.image ?? "",
     publie: a.publie,
     publieLe: versChampDate(a.publieLe),
-  });
+  };
+
+  const [v, setV] = useState(depart);
+
+  /*
+    CE QUI EST ENREGISTRÉ, POUR SAVOIR CE QUI NE L'EST PAS.
+
+    `reference` est l'état du dernier enregistrement réussi — pas l'état
+    initial, sinon l'avertissement resterait allumé après avoir sauvegardé.
+    Un article est long : on peut travailler vingt minutes, remonter en haut de
+    la page et cliquer « Retour à la liste » sans se rappeler qu'on n'a jamais
+    enregistré. Le bouton partait alors sans rien dire.
+  */
+  const [reference, setReference] = useState(depart);
+  const modifie = (Object.keys(v) as (keyof typeof v)[]).some((c) => v[c] !== reference[c]);
+  const [confirmeSortie, setConfirmeSortie] = useState(false);
 
   // Tant que l'auteur n'a pas touché à l'adresse, elle suit le titre.
   const [slugManuel, setSlugManuel] = useState(a.slug !== "nouvel-article" && a.titre !== "Nouvel article");
@@ -160,8 +183,7 @@ export function FormulaireArticle({ a }: { a: ArticleComplet }) {
 
         <div className="mt-4">
           <label className={ETIQUETTE} htmlFor="chapo">
-            Résumé — affiché dans la liste et lors du partage. Laissé vide, on prend le début de
-            l&apos;article.
+            Résumé — affiché dans la liste du blog et dans l&apos;aperçu des liens partagés
           </label>
           <textarea
             id="chapo"
@@ -169,8 +191,21 @@ export function FormulaireArticle({ a }: { a: ArticleComplet }) {
             rows={2}
             value={v.chapo}
             maxLength={400}
+            aria-describedby="chapo-aide"
+            placeholder={a.chapo || "Les premières lignes de l’article"}
             onChange={(e) => setV({ ...v, chapo: e.target.value })}
           />
+          {/*
+            Ce que devient un champ vide, écrit noir sur blanc. Sans cette
+            phrase, un résumé absent ressemble à un oubli — alors que le laisser
+            vide est le bon choix dans la plupart des cas : il suit alors
+            l'article au lieu de se figer à la première sauvegarde.
+          */}
+          <p id="chapo-aide" className="mt-1 text-xs text-muted-foreground">
+            {v.chapo.trim()
+              ? "C’est ce texte qui sera affiché."
+              : "Vide, ce sont les premières lignes de l’article qui seront reprises — et elles suivront vos modifications."}
+          </p>
         </div>
       </div>
 
@@ -215,26 +250,66 @@ export function FormulaireArticle({ a }: { a: ArticleComplet }) {
           {v.publie
             ? "Cet article est lisible par tout le monde dès l'enregistrement."
             : "Brouillon : personne d'autre que vous ne peut le voir."}
+          {modifie && (
+            <>
+              {" "}
+              <span className="font-medium text-field">
+                Modifications non enregistrées.
+              </span>
+            </>
+          )}
         </p>
 
         <div className="mt-4 flex flex-wrap items-center gap-2">
           <button
             type="button"
             disabled={enCours}
-            onClick={() => lancer("enregistrer", () => enregistrerArticle(a.id, v))}
+            onClick={() =>
+              lancer("enregistrer", async () => {
+                const r = await enregistrerArticle(a.id, v);
+                // Ce qui vient d'être écrit devient la nouvelle référence :
+                // sans ça, « non enregistré » resterait affiché après un
+                // enregistrement réussi.
+                if (r.ok) setReference(v);
+                return r;
+              })
+            }
             className={BOUTON_PRINCIPAL}
           >
             {occupe("enregistrer") && <Rotative />}
             Enregistrer
           </button>
 
-          <button
-            type="button"
-            onClick={() => router.push("/admin/blog")}
-            className={BOUTON_NEUTRE}
-          >
-            Retour à la liste
-          </button>
+          {confirmeSortie ? (
+            <span className="inline-flex flex-wrap items-center gap-2 rounded-lg border border-field/40 bg-field/5 px-3 py-1.5">
+              <span className="text-sm">Vos modifications ne sont pas enregistrées.</span>
+              <button
+                type="button"
+                onClick={() => router.push("/admin/blog")}
+                className="rounded-lg px-2 py-1 text-sm font-medium text-destructive underline underline-offset-2"
+              >
+                Quitter sans enregistrer
+              </button>
+              <button
+                type="button"
+                onClick={() => setConfirmeSortie(false)}
+                className="rounded-lg px-2 py-1 text-sm font-medium underline underline-offset-2"
+              >
+                Rester
+              </button>
+            </span>
+          ) : (
+            <button
+              type="button"
+              onClick={() => {
+                if (modifie) setConfirmeSortie(true);
+                else router.push("/admin/blog");
+              }}
+              className={BOUTON_NEUTRE}
+            >
+              Retour à la liste
+            </button>
+          )}
 
           {confirmeSuppression ? (
             <span className="inline-flex flex-wrap items-center gap-2 rounded-lg border border-destructive/40 bg-destructive/5 px-3 py-1.5">
