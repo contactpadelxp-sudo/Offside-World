@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { montantLisible } from "@/lib/tarification";
 import { lireAudience } from "@/lib/db/audience";
 import { Graphique } from "@/components/icons";
 
@@ -150,14 +151,24 @@ export default async function PageAnalyse({
         </div>
       ) : (
         <div className="mt-6 space-y-6">
+          {/*
+            DEUX FAMILLES DE CHIFFRES, ET IL FAUT SAVOIR LAQUELLE ON LIT.
+
+            Les deux premiers sont MESURÉS : ils ne comptent que les visiteurs
+            ayant accepté la mesure d'audience, et sous-estiment donc toujours
+            la fréquentation réelle. Les deux suivants sont RÉELS : ils viennent
+            des réservations et des paiements, que personne n'a le droit de
+            refuser puisque ce n'est pas du pistage mais l'activité du complexe.
+
+            Le mélange était la cause d'un contresens : le nombre de
+            réservations était lu dans les événements d'audience, et affichait
+            « 0 » alors que deux réservations payées existaient en base.
+          */}
           <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-            <Chiffre valeur={NOMBRE.format(a.visites)} label="visites" />
+            <Chiffre valeur={NOMBRE.format(a.visites)} label="visites mesurées" />
             <Chiffre valeur={NOMBRE.format(a.pagesVues)} label="pages vues" />
             <Chiffre valeur={NOMBRE.format(a.reservations)} label="réservations" />
-            <Chiffre
-              valeur={a.tauxConversion === null ? "—" : `${a.tauxConversion.toFixed(1)} %`}
-              label="taux de conversion"
-            />
+            <Chiffre valeur={montantLisible(a.encaisseCents)} label="encaissé" />
           </div>
 
           <Carte
@@ -169,7 +180,14 @@ export default async function PageAnalyse({
 
           <Carte
             titre="Où les gens abandonnent"
-            aide="Chaque étape compte des visites distinctes, pas des clics."
+            aide={
+              "Chaque étape compte des visites distinctes, pas des clics. Uniquement " +
+              "les visiteurs ayant accepté la mesure — ceux qui refusent réservent " +
+              "aussi, sans apparaître ici." +
+              (a.tauxConversion !== null
+                ? ` Parmi eux, ${a.tauxConversion.toFixed(1)} % de ceux qui ouvrent « Réserver » vont jusqu'au bout.`
+                : "")
+            }
           >
             <Tunnel etapes={a.tunnel} />
           </Carte>

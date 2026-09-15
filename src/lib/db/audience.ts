@@ -104,10 +104,29 @@ export interface EtapeTunnel {
 
 export interface ResumeAudience {
   jours: number;
+  /** Visites MESURÉES, donc seulement celles qui ont accepté la mesure. */
   visites: number;
   pagesVues: number;
+  /**
+   * Réservations RÉELLES, lues dans la table des réservations.
+   *
+   * Surtout pas comptées depuis les événements d'audience : ceux-ci n'existent
+   * que pour les visiteurs ayant accepté la mesure. Le 15 septembre 2026, une
+   * réservation payée n'a produit AUCUN événement — la tuile affichait donc
+   * « 0 réservation » alors qu'il y en avait deux en base. Un exploitant qui
+   * lit ça conclut que son site ne vend rien.
+   */
   reservations: number;
-  /** Réservations rapportées aux visites de la page de réservation, en %. */
+  /** Ce qui a été encaissé sur la période, remboursements déduits. */
+  encaisseCents: number;
+  /**
+   * Part des visiteurs MESURÉS qui, après avoir ouvert la page de réservation,
+   * sont allés jusqu'au bout. `null` si personne n'a ouvert cette page.
+   *
+   * Ce taux ne porte QUE sur les visiteurs mesurés, des deux côtés de la
+   * division : le rapprocher du nombre réel de réservations n'aurait aucun
+   * sens, et pourrait dépasser 100 %.
+   */
   tauxConversion: number | null;
   parJour: { jour: string; visites: number }[];
   pages: Comptage[];
@@ -210,14 +229,41 @@ export async function lireAudience(jours = 30): Promise<ResumeAudience | null> {
     return etape;
   });
 
-  const reservations = sessionsParEtape.get("reservation")?.size ?? 0;
+  // Mesuré : sert au taux de conversion, dont les deux termes doivent venir
+  // de la même population.
+  const reservationsMesurees = sessionsParEtape.get("reservation")?.size ?? 0;
+
+  /*
+    LES VRAIS CHIFFRES VIENNENT DES VRAIES TABLES.
+
+    Ceux-ci ne dépendent d'aucun consentement : ce ne sont pas des traces de
+    navigation mais l'activité du complexe, que l'exploitant possède déjà.
+  */
+  const [{ count: reservations }, { data: encaissements }] = await Promise.all([
+    base()
+      .from("reservations")
+      .select("id", { count: "exact", head: true })
+      .gte("created_at", depuis)
+      .in("statut", ["en_attente", "confirmee"]),
+    base()
+      .from("paiements")
+      .select("montant_cents, montant_rembourse_cents")
+      .gte("created_at", depuis)
+      .in("statut", ["reussi", "partiellement_rembourse"]),
+  ]);
+
+  const encaisseCents = (encaissements ?? []).reduce(
+    (somme, p) => somme + (p.montant_cents ?? 0) - (p.montant_rembourse_cents ?? 0),
+    0
+  );
 
   return {
     jours,
     visites: sessions.size,
     pagesVues: pagesVues.length,
-    reservations,
-    tauxConversion: depart > 0 ? (reservations / depart) * 100 : null,
+    reservations: reservations ?? 0,
+    encaisseCents,
+    tauxConversion: depart > 0 ? (reservationsMesurees / depart) * 100 : null,
     parJour,
     pages: compter(pagesVues.map((l) => l.chemin)),
     provenances: compter(lignes.map((l) => l.provenance)),
