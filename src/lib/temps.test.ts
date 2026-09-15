@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { capitaliser, heure, jourCompact, jourISO, jourLisible, jourLisibleCap } from "./temps";
+import { capitaliser, heure, heuresAvant, jourCompact, jourISO, jourLisible, jourLisibleCap } from "./temps";
 
 /**
  * Le fuseau horaire, et pourquoi ces tests existent.
@@ -102,5 +102,89 @@ describe("capitalisation", () => {
 
   it("laisse intacte une chaîne déjà capitalisée", () => {
     expect(capitaliser("Samedi")).toBe("Samedi");
+  });
+});
+
+describe("délai avant l'activité — le nombre dont dépend chaque remboursement", () => {
+  /*
+    C'est ce nombre qui décide si un client récupère 200 €, 100 € ou rien.
+    Le barème qui le consomme est testé ailleurs ; ici on vérifie qu'il reçoit
+    la bonne valeur — l'unité, le signe, et l'indépendance au fuseau.
+  */
+  const LE_15_OCTOBRE_15H_BELGE = "2026-10-15T13:00:00+00:00"; // 15 h à Bruxelles, heure d'été
+
+  it("compte en HEURES, pas en minutes ni en jours", () => {
+    const debut = new Date("2026-10-15T13:00:00Z");
+    const vingtQuatreHeuresAvant = new Date("2026-10-14T13:00:00Z");
+    expect(heuresAvant(debut, vingtQuatreHeuresAvant)).toBe(24);
+    // Le garde-fou qui compte : 24 et 1440 ne tombent pas dans le même palier.
+    expect(heuresAvant(debut, vingtQuatreHeuresAvant)).not.toBe(1440);
+  });
+
+  it("donne le même délai quelle que soit l'écriture de l'instant", () => {
+    /*
+      PostgreSQL peut renvoyer un `timestamptz` avec « +00:00 », « Z » ou le
+      décalage local. Ces trois écritures désignent le MÊME instant : le délai
+      doit être identique, sinon un client remboursé dépendrait du format de
+      sérialisation de la base.
+    */
+    const maintenant = new Date("2026-10-08T13:00:00Z");
+    const attendu = heuresAvant(LE_15_OCTOBRE_15H_BELGE, maintenant);
+    expect(heuresAvant("2026-10-15T13:00:00Z", maintenant)).toBe(attendu);
+    expect(heuresAvant("2026-10-15T15:00:00+02:00", maintenant)).toBe(attendu);
+    expect(heuresAvant(new Date("2026-10-15T13:00:00Z"), maintenant)).toBe(attendu);
+    // Sept jours pile : la borne du remboursement intégral.
+    expect(attendu).toBe(7 * 24);
+  });
+
+  it("ne dépend pas du fuseau du serveur", () => {
+    /*
+      Le serveur peut tourner en UTC sur Vercel et à Bruxelles en local. Deux
+      instants absolus ont le même écart partout : si ce test échouait, le
+      remboursement d'un client dépendrait de l'endroit où le code s'exécute.
+    */
+    const avant = process.env.TZ;
+    const mesures: number[] = [];
+    try {
+      for (const tz of ["UTC", "Europe/Brussels", "Pacific/Auckland", "America/Los_Angeles"]) {
+        process.env.TZ = tz;
+        mesures.push(heuresAvant("2026-10-15T13:00:00Z", new Date("2026-10-12T13:00:00Z")));
+      }
+    } finally {
+      process.env.TZ = avant;
+    }
+    expect(new Set(mesures).size).toBe(1);
+    expect(mesures[0]).toBe(72);
+  });
+
+  it("traverse le changement d'heure sans se décaler", () => {
+    /*
+      Le passage à l'heure d'hiver en Belgique a lieu le dernier dimanche
+      d'octobre — le 25 octobre 2026 à 03:00 locale. Une réservation de part et
+      d'autre de cette nuit doit être comptée en heures réelles écoulées.
+      C'est le cas où un calcul naïf en jours civils se tromperait d'une heure,
+      donc de palier pour qui annule à la limite.
+    */
+    // 24 octobre 15 h belge (+02:00) → 26 octobre 15 h belge (+01:00) :
+    // 49 heures réelles, et non 48.
+    const veille = new Date("2026-10-24T13:00:00Z");
+    const surlendemain = new Date("2026-10-26T14:00:00Z");
+    expect(heuresAvant(surlendemain, veille)).toBe(49);
+  });
+
+  it("devient négatif une fois l'activité commencée", () => {
+    const debut = new Date("2026-10-15T13:00:00Z");
+    expect(heuresAvant(debut, new Date("2026-10-15T14:00:00Z"))).toBe(-1);
+    expect(heuresAvant(debut, new Date("2026-10-16T13:00:00Z"))).toBe(-24);
+  });
+
+  it("refuse une date illisible au lieu d'inventer un délai", () => {
+    /*
+      Renvoyer 0 ferait tomber l'annulation dans le dernier palier — « moins de
+      48 heures, aucun remboursement » —, c'est-à-dire priver le client de son
+      argent sur une erreur de lecture. On lève, l'appelant décide.
+    */
+    expect(() => heuresAvant("pas une date")).toThrow(/illisible/);
+    expect(() => heuresAvant("")).toThrow(/illisible/);
   });
 });

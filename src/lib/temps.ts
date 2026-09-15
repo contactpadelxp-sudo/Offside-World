@@ -79,3 +79,40 @@ export function jourCompact(instant: Date): string {
 export function heure(instant: Date): string {
   return HEURE.format(instant);
 }
+
+/**
+ * Combien d'heures séparent `maintenant` du début de l'activité.
+ *
+ * POURQUOI CETTE FONCTION EXISTE SÉPARÉMENT.
+ *
+ * C'est le nombre que le barème d'annulation consomme pour décider si le
+ * client est remboursé en entier, à moitié, ou pas du tout. Il vivait sous
+ * forme d'expression en ligne dans l'action d'annulation :
+ *
+ *     (new Date(avant.debut).getTime() - Date.now()) / 3_600_000
+ *
+ * Le barème et sa conversion en euros étaient couverts par vingt-huit tests ;
+ * cette ligne-là, par aucun. Or c'est exactement l'endroit où se logent les
+ * deux erreurs qui coûtent de l'argent sans se voir : une unité fausse — des
+ * minutes ou des jours au lieu d'heures, et tout le monde bascule d'un palier —
+ * et un décalage de fuseau, qui se déclenche une nuit de changement d'heure.
+ *
+ * ELLE NE FAIT AUCUNE CONVERSION DE FUSEAU, ET C'EST VOULU. Un `timestamptz`
+ * de PostgreSQL et l'horloge du serveur désignent tous deux un INSTANT absolu ;
+ * leur différence est la même quel que soit le fuseau dans lequel on les
+ * regarde. Convertir vers Europe/Bruxelles avant de soustraire n'ajouterait
+ * rien et introduirait un bug au changement d'heure.
+ *
+ * `maintenant` est un paramètre plutôt qu'un `Date.now()` caché : c'est ce qui
+ * rend la fonction testable sans figer l'horloge.
+ *
+ * Renvoie un nombre NÉGATIF si l'activité est déjà passée — le barème sait quoi
+ * en faire, et le lui cacher serait pire.
+ */
+export function heuresAvant(debut: string | Date, maintenant: Date = new Date()): number {
+  const instant = debut instanceof Date ? debut : new Date(debut);
+  if (Number.isNaN(instant.getTime())) {
+    throw new Error(`Date de créneau illisible : ${String(debut)}`);
+  }
+  return (instant.getTime() - maintenant.getTime()) / 3_600_000;
+}

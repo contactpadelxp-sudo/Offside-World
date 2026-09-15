@@ -26,7 +26,7 @@ import {
   emailDeTest,
 } from "@/lib/email/modeles";
 import { lignesDepuisJson, obstaclesEnvoi, totalDevisCents } from "@/lib/devis";
-import { jourLisibleCap } from "@/lib/temps";
+import { heuresAvant, jourLisibleCap } from "@/lib/temps";
 import { genererDevisPdf } from "@/lib/devis-pdf";
 import type { SaisieDevis } from "@/lib/vues";
 import {
@@ -194,10 +194,10 @@ export async function annulerReservation(
             "sans elle. Réessayez, ou choisissez « remboursement intégral » ou « aucun ».",
         };
       }
-      const heuresAvant = avant?.debut
-        ? (new Date(avant.debut).getTime() - Date.now()) / 3_600_000
-        : 0;
-      const montant = montantARembourser(paiement, choix, heuresAvant);
+      // Le calcul vit dans `lib/temps.ts`, où il est testé : unité, signe,
+      // fuseau et changement d'heure. Voir `heuresAvant`.
+      const delai = avant?.debut ? heuresAvant(avant.debut) : 0;
+      const montant = montantARembourser(paiement, choix, delai);
       const resultat = await rembourser(paiement, montant);
       if (resultat.erreur) {
         avertissement = ` ${resultat.erreur}`;
