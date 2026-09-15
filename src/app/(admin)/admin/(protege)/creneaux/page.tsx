@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ListeCreneaux, OuvrirPeriode } from "@/components/admin/actions-creneaux";
+import { AllerAuJour, ListeCreneaux, OuvrirPeriode } from "@/components/admin/actions-creneaux";
 import { LienOnglet } from "@/components/admin/onglets";
 import { lireCreneauxDuJour } from "@/lib/db/backoffice";
 import { jourCompact, jourISO, jourLisibleCap } from "@/lib/temps";
@@ -73,9 +73,12 @@ export default async function PageCreneaux({
         </Link>
       </div>
 
-      <h2 className="mt-8 mb-3 text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-        {jourLisibleCap(versDate(jour))}
-      </h2>
+      <div className="mt-8 mb-3 flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
+        <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+          {jourLisibleCap(versDate(jour))}
+        </h2>
+        <AllerAuJour jour={jour} />
+      </div>
       <ListeCreneaux creneaux={creneaux} />
 
       <div className="mt-10">

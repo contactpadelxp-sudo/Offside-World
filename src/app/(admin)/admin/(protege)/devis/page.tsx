@@ -34,7 +34,14 @@ export default async function PageDevis({
 
       {devis.length === 0 ? (
         <p className="mt-6 rounded-2xl border border-border bg-card p-6 text-muted-foreground">
-          Aucune demande de devis en cours.
+          {/*
+            « Aucune demande en cours » s'affichait aussi quand on demandait à
+            voir les demandes CLOSES : on pouvait conclure qu'il n'y avait rien
+            en cours alors qu'on regardait tout, closes comprises.
+          */}
+          {inclureTraites
+            ? "Aucune demande de devis, ni en cours ni close."
+            : "Aucune demande de devis en cours."}
         </p>
       ) : (
         <div className="mt-6 space-y-4">

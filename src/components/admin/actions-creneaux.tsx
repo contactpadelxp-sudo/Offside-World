@@ -1,6 +1,7 @@
 "use client";
 
-import { useOptimistic, useState } from "react";
+import { useOptimistic, useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { basculerCreneau, genererCreneaux } from "@/lib/actions/admin";
 import type { CreneauAdmin } from "@/lib/vues";
 import {
@@ -99,6 +100,37 @@ export function ListeCreneaux({ creneaux }: { creneaux: CreneauAdmin[] }) {
         <LigneCreneau key={c.id} c={c} />
       ))}
     </ul>
+  );
+}
+
+/**
+ * Aller directement à une date.
+ *
+ * La bande de jours n'en montre que sept, et les flèches avancent d'un jour.
+ * Pour vérifier un samedi dans trois semaines — la question qu'on se pose
+ * vraiment quand on regarde des créneaux — il fallait vingt-et-un clics, ou
+ * réécrire l'adresse à la main. Le champ est un `type="date"` natif : sur
+ * téléphone il ouvre le sélecteur du système, qu'on sait déjà manipuler.
+ */
+export function AllerAuJour({ jour }: { jour: string }) {
+  const router = useRouter();
+  const [enCours, demarrer] = useTransition();
+
+  return (
+    <label className="inline-flex items-center gap-2 text-sm text-muted-foreground">
+      Aller au
+      <input
+        type="date"
+        value={jour}
+        disabled={enCours}
+        onChange={(e) => {
+          const v = e.target.value;
+          if (v) demarrer(() => router.push(`/admin/creneaux?jour=${v}`));
+        }}
+        className="h-9 rounded-lg border border-border bg-input/30 px-2 text-sm text-foreground outline-none transition-colors focus-visible:ring-2 focus-visible:ring-field/60"
+      />
+      {enCours && <Rotative />}
+    </label>
   );
 }
 
