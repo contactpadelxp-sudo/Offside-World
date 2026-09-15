@@ -99,39 +99,56 @@ demande aucun redéploiement.
 Obligatoires en Belgique (Code de droit économique, art. III.74). Elles
 s'affichent aujourd'hui « [à compléter] » sur le site public.
 
-- [x] ~~Dénomination sociale~~ **Belantis**, communiquée le 12 septembre 2026.
+- [ ] ~~Dénomination sociale~~ **Belantis**, communiquée le 12 septembre 2026 —
+      **périmée** : le vendeur est DBT (voir plus bas). À redemander pour DBT.
 - [ ] **La FORME JURIDIQUE** (SRL, SA, ASBL, indépendant…). L'article 2:20 du
       Code des sociétés impose que tout document émanant d'une société porte sa
-      dénomination ET sa forme légale : « Belantis » seul ne suffit pas, il faut
-      « Belantis SRL » ou la forme réelle. Laissée vide plutôt que devinée —
+      dénomination ET sa forme légale : un nom seul ne suffit pas, il faut
+      « DBT SRL » ou la forme réelle. Laissée vide plutôt que devinée —
       une forme erronée sur un devis engageant serait pire qu'une absence.
 - [ ] **Le TRIBUNAL DE L'ENTREPRISE du RPM.** Même article : les documents
-      doivent porter « RPM » suivi du tribunal compétent pour le siège. Pour
-      Gembloux, c'est vraisemblablement Liège division Namur — mais
-      « vraisemblablement » ne suffit pas pour l'imprimer.
-- [x] ~~Numéro d'entreprise (BCE)~~ **1025.713.731** — déduit du numéro de TVA
-      (en Belgique c'est le même nombre). **À faire confirmer par Brahim.**
-- [x] ~~Numéro de TVA~~ **BE 1025.713.731**, communiqué le 12 septembre 2026 et
-      validé par sa clé de contrôle modulo 97 avant d'être inscrit.
-- [ ] **LE COMPTE STRIPE N'EST PAS AU NOM DE BELANTIS.** Constaté le
-      14 septembre 2026 : le compte Stripe de Brahim — qui a déjà servi, avec
-      des configurations d'août 2024 et mai 2025 — est enregistré sous une
-      autre entité. Mathis a tranché : c'est Brahim qui gère cette partie.
+      doivent porter « RPM » suivi du tribunal compétent.
 
-      Ce qu'il reste à aligner, et qui est de notre côté : le titulaire du
-      compte Stripe est LE VENDEUR au sens légal — c'est lui qui encaisse et
-      qui déclare la TVA. Or le site annonce « Belantis / BE 1025.713.731 »
-      dans les mentions légales, les CGV et les devis PDF. Les deux doivent
-      finir par désigner la même personne morale.
+      **La règle est établie** (vérifiée le 15 septembre 2026 auprès du site des
+      Cours & Tribunaux) : c'est le tribunal de l'entreprise de l'arrondissement
+      du **siège social de la société**, et non celui de l'adresse d'exploitation.
+      Toute la province de Namur — Gembloux compris — relève du **Tribunal de
+      l'entreprise de Liège, division Namur** (Rue Général Michel 10, 5000 Namur).
 
-      Deux issues possibles, à trancher avec Brahim :
-      *a)* l'encaissement passe finalement par Belantis — rien à changer sur le
-      site ; *b)* il reste sur l'autre entité — il faut alors corriger
-      `src/data/entreprise.ts` et tout ce qui en découle.
+      Donc : si le siège social de DBT est en province de Namur, la mention est
+      « RPM Liège, division Namur ». S'il est ailleurs, c'est un autre tribunal.
+      **Il manque le siège social de DBT pour trancher — c'est la seule inconnue.**
+- [ ] ~~Numéro d'entreprise (BCE)~~ **1025.713.731** — **périmé** : c'est celui
+      de Belantis, déduit de son numéro de TVA. À redemander pour DBT.
+- [ ] ~~Numéro de TVA~~ **BE 1025.713.731** — **périmé**, même raison. Le numéro
+      de Belantis avait été validé par sa clé de contrôle modulo 97 ; celui de
+      DBT devra l'être aussi avant d'être inscrit.
+- [ ] **LE VENDEUR EST « DBT », PAS BELANTIS — TOUT LE BLOC D'IDENTITÉ EST DONC
+      À REFAIRE.** Constaté le 14 septembre 2026 : le compte Stripe de Brahim
+      est enregistré sous une autre entité que Belantis. **Tranché le
+      15 septembre 2026** : Brahim confirme que **c'est DBT qui exploite le
+      foot**, et que le compte Stripe est donc au bon nom.
 
-      **Sans conséquence tant qu'on est en clés de test.** Bloquant avant le
-      premier paiement réel.
-- [ ] Siège social, s'il diffère de Gembloux
+      C'est l'issue *b)* qui était redoutée. Le titulaire du compte Stripe est
+      LE VENDEUR au sens légal : c'est lui qui encaisse, qui déclare la TVA et
+      que le client doit pouvoir identifier. Or le site annonce aujourd'hui
+      « Belantis / BE 1025.713.731 » dans les mentions légales, les CGV, les
+      devis PDF et chaque e-mail de confirmation. **Ces mentions désignent la
+      mauvaise personne morale.**
+
+      Ce qu'il faut demander à Brahim, pour DBT et non pour Belantis :
+      1. la **dénomination sociale complète et la forme juridique** (« DBT SRL »,
+         « DBT SA »… — art. 2:20 CSA : dénomination ET forme, toujours ensemble) ;
+      2. le **numéro d'entreprise / TVA** de DBT — celui en base aujourd'hui est
+         celui de Belantis ;
+      3. le **siège social** de DBT.
+
+      Le tribunal du RPM découle du point 3, pas de l'adresse du complexe.
+
+      Tant que ce n'est pas corrigé dans `src/data/entreprise.ts`, le site
+      identifie le mauvais vendeur. **Sans conséquence en clés de test.
+      Bloquant avant le premier paiement réel.**
+- [ ] **Siège social de DBT** — et il commande le tribunal du RPM ci-dessus.
 - [ ] Responsable de la publication
 - [ ] Arrondissement judiciaire compétent (pour les CGU)
 

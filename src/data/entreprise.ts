@@ -9,7 +9,29 @@
 
 export const NOM_COMMERCIAL = "Offside Foot Indoor";
 
-/** Dénomination sociale (raison sociale). Communiquée le 12 septembre 2026. */
+/*
+ * ⚠ CES TROIS VALEURS DÉSIGNENT LA MAUVAISE SOCIÉTÉ. À CORRIGER AVANT LE
+ *   PREMIER PAIEMENT RÉEL.
+ *
+ * `DENOMINATION_SOCIALE`, `BCE` et `TVA` ci-dessous sont ceux de **Belantis**,
+ * communiqués le 12 septembre 2026. Or Brahim a confirmé le 15 septembre 2026
+ * que **c'est DBT qui exploite le foot**, et le compte Stripe est bien au nom
+ * de DBT.
+ *
+ * Le titulaire du compte Stripe est le VENDEUR au sens légal : c'est lui qui
+ * encaisse, qui déclare la TVA, et que le client doit pouvoir identifier et
+ * assigner. Tant que ces constantes disent « Belantis », les mentions légales,
+ * les CGV, les devis PDF et chaque e-mail de confirmation nomment une personne
+ * morale qui n'est pas le vendeur.
+ *
+ * Il manque, pour DBT : dénomination + forme juridique, numéro d'entreprise,
+ * siège social. Voir A-FAIRE.md, section « Identité de l'entreprise ».
+ *
+ * Sans conséquence tant qu'on est en clés de test — aucune vente réelle n'a eu
+ * lieu. Bloquant dès la première.
+ */
+
+/** Dénomination sociale (raison sociale). ⚠ Belantis : voir l'avertissement ci-dessus. */
 export const DENOMINATION_SOCIALE: string | null = "Belantis";
 
 /**
@@ -30,14 +52,27 @@ export const FORME_JURIDIQUE: string | null = null;
  * Tribunal de l'entreprise du registre des personnes morales.
  *
  * Également imposé par l'article 2:20 du CSA : les documents doivent porter la
- * mention « RPM » suivie du tribunal compétent pour le siège. Pour Gembloux,
- * c'est selon toute vraisemblance le tribunal de l'entreprise de Liège,
- * division Namur — mais « selon toute vraisemblance » n'est pas une base
- * suffisante pour l'imprimer sur un document engageant. À confirmer.
+ * mention « RPM » suivie du tribunal compétent.
+ *
+ * LA RÈGLE, VÉRIFIÉE : c'est le tribunal de l'arrondissement du SIÈGE SOCIAL de
+ * la société — pas celui de l'adresse d'exploitation, qui n'entre pas en ligne
+ * de compte. Toute la province de Namur, Gembloux compris, relève du tribunal
+ * de l'entreprise de Liège, division Namur.
+ *
+ * Reste donc `null` pour une raison précise, et non par prudence vague : le
+ * siège social de DBT — la société qui exploite réellement le foot — n'est pas
+ * connu. S'il est en province de Namur, la valeur est « Liège, division
+ * Namur ». S'il est ailleurs, c'est un autre tribunal, et l'imprimer au jugé
+ * sur un devis engageant serait une mention fausse.
  */
 export const RPM_TRIBUNAL: string | null = null;
 
-/** Siège social s'il diffère de l'adresse d'exploitation. */
+/**
+ * Siège social s'il diffère de l'adresse d'exploitation.
+ *
+ * C'est lui qui détermine le tribunal du RPM ci-dessus : les deux se
+ * renseignent ensemble, ou pas du tout.
+ */
 export const SIEGE_SOCIAL: string | null = null;
 
 /**
