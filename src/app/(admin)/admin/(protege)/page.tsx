@@ -65,10 +65,17 @@ export default async function PageReservations({
           </p>
         )}
       </div>
-      <p className="mt-1 text-sm text-muted-foreground">
-        Les locations de terrain sont gérées sur Sport-Finder et n&apos;apparaissent pas ici.
-      </p>
+      {/*
+        Une phrase rappelait ici que les locations de terrain passent par
+        Sport-Finder et n'apparaissent pas dans cette liste. Retirée à la
+        demande du client le 16 septembre 2026 : elle était utile la première
+        fois, puis restait à l'écran pour toujours — et elle coûtait une ligne
+        exactement là où l'on s'est battu pour en gagner, l'en-tête poussant
+        déjà la première fiche à 628 px du haut sur un iPhone SE.
 
+        L'information elle-même n'est pas perdue : le parcours public dirige
+        vers Sport-Finder, et les CGV le disent.
+      */}
       <div className="mt-4 flex flex-wrap items-center gap-3">
         <OngletsFiltres filtres={FILTRES} actif={actif} desactives={Boolean(recherche)} />
         <Recherche valeur={recherche} filtre={actif} />
