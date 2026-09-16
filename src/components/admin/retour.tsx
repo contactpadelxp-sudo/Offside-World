@@ -72,7 +72,19 @@ export function MessageAction({ retour }: { retour: Resultat | null }) {
 
   return (
     <p
-      role="status"
+      /*
+        UN ÉCHEC S'ANNONCE, UN SUCCÈS SE SIGNALE.
+
+        Tout passait en `role="status"`, qui est poli : un lecteur d'écran
+        attend la fin de ce qu'il est en train de lire, et peut ne jamais
+        arriver au message. Pour « la réservation n'a pas pu être annulée »,
+        c'est trop peu — d'autant que le message d'erreur, lui, ne disparaît
+        pas tout seul, donc il reste là sans avoir été annoncé.
+
+        Le formulaire de connexion utilisait déjà `role="alert"` pour son
+        erreur ; c'est ici que la règle n'était pas suivie.
+      */
+      role={retour.ok ? "status" : "alert"}
       className={`mt-3 flex animate-in fade-in slide-in-from-top-1 items-start gap-2 rounded-lg px-3 py-2 text-sm duration-200 ${
         retour.ok
           ? "bg-field/10 text-field"

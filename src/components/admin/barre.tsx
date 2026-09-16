@@ -127,9 +127,24 @@ export function BarreAdmin({
                 <s.icone className="size-4 shrink-0" />
                 <span>{s.label}</span>
                 {n > 0 && (
-                  <span className="ml-auto inline-flex min-w-5 shrink-0 items-center justify-center rounded-full bg-kick px-1.5 text-[11px] font-bold text-[#0a0a0b] sm:ml-0.5">
-                    {n}
-                  </span>
+                  <>
+                    <span
+                      aria-hidden
+                      className="ml-auto inline-flex min-w-5 shrink-0 items-center justify-center rounded-full bg-kick px-1.5 text-[11px] font-bold text-[#0a0a0b] sm:ml-0.5"
+                    >
+                      {n}
+                    </span>
+                    {/*
+                      La pastille seule se lisait « Réservations 3 » : un nombre
+                      sans unité, dont rien ne dit s'il s'agit de réservations
+                      totales, de nouvelles ou d'un numéro de page. On dit ce
+                      qu'il compte, pour les lecteurs d'écran uniquement.
+                    */}
+                    <span className="sr-only">
+                      {" "}
+                      — {n} {s.href === "/admin" ? "à confirmer" : "nouvelle" + (n > 1 ? "s" : "")}
+                    </span>
+                  </>
                 )}
                 <Voyant />
               </Link>

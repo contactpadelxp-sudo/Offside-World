@@ -93,7 +93,13 @@ export default async function PageJournal({
             >
               {o.label}
               {/* Le compteur évite d'ouvrir un onglet pour y trouver le vide. */}
-              <span className="ml-1.5 tabular-nums opacity-60">{n}</span>
+              <span aria-hidden className="ml-1.5 tabular-nums opacity-60">
+                {n}
+              </span>
+              <span className="sr-only">
+                {" "}
+                — {n} action{n > 1 ? "s" : ""}
+              </span>
             </LienOnglet>
           );
         })}

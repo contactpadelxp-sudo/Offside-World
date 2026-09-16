@@ -1,6 +1,7 @@
 "use client";
 
 import { useOptimistic, useState, useTransition } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { basculerCreneau, genererCreneaux } from "@/lib/actions/admin";
 import type { CreneauAdmin } from "@/lib/vues";
@@ -41,9 +42,21 @@ function LigneCreneau({ c }: { c: CreneauAdmin }) {
         </span>
 
         {c.reservePar ? (
-          <span className="rounded-md bg-kick/10 px-2 py-0.5 text-xs font-medium text-kick">
+          /*
+            `reservePar` EST LA RÉFÉRENCE : autant y aller.
+
+            Elle s'affichait en texte mort. Pour savoir qui occupe le créneau —
+            la seule chose qu'on veut savoir en voyant « Réservé » — il fallait
+            retenir « OW-AZEG8RV6 », ouvrir les réservations et le retaper.
+            La recherche du back-office trouve une référence quel que soit
+            l'onglet, le lien tombe donc toujours juste.
+          */
+          <Link
+            href={`/admin?q=${encodeURIComponent(c.reservePar)}`}
+            className="rounded-md bg-kick/10 px-2 py-0.5 text-xs font-medium text-kick underline underline-offset-2 hover:bg-kick/20"
+          >
             Réservé · {c.reservePar}
-          </span>
+          </Link>
         ) : ouvert ? (
           <span className="text-xs text-muted-foreground">Libre</span>
         ) : (

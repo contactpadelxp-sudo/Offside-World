@@ -64,6 +64,25 @@ export function FicheDevis({ d }: { d: DevisAdmin }) {
     clientAdresse: adresse,
     clientTva: tvaClient,
   };
+  /*
+    CE QUI N'EST PAS ENCORE ENREGISTRÉ, DIT À L'ÉCRAN.
+
+    Un devis se rédige : des lignes, des montants, un mot d'introduction, une
+    adresse de facturation. Tout cela vit dans cet écran tant qu'on n'a pas
+    cliqué. Rien ne le signalait, et rien ne retenait quand on partait — un
+    onglet fermé, un retour en arrière, et le travail était perdu sans un mot.
+
+    Les tarifs et les articles de blog ont reçu le même avertissement. Un devis
+    le mérite au moins autant : c'est un document qui engage un prix.
+
+    On compare des empreintes plutôt que champ par champ, parce que les lignes
+    sont un tableau d'objets ; l'ordre des clés est fixé par la construction
+    ci-dessus, donc la comparaison est stable.
+  */
+  const empreinte = JSON.stringify(devis);
+  const [empreinteEnregistree, setEmpreinteEnregistree] = useState(empreinte);
+  const modifie = empreinte !== empreinteEnregistree;
+
   const obstacles = obstaclesEnvoi(devis);
   const reserves = reservesDevis({ tvaPourcent: tva, clientAdresse: adresse, clientTva: tvaClient });
   const m = montantsDevis(lignes, tva);
@@ -112,6 +131,16 @@ export function FicheDevis({ d }: { d: DevisAdmin }) {
                   : `Devis envoyé le ${envoye}`}
             </span>
             <span className="font-mono text-xs text-muted-foreground">{d.reference}</span>
+            {/*
+              À côté de l'étiquette d'état, et non en bas près des boutons :
+              une fiche de devis est longue, et les boutons sont hors de l'écran
+              dès qu'on saisit une ligne sur un téléphone.
+            */}
+            {modifie && (
+              <span className="inline-flex items-center rounded-md bg-kick/15 px-2 py-0.5 text-xs font-semibold text-kick">
+                non enregistré
+              </span>
+            )}
           </div>
           <h2 className="mt-2 font-bold">{d.entreprise}</h2>
           <p className="text-sm text-muted-foreground">{d.contactNom}</p>
@@ -139,7 +168,7 @@ export function FicheDevis({ d }: { d: DevisAdmin }) {
             <span className="inline-flex items-center gap-1.5 text-muted-foreground sm:flex sm:justify-end">
               <span className="sm:hidden">·</span>
               <Groupe className="size-3.5" />
-              {d.nbParticipants} participants
+              {d.nbParticipants} participant{d.nbParticipants > 1 ? "s" : ""}
             </span>
           )}
         </div>
@@ -376,7 +405,12 @@ export function FicheDevis({ d }: { d: DevisAdmin }) {
             onClick={() =>
               lancer("envoyer", async () => {
                 const r = await envoyerDevis(d.id, devis);
-                if (r.ok) setEnvoye("à l'instant");
+                if (r.ok) {
+                  setEnvoye("à l'instant");
+                  // L'envoi enregistre aussi : ce qui vient de partir au client
+                  // devient la nouvelle référence.
+                  setEmpreinteEnregistree(empreinte);
+                }
                 return r;
               })
             }
@@ -389,7 +423,13 @@ export function FicheDevis({ d }: { d: DevisAdmin }) {
           <button
             type="button"
             disabled={enCours}
-            onClick={() => lancer("brouillon", () => enregistrerDevis(d.id, devis))}
+            onClick={() =>
+              lancer("brouillon", async () => {
+                const r = await enregistrerDevis(d.id, devis);
+                if (r.ok) setEmpreinteEnregistree(empreinte);
+                return r;
+              })
+            }
             className={BOUTON_NEUTRE}
           >
             {occupe("brouillon") ? <Rotative /> : <Coche className="size-4" />}
