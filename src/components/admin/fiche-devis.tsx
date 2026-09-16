@@ -1,8 +1,13 @@
 "use client";
 
-import { useState } from "react";
-import { enregistrerDevis, enregistrerNoteDevis, envoyerDevis } from "@/lib/actions/admin";
-import type { DevisAdmin } from "@/lib/vues";
+import { useOptimistic, useState } from "react";
+import {
+  changerStatutDevis,
+  enregistrerDevis,
+  enregistrerNoteDevis,
+  envoyerDevis,
+} from "@/lib/actions/admin";
+import type { DevisAdmin, StatutDevis } from "@/lib/vues";
 import {
   devisPreRempli,
   montantsDevis,
@@ -40,10 +45,35 @@ import { Coche, Croix, Document, Enveloppe, Groupe, Telephone } from "@/componen
  * « sur devis », c'est tout l'objet de cet écran. Un montant pré-rempli
  * finirait par partir tel quel.
  */
+/**
+ * L'état d'une demande, en français.
+ *
+ * `devis_envoye` est le seul que l'exploitant ne peut pas poser à la main :
+ * il s'écrit tout seul quand le devis part réellement. Les autres constatent
+ * ce qu'a répondu le client, ou rangent une demande traitée par téléphone —
+ * ce qui est le cas courant en team building.
+ */
+const ETAT_DEVIS: Record<StatutDevis, { label: string; classe: string }> = {
+  nouvelle: { label: "Nouvelle demande", classe: "bg-kick/15 text-kick" },
+  traitee: { label: "Prise en charge", classe: "bg-white/10 text-foreground" },
+  devis_envoye: { label: "Devis envoyé", classe: "bg-field/15 text-field" },
+  acceptee: { label: "Acceptée", classe: "bg-field/15 text-field" },
+  refusee: { label: "Refusée", classe: "bg-destructive/15 text-destructive" },
+};
+
 export function FicheDevis({ d }: { d: DevisAdmin }) {
   const { enCours, occupe, retour, lancer } = useAction();
   const [noteOuverte, setNoteOuverte] = useState(false);
   const [texteNote, setTexteNote] = useState(d.noteInterne ?? "");
+  /*
+    L'état bascule tout de suite à l'écran, le serveur ne fait que confirmer.
+    Sans ça, marquer une demande « refusée » laissait l'étiquette inchangée
+    jusqu'au rechargement, et on recliquait.
+  */
+  const [statut, projeterStatut] = useOptimistic<StatutDevis, StatutDevis>(
+    d.statut,
+    (_a, vise) => vise
+  );
 
   // Un devis déjà rédigé est repris tel quel ; sinon on part du pré-rempli.
   const [lignes, setLignes] = useState<LigneDevis[]>(
@@ -111,24 +141,22 @@ export function FicheDevis({ d }: { d: DevisAdmin }) {
         <div>
           <div className="flex flex-wrap items-center gap-2">
             {/*
-              L'étiquette est une LECTURE, plus un choix. Elle dit ce que la
-              base sait de l'envoi réel.
+              L'ÉTIQUETTE DIT L'ÉTAT DE LA DEMANDE, PAS L'ENVOI DU DEVIS.
+
+              Elle ne lisait que `devis_envoye_le`. Une demande acceptée par
+              téléphone, sans devis envoyé depuis le site, s'affichait donc
+              « À traiter » — y compris dans la liste des demandes CLOSES, où
+              elle figure parce que son statut vaut « acceptée ». Deux notions
+              différentes montrées comme une seule : c'est exactement ce que le
+              client a vu et trouvé bizarre.
+
+              L'envoi reste affiché, mais à sa place : en dessous, comme un
+              fait daté, et non comme l'état de la demande.
             */}
             <span
-              className={`inline-flex items-center rounded-md px-2 py-0.5 text-xs font-semibold ${
-                envoye ? "bg-field/15 text-field" : "bg-kick/15 text-kick"
-              }`}
+              className={`inline-flex items-center rounded-md px-2 py-0.5 text-xs font-semibold ${ETAT_DEVIS[statut].classe}`}
             >
-              {/*
-                Après un envoi réussi, l'état passe à « à l'instant » — le
-                gabarit affichait alors « Devis envoyé le à l'instant ». On
-                n'ajoute « le » que devant une vraie date.
-              */}
-              {!envoye
-                ? "À traiter"
-                : envoye === "à l'instant"
-                  ? "Devis envoyé à l'instant"
-                  : `Devis envoyé le ${envoye}`}
+              {ETAT_DEVIS[statut].label}
             </span>
             <span className="font-mono text-xs text-muted-foreground">{d.reference}</span>
             {/*
@@ -144,6 +172,16 @@ export function FicheDevis({ d }: { d: DevisAdmin }) {
           </div>
           <h2 className="mt-2 font-bold">{d.entreprise}</h2>
           <p className="text-sm text-muted-foreground">{d.contactNom}</p>
+          {/*
+            Après un envoi réussi, l'horodatage passe à « à l'instant » : on
+            n'ajoute « le » que devant une vraie date, sans quoi le gabarit
+            écrivait « Devis envoyé le à l'instant ».
+          */}
+          {envoye && (
+            <p className="mt-0.5 text-xs text-field">
+              {envoye === "à l'instant" ? "Devis envoyé à l'instant" : `Devis envoyé le ${envoye}`}
+            </p>
+          )}
         </div>
 
         {/*
@@ -455,6 +493,65 @@ export function FicheDevis({ d }: { d: DevisAdmin }) {
               Voir le PDF
             </button>
           </form>
+
+          {/*
+            CLORE UNE DEMANDE — CE QUI ÉTAIT IMPOSSIBLE.
+
+            Le seul changement d'état était l'envoi du devis. Un client qui
+            refuse, ou qui ne répond jamais, laissait sa demande dans la liste
+            active pour toujours : elle proposait pourtant « voir aussi les
+            demandes closes », alors que rien ne pouvait en clore une.
+
+            Une demande close redevient ouverte d'un clic : ranger quelque
+            chose ne doit jamais être un aller simple.
+          */}
+          {statut === "acceptee" || statut === "refusee" ? (
+            <button
+              type="button"
+              disabled={enCours}
+              onClick={() =>
+                lancer("statut", async () => {
+                  projeterStatut(d.devis.envoyeLe ? "devis_envoye" : "nouvelle");
+                  return changerStatutDevis(d.id, d.devis.envoyeLe ? "traitee" : "nouvelle");
+                })
+              }
+              className={BOUTON_NEUTRE}
+            >
+              {occupe("statut") && <Rotative />}
+              Rouvrir la demande
+            </button>
+          ) : (
+            <>
+              <button
+                type="button"
+                disabled={enCours}
+                onClick={() =>
+                  lancer("statut", async () => {
+                    projeterStatut("acceptee");
+                    return changerStatutDevis(d.id, "acceptee");
+                  })
+                }
+                className={BOUTON_NEUTRE}
+              >
+                {occupe("statut") ? <Rotative /> : <Coche className="size-4" />}
+                Le client accepte
+              </button>
+              <button
+                type="button"
+                disabled={enCours}
+                onClick={() =>
+                  lancer("statut", async () => {
+                    projeterStatut("refusee");
+                    return changerStatutDevis(d.id, "refusee");
+                  })
+                }
+                className={BOUTON_NEUTRE}
+              >
+                <Croix className="size-4" />
+                Le client refuse
+              </button>
+            </>
+          )}
 
           <button
             type="button"

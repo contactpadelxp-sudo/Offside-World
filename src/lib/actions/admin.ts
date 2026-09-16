@@ -911,3 +911,174 @@ export async function envoyerEmailTest(destinataire: string): Promise<Resultat> 
     return { ok: false, message: `Refusé par le fournisseur : ${detail.slice(0, 300)}` };
   }
 }
+
+/**
+ * Crée UN créneau, à la main.
+ *
+ * Il n'existait que « ouvrir une période », qui génère des dizaines de créneaux
+ * d'après des règles écrites dans le SQL — celles qu'on a posées faute de
+ * connaître les vrais horaires du complexe. Aucun moyen d'en ajouter un seul,
+ * ni d'en corriger un. L'exploitant ne pouvait donc pas saisir SON planning :
+ * il pouvait seulement régénérer le nôtre.
+ *
+ * L'heure est reçue telle qu'elle est saisie — « 2026-10-11 » et « 15:30 » —
+ * et interprétée à Bruxelles, parce que c'est l'heure du complexe. Passer par
+ * une chaîne ISO sans fuseau la ferait basculer d'une heure deux fois par an,
+ * précisément aux périodes où l'on prépare la saison suivante.
+ */
+export async function creerCreneau(saisie: {
+  jour: string;
+  heure: string;
+  dureeMinutes: number;
+  espaceId: string;
+  type: "anniversaire" | "bubble";
+}): Promise<Resultat> {
+  const session = await garde();
+  if (!session) return REFUS_SESSION;
+
+  try {
+    const j = jour(saisie?.jour, "Date");
+    const h = texte(saisie?.heure, "Heure", { min: 4, max: 5 });
+    if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(h)) {
+      return { ok: false, message: "L'heure doit s'écrire comme 15:30." };
+    }
+    const duree = entier(saisie?.dureeMinutes, "Durée", { min: 15, max: 600 });
+    const espaceId = texte(saisie?.espaceId, "Espace", { min: 1, max: 40 });
+    const type = saisie?.type;
+    if (type !== "anniversaire" && type !== "bubble") {
+      return { ok: false, message: "Choisissez le type d'activité." };
+    }
+
+    /*
+      LE CALCUL DE L'HORAIRE EST FAIT PAR POSTGRES, PAS PAR NOUS.
+
+      `(timestamp) at time zone 'Europe/Brussels'` est exactement ce qu'emploie
+      la génération automatique (migration 0014) : les deux chemins produisent
+      donc le même instant pour le même horaire affiché, y compris la nuit des
+      changements d'heure. Le refaire en JavaScript aurait introduit une
+      deuxième vérité.
+    */
+    const { data, error } = await base()
+      .rpc("creer_creneau", {
+        p_espace: espaceId,
+        p_type: type,
+        p_jour: j,
+        p_heure: h,
+        p_duree_minutes: duree,
+      })
+      .single();
+
+    if (error) {
+      if (error.code === VIOLATION_EXCLUSION) {
+        return {
+          ok: false,
+          message: "Un créneau ouvert occupe déjà cet horaire dans cet espace.",
+        };
+      }
+      throw error;
+    }
+
+    await journaliser(session, "creneau.cree", String(data));
+    rafraichir();
+    return { ok: true, message: "Créneau ajouté." };
+  } catch (e) {
+    return echec(e);
+  }
+}
+
+/**
+ * Supprime un créneau.
+ *
+ * Différent de « fermer » : fermer retire de la vente en gardant la trace,
+ * supprimer efface. On supprime ce qui n'aurait jamais dû exister — un créneau
+ * généré au mauvais horaire —, on ferme ce qui existe mais ne se vend pas ce
+ * jour-là.
+ *
+ * Un créneau qui porte une réservation, MÊME ANNULÉE, n'est jamais supprimé :
+ * la ligne de réservation le référence, et avec elle le paiement, le
+ * remboursement et le journal. Effacer le créneau ferait disparaître l'horaire
+ * d'une vente passée.
+ */
+export async function supprimerCreneau(id: string): Promise<Resultat> {
+  const session = await garde();
+  if (!session) return REFUS_SESSION;
+
+  try {
+    const cible = uuid(id, "Créneau");
+
+    const { data: liee } = await base()
+      .from("reservations")
+      .select("reference, statut")
+      .eq("creneau_id", cible)
+      .limit(1)
+      .maybeSingle();
+
+    if (liee) {
+      return {
+        ok: false,
+        message: `Impossible : la réservation ${liee.reference} porte ce créneau. Fermez-le plutôt que de le supprimer.`,
+      };
+    }
+
+    const { data, error } = await base()
+      .from("creneaux")
+      .delete()
+      .eq("id", cible)
+      .select("id")
+      .maybeSingle();
+
+    if (error) throw error;
+    if (!data) return { ok: false, message: "Créneau introuvable." };
+
+    await journaliser(session, "creneau.supprime", cible);
+    rafraichir();
+    return { ok: true, message: "Créneau supprimé." };
+  } catch (e) {
+    return echec(e);
+  }
+}
+
+/**
+ * Change l'état d'une demande de team building.
+ *
+ * IL N'Y AVAIT AUCUN MOYEN DE CLORE UNE DEMANDE. Le seul changement d'état
+ * possible était l'envoi du devis, qui la passe à « devis envoyé ». Un client
+ * qui refuse, ou qui ne répond jamais, laissait donc sa demande dans la liste
+ * active pour toujours — et la liste proposait « voir aussi les demandes
+ * closes » alors que rien ne pouvait en clore une.
+ *
+ * Les états ne sont PAS libres : on ne peut pas prétendre qu'un devis a été
+ * envoyé, seul l'envoi réel l'écrit. Ici on ne fait que constater la réponse
+ * du client, ou ranger une demande traitée autrement — par téléphone, par
+ * exemple, ce qui est le cas le plus courant pour du team building.
+ */
+export async function changerStatutDevis(
+  id: string,
+  statut: "nouvelle" | "traitee" | "acceptee" | "refusee"
+): Promise<Resultat> {
+  const session = await garde();
+  if (!session) return REFUS_SESSION;
+
+  try {
+    const cible = uuid(id, "Demande");
+    if (!["nouvelle", "traitee", "acceptee", "refusee"].includes(statut)) {
+      return { ok: false, message: "État inconnu." };
+    }
+
+    const { data, error } = await base()
+      .from("demandes_devis")
+      .update({ statut })
+      .eq("id", cible)
+      .select("reference")
+      .maybeSingle();
+
+    if (error) throw error;
+    if (!data) return { ok: false, message: "Demande introuvable." };
+
+    await journaliser(session, "devis.statut", data.reference, { statut });
+    rafraichir();
+    return { ok: true, message: "État mis à jour." };
+  } catch (e) {
+    return echec(e);
+  }
+}

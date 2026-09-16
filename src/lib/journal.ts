@@ -66,6 +66,8 @@ const ACTIONS: Record<
   },
   "devis.note": { libelle: "Note interne d’un devis", famille: "devis" },
 
+  "creneau.cree": { libelle: "Créneau ajouté", famille: "catalogue" },
+  "creneau.supprime": { libelle: "Créneau supprimé", famille: "catalogue" },
   "creneau.ouvert": { libelle: "Créneau rouvert", famille: "catalogue" },
   "creneau.ferme": { libelle: "Créneau fermé", famille: "catalogue" },
   "creneaux.generes": {

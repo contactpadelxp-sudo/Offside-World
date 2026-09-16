@@ -3,7 +3,7 @@
 import { useOptimistic, useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { basculerCreneau, genererCreneaux } from "@/lib/actions/admin";
+import { basculerCreneau, creerCreneau, genererCreneaux, supprimerCreneau } from "@/lib/actions/admin";
 import type { CreneauAdmin } from "@/lib/vues";
 import {
   BOUTON_NEUTRE,
@@ -12,7 +12,7 @@ import {
   Rotative,
   useAction,
 } from "@/components/admin/retour";
-import { Cadenas, Coche } from "@/components/icons";
+import { Cadenas, Coche, Croix, Plus } from "@/components/icons";
 
 /**
  * Ouverture et fermeture des créneaux.
@@ -90,6 +90,30 @@ function LigneCreneau({ c }: { c: CreneauAdmin }) {
               {ouvert ? "Fermer" : "Rouvrir"}
             </button>
           )}
+          {/*
+            SUPPRIMER N'EST PAS FERMER.
+
+            Fermer retire de la vente en gardant la trace — un tournoi, un jour
+            de fermeture. Supprimer efface un créneau qui n'aurait jamais dû
+            exister : un horaire généré au jugé, que l'exploitant remplace par
+            le sien. Il n'existait aucun moyen de le faire, donc aucun moyen de
+            saisir son vrai planning.
+
+            Le bouton n'apparaît pas sur un créneau réservé : le serveur le
+            refuserait de toute façon, et proposer une action impossible est
+            une promesse en l'air.
+          */}
+          {!c.reservePar && (
+            <button
+              type="button"
+              disabled={enCours}
+              aria-label={`Supprimer le créneau de ${c.debut}`}
+              onClick={() => lancer("supprimer", () => supprimerCreneau(c.id))}
+              className="ml-2 inline-flex size-8 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
+            >
+              {occupe("supprimer") ? <Rotative /> : <Croix className="size-4" />}
+            </button>
+          )}
         </span>
       </div>
 
@@ -102,7 +126,7 @@ export function ListeCreneaux({ creneaux }: { creneaux: CreneauAdmin[] }) {
   if (creneaux.length === 0) {
     return (
       <p className="rounded-xl border border-border bg-card p-6 text-sm text-muted-foreground">
-        Aucun créneau ce jour-là. Utilisez « Ouvrir une période » pour en générer.
+        Aucun créneau ce jour-là. Ajoutez-en un ci-dessous, ou ouvrez une période entière.
       </p>
     );
   }
@@ -144,6 +168,136 @@ export function AllerAuJour({ jour }: { jour: string }) {
       />
       {enCours && <Rotative />}
     </label>
+  );
+}
+
+/**
+ * AJOUTER UN CRÉNEAU, UN PAR UN.
+ *
+ * C'est l'outil qui manquait. Il n'existait que « ouvrir une période », qui
+ * génère des dizaines de créneaux d'après des règles écrites dans le SQL —
+ * celles posées faute de connaître les vrais horaires du complexe. On pouvait
+ * donc régénérer NOTRE planning, jamais saisir CELUI de l'exploitant.
+ *
+ * Les valeurs restent en place après un ajout réussi : on saisit rarement un
+ * seul créneau. Seule l'heure est vidée, parce que c'est la seule qui change
+ * d'une ligne à l'autre quand on remplit une journée.
+ */
+const CHAMP_CRENEAU =
+  "h-10 rounded-xl border border-border bg-input/30 px-3 text-sm text-foreground outline-none transition-colors focus-visible:ring-2 focus-visible:ring-field/60";
+
+export function AjouterCreneau({
+  jour,
+  espaces,
+}: {
+  jour: string;
+  espaces: { id: string; nom: string }[];
+}) {
+  const { enCours, occupe, retour, lancer } = useAction();
+  const [heure, setHeure] = useState("");
+  const [duree, setDuree] = useState(120);
+  const [espaceId, setEspaceId] = useState(espaces[0]?.id ?? "");
+  const [type, setType] = useState<"anniversaire" | "bubble">("anniversaire");
+
+  if (espaces.length === 0) return null;
+
+  return (
+    <div className="rounded-2xl border border-border bg-card p-5">
+      <h2 className="flex items-center gap-2 font-semibold">
+        <Plus className="size-4 text-field" /> Ajouter un créneau
+      </h2>
+      <p className="mt-1 text-sm text-muted-foreground">
+        Il s&apos;ajoute au jour affiché ci-dessus, et devient réservable aussitôt.
+      </p>
+
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          lancer("ajouter", async () => {
+            const r = await creerCreneau({ jour, heure, dureeMinutes: duree, espaceId, type });
+            if (r.ok) setHeure("");
+            return r;
+          });
+        }}
+        className="mt-4 flex flex-wrap items-end gap-3"
+      >
+        <div>
+          <label htmlFor="c-heure" className="mb-1 block text-xs text-muted-foreground">
+            Heure de début
+          </label>
+          <input
+            id="c-heure"
+            type="time"
+            required
+            value={heure}
+            onChange={(e) => setHeure(e.target.value)}
+            style={{ colorScheme: "dark" }}
+            className={CHAMP_CRENEAU}
+          />
+        </div>
+
+        <div>
+          <label htmlFor="c-duree" className="mb-1 block text-xs text-muted-foreground">
+            Durée
+          </label>
+          <select
+            id="c-duree"
+            value={duree}
+            onChange={(e) => setDuree(Number(e.target.value))}
+            style={{ colorScheme: "dark" }}
+            className={CHAMP_CRENEAU}
+          >
+            <option value={60}>1 h</option>
+            <option value={90}>1 h 30</option>
+            <option value={120}>2 h</option>
+            <option value={150}>2 h 30</option>
+            <option value={180}>3 h</option>
+          </select>
+        </div>
+
+        <div>
+          <label htmlFor="c-espace" className="mb-1 block text-xs text-muted-foreground">
+            Espace
+          </label>
+          <select
+            id="c-espace"
+            value={espaceId}
+            onChange={(e) => setEspaceId(e.target.value)}
+            style={{ colorScheme: "dark" }}
+            className={CHAMP_CRENEAU}
+          >
+            {espaces.map((e) => (
+              <option key={e.id} value={e.id}>
+                {e.nom}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div>
+          <label htmlFor="c-type" className="mb-1 block text-xs text-muted-foreground">
+            Activité
+          </label>
+          <select
+            id="c-type"
+            value={type}
+            onChange={(e) => setType(e.target.value as "anniversaire" | "bubble")}
+            style={{ colorScheme: "dark" }}
+            className={CHAMP_CRENEAU}
+          >
+            <option value="anniversaire">Anniversaire</option>
+            <option value="bubble">Bubble Foot</option>
+          </select>
+        </div>
+
+        <button type="submit" disabled={enCours} className={`${BOUTON_PRINCIPAL} h-10`}>
+          {occupe("ajouter") ? <Rotative /> : <Plus className="size-4" />}
+          Ajouter
+        </button>
+      </form>
+
+      <MessageAction retour={retour} />
+    </div>
   );
 }
 

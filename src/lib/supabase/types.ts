@@ -575,6 +575,16 @@ export type Database = {
         Args: { delai?: string }
         Returns: number
       }
+      creer_creneau: {
+        Args: {
+          p_duree_minutes: number
+          p_espace: string
+          p_heure: string
+          p_jour: string
+          p_type: Database["public"]["Enums"]["type_activite"]
+        }
+        Returns: string
+      }
       expirer_reservations_passees: {
         Args: never
         Returns: number

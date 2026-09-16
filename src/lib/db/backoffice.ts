@@ -520,3 +520,24 @@ export async function joursDeCreneauxRestants(): Promise<number | null> {
   const restant = new Date(data.debut).getTime() - Date.now();
   return Math.floor(restant / 86_400_000);
 }
+
+/**
+ * Les espaces de jeu, pour alimenter le choix à la création d'un créneau.
+ *
+ * Lus en base et non écrits en dur : leurs noms sont provisoires — « Espace
+ * anniversaire 1 » et « Espace anniversaire 2 » — et changeront dès que Brahim
+ * aura donné les vrais. Le formulaire suivra sans qu'on y retouche.
+ */
+export async function lireEspaces(): Promise<{ id: string; nom: string }[]> {
+  if (!baseConfiguree()) return [];
+  const { data, error } = await base()
+    .from("espaces")
+    .select("id, nom")
+    .eq("actif", true)
+    .order("nom");
+  if (error || !data) {
+    console.error("Lecture des espaces impossible :", error?.message);
+    return [];
+  }
+  return data;
+}
