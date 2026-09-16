@@ -10,6 +10,11 @@ import {
 import type { ChoixRemboursement, ReservationAdmin, StatutReservation } from "@/lib/vues";
 import { euros, montantLisible } from "@/lib/tarification";
 import {
+  decrireConsequence,
+  gesteADeuxMontants,
+  type Situation,
+} from "@/lib/paiement/consequence";
+import {
   BOUTON_DANGER,
   BOUTON_NEUTRE,
   BOUTON_PRINCIPAL,
@@ -61,23 +66,6 @@ const STATUTS: Record<StatutReservation, { label: string; classe: string }> = {
   le symbole collé, à côté de montants écrits « 245,50 € » deux lignes plus bas.
 */
 
-/**
- * Les trois manières d'annuler une réservation payée.
- *
- * « Barème » est mis en tête parce que c'est le cas courant — un client qui se
- * désiste. Aucun des trois n'est présélectionné : rendre de l'argent, ou le
- * garder, sont deux décisions, et ni l'une ni l'autre ne doit être prise par
- * défaut. Tant qu'aucune n'est cochée, l'annulation est bloquée.
- */
-const CHOIX_REMBOURSEMENT: {
-  valeur: ChoixRemboursement;
-  libelle: (paye: number, bareme: number) => string;
-}[] = [
-  { valeur: "bareme", libelle: (_p, b) => `Barème d'annulation (${montantLisible(b)})` },
-  { valeur: "integral", libelle: (p) => `Remboursement intégral (${montantLisible(p)})` },
-  { valeur: "aucun", libelle: () => "Aucun remboursement" },
-];
-
 function Etiquette({ children, classe }: { children: React.ReactNode; classe: string }) {
   return (
     <span
@@ -94,29 +82,23 @@ export function FicheReservation({ r }: { r: ReservationAdmin }) {
     r.statut,
     (_actuel, vise) => vise
   );
-  const [confirmeAnnulation, setConfirmeAnnulation] = useState(false);
   /*
-    `null` AU DÉPART, ET C'EST LE CŒUR DE LA CORRECTION.
+    UN SEUL PANNEAU, DONC UN SEUL ÉTAT D'OUVERTURE.
 
-    L'état partait de `"aucun"`, ce qui cochait « Aucun remboursement » à
-    l'ouverture du bloc. Brahim pouvait donc annuler une réservation payée trois
-    semaines à l'avance et garder les 180 € du client sans avoir rien décidé —
-    il suffisait de ne pas remarquer les trois options. Le commentaire du code
-    affirmait l'inverse (« AUCUN n'est présélectionné »), ce qui est précisément
-    la manière dont ce genre de piège survit à une relecture.
+    Il y en avait deux — l'annulation et le remboursement — chacun avec son
+    choix d'argent. Deux portes pour une même décision, et deux occasions de
+    rouvrir l'une avec le choix périmé de l'autre.
 
-    Tant qu'il reste de l'argent à rendre, le bouton « Oui, annuler » est
-    maintenant inerte : on ne peut pas annuler sans avoir dit ce qu'on fait de
-    la somme.
+    Rien n'est présélectionné, et ce n'est pas un détail : l'état partait
+    autrefois de « aucun remboursement », si bien qu'annuler une réservation
+    payée trois semaines à l'avance gardait les 180 € du client sans que
+    personne ait rien décidé. Tant qu'aucune situation n'est choisie, le bouton
+    reste inerte.
   */
-  const [remboursement, setRemboursement] = useState<ChoixRemboursement | null>(null);
-  /*
-    Le remboursement HORS ANNULATION a son propre état : c'est une autre
-    décision, prise à un autre moment, et mélanger les deux ferait qu'ouvrir
-    l'un préremplirait l'autre.
-  */
-  const [remboursementOuvert, setRemboursementOuvert] = useState(false);
-  const [choixRemb, setChoixRemb] = useState<ChoixRemboursement | null>(null);
+  const [panneauOuvert, setPanneauOuvert] = useState(false);
+  const [situation, setSituation] = useState<Situation | null>(null);
+  /** Sous-choix du geste commercial, posé seulement quand deux montants sont possibles. */
+  const [montantGeste, setMontantGeste] = useState<ChoixRemboursement | null>(null);
   const [noteOuverte, setNoteOuverte] = useState(false);
   const [texteNote, setTexteNote] = useState(r.noteInterne ?? "");
 
@@ -149,6 +131,98 @@ export function FicheReservation({ r }: { r: ReservationAdmin }) {
       classe: "text-destructive",
     };
   })();
+
+  const bareme = r.paiement?.baremeCents ?? 0;
+  /*
+    Le geste commercial n'a deux montants possibles que lorsqu'ils diffèrent
+    VRAIMENT. `baremeCents` étant plafonné au reste, l'égalité survient aussi
+    bien à plus de 7 jours que sur une réservation déjà partiellement
+    remboursée : dans les deux cas, une seule somme est offerte et la
+    sous-question ne se pose pas.
+  */
+  const deuxMontantsPourLeGeste = gesteADeuxMontants(bareme, reste);
+
+  const fermerPanneau = () => {
+    setPanneauOuvert(false);
+    // Un choix abandonné ne doit pas se retrouver coché à la réouverture : ce
+    // sont des décisions sur de l'argent.
+    setSituation(null);
+    setMontantGeste(null);
+  };
+
+  const choisirSituation = (v: Situation) => {
+    setSituation(v);
+    // Changer de situation invalide le sous-choix : sans ça, un montant coché
+    // sous « geste commercial » survivrait à un passage vers « le client se
+    // désiste ».
+    setMontantGeste(null);
+  };
+
+  /*
+    QUAND IL N'Y A PAS D'ARGENT, ON NE POSE PAS DE QUESTION D'ARGENT.
+
+    Rien encaissé en ligne, ou tout déjà remboursé : annuler redevient une
+    simple confirmation. Ce cas doit être traité à part, et pas seulement par
+    souci de concision — avec `reste === 0`, `baremeCents` vaut 0 quelle que
+    soit la date, puisqu'il est plafonné au reste. La phrase « à cette date,
+    vos conditions d'annulation ne prévoient plus de remboursement » serait
+    alors un mensonge : elle n'est vraie que lorsqu'il restait quelque chose à
+    rendre et que le barème l'a ramené à zéro.
+  */
+  const sansArgent = active && reste <= 0;
+
+  const situationsPossibles: { valeur: Situation; titre: string; aide: string }[] = sansArgent
+    ? []
+    : active
+    ? [
+        {
+          valeur: "desistement",
+          titre: "Le client se désiste",
+          aide: "C'est lui qui renonce. Vos conditions d'annulation décident de ce qui lui est rendu.",
+        },
+        {
+          valeur: "complexe",
+          titre: "C'est nous qui annulons",
+          aide: "Terrain indisponible, animateur absent… Il récupère tout, quelle que soit la date.",
+        },
+        {
+          valeur: "geste",
+          titre: "Je lui rends de l'argent, mais l'activité a lieu",
+          aide: "Geste commercial ou somme payée en trop. Le créneau reste réservé.",
+        },
+        {
+          valeur: "rien",
+          titre: "J'annule sans rien lui rendre",
+          aide: "Vous pourrez toujours le rembourser plus tard depuis cette fiche.",
+        },
+      ]
+    : [
+        // Réservation déjà annulée : il ne reste qu'une question de montant,
+        // donc les libellés portent les sommes — ici, c'est la somme qui EST
+        // le sens, et les deux ne sont proposées que si elles diffèrent.
+        ...(deuxMontantsPourLeGeste
+          ? [
+              {
+                valeur: "remb-partie" as Situation,
+                titre: `Ce que prévoient vos conditions d'annulation : ${montantLisible(bareme)}`,
+                aide: "Le montant calculé d'après la date de l'activité.",
+              },
+            ]
+          : []),
+        {
+          valeur: "remb-tout",
+          titre: `La totalité de ce qui reste : ${montantLisible(reste)}`,
+          aide: "Tout ce qui n'a pas encore été rendu.",
+        },
+      ];
+
+  const consequence = decrireConsequence(situation, {
+    reste,
+    bareme,
+    montantGeste,
+    sansArgent,
+    creneau: `le créneau du ${r.jourLabel} à ${r.debut}`,
+  });
 
   return (
     <article
@@ -302,200 +376,216 @@ export function FicheReservation({ r }: { r: ReservationAdmin }) {
             </button>
           )}
 
-          {active &&
-            (confirmeAnnulation ? (
-              <div className="w-full rounded-lg border border-destructive/40 bg-destructive/5 px-3 py-2.5">
-                <p className="text-sm text-destructive">
-                  Annuler cette réservation ?
-                  {reste > 0 && " Choisissez ce qui est rendu au client."}
-                </p>
+          {/*
+            UN SEUL PANNEAU, ET IL PART DE LA SITUATION.
+
+            Il y avait deux boutons concurrents — « Annuler » et
+            « Rembourser » — ouvrant chacun sa liste d'options, avec des choix
+            qui se recouvraient. Le client a signalé les deux défauts : les
+            options se ressemblaient (« j'ai que ces deux choix car on est à
+            plus de 7 jours c'est ça ? ») et le second bouton restait opaque
+            (« pour le bouton rembourser c'est vraiment pas clair »).
+
+            LE DOUBLON VENAIT DES MONTANTS ÉCRITS DANS LES LIBELLÉS. Mesuré sur
+            un paiement de 200 € : à plus de 7 jours, « Barème » et « Intégral »
+            affichaient tous deux 200 € ; à moins de 48 h, « Barème » et
+            « Aucun » affichaient tous deux 0 €. Deux bandes horaires sur trois
+            montraient deux lignes identiques.
+
+            La correction n'est donc pas d'expliquer le doublon, mais de le
+            faire disparaître : AUCUN MONTANT DANS LES OPTIONS. On y décrit ce
+            qui s'est passé — un fait que l'exploitant connaît avec certitude,
+            contrairement à un montant qu'il doit interpréter. Deux situations
+            qui donnent aujourd'hui la même somme restent deux situations
+            distinctes, et rien à l'écran ne suggère qu'elles font double
+            emploi.
+
+            UN SEUL MONTANT SUR TOUT L'ÉCRAN, collé au bouton qui l'engage :
+            impossible de choisir le mauvais nombre, puisqu'il n'y en a qu'un.
+
+            ON NE FUSIONNE JAMAIS « barème » EN « intégral », même quand les
+            deux valent pareil à l'instant du rendu. Le serveur recalcule à
+            partir de la date : sur une page restée ouverte qui franchit le
+            seuil des 7 jours, envoyer « intégral » rendrait 100 % là où le
+            barème n'en prévoit plus que 50.
+
+            ON NE DÉDUIT JAMAIS LE DÉLAI D'UNE ÉGALITÉ DE MONTANTS. `baremeCents`
+            est plafonné au reste (backoffice.ts) : sur une réservation déjà
+            partiellement remboursée, « barème = reste » survient aussi à trois
+            jours. Les phrases disent donc le RÉSULTAT, jamais le palier.
+          */}
+          {(active || reste > 0) &&
+            (panneauOuvert ? (
+              <div
+                className={`w-full rounded-lg border px-3 py-2.5 ${
+                  active ? "border-border bg-muted/40" : "border-border bg-muted/40"
+                }`}
+              >
+                {sansArgent ? (
+                  <>
+                    <p className="text-sm font-medium">Annuler cette réservation ?</p>
+                    <p className="mt-0.5 text-xs text-muted-foreground">
+                      {r.paiement
+                        ? "Tout a déjà été remboursé : il ne reste rien à rendre."
+                        : "Rien n\u2019a été encaissé en ligne : il n\u2019y a pas d\u2019argent à rendre."}
+                    </p>
+                  </>
+                ) : active ? (
+                  <>
+                    <p className="text-sm font-medium">Que s&apos;est-il passé ?</p>
+                    <p className="mt-0.5 text-xs text-muted-foreground">
+                      Le montant s&apos;affiche avant que vous validiez.
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <p className="text-sm font-medium">Le client rappelle après coup ?</p>
+                    <p className="mt-0.5 text-xs text-muted-foreground">
+                      La réservation reste annulée et le créneau ne revient pas. Vous pouvez
+                      encore lui rendre de l&apos;argent.
+                    </p>
+                  </>
+                )}
+
+                <fieldset className="mt-2.5" hidden={situationsPossibles.length === 0}>
+                  <legend className="sr-only">
+                    {active ? "Situation" : "Montant à rendre"}
+                  </legend>
+                  <div className="flex flex-col gap-1.5">
+                    {situationsPossibles.map((sit) => (
+                      <label
+                        key={sit.valeur}
+                        className={`flex min-h-11 cursor-pointer items-start gap-2.5 rounded-lg border px-2.5 py-2 transition-colors ${
+                          situation === sit.valeur
+                            ? "border-field bg-field/5"
+                            : "border-border hover:border-field/40"
+                        }`}
+                      >
+                        <input
+                          type="radio"
+                          name={`situation-${r.id}`}
+                          value={sit.valeur}
+                          checked={situation === sit.valeur}
+                          onChange={() => choisirSituation(sit.valeur)}
+                          className="mt-0.5 size-4 shrink-0 accent-field"
+                        />
+                        {/*
+                          L'EXPLICATION NE S'AFFICHE QUE SOUS L'OPTION CHOISIE.
+
+                          Les quatre ensemble portaient le panneau à 564 px de
+                          haut, mesuré sur un écran de 390 px : le bouton de
+                          validation passait sous la ligne de flottaison, et il
+                          fallait faire défiler pour lire la conséquence de son
+                          propre choix. Les titres se suffisent pour choisir ;
+                          la nuance n'est utile qu'une fois qu'on a choisi.
+
+                          Dans un groupe de boutons radio, les flèches
+                          déplacent ET sélectionnent : l'explication apparaît
+                          donc aussi au clavier, au fur et à mesure.
+                        */}
+                        <span className="min-w-0">
+                          <span className="block text-sm font-medium">{sit.titre}</span>
+                          {situation === sit.valeur && (
+                            <span className="mt-0.5 block text-xs text-muted-foreground">
+                              {sit.aide}
+                            </span>
+                          )}
+                        </span>
+                      </label>
+                    ))}
+                  </div>
+                </fieldset>
 
                 {/*
-                  LE MONTANT N'EST PAS SAISI ICI, ET CE N'EST PAS UN OUBLI.
-                  Les trois choix couvrent les trois situations réelles — le
-                  client se désiste, le complexe annule, ou la somme reste
-                  acquise —, et le serveur recalcule lui-même ce qu'il envoie
-                  chez Stripe. Un champ libre ferait de cet écran une commande
-                  de virement, à un chiffre de trop près.
+                  LE SEUL SOUS-CHOIX DE L'ÉCRAN, ET IL N'APPARAÎT QUE S'IL A
+                  UN SENS.
+
+                  Combien vaut un geste commercial est la seule décision
+                  réellement libre ici : l'interface ne la prend pas à la place
+                  de l'exploitant. Elle ne la pose pas non plus quand une seule
+                  somme est possible — poser une question à une seule réponse
+                  fait douter qu'il y en ait d'autres.
                 */}
-                {/*
-                  Les trois choix sont EMPILÉS, un par ligne, et non alignés en
-                  rangée : c'est une décision sur de l'argent, pas une barre
-                  d'outils. Chacun porte la somme qu'il engage, calculée sur le
-                  paiement réel.
-                */}
-                {reste > 0 && (
-                  <fieldset className="mt-2">
-                    <legend className="sr-only">Remboursement</legend>
-                    <div className="flex flex-col gap-1">
-                      {CHOIX_REMBOURSEMENT.map((c) => (
+                {situation === "geste" && deuxMontantsPourLeGeste && (
+                  <fieldset className="ml-6 mt-2 border-l border-border pl-3">
+                    <legend className="text-xs text-muted-foreground">
+                      Combien lui rendez-vous ?
+                    </legend>
+                    <div className="mt-1 flex flex-col gap-1">
+                      {([
+                        { v: "bareme" as ChoixRemboursement, t: `Une partie : ${montantLisible(bareme)}` },
+                        { v: "integral" as ChoixRemboursement, t: `La totalité : ${montantLisible(reste)}` },
+                      ]).map((m) => (
                         <label
-                          key={c.valeur}
+                          key={m.v}
                           className="inline-flex min-h-9 cursor-pointer items-center gap-2 text-sm"
                         >
                           <input
                             type="radio"
-                            name={`remb-${r.id}`}
-                            value={c.valeur}
-                            checked={remboursement === c.valeur}
-                            onChange={() => setRemboursement(c.valeur)}
-                            className="size-4 shrink-0 accent-destructive"
+                            name={`geste-${r.id}`}
+                            value={m.v}
+                            checked={montantGeste === m.v}
+                            onChange={() => setMontantGeste(m.v)}
+                            className="size-4 shrink-0 accent-field"
                           />
-                          {c.libelle(reste, r.paiement?.baremeCents ?? 0)}
+                          {m.t}
                         </label>
                       ))}
                     </div>
                   </fieldset>
                 )}
 
+                {/*
+                  LE SEUL MONTANT DE L'ÉCRAN, ET IL TOUCHE LE BOUTON.
+
+                  `aria-live` pour qu'il soit annoncé quand il change ; collé
+                  au bouton pour que la somme et le geste se lisent d'un même
+                  regard, même après avoir fait défiler.
+                */}
+                {consequence && (
+                  <p
+                    aria-live="polite"
+                    className="mt-2.5 rounded-lg bg-background px-2.5 py-2 text-sm"
+                  >
+                    <span className="block text-xs text-muted-foreground">En validant :</span>
+                    {consequence.phrase}
+                  </p>
+                )}
+
                 <div className="mt-2.5 flex flex-wrap items-center gap-2">
                   <button
                     type="button"
-                    disabled={enCours || (reste > 0 && remboursement === null)}
+                    disabled={enCours || !consequence}
                     onClick={() => {
-                      const choix = remboursement ?? "aucun";
-                      setConfirmeAnnulation(false);
-                      setRemboursement(null);
-                      lancer("annuler", async () => {
-                        projeter("annulee");
-                        return annulerReservation(r.id, choix);
+                      if (!consequence) return;
+                      const { action, choix } = consequence;
+                      fermerPanneau();
+                      lancer(action === "annuler" ? "annuler" : "rembourser", async () => {
+                        if (action === "annuler") {
+                          projeter("annulee");
+                          return annulerReservation(r.id, choix);
+                        }
+                        return rembourserReservation(r.id, choix);
                       });
                     }}
-                    className={BOUTON_DANGER}
+                    className={consequence?.action === "annuler" ? BOUTON_DANGER : BOUTON_PRINCIPAL}
                   >
-                    Oui, annuler
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setConfirmeAnnulation(false);
-                      // Sans ça, un choix fait puis abandonné resterait coché à
-                      // la réouverture du bloc, sur une décision d'argent.
-                      setRemboursement(null);
-                    }}
-                    className={BOUTON_NEUTRE}
-                  >
-                    Non
-                  </button>
-                </div>
-
-
-              </div>
-            ) : (
-              <button
-                type="button"
-                disabled={enCours}
-                onClick={() => setConfirmeAnnulation(true)}
-                className={BOUTON_NEUTRE}
-              >
-                {occupe("annuler") ? <Rotative /> : <Croix className="size-4" />}
-                Annuler
-              </button>
-            ))}
-
-          {/*
-            REMBOURSER SANS ANNULER — le cas qui manquait.
-
-            Rendre de l'argent n'était possible qu'à la seconde exacte de
-            l'annulation. Passé ce moment, plus aucun bouton : Brahim qui avait
-            coché « aucun remboursement » puis dont le client rappelait n'avait
-            plus que Stripe — où le montant serait parti sans jamais être écrit
-            chez nous, laissant la fiche affirmer « 0 € remboursé ».
-
-            Le bouton apparaît dès qu'il reste quelque chose à rendre, quel que
-            soit le statut. Sur une réservation encore active, il ne l'annule
-            pas : le créneau reste réservé, et le bloc le dit en toutes lettres
-            pour qu'on ne s'en serve pas par erreur à la place d'« Annuler ».
-          */}
-          {reste > 0 &&
-            (remboursementOuvert ? (
-              <div className="w-full rounded-lg border border-border bg-muted/40 px-3 py-2.5">
-                {/*
-                  DIRE À QUOI ÇA SERT, PAS CE QUE ÇA N'EST PAS.
-
-                  Le bloc annonçait « La réservation N'EST PAS annulée » — une
-                  phrase qui alarme sans expliquer : on rembourse un client,
-                  pourquoi garderait-il son créneau ? La réponse n'était nulle
-                  part. On nomme donc les deux cas réels — le geste commercial
-                  et le trop-perçu — et on renvoie vers « Annuler » pour l'autre
-                  besoin, au lieu de laisser deviner.
-                */}
-                <p className="text-sm font-medium">
-                  {active
-                    ? `Rendre de l'argent sans annuler — ${montantLisible(reste)} au maximum`
-                    : `Rembourser ${montantLisible(reste)} au maximum`}
-                </p>
-                <p className="mt-0.5 text-xs text-muted-foreground">
-                  {active ? (
-                    <>
-                      Pour un geste commercial ou un trop-perçu : le client est remboursé mais
-                      garde son créneau, l&apos;activité a bien lieu. Pour annuler la réservation{" "}
-                      <em>et</em> rembourser, utilisez « Annuler ».
-                    </>
-                  ) : (
-                    "La réservation reste annulée. Seul l'argent est rendu."
-                  )}
-                </p>
-
-                <fieldset className="mt-2">
-                  <legend className="sr-only">Montant à rembourser</legend>
-                  <div className="flex flex-col gap-1">
-                    {CHOIX_REMBOURSEMENT.filter((c) => c.valeur !== "aucun").map((c) => (
-                      <label
-                        key={c.valeur}
-                        className="inline-flex min-h-9 cursor-pointer items-center gap-2 text-sm"
-                      >
-                        <input
-                          type="radio"
-                          name={`remb-hors-${r.id}`}
-                          value={c.valeur}
-                          checked={choixRemb === c.valeur}
-                          onChange={() => setChoixRemb(c.valeur)}
-                          className="size-4 shrink-0 accent-field"
-                        />
-                        {c.libelle(reste, r.paiement?.baremeCents ?? 0)}
-                      </label>
-                    ))}
-                  </div>
-                </fieldset>
-
-                <div className="mt-2.5 flex flex-wrap items-center gap-2">
-                  <button
-                    type="button"
-                    disabled={enCours || choixRemb === null}
-                    onClick={() => {
-                      const choix = choixRemb;
-                      if (!choix) return;
-                      setRemboursementOuvert(false);
-                      setChoixRemb(null);
-                      lancer("rembourser", () => rembourserReservation(r.id, choix));
-                    }}
-                    className={BOUTON_PRINCIPAL}
-                  >
-                    {occupe("rembourser") ? <Rotative /> : <Coche className="size-4" />}
-                    Rembourser
+                    {consequence ? consequence.bouton : "Valider"}
                   </button>
                   {/*
-                    « Fermer » et non « Annuler » : le bouton qui annule la
-                    RÉSERVATION du client est à quelques centimètres, dans le
-                    même style. La note interne avait déjà reçu cette correction ;
-                    elle manquait ici, sur le bloc qui manipule de l'argent.
+                    « Fermer » et jamais « Annuler » : le bouton qui annule la
+                    RÉSERVATION du client est juste à côté, dans le même style.
                   */}
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setRemboursementOuvert(false);
-                      setChoixRemb(null);
-                    }}
-                    className={BOUTON_NEUTRE}
-                  >
+                  <button type="button" onClick={fermerPanneau} className={BOUTON_NEUTRE}>
                     Fermer
                   </button>
                 </div>
 
-                {choixRemb === null && (
+                {!consequence && (
                   <p className="mt-2 text-xs text-muted-foreground">
-                    Choisissez un montant pour pouvoir rembourser.
+                    {active
+                      ? "Choisissez d\u2019abord ce qui s\u2019est passé."
+                      : "Choisissez d\u2019abord le montant."}
                   </p>
                 )}
               </div>
@@ -503,11 +593,25 @@ export function FicheReservation({ r }: { r: ReservationAdmin }) {
               <button
                 type="button"
                 disabled={enCours}
-                onClick={() => setRemboursementOuvert(true)}
+                onClick={() => setPanneauOuvert(true)}
                 className={BOUTON_NEUTRE}
               >
-                {occupe("rembourser") ? <Rotative /> : <Carte className="size-4" />}
-                Rembourser
+                {occupe("annuler") || occupe("rembourser") ? (
+                  <Rotative />
+                ) : active ? (
+                  <Croix className="size-4" />
+                ) : (
+                  <Carte className="size-4" />
+                )}
+                {/*
+                  Le libellé dit ce qui est possible ici et maintenant, au lieu
+                  de proposer deux portes dont on ne sait pas laquelle pousser.
+                */}
+                {!active
+                  ? "Rendre de l\u2019argent"
+                  : reste > 0
+                    ? "Annuler ou rembourser\u2026"
+                    : "Annuler la réservation"}
               </button>
             ))}
 
