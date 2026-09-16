@@ -394,6 +394,21 @@ export interface SaisieDevis {
   dateSouhaitee: string;
   periode: "matin" | "apres-midi";
   nbParticipants: number;
+  /**
+   * Coordonnées de FACTURATION, facultatives.
+   *
+   * Elles ne l'étaient pas du tout auparavant : le formulaire public ne les
+   * demandait pas, et l'exploitant devait les réclamer par téléphone avant de
+   * pouvoir établir le devis — un aller-retour systématique sur chaque demande.
+   *
+   * Facultatives et non obligatoires, parce qu'une adresse complète et un
+   * numéro de TVA exigés d'un prospect qui n'a pas encore vu un prix font
+   * abandonner des demandes. Une société qui les a sous la main les donne ;
+   * les autres passent. La fiche du back-office reste modifiable dans les deux
+   * cas, elle a donc toujours le dernier mot.
+   */
+  clientAdresse?: string;
+  clientTva?: string;
   message?: string;
   newsletter?: boolean;
   cgv: boolean;
@@ -412,6 +427,10 @@ export async function demanderDevis(saisie: SaisieDevis): Promise<Resultat> {
     const contactTelephone = telephone(saisie?.contactTelephone, "Téléphone");
     const dateSouhaitee = jour(saisie?.dateSouhaitee, "Date souhaitée");
     const message = texteFacultatif(saisie?.message, "Message", { max: 2000 });
+    // Mêmes bornes que les champs équivalents du back-office, pour qu'une
+    // saisie acceptée ici ne soit pas refusée là-bas.
+    const clientAdresse = texteFacultatif(saisie?.clientAdresse, "Adresse", { max: 300 });
+    const clientTva = texteFacultatif(saisie?.clientTva, "Numéro de TVA", { max: 40 });
     const nbParticipants = entier(saisie?.nbParticipants, "Nombre de participants", {
       min: TEAM_BUILDING_MIN_PARTICIPANTS,
       max: TEAM_BUILDING_MAX_PARTICIPANTS,
@@ -431,6 +450,8 @@ export async function demanderDevis(saisie: SaisieDevis): Promise<Resultat> {
       date_souhaitee: dateSouhaitee,
       periode,
       nb_participants: nbParticipants,
+      client_adresse: clientAdresse,
+      client_tva: clientTva,
       message,
       newsletter: booleen(saisie?.newsletter),
       cgv_acceptees_le: new Date().toISOString(),

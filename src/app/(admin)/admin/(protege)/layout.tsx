@@ -9,6 +9,7 @@ import {
   joursDeCreneauxRestants,
 } from "@/lib/db/backoffice";
 import { expirerReservationsAbandonnees } from "@/lib/db/reservations";
+import { resolveLogoSrc } from "@/lib/logo";
 
 /**
  * Gabarit des pages protégées du back-office.
@@ -48,7 +49,12 @@ export default async function GabaritProtege({
 
   return (
     <>
-      <BarreAdmin acteur={session.acteur} aConfirmer={aConfirmer} devisNouveaux={devisNouveaux} />
+      <BarreAdmin
+        acteur={session.acteur}
+        aConfirmer={aConfirmer}
+        devisNouveaux={devisNouveaux}
+        logoSrc={resolveLogoSrc()}
+      />
 
       {/*
         Les e-mails sont ignorés en silence quand le fournisseur n'est pas

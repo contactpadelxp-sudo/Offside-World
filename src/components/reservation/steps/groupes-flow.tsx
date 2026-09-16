@@ -66,6 +66,20 @@ export function GroupesFlow({
 
   const [nom, setNom] = useState("");
   const [entreprise, setEntreprise] = useState("");
+  /*
+    COORDONNÉES DE FACTURATION, DEMANDÉES ICI PLUTÔT QU'AU TÉLÉPHONE.
+
+    Elles ne l'étaient nulle part : l'exploitant devait rappeler chaque société
+    pour obtenir son adresse et son numéro de TVA avant de pouvoir établir le
+    devis. Un aller-retour sur chaque demande.
+
+    Facultatives, et dites comme telles. Une adresse complète et un numéro de
+    TVA exigés d'un prospect qui n'a pas encore vu un prix font abandonner des
+    demandes — et une demande perdue coûte plus cher qu'un coup de fil. Les
+    champs du back-office restent modifiables, ils ont donc le dernier mot.
+  */
+  const [adresse, setAdresse] = useState("");
+  const [tvaClient, setTvaClient] = useState("");
   const [email, setEmail] = useState("");
   const [emailTouched, setEmailTouched] = useState(false);
   const [phone, setPhone] = useState("");
@@ -147,6 +161,8 @@ export function GroupesFlow({
           dateSouhaitee: demiJournee?.jour ?? "",
           periode: demiJournee?.periode ?? "matin",
           nbParticipants,
+          clientAdresse: adresse || undefined,
+          clientTva: tvaClient || undefined,
           message: message || undefined,
           newsletter: acceptNewsletter,
           cgv: acceptCGV,
@@ -489,6 +505,25 @@ export function GroupesFlow({
                 <Label htmlFor="entreprise">Entreprise</Label>
                 <Input id="entreprise" value={entreprise} onChange={(e) => setEntreprise(e.target.value)} maxLength={120} />
               </div>
+            )}
+            {!isBubble && (
+              <>
+                <div>
+                  <Label htmlFor="adresse">Adresse de facturation (facultatif)</Label>
+                  <Input id="adresse" value={adresse} onChange={(e) => setAdresse(e.target.value)}
+                    maxLength={300} autoComplete="street-address"
+                    placeholder="Rue, numéro, code postal, ville" />
+                </div>
+                <div>
+                  <Label htmlFor="tvaClient">N° de TVA (facultatif)</Label>
+                  <Input id="tvaClient" value={tvaClient} onChange={(e) => setTvaClient(e.target.value)}
+                    maxLength={40} placeholder="BE 0123.456.789" />
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Ces deux informations figureront sur votre devis. Sans elles, nous vous les
+                    demanderons avant de l&apos;établir.
+                  </p>
+                </div>
+              </>
             )}
             <div>
               <Label htmlFor="nom">{isBubble ? "Nom" : "Nom du contact"}</Label>

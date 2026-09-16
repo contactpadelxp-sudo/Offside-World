@@ -93,6 +93,47 @@
   --sidebar-ring: oklch(0.80 0.14 79);
 }
 
+/*
+  LE BACK-OFFICE EST PLUS CLAIR QUE LE SITE PUBLIC.
+
+  Ce ne sont pas les mêmes usages. La vitrine est sombre par choix : c'est
+  l'identité du complexe, et on la regarde quelques minutes. Le back-office est
+  un outil de travail, ouvert longtemps, souvent en plein jour, souvent sur un
+  téléphone — et il y manquait la chose la plus élémentaire : voir où commence
+  une carte.
+
+  MESURÉ, PAS ESTIMÉ. Avec le fond à 0.13 et les cartes à 0.175, le contraste
+  entre les deux surfaces valait 1,06:1 — en pratique, rien. Les fiches de
+  réservation, les blocs de tarif, les cartes de l'analyse flottaient sur un
+  fond dont ils ne se distinguaient pas, et seule la bordure — à 1,34:1 sur la
+  carte, guère mieux — indiquait qu'il y avait un bloc.
+
+  Ici, fond 0.22 et cartes 0.32 : la séparation passe à 1,36:1, la bordure à
+  1,63:1. Tout est plus clair, et surtout tout se détache.
+
+  Les textes ont été recalculés sur les nouvelles surfaces, pas supposés :
+  texte principal 12,2:1 et texte atténué 6,2:1 sur une carte, là où le critère
+  1.4.3 du WCAG en demande 4,5. On gagne en lisibilité de structure sans rien
+  perdre en lisibilité de texte.
+
+  La teinte (70) et la faible saturation sont celles du site : le back-office
+  s'éclaircit, il ne change pas de famille de couleurs.
+*/
+.back-office {
+  --background: oklch(0.22 0.005 70);
+  --card: oklch(0.32 0.007 70);
+  --card-foreground: oklch(0.985 0 0);
+  --popover: oklch(0.32 0.007 70);
+  --secondary: oklch(0.38 0.008 70);
+  --muted: oklch(0.38 0.008 70);
+  --muted-foreground: oklch(0.775 0.016 75);
+  --accent: oklch(0.40 0.03 75);
+  --border: oklch(0.46 0.010 70);
+  --input: oklch(0.42 0.009 70);
+  /* Le fond de la barre, autrefois écrit en dur : il suit maintenant le thème. */
+  --barre: oklch(0.17 0.005 70);
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;

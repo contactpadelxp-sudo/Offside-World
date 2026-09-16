@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { useFormStatus } from "react-dom";
 import { seDeconnecter } from "@/lib/actions/session";
 import { Voyant } from "@/components/admin/onglets";
+import { Logo } from "@/components/logo";
 import { Bouclier, Calendrier, Carte, Document, Graphique, Plume, PressePapier, Reglages, type IconType } from "@/components/icons";
 
 /**
@@ -43,10 +44,13 @@ export function BarreAdmin({
   acteur,
   aConfirmer,
   devisNouveaux,
+  logoSrc,
 }: {
   acteur: string;
   aConfirmer: number;
   devisNouveaux: number;
+  /** Résolu au build par `resolveLogoSrc()`. `null` = lettrage texte. */
+  logoSrc: string | null;
 }) {
   const chemin = usePathname();
 
@@ -64,15 +68,26 @@ export function BarreAdmin({
       quart de l'écran à chaque instant. Dès `sm:`, la place existe : on
       ré-épingle.
     */
-    <header className="relative z-30 border-b border-border bg-[#0a0a0b]/95 backdrop-blur sm:sticky sm:top-0">
+    <header className="relative z-30 border-b border-border bg-[var(--barre)]/95 backdrop-blur sm:sticky sm:top-0">
       {/* Bandeau de couleur : on voit d'un coup d'œil qu'on n'est pas sur le site public. */}
       <div className="h-1 bg-gradient-to-r from-field to-kick" />
 
       <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-6 gap-y-3 px-4 py-3">
+        {/*
+          LE VRAI LOGO, EN HAUT À GAUCHE.
+
+          La barre affichait « OFFSIDE » en lettrage texte alors que le logo du
+          complexe existe dans le projet et sert déjà sur le site public. Le
+          composant `Logo` retombe tout seul sur le lettrage si le fichier
+          disparaît — la barre ne peut donc pas casser.
+
+          Il n'est PAS un lien : rien dans le back-office ne mène au site
+          public, c'est la règle de ce gabarit. Cliquer sur le logo d'un outil
+          de travail pour se retrouver sur la vitrine serait une sortie par
+          mégarde.
+        */}
         <div className="flex items-center gap-2">
-          <span className="font-[family-name:var(--font-heading)] text-sm font-bold tracking-wide text-field">
-            OFFSIDE
-          </span>
+          <Logo src={logoSrc} height={28} className="h-6 sm:h-7" textClassName="text-sm" />
           <span className="rounded-md bg-white/10 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
             Back-office
           </span>

@@ -410,13 +410,31 @@ export function FicheReservation({ r }: { r: ReservationAdmin }) {
           {reste > 0 &&
             (remboursementOuvert ? (
               <div className="w-full rounded-lg border border-border bg-muted/40 px-3 py-2.5">
+                {/*
+                  DIRE À QUOI ÇA SERT, PAS CE QUE ÇA N'EST PAS.
+
+                  Le bloc annonçait « La réservation N'EST PAS annulée » — une
+                  phrase qui alarme sans expliquer : on rembourse un client,
+                  pourquoi garderait-il son créneau ? La réponse n'était nulle
+                  part. On nomme donc les deux cas réels — le geste commercial
+                  et le trop-perçu — et on renvoie vers « Annuler » pour l'autre
+                  besoin, au lieu de laisser deviner.
+                */}
                 <p className="text-sm font-medium">
-                  Rembourser {montantLisible(reste)} au maximum
+                  {active
+                    ? `Rendre de l'argent sans annuler — ${montantLisible(reste)} au maximum`
+                    : `Rembourser ${montantLisible(reste)} au maximum`}
                 </p>
                 <p className="mt-0.5 text-xs text-muted-foreground">
-                  {active
-                    ? "La réservation N'EST PAS annulée : le créneau reste réservé au client."
-                    : "La réservation reste annulée. Seul l'argent est rendu."}
+                  {active ? (
+                    <>
+                      Pour un geste commercial ou un trop-perçu : le client est remboursé mais
+                      garde son créneau, l&apos;activité a bien lieu. Pour annuler la réservation{" "}
+                      <em>et</em> rembourser, utilisez « Annuler ».
+                    </>
+                  ) : (
+                    "La réservation reste annulée. Seul l'argent est rendu."
+                  )}
                 </p>
 
                 <fieldset className="mt-2">
