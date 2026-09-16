@@ -30,17 +30,57 @@ function Barre({ className = "" }: { className?: string }) {
   return <span className={`block rounded bg-white/10 ${className}`} />;
 }
 
-export function SqueletteEnTete() {
+export function SqueletteEnTete({ onglets = 3 }: { onglets?: number }) {
   return (
     <div className="animate-pulse">
       <Barre className="h-8 w-2/3 max-w-64" />
       <Barre className="mt-2 h-4 w-full max-w-96" />
       {/* Les onglets de filtre se replient comme les vrais. */}
-      <div className="mt-5 flex flex-wrap gap-2">
-        <Barre className="h-8 w-24 rounded-lg" />
-        <Barre className="h-8 w-28 rounded-lg" />
-        <Barre className="h-8 w-24 rounded-lg" />
-      </div>
+      {onglets > 0 && (
+        <div className="mt-5 flex flex-wrap gap-2">
+          {Array.from({ length: onglets }, (_, i) => (
+            <Barre key={i} className={`h-8 rounded-lg ${i % 2 ? "w-28" : "w-24"}`} />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/*
+  CHAQUE PAGE ANNONCE SA PROPRE FORME.
+
+  `loading.tsx` couvre aussi les pages filles qui n'en ont pas. Trois pages
+  vivaient donc sur l'ossature des RÉSERVATIONS : l'analyse, le blog et
+  l'écriture d'un article. On y voyait trois grandes fiches et trois onglets de
+  filtre, puis tout était remplacé par autre chose.
+
+  Le pire cas était l'analyse, parce que c'est la page la plus lente — elle
+  rapatrie jusqu'à 50 000 lignes de mesure — donc celle où la fausse ossature
+  reste le plus longtemps à l'écran avant de sauter.
+*/
+
+/** Grille de grands chiffres, comme en tête de l'analyse. */
+export function SqueletteTuiles({ nombre = 4 }: { nombre?: number }) {
+  return (
+    <div className="mt-6 grid animate-pulse grid-cols-2 gap-4 lg:grid-cols-4">
+      {Array.from({ length: nombre }, (_, i) => (
+        <div key={i} className="rounded-2xl border border-border bg-card p-5">
+          <Barre className="h-9 w-3/5 max-w-24" />
+          <Barre className="mt-2 h-4 w-4/5 max-w-32" />
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/** Carte au contenu haut : un graphique, un tunnel, un éditeur. */
+export function SqueletteBloc({ hauteur = "h-32" }: { hauteur?: string }) {
+  return (
+    <div className="mt-6 animate-pulse rounded-2xl border border-border bg-card p-5">
+      <Barre className="h-5 w-2/5 max-w-48" />
+      <Barre className="mt-2 h-4 w-4/5 max-w-96" />
+      <Barre className={`mt-4 w-full rounded-xl ${hauteur}`} />
     </div>
   );
 }
