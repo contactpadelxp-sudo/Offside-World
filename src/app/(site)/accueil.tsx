@@ -467,7 +467,25 @@ export function Accueil({ formules }: { formules: FormuleVue[] }) {
           {[
             { icon: Batiment, title: "Toute l’année", subtitle: "En salle, quelle que soit la météo", color: "bg-white/[0.04] text-field border-white/10" },
             { icon: Epingle, title: "Facile d'accès", subtitle: "Parking gratuit", color: "bg-white/[0.04] text-field border-white/10" },
-            { icon: Enfant, title: "Dès 6 ans", subtitle: "Encadrement adapté", color: "bg-white/[0.04] text-kick border-white/10" },
+            /*
+              DEUX AFFIRMATIONS FAUSSES CORRIGÉES ICI.
+
+              « Dès 6 ans » : Brahim a répondu le 17 septembre 2026 « à partir
+              de 4 ans ». Un parent d'enfant de 5 ans se croyait exclu, sur la
+              page d'accueil, alors que le tunnel accepte sa réservation.
+
+              « Encadrement adapté » : Brahim a écrit, à propos du délai de
+              réservation, « même en dernière minute vu qu'il n'y a pas de
+              coach ». Il n'y a donc pas d'encadrement général. Un animateur
+              n'est compris que dans la formule Bubble, ce que les CGV disent
+              déjà correctement (« l'animateur Bubble est compris dans les
+              prestations pour lesquelles sa présence est prévue »).
+
+              Promettre un encadrement est le pire endroit où se tromper : un
+              parent peut laisser ses enfants en croyant qu'on les surveille.
+              On annonce donc ce qui est vérifiable — le matériel.
+            */
+            { icon: Enfant, title: "Dès 4 ans", subtitle: "Terrain et matériel adaptés", color: "bg-white/[0.04] text-kick border-white/10" },
             { icon: Carte, title: "Réservation flexible", subtitle: `Jusqu’à ${DELAI_RESERVATION_HEURES}h avant`, color: "bg-white/[0.04] text-field border-white/10" },
           ].map((item) => (
             /*

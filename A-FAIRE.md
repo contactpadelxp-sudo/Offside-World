@@ -182,6 +182,28 @@ facturation serait hors de proportion et mal placé.
       — nombre d'anniversaires depuis l'ouverture, note Google réelle — ils
       auraient plus de poids que ce qui a été retiré. Sinon on reste comme ça.
 
+## Affirmations du site à faire confirmer
+
+Une allégation invérifiable engage le vendeur (art. VI.97 du Code de droit
+économique). Trois ont été relevées le 17 septembre 2026 en relisant le site ;
+deux étaient fausses et sont corrigées, la troisième est à confirmer.
+
+- [x] ~~« Dès 6 ans » sur la page d'accueil~~ **CORRIGÉ en « Dès 4 ans »**, ce
+      que Brahim a répondu. Un parent d'enfant de 5 ans se croyait exclu depuis
+      l'accueil, alors que le tunnel acceptait sa réservation.
+- [x] ~~« Encadrement adapté » sur la page d'accueil~~ **RETIRÉ.** Brahim a
+      écrit « même en dernière minute vu qu'il n'y a pas de coach » : il n'y a
+      donc pas d'encadrement général, seulement un animateur pour la formule
+      Bubble — ce que les CGV disent déjà correctement. Remplacé par « Terrain
+      et matériel adaptés », vérifiable.
+
+      C'est le pire endroit où se tromper : un parent peut laisser ses enfants
+      en croyant qu'on les surveille.
+- [ ] **« Parking gratuit » — à confirmer.** Affirmation factuelle sur le
+      complexe, jamais vérifiée avec Brahim. Laissée en place faute de raison
+      d'en douter, mais elle n'est pas sourcée. Si le parking est payant ou
+      partagé, la phrase doit partir.
+
 ## Contenus manquants
 
 - [ ] Photo pour la carte « Anniversaire » de la page de réservation
