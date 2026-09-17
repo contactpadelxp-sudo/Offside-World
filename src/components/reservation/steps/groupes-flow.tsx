@@ -36,6 +36,12 @@ import {
   AlerteCercle, Ballon, Batiment, Bouclier, Coche, Document, FlecheDroite, FlecheGauche, Groupe, Horloge, Info, Visuel,
 } from "@/components/icons";
 
+/** « Matin », ou « Matin · 09:00 – 13:00 » quand les heures sont connues. */
+function horaireDemiJournee(dj: DemiJourneeVue | null): string {
+  if (!dj) return "";
+  return dj.debut && dj.fin ? `${dj.periodeLabel} · ${dj.debut} – ${dj.fin}` : dj.periodeLabel;
+}
+
 type Offre = "bubble" | "team-building";
 type Step = "offre" | "creneau" | "recap";
 
@@ -188,7 +194,7 @@ export function GroupesFlow({
       date: isBubble ? bubbleCreneau?.jourLabel : demiJournee?.jourLabel,
       horaire: isBubble
         ? `${bubbleCreneau?.debut} – ${bubbleCreneau?.fin}`
-        : `${demiJournee?.periodeLabel} · ${demiJournee?.debut} – ${demiJournee?.fin}`,
+        : horaireDemiJournee(demiJournee),
       surDevis: !isBubble,
     });
     /*
@@ -425,7 +431,15 @@ export function GroupesFlow({
                         }`}
                       >
                         <Horloge className="size-3.5" />
-                        {dj.periodeLabel} · {dj.debut} – {dj.fin}
+                        {/*
+                          L'heure ne s'écrit que si elle est connue. Voir
+                          `bubble-team.ts` : elle vaut `null` tant que Brahim
+                          n'a pas donné les plages réelles, et « Matin » seul
+                          est vrai là où « Matin · 09:00 – 13:00 » ne l'était
+                          pas.
+                        */}
+                        {dj.periodeLabel}
+                        {dj.debut && dj.fin && ` · ${dj.debut} – ${dj.fin}`}
                       </button>
                     );
                   })}
@@ -456,11 +470,29 @@ export function GroupesFlow({
             </ul>
           </div>
 
-          <div className="mt-8 flex justify-between">
+          {/*
+            LE CHAMP QUI BLOQUE EST EN HAUT, LE BOUTON EN BAS, ET IL Y A UN
+            AUTRE CHAMP ENTRE LES DEUX.
+
+            On renseigne le nombre de participants — le seul champ visible près
+            du bouton —, on descend, et « Continuer » est mort parce qu'aucune
+            demi-journée n'a été cochée trois écrans plus haut. Rien ne le
+            disait. Sur le tunnel anniversaire et sur l'envoi d'un devis au
+            back-office, la même correction était déjà faite.
+          */}
+          <div className="mt-8 flex flex-wrap items-center justify-between gap-3">
             <Button variant="ghost" onClick={() => setStep("offre")} className="gap-1.5"><FlecheGauche className="size-4" /> Retour</Button>
-            <Button onClick={() => setStep("recap")} disabled={!demiJournee} className="btn-glass-field text-[#0a0a0b] border-0 gap-1.5">
-              Continuer <FlecheDroite className="size-4" />
-            </Button>
+            <div className="flex flex-col items-end gap-1.5">
+              <Button onClick={() => setStep("recap")} disabled={!demiJournee} className="btn-glass-field text-[#0a0a0b] border-0 gap-1.5">
+                Continuer <FlecheDroite className="size-4" />
+              </Button>
+              {!demiJournee && (
+                <p className="flex items-start gap-1.5 text-right text-sm text-muted-foreground">
+                  <AlerteCercle className="mt-0.5 size-4 shrink-0 text-kick" />
+                  <span>Choisissez d&apos;abord une demi-journée ci-dessus.</span>
+                </p>
+              )}
+            </div>
           </div>
         </FadeIn>
       )}
@@ -490,7 +522,7 @@ export function GroupesFlow({
                 <span className="font-semibold">
                   {isBubble
                     ? `${bubbleCreneau?.debut} – ${bubbleCreneau?.fin}`
-                    : `${demiJournee?.periodeLabel} · ${demiJournee?.debut} – ${demiJournee?.fin}`}
+                    : horaireDemiJournee(demiJournee)}
                 </span>
               </div>
               <div className="flex justify-between">

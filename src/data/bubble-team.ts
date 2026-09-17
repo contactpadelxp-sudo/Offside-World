@@ -52,9 +52,26 @@ export const TEAM_BUILDING_JOURS = [1, 2, 4, 5] as const; // ISO : lun, mar, jeu
 /** Le vendredi, seule la matinée est proposée. */
 export const TEAM_BUILDING_JOURS_APRES_MIDI = [1, 2, 4] as const;
 
-// TODO heures exactes à confirmer avec Brahim — les jours le sont, pas les plages.
-export const TEAM_BUILDING_MATIN = { debut: "09:00", fin: "13:00" } as const;
-export const TEAM_BUILDING_APRES_MIDI = { debut: "14:00", fin: "18:00" } as const;
+/*
+  LES HEURES SONT `null` TANT QU'ON NE LES CONNAÎT PAS, ET CE N'EST PAS UN OUBLI.
+
+  Elles valaient « 09:00 – 13:00 » et « 14:00 – 18:00 » — des horaires que
+  personne n'a confirmés. Le client les voyait en choisissant sa demi-journée,
+  puis dans son récapitulatif : une précision inventée, sur l'écran même où il
+  demande un devis.
+
+  `null` fait disparaître l'heure de l'affichage sans rien casser : il reste
+  « Matin » et « Après-midi », qui sont vrais. Le jour où Brahim répond, il
+  suffit de remplir ces deux constantes — les heures réapparaissent partout,
+  sans toucher à une ligne d'interface.
+
+  Écrire une heure fausse coûte plus qu'en écrire aucune : une entreprise qui
+  accepte un devis s'engage sur l'horaire qu'elle y a lu.
+*/
+type Plage = { debut: string; fin: string } | null;
+
+export const TEAM_BUILDING_MATIN: Plage = null;
+export const TEAM_BUILDING_APRES_MIDI: Plage = null;
 
 export const TEAM_BUILDING_INCLUS = [
   "Terrain privatisé pour votre groupe",

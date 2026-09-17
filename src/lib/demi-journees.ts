@@ -26,8 +26,9 @@ export interface DemiJourneeVue {
   jourLabel: string;
   periode: "matin" | "apres-midi";
   periodeLabel: "Matin" | "Après-midi";
-  debut: string;
-  fin: string;
+  /** `null` tant que les heures réelles ne sont pas connues. Voir `bubble-team.ts`. */
+  debut: string | null;
+  fin: string | null;
 }
 
 /**
@@ -72,8 +73,8 @@ export function prochainesDemiJournees(nbJours = 10, depuis = new Date()): DemiJ
       jourLabel: label,
       periode: "matin",
       periodeLabel: "Matin",
-      debut: TEAM_BUILDING_MATIN.debut,
-      fin: TEAM_BUILDING_MATIN.fin,
+      debut: TEAM_BUILDING_MATIN?.debut ?? null,
+      fin: TEAM_BUILDING_MATIN?.fin ?? null,
     });
 
     // Le vendredi s'arrête à midi : on ne propose pas l'après-midi ce jour-là.
@@ -84,8 +85,8 @@ export function prochainesDemiJournees(nbJours = 10, depuis = new Date()): DemiJ
         jourLabel: label,
         periode: "apres-midi",
         periodeLabel: "Après-midi",
-        debut: TEAM_BUILDING_APRES_MIDI.debut,
-        fin: TEAM_BUILDING_APRES_MIDI.fin,
+        debut: TEAM_BUILDING_APRES_MIDI?.debut ?? null,
+        fin: TEAM_BUILDING_APRES_MIDI?.fin ?? null,
       });
     }
   }
