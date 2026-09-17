@@ -19,7 +19,8 @@ réglages y sont incohérents avec le site.
       sont ceux que Brahim a donnés à Mathis — Kick-Off **180 €**, Bubble
       **290 €**, Bubble Foot **23 €/pers.** Ils sont en base et affichés partout
       sur le site ; côté site, il n'y a rien à faire.
-- [ ] **Corriger les deux prix chez Sport-Finder** — action de Brahim, sur leur
+- [ ] *(Brahim a répondu le 17 septembre : « je vais adapter ». À revérifier
+      sur leur page publique une fois fait.)* **Corriger les deux prix chez Sport-Finder** — action de Brahim, sur leur
       plateforme. Ils y annoncent encore 140 €/session et 20 €/pers.
 
       L'écart n'est pas seulement gênant commercialement. Un client qui compare
@@ -40,23 +41,23 @@ réglages y sont incohérents avec le site.
 - [ ] **Vérifier les factures Sport-Finder.** Un bandeau du back-office mentionne
       2 factures ; un impayé peut suspendre la page publique.
 
-## Créneaux des anniversaires — le site tourne aujourd'hui sur des plages provisoires
+## Créneaux — les vrais horaires sont en place
 
-**Décision prise :** les terrains restent sur Sport-Finder, les anniversaires sur
-le site, et les anniversaires n'occupent que des plages retirées de la location.
+**Décision de fond, inchangée :** les terrains restent sur Sport-Finder, les
+anniversaires sur le site, et les anniversaires n'occupent que des plages
+retirées de la location.
 
-En attendant les vraies plages, la base tourne sur une hypothèse. État relevé
-en production le 8 septembre 2026, **en heure belge**, sur les deux espaces :
+Horaires communiqués par Brahim le **17 septembre 2026**, appliqués le jour
+même (migration 0020) :
 
-| | Anniversaires (2 h) | Bubble Foot (1 h) |
-|---|---|---|
-| Mercredi | 15:00 · 17:30 | — |
-| Vendredi | — | 18:00 · 19:00 · 20:00 |
-| Samedi | 10:00 · 12:30 · 15:00 · 17:30 | 20:00 |
-| Dimanche | idem samedi | 20:00 |
+| | Anniversaires (2 h) |
+|---|---|
+| Mercredi | 13:30 · 16:00 |
+| Vendredi | 16:00 · 18:30 |
+| Samedi | 10:00 · 12:30 · 15:00 · 17:30 |
+| Dimanche | 10:00 · 12:30 · 15:00 · 17:30 |
 
-Les départs s'enchaînent toutes les 2 h 30 : deux heures de fête, puis trente
-minutes de battement.
+941 créneaux générés sur six mois, dans les trois Fun zones.
 
 > **Piège de lecture, qui m'a eu.** Interroger la table sans préciser le fuseau
 > renvoie de l'UTC, et une même plage y apparaît DEUX FOIS — un créneau de
@@ -64,93 +65,63 @@ minutes de battement.
 > huit départs par jour, et une « option intermédiaire » qui n'existe pas.
 > Toujours lire `debut at time zone 'Europe/Brussels'`.
 
-> **Anomalie à trancher.** Le Bubble Foot n'a qu'UN créneau le samedi et le
-> dimanche (20:00), là où le vendredi en a trois. Les 18:00 et 19:00 du week-end
-> chevauchent l'anniversaire de 17:30–19:30 dans le même espace : la contrainte
-> d'exclusion les a refusés en silence à la génération. Un client qui cherche un
-> Bubble Foot le samedi soir ne voit donc presque rien. À régler avec les vraies
-> plages de Brahim.
-
-Ces plages sont désormais **des données, plus du code** : les corriger ne
-demande aucun redéploiement.
-
-- [ ] Jours et plages horaires réellement réservés aux anniversaires
-- [x] ~~Nombre d'anniversaires en parallèle.~~ **Deux**, soit les deux espaces
-      actifs — déjà le comportement en place.
+- [x] ~~Jours et plages réellement réservés aux anniversaires~~ **Reçus le
+      17 septembre 2026.**
+- [x] ~~**L'ambiguïté du battement de 30 minutes.**~~ **TRANCHÉE PAR LA GRILLE
+      ELLE-MÊME.** « 13h30–15h30 · 16h00–18h00 » ne laisse aucun doute : les
+      30 minutes séparent la FIN d'un créneau du DÉBUT du suivant, et ne
+      décalent pas deux groupes simultanés. C'était déjà ce qui était en place.
+- [x] ~~Nombre d'anniversaires en parallèle.~~ **Trois désormais**, soit les
+      trois Fun zones.
 - [x] ~~Délai minimum avant le début.~~ **Une heure**, « même en dernière minute
-      vu qu'il n'y a pas de coach » (Brahim). Déjà appliqué :
-      `DELAI_RESERVATION_HEURES = 1`, vérifié côté serveur dans
-      `src/lib/db/creneaux.ts`.
-- [ ] **Horizon de réservation** — question distincte de la précédente, et
-      toujours ouverte : jusqu'à quelle échéance accepte-t-on une réservation ?
-      Six mois sont ouverts en base (jusqu'au 3 mars 2027), trois mois sont
-      annoncés sur le site.
-- [ ] **Lever une ambiguïté sur le battement de 30 minutes.** Brahim dit « deux
-      en même temps, avec un espacement de 30 min pour le prochain ». Deux
-      lectures possibles, qui ne donnent pas la même grille :
-      *a)* le groupe suivant démarre 30 min après la fin du précédent — c'est ce
-      qui est en place (cadence de 2 h 30) ;
-      *b)* les deux groupes simultanés sont décalés de 30 min entre eux, pour
-      étaler arrivées et départs — il faudrait alors décaler l'espace 2 de
-      30 min (08:30, 11:00, 13:30, 16:00).
+      vu qu'il n'y a pas de coach » (Brahim). `DELAI_RESERVATION_HEURES = 1`.
+- [x] ~~**Horizon de réservation**~~ **SIX MOIS**, répondu le 17 septembre 2026.
+      `HORIZON_JOURS` passe de 90 à 183 : six mois calendaires valent entre 181
+      et 184 jours, et rogner trois jours ferait disparaître du sélecteur la
+      date que le client vient d'entendre au téléphone.
+
+- [ ] **LES PLAGES DU BUBBLE FOOT RESTENT INCONNUES.** À la question « et le
+      Bubble Foot ? », Brahim a répondu par les horaires du FOOT : 14h–01h les
+      lundi, mardi et jeudi ; 20h–01h les mercredi, samedi et dimanche. Ce sont
+      les heures de la **location de terrain**, qui se réserve sur Sport-Finder,
+      pas ici.
+
+      La génération garde donc ses horaires provisoires — vendredi, samedi et
+      dimanche à 18h, 19h et 20h — et **l'anomalie connue subsiste** : les 18h
+      et 19h du week-end chevauchent l'anniversaire de 17h30–19h30 dans le même
+      espace, donc la contrainte d'exclusion les refuse en silence. Un client
+      qui cherche un Bubble Foot le samedi soir ne voit presque rien.
+
+      Inventer une plage reviendrait à vendre un créneau qui n'existe pas.
+
+- [ ] **LES HEURES DES DEMI-JOURNÉES DE TEAM BUILDING.** Les JOURS sont connus
+      — lundi, mardi et jeudi matin et après-midi, vendredi matin seulement, et
+      c'est appliqué — mais pas les heures. 9h–13h et 14h–18h restent des
+      hypothèses, et elles partent sur chaque devis.
 
 ## Informations d'entreprise
 
 Obligatoires en Belgique (Code de droit économique, art. III.74). Elles
 s'affichent aujourd'hui « [à compléter] » sur le site public.
 
-- [ ] ~~Dénomination sociale~~ **Belantis**, communiquée le 12 septembre 2026 —
-      **périmée** : le vendeur est DBT (voir plus bas). À redemander pour DBT.
-- [ ] **La FORME JURIDIQUE** (SRL, SA, ASBL, indépendant…). L'article 2:20 du
-      Code des sociétés impose que tout document émanant d'une société porte sa
-      dénomination ET sa forme légale : un nom seul ne suffit pas, il faut
-      « DBT SRL » ou la forme réelle. Laissée vide plutôt que devinée —
-      une forme erronée sur un devis engageant serait pire qu'une absence.
-- [ ] **Le TRIBUNAL DE L'ENTREPRISE du RPM.** Même article : les documents
-      doivent porter « RPM » suivi du tribunal compétent.
+- [x] ~~Dénomination sociale, forme juridique, BCE, TVA, siège, responsable de
+      publication, tribunal du RPM~~ **TOUT EST RENSEIGNÉ — 17 septembre 2026.**
 
-      **La règle est établie** (vérifiée le 15 septembre 2026 auprès du site des
-      Cours & Tribunaux) : c'est le tribunal de l'entreprise de l'arrondissement
-      du **siège social de la société**, et non celui de l'adresse d'exploitation.
-      Toute la province de Namur — Gembloux compris — relève du **Tribunal de
-      l'entreprise de Liège, division Namur** (Rue Général Michel 10, 5000 Namur).
+      **DBT Partners SRL**, BCE et TVA **BE 0788.645.632**, siège social
+      Rue des Orchidées 6, 5030 Gembloux — la même adresse que le complexe.
+      Responsable de la publication : **Brahim Bel Abbes**.
 
-      Donc : si le siège social de DBT est en province de Namur, la mention est
-      « RPM Liège, division Namur ». S'il est ailleurs, c'est un autre tribunal.
-      **Il manque le siège social de DBT pour trancher — c'est la seule inconnue.**
-- [ ] ~~Numéro d'entreprise (BCE)~~ **1025.713.731** — **périmé** : c'est celui
-      de Belantis, déduit de son numéro de TVA. À redemander pour DBT.
-- [ ] ~~Numéro de TVA~~ **BE 1025.713.731** — **périmé**, même raison. Le numéro
-      de Belantis avait été validé par sa clé de contrôle modulo 97 ; celui de
-      DBT devra l'être aussi avant d'être inscrit.
-- [ ] **LE VENDEUR EST « DBT », PAS BELANTIS — TOUT LE BLOC D'IDENTITÉ EST DONC
-      À REFAIRE.** Constaté le 14 septembre 2026 : le compte Stripe de Brahim
-      est enregistré sous une autre entité que Belantis. **Tranché le
-      15 septembre 2026** : Brahim confirme que **c'est DBT qui exploite le
-      foot**, et que le compte Stripe est donc au bon nom.
+      Le numéro a été validé par sa clé de contrôle avant d'être inscrit :
+      97 − (7886456 mod 97) = 32, et il finit bien par 32.
 
-      C'est l'issue *b)* qui était redoutée. Le titulaire du compte Stripe est
-      LE VENDEUR au sens légal : c'est lui qui encaisse, qui déclare la TVA et
-      que le client doit pouvoir identifier. Or le site annonce aujourd'hui
-      « Belantis / BE 1025.713.731 » dans les mentions légales, les CGV, les
-      devis PDF et chaque e-mail de confirmation. **Ces mentions désignent la
-      mauvaise personne morale.**
+      Le tribunal du RPM en découle sans ambiguïté : le siège est en province
+      de Namur, donc **RPM Liège, division Namur**.
 
-      Ce qu'il faut demander à Brahim, pour DBT et non pour Belantis :
-      1. la **dénomination sociale complète et la forme juridique** (« DBT SRL »,
-         « DBT SA »… — art. 2:20 CSA : dénomination ET forme, toujours ensemble) ;
-      2. le **numéro d'entreprise / TVA** de DBT — celui en base aujourd'hui est
-         celui de Belantis ;
-      3. le **siège social** de DBT.
-
-      Le tribunal du RPM découle du point 3, pas de l'adresse du complexe.
-
-      Tant que ce n'est pas corrigé dans `src/data/entreprise.ts`, le site
-      identifie le mauvais vendeur. **Sans conséquence en clés de test.
-      Bloquant avant le premier paiement réel.**
-- [ ] **Siège social de DBT** — et il commande le tribunal du RPM ci-dessus.
-- [ ] Responsable de la publication
-- [ ] Arrondissement judiciaire compétent (pour les CGU)
+      Au passage, la dénomination et la forme juridique étaient jointes à un
+      seul endroit — le PDF de devis. Les mentions légales, les CGV, la
+      politique de confidentialité et les e-mails affichaient « DBT Partners »
+      tout court, ce que l'article 2:20 du CSA interdit. Une constante unique,
+      `RAISON_SOCIALE`, les joint désormais partout.
 
 ## Facturation électronique — à vérifier avec son comptable
 

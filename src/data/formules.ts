@@ -33,7 +33,7 @@ export const FORMULES_REPLI: FormuleVue[] = [
     prixBase: 180,
     enfantsInclus: 10,
     prixEnfantSup: 10,
-    enfantsMax: 20,
+    enfantsMax: 18,
     dureeMinutes: 120,
     inclus: [
       "2 heures de Football Indoor",
@@ -41,7 +41,6 @@ export const FORMULES_REPLI: FormuleVue[] = [
       "Ballons et chasubles à disposition",
       "Accès aux vestiaires",
       "Espace réservé pour le gâteau",
-      "Vidéo souvenir de l'anniversaire",
       "Décoration de l'espace anniversaire",
       "Assiettes, gobelets et serviettes",
       "Eau, menthe et grenadine à volonté",
@@ -57,7 +56,7 @@ export const FORMULES_REPLI: FormuleVue[] = [
     prixBase: 290,
     enfantsInclus: 10,
     prixEnfantSup: 15,
-    enfantsMax: 20,
+    enfantsMax: 18,
     dureeMinutes: 120,
     inclus: [
       "1 heure de Bubble Foot",
@@ -65,7 +64,6 @@ export const FORMULES_REPLI: FormuleVue[] = [
       "1 heure de Football Indoor",
       "Bulles et matériel compris",
       "Terrain réservé pour le groupe",
-      "Vidéo souvenir de l'anniversaire",
       "Décoration de l'espace anniversaire",
       "Assiettes, gobelets et serviettes",
       "Eau, menthe et grenadine à volonté",

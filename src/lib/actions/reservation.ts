@@ -138,7 +138,18 @@ export async function reserverAnniversaire(saisie: SaisieAnniversaire): Promise<
     const creneauId = uuid(saisie?.creneauId, "Créneau");
     const formuleId = texte(saisie?.formuleId, "Formule", { max: 60 });
     const enfantPrenom = texte(saisie?.enfantPrenom, "Prénom de l'enfant", { min: 1, max: 60 });
-    const enfantAge = entier(saisie?.enfantAge, "Âge de l'enfant", { min: 1, max: 17 });
+    /*
+      4 ANS MINIMUM, ET PAS DE MAXIMUM À 17 ANS.
+
+      Le plancher était à 1 an, le plafond à 17. Brahim a précisé le
+      17 septembre 2026 : à partir de 4 ans, et sans limite haute — le Bubble
+      Foot se joue aussi entre adultes, et un anniversaire de trentenaire est
+      une vente comme une autre. Le plafond refusait donc de vraies commandes.
+
+      99 reste comme garde-fou de saisie : ce n'est pas une limite d'âge mais
+      la borne au-delà de laquelle un nombre n'est plus un âge.
+    */
+    const enfantAge = entier(saisie?.enfantAge, "Âge", { min: 4, max: 99 });
     const optionsIds = identifiants(saisie?.optionsIds, "Options", 10);
     const clientNom = texte(saisie?.clientNom, "Nom", { min: 2, max: 120 });
     const clientEmail = email(saisie?.clientEmail, "E-mail");

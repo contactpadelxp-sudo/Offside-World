@@ -5,7 +5,7 @@ import { urlAbsolue } from "@/lib/site";
 import {
   ADRESSE_LIGNE,
   BCE,
-  DENOMINATION_SOCIALE,
+  RAISON_SOCIALE,
   EMAIL,
   NOM_COMMERCIAL,
   TVA,
@@ -75,8 +75,8 @@ interface Ligne {
  */
 function identiteVendeur(): string[] {
   const lignes = [
-    DENOMINATION_SOCIALE && DENOMINATION_SOCIALE !== NOM_COMMERCIAL
-      ? `${DENOMINATION_SOCIALE} (${NOM_COMMERCIAL})`
+    RAISON_SOCIALE && RAISON_SOCIALE !== NOM_COMMERCIAL
+      ? `${RAISON_SOCIALE} (${NOM_COMMERCIAL})`
       : NOM_COMMERCIAL,
     ADRESSE_LIGNE,
   ];

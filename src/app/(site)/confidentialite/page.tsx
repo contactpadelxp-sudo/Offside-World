@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import {
-  NOM_COMMERCIAL, DENOMINATION_SOCIALE, BCE, ADRESSE, ADRESSE_LIGNE,
+  NOM_COMMERCIAL, RAISON_SOCIALE, BCE, ADRESSE, ADRESSE_LIGNE,
   EMAIL, MAJ_LEGALE, ouACompleter,
 } from "@/data/entreprise";
 
@@ -46,7 +46,7 @@ export default function Confidentialite() {
       <Article n={1} titre="Responsable du traitement">
         <P>Le responsable du traitement est :</P>
         <ul className="list-disc pl-6 space-y-1 text-muted-foreground">
-          <li><strong>{ouACompleter(DENOMINATION_SOCIALE, "dénomination sociale à compléter")}</strong></li>
+          <li><strong>{ouACompleter(RAISON_SOCIALE, "dénomination sociale à compléter")}</strong></li>
           <li><strong>Nom commercial :</strong> {NOM_COMMERCIAL}</li>
           <li><strong>Adresse :</strong> {ADRESSE_LIGNE}</li>
           <li><strong>N° d&apos;entreprise :</strong> {ouACompleter(BCE)}</li>

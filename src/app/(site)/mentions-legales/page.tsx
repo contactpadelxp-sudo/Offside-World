@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import {
-  NOM_COMMERCIAL, DENOMINATION_SOCIALE, SIEGE_SOCIAL, BCE, TVA,
+  NOM_COMMERCIAL, RAISON_SOCIALE, SIEGE_SOCIAL, BCE, TVA,
   RESPONSABLE_PUBLICATION, ADRESSE, EMAIL,
   MAJ_LEGALE, ouACompleter,
 } from "@/data/entreprise";
@@ -30,7 +30,7 @@ export default function MentionsLegales() {
         <h2 className="text-xl font-bold">Éditeur du site</h2>
         <p className="text-muted-foreground">Le présent site internet est édité par :</p>
         <ul className="list-disc pl-6 space-y-1 text-muted-foreground">
-          <li><strong>Dénomination sociale :</strong> {ouACompleter(DENOMINATION_SOCIALE)}</li>
+          <li><strong>Dénomination sociale :</strong> {ouACompleter(RAISON_SOCIALE)}</li>
           <li><strong>Nom commercial :</strong> {NOM_COMMERCIAL}</li>
           <li>
             <strong>Adresse d&apos;exploitation :</strong> {ADRESSE.rue}, {ADRESSE.codePostal} {ADRESSE.ville}, {ADRESSE.pays}

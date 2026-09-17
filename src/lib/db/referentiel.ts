@@ -44,14 +44,29 @@ export async function lireFormules(): Promise<FormuleVue[]> {
   }));
 }
 
-export async function lireOptions(): Promise<OptionVue[]> {
+/**
+ * Les extras.
+ *
+ * `seulementEnVente` distingue DEUX BESOINS QUI NE SONT PAS LE MÊME.
+ *
+ * Le tunnel public ne doit proposer que ce qui se vend aujourd'hui. Le
+ * back-office, lui, doit pouvoir nommer ce qu'un client a commandé HIER — même
+ * si l'extra a été retiré du catalogue depuis.
+ *
+ * Constaté le 17 septembre 2026 en retirant le pack photo et la piñata à la
+ * demande de l'exploitant : une réservation les portait encore, et sa fiche
+ * s'est mise à afficher « photo » au lieu de « Pack photo souvenir ». Le
+ * libellé brut de la base, sur l'écran où l'on prépare une journée de travail.
+ */
+export async function lireOptions(seulementEnVente = true): Promise<OptionVue[]> {
   if (!baseConfiguree()) return [];
 
-  const { data, error } = await base()
+  let requete = base()
     .from("options")
-    .select("id, libelle, description, prix_cents")
-    .eq("actif", true)
-    .order("id");
+    .select("id, libelle, description, prix_cents");
+  if (seulementEnVente) requete = requete.eq("actif", true);
+
+  const { data, error } = await requete.order("id");
 
   if (error) {
     console.error("Lecture des options impossible :", error.message);

@@ -2,37 +2,27 @@
  * Identité de l'entreprise — source unique pour les pages légales,
  * le pied de page et les écrans de réservation.
  *
- * Valeurs issues des documents fournis par le client (version du
- * 1er septembre 2026). Les champs `null` restent à compléter : ils
- * s'affichent alors comme « [à compléter] » sur le site.
+ * Valeurs communiquées par Brahim Bel Abbes le 17 septembre 2026, et qui
+ * remplacent celles de Belantis : la société qui vend et encaisse est DBT
+ * Partners SRL. Les champs `null` restent à compléter et s'affichent alors
+ * « [à compléter] » sur le site — il n'en reste qu'un, le siège social, qui est
+ * nul parce qu'il est IDENTIQUE à l'adresse d'exploitation, pas parce qu'il
+ * manque.
  */
 
 export const NOM_COMMERCIAL = "Offside Foot Indoor";
 
-/*
- * ⚠ CES TROIS VALEURS DÉSIGNENT LA MAUVAISE SOCIÉTÉ. À CORRIGER AVANT LE
- *   PREMIER PAIEMENT RÉEL.
+/**
+ * Dénomination sociale — la société qui VEND et qui ENCAISSE.
  *
- * `DENOMINATION_SOCIALE`, `BCE` et `TVA` ci-dessous sont ceux de **Belantis**,
- * communiqués le 12 septembre 2026. Or Brahim a confirmé le 15 septembre 2026
- * que **c'est DBT qui exploite le foot**, et le compte Stripe est bien au nom
- * de DBT.
+ * « Belantis » figurait ici jusqu'au 16 septembre 2026, avec son numéro
+ * d'entreprise. C'était la mauvaise société : le compte Stripe est au nom de
+ * DBT Partners, et le titulaire du compte est le vendeur au sens légal — c'est
+ * lui qui encaisse, déclare la TVA, et que le client doit pouvoir identifier.
  *
- * Le titulaire du compte Stripe est le VENDEUR au sens légal : c'est lui qui
- * encaisse, qui déclare la TVA, et que le client doit pouvoir identifier et
- * assigner. Tant que ces constantes disent « Belantis », les mentions légales,
- * les CGV, les devis PDF et chaque e-mail de confirmation nomment une personne
- * morale qui n'est pas le vendeur.
- *
- * Il manque, pour DBT : dénomination + forme juridique, numéro d'entreprise,
- * siège social. Voir A-FAIRE.md, section « Identité de l'entreprise ».
- *
- * Sans conséquence tant qu'on est en clés de test — aucune vente réelle n'a eu
- * lieu. Bloquant dès la première.
+ * Communiqué par Brahim Bel Abbes le 17 septembre 2026.
  */
-
-/** Dénomination sociale (raison sociale). ⚠ Belantis : voir l'avertissement ci-dessus. */
-export const DENOMINATION_SOCIALE: string | null = "Belantis";
+export const DENOMINATION_SOCIALE: string | null = "DBT Partners";
 
 /**
  * Forme juridique — SRL, SA, ASBL, indépendant en personne physique…
@@ -40,13 +30,11 @@ export const DENOMINATION_SOCIALE: string | null = "Belantis";
  * OBLIGATOIRE SUR LES DOCUMENTS DE LA SOCIÉTÉ. L'article 2:20 du Code des
  * sociétés et des associations impose que tout acte, facture, bon de commande
  * ou courrier émanant d'une société mentionne sa dénomination ET sa forme
- * légale. « Belantis » seul ne suffit donc pas : il faut « Belantis SRL », ou
- * la forme réelle.
+ * légale : « DBT Partners » seul ne suffirait pas.
  *
- * Laissé à `null` plutôt que deviné : inscrire une forme juridique erronée sur
- * un devis engageant serait pire que de l'omettre.
+ * Communiquée le 17 septembre 2026.
  */
-export const FORME_JURIDIQUE: string | null = null;
+export const FORME_JURIDIQUE: string | null = "SRL";
 
 /**
  * Tribunal de l'entreprise du registre des personnes morales.
@@ -59,13 +47,16 @@ export const FORME_JURIDIQUE: string | null = null;
  * de compte. Toute la province de Namur, Gembloux compris, relève du tribunal
  * de l'entreprise de Liège, division Namur.
  *
- * Reste donc `null` pour une raison précise, et non par prudence vague : le
- * siège social de DBT — la société qui exploite réellement le foot — n'est pas
- * connu. S'il est en province de Namur, la valeur est « Liège, division
- * Namur ». S'il est ailleurs, c'est un autre tribunal, et l'imprimer au jugé
- * sur un devis engageant serait une mention fausse.
+ * RÉSOLU LE 17 SEPTEMBRE 2026 : le siège social de DBT Partners est Rue des
+ * Orchidées 6 à 5030 Gembloux — la même adresse que le complexe. Gembloux est
+ * en province de Namur, laquelle relève entièrement du tribunal de l'entreprise
+ * de Liège, division Namur (vérifié auprès du site des Cours & Tribunaux).
+ *
+ * La valeur n'est donc plus déduite d'une vraisemblance mais de l'adresse
+ * réelle, ce qui est la seule base acceptable pour l'imprimer sur un devis
+ * engageant.
  */
-export const RPM_TRIBUNAL: string | null = null;
+export const RPM_TRIBUNAL: string | null = "Liège, division Namur";
 
 /**
  * Siège social s'il diffère de l'adresse d'exploitation.
@@ -73,31 +64,48 @@ export const RPM_TRIBUNAL: string | null = null;
  * C'est lui qui détermine le tribunal du RPM ci-dessus : les deux se
  * renseignent ensemble, ou pas du tout.
  */
-export const SIEGE_SOCIAL: string | null = null;
+export const SIEGE_SOCIAL: string | null = null; // Identique à l'adresse d'exploitation.
 
 /**
  * Numéro d'entreprise à la Banque-Carrefour des Entreprises.
  *
  * DÉDUIT DU NUMÉRO DE TVA, et ce n'est pas un raccourci : en Belgique, le
  * numéro d'entreprise et le numéro de TVA sont le MÊME nombre — la TVA n'est
- * que le numéro d'entreprise préfixé de « BE ». Communiqué
- * « BE1025713731 » le 12 septembre 2026.
+ * que le numéro d'entreprise préfixé de « BE ». Communiqué « BE 0788.645.632 »
+ * le 17 septembre 2026, pour DBT Partners.
  */
-export const BCE: string | null = "1025.713.731";
+export const BCE: string | null = "0788.645.632";
 
 /**
  * Numéro de TVA, sans le préfixe « BE » — les pages l'ajoutent à l'affichage.
  *
  * Validé par sa clé de contrôle avant d'être inscrit ici : la règle belge veut
  * que les deux derniers chiffres valent `97 − (les huit premiers mod 97)`. Ici
- * 97 − (10257137 mod 97) = 97 − 66 = 31, et le numéro finit bien par 31. Un
+ * 97 − (7886456 mod 97) = 97 − 65 = 32, et le numéro finit bien par 32. Un
  * numéro mal recopié aurait échoué ce test, au lieu de s'afficher des mois
  * durant sur des pages légales et dans chaque e-mail envoyé.
  */
-export const TVA: string | null = "1025.713.731";
+export const TVA: string | null = "0788.645.632";
 
 /** Responsable de la publication du site. */
-export const RESPONSABLE_PUBLICATION: string | null = null;
+export const RESPONSABLE_PUBLICATION: string | null = "Brahim Bel Abbes";
+
+/**
+ * LA RAISON SOCIALE COMPLÈTE : dénomination ET forme juridique, toujours
+ * ensemble.
+ *
+ * L'article 2:20 du Code des sociétés impose les deux sur tout document émanant
+ * de la société. Elles étaient jointes à un seul endroit — le PDF de devis —
+ * si bien que les mentions légales, les CGV, la politique de confidentialité et
+ * les e-mails affichaient « DBT Partners » tout court. Un nom sans forme légale
+ * ne désigne pas une personne morale identifiable.
+ *
+ * Une seule fonction, employée partout : ajouter la forme à quatre endroits
+ * séparés aurait garanti qu'un cinquième soit oublié.
+ */
+export const RAISON_SOCIALE: string | null = DENOMINATION_SOCIALE
+  ? [DENOMINATION_SOCIALE, FORME_JURIDIQUE].filter(Boolean).join(" ")
+  : null;
 
 export const ADRESSE = {
   rue: "Rue des Orchidées 6",
@@ -127,7 +135,7 @@ export const EMAIL = "info@offsidefootindoor.be";
  */
 
 /** Date de la dernière mise à jour des documents légaux. */
-export const MAJ_LEGALE = "1er septembre 2026";
+export const MAJ_LEGALE = "17 septembre 2026";
 
 /** Affiche une valeur ou un marqueur explicite si elle n'est pas encore renseignée. */
 export function ouACompleter(valeur: string | null, libelle = "à compléter"): string {

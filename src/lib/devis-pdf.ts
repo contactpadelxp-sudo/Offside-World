@@ -11,9 +11,8 @@ import { montantLisible } from "@/lib/tarification";
 import {
   ADRESSE_LIGNE,
   BCE,
-  DENOMINATION_SOCIALE,
+  RAISON_SOCIALE,
   EMAIL,
-  FORME_JURIDIQUE,
   NOM_COMMERCIAL,
   RPM_TRIBUNAL,
   SIEGE_SOCIAL,
@@ -198,7 +197,10 @@ export async function genererDevisPdf(d: DevisPourPdf): Promise<Uint8Array> {
     « [à compléter] ». Ils apparaîtront d'eux-mêmes quand `data/entreprise.ts`
     les portera.
   */
-  const raisonSociale = [DENOMINATION_SOCIALE, FORME_JURIDIQUE].filter(Boolean).join(" ");
+  // La dénomination et la forme juridique sont jointes par `RAISON_SOCIALE`,
+  // pour que les mentions légales, les CGV et ce PDF disent exactement la même
+  // chose — l'article 2:20 les exige ensemble sur chacun.
+  const raisonSociale = RAISON_SOCIALE ?? "";
   const vendeur = [
     raisonSociale
       ? `${raisonSociale}${raisonSociale !== NOM_COMMERCIAL ? ` — ${NOM_COMMERCIAL}` : ""}`

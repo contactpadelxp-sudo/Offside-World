@@ -309,7 +309,7 @@ export function AnniversaireFlow({
           {/* Infos enfant */}
           <div className="mt-6 max-w-md space-y-4">
             <div>
-              <Label htmlFor="childName">Prénom de l&apos;enfant fêté</Label>
+              <Label htmlFor="childName">Prénom de la personne fêtée</Label>
               <Input id="childName" value={childName} onChange={(e) => setChildName(e.target.value)} placeholder="Ex. : Lucas" maxLength={50} />
             </div>
             <div>
@@ -323,7 +323,20 @@ export function AnniversaireFlow({
                   className="h-10 w-full min-w-0 appearance-none rounded-lg border border-input bg-transparent px-2.5 py-1 pr-9 text-base outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 md:text-sm dark:bg-input/30"
                 >
                   <option value={0}>Choisir l&apos;âge</option>
-                  {Array.from({ length: 17 }, (_, i) => i + 1).map((n) => (
+                  {/*
+                    DE 4 À 60 ANS, ET PAS DE 1 À 17.
+
+                    La liste s'arrêtait à 17 ans : un anniversaire d'adulte —
+                    le Bubble Foot se joue aussi entre grands — était
+                    impossible à réserver, et le serveur le refusait
+                    également. Brahim a précisé le 17 septembre 2026 : à
+                    partir de 4 ans, sans limite haute.
+
+                    60 est une borne de LISTE, pas d'âge : au-delà, dérouler
+                    des dizaines de lignes coûte plus qu'il ne sert, et le
+                    serveur accepte jusqu'à 99 de toute façon.
+                  */}
+                  {Array.from({ length: 57 }, (_, i) => i + 4).map((n) => (
                     <option key={n} value={n}>{n} ans</option>
                   ))}
                 </select>

@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import {
-  NOM_COMMERCIAL, DENOMINATION_SOCIALE, SIEGE_SOCIAL, BCE, TVA,
+  NOM_COMMERCIAL, RAISON_SOCIALE, SIEGE_SOCIAL, BCE, TVA,
   ADRESSE, ADRESSE_LIGNE, EMAIL,
   MAJ_LEGALE, ouACompleter,
 } from "@/data/entreprise";
@@ -40,7 +40,7 @@ export default function CGV() {
         <P>Les présentes Conditions Générales de Vente sont proposées par :</P>
         <ul className="list-disc pl-6 space-y-1 text-muted-foreground">
           <li>
-            <strong>{ouACompleter(DENOMINATION_SOCIALE, "dénomination sociale à compléter")}</strong>,
+            <strong>{ouACompleter(RAISON_SOCIALE, "dénomination sociale à compléter")}</strong>,
             {" "}exploitant sous le nom commercial <strong>{NOM_COMMERCIAL}</strong>
           </li>
           <li><strong>Adresse d&apos;exploitation :</strong> {ADRESSE_LIGNE}</li>

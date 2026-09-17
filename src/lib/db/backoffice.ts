@@ -104,7 +104,7 @@ export async function lireReservations(
       console.error("Recherche impossible :", error?.message);
       return [];
     }
-    return construire(data, await lireOptions(), await lirePaiements(data), maintenant);
+    return construire(data, await lireOptions(false), await lirePaiements(data), maintenant);
   }
 
   switch (filtre) {
@@ -135,7 +135,9 @@ export async function lireReservations(
       break;
   }
 
-  const [{ data, error }, options] = await Promise.all([requete, lireOptions()]);
+  // `false` : y compris les extras retirés de la vente, pour que la fiche
+  // d'une ancienne réservation continue de nommer ce qui a été commandé.
+  const [{ data, error }, options] = await Promise.all([requete, lireOptions(false)]);
 
   if (error || !data) {
     console.error("Lecture des réservations impossible :", error?.message);
@@ -524,9 +526,10 @@ export async function joursDeCreneauxRestants(): Promise<number | null> {
 /**
  * Les espaces de jeu, pour alimenter le choix à la création d'un créneau.
  *
- * Lus en base et non écrits en dur : leurs noms sont provisoires — « Espace
- * anniversaire 1 » et « Espace anniversaire 2 » — et changeront dès que Brahim
- * aura donné les vrais. Le formulaire suivra sans qu'on y retouche.
+ * Lus en base et non écrits en dur. Ils s'appelaient « Espace anniversaire 1 »
+ * et « 2 » faute de connaître les vrais noms ; ce sont désormais les trois
+ * « Fun zone », communiquées le 17 septembre 2026. Le formulaire a suivi sans
+ * qu'on y retouche — c'est précisément ce que cette lecture en base achète.
  */
 export async function lireEspaces(): Promise<{ id: string; nom: string }[]> {
   if (!baseConfiguree()) return [];

@@ -18,12 +18,19 @@ export type { CreneauVue };
 export type TypeActivite = Database["public"]["Enums"]["type_activite"];
 
 /**
- * Horizon d'affichage. Six mois de créneaux sont ouverts en base, mais en
- * proposer autant d'un coup noierait le sélecteur de dates. Le client peut
- * réserver plus loin dès que le besoin s'en fera sentir : c'est une limite
- * d'affichage, pas une limite commerciale.
+ * Jusqu'où un client peut réserver à l'avance.
+ *
+ * SIX MOIS, et c'est maintenant une limite COMMERCIALE, pas d'affichage.
+ * L'exploitant a répondu « 6 mois » le 17 septembre 2026 ; la valeur était à
+ * 90 jours faute de le savoir, avec ce commentaire : « le client pourra
+ * réserver plus loin dès que le besoin s'en fera sentir ». Le besoin est
+ * exprimé, la limite suit.
+ *
+ * 183 jours plutôt que 180 : six mois calendaires valent entre 181 et 184
+ * jours selon le mois de départ, et rogner trois jours ferait disparaître du
+ * sélecteur la date que le client vient justement d'entendre au téléphone.
  */
-const HORIZON_JOURS = 90;
+const HORIZON_JOURS = 183;
 
 /** Instant à partir duquel un créneau est encore réservable. */
 export function premierInstantReservable(maintenant = new Date()): Date {

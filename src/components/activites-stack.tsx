@@ -104,7 +104,23 @@ export default function ActivitesStack({ children }: { children?: React.ReactNod
       href: hrefActivite("anniversaire"),
       icon: Gateau,
       title: "Anniversaires",
-      desc: "Deux formules 100 % foot, Kick-Off et Bubble. Décoration, boissons et vidéo souvenir de l'anniversaire comprises.",
+      /*
+        LA VIDÉO SOUVENIR N'EST PLUS PROMISE ICI.
+
+        Cette phrase annonçait « vidéo souvenir de l'anniversaire comprise »
+        sans aucune condition — une promesse commerciale ferme, sur la page
+        d'accueil. Brahim l'a retirée des formules le 17 septembre 2026 : la
+        laisser serait une pratique trompeuse au sens de l'article VI.97 du
+        Code de droit économique, et surtout une prestation que le client
+        réclamerait à juste titre.
+
+        La clause 15 des CGV, elle, reste : elle est conditionnelle
+        (« lorsqu'une telle fonctionnalité fait partie de la prestation ») et
+        encadre l'autorisation parentale pour l'image des mineurs. Retirer une
+        protection parce que la prestation n'est plus vendue serait le mauvais
+        raisonnement — les caméras du complexe, elles, n'ont pas disparu.
+      */
+      desc: "Deux formules 100 % foot, Kick-Off et Bubble. Décoration, boissons et espace gâteau compris.",
       itemClassName: "bg-gradient-to-br from-field to-kick text-[#0a0a0b]",
       badgeClass: "bg-black/15 text-[#0a0a0b]",
       ctaClass: "text-[#0a0a0b]",
