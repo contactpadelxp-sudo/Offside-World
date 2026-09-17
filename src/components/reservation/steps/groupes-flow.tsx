@@ -16,6 +16,7 @@ import { PhoneField } from "@/components/reservation/phone-field";
 import { isValidEmail } from "@/lib/validation";
 import { memoriserRecap } from "@/lib/reservation";
 import { mesurer } from "@/lib/mesure";
+import { EMAIL } from "@/data/entreprise";
 import { useScrollTop } from "@/lib/use-scroll-top";
 import { demanderDevis, reserverBubble } from "@/lib/actions/reservation";
 import type { CreneauVue } from "@/lib/vues";
@@ -324,8 +325,25 @@ export function GroupesFlow({
 
           {creneauxAffiches.length === 0 ? (
             <p className="mt-4 rounded-xl border border-field/20 bg-field/5 p-4 text-sm text-muted-foreground">
-              Aucun créneau Bubble Foot n&apos;est ouvert pour le moment. Contactez-nous : nous
-              trouverons un horaire.
+              {/*
+                UN « CONTACTEZ-NOUS » QUI NE DONNE AUCUN MOYEN DE LE FAIRE EST
+                UNE IMPASSE.
+
+                Le message invitait à nous contacter sans adresse ni lien : le
+                visiteur devait retourner chercher l'e-mail ailleurs sur le
+                site, ou renoncer. Et ce n'est pas un cas de bord — le
+                17 septembre 2026, le Bubble Foot n'a aucun créneau en base
+                faute d'horaires confirmés, donc c'est LA SEULE CHOSE que voit
+                quiconque clique sur l'activité.
+
+                L'e-mail vient de `src/data/entreprise.ts`, comme partout
+                ailleurs : le jour où il change, il change ici aussi.
+              */}
+              Aucun créneau Bubble Foot n&apos;est ouvert pour le moment. Écrivez-nous à{" "}
+              <a href={`mailto:${EMAIL}`} className="font-medium text-field underline underline-offset-2">
+                {EMAIL}
+              </a>{" "}
+              : nous trouverons un horaire.
             </p>
           ) : (
             <div className="mt-4 grid gap-3 sm:grid-cols-2">

@@ -14,6 +14,7 @@ import { PhoneField } from "@/components/reservation/phone-field";
 import { isValidEmail } from "@/lib/validation";
 import { memoriserRecap } from "@/lib/reservation";
 import { mesurer } from "@/lib/mesure";
+import { EMAIL } from "@/data/entreprise";
 import { useScrollTop } from "@/lib/use-scroll-top";
 import { reserverAnniversaire } from "@/lib/actions/reservation";
 import type { CreneauVue, FormuleVue, OptionVue } from "@/lib/vues";
@@ -136,6 +137,24 @@ export function AnniversaireFlow({
     jour où une condition est ajoutée au bouton sans être ajoutée ici, le
     message redevient incomplet, et ça se voit tout de suite à l'écran.
   */
+  /*
+    CE QUI MANQUE EST ÉCRIT, À CHAQUE ÉTAPE QUI BLOQUE.
+
+    La dernière étape le faisait déjà — c'est celle qui engage à payer. Les
+    étapes intermédiaires, non : « Continuer » se grisait sans un mot. Sur
+    l'étape des détails, deux champs le commandent, dont un menu déroulant
+    d'âge resté sur « Choisir l'âge ». On remplit le prénom, on ne voit pas
+    que l'âge manque, et le bouton est mort sans explication.
+
+    C'est le même défaut que sur le bouton d'envoi d'un devis au back-office,
+    corrigé là-bas : un bouton désactivé qui ne dit pas pourquoi oblige à
+    deviner.
+  */
+  const manquantsDetails = [
+    !childName && "le prénom de la personne fêtée",
+    !childAge && "son âge",
+  ].filter(Boolean) as string[];
+
   const manquants = [
     !parentName && "votre nom",
     !emailValid && "une adresse e-mail valide",
@@ -302,11 +321,25 @@ export function AnniversaireFlow({
             <Groupe className="size-6 text-field" /> Détails de l&apos;anniversaire
           </h2>
           <p className="mt-1 text-muted-foreground">
-            Quelques infos sur l&apos;enfant fêté, puis personnalisez avec nos extras.{" "}
+            {/*
+              « PARTICIPANTS » ET NON « ENFANTS », DEPUIS LE 17 SEPTEMBRE 2026.
+
+              Brahim a ouvert les anniversaires aux adultes — « pas de limite
+              vu que bubble possible pour adulte ». L'âge accepté va donc de
+              4 ans à sans limite. Mais tout le tunnel disait « enfant » :
+              quelqu'un qui réserve son propre anniversaire à 35 ans lisait
+              « Quelques infos sur l'enfant fêté » et « Nombre d'enfants ».
+
+              Les noms en base restent `nb_enfants` et `prix_enfant_sup_cents` :
+              renommer des colonnes pour une question de vocabulaire coûterait
+              une migration et casserait les réservations existantes, sans rien
+              apporter. C'est ce que le client LIT qui change.
+            */}
+            Quelques infos sur la personne fêtée, puis personnalisez avec nos extras.{" "}
             <a href="/confidentialite" className="underline py-1">Politique de confidentialité</a>
           </p>
 
-          {/* Infos enfant */}
+          {/* Infos sur la personne fêtée */}
           <div className="mt-6 max-w-md space-y-4">
             <div>
               <Label htmlFor="childName">Prénom de la personne fêtée</Label>
@@ -345,12 +378,12 @@ export function AnniversaireFlow({
             </div>
             <ChampNombre
               id="childCount"
-              label="Nombre d'enfants"
+              label="Nombre de participants"
               min={1}
               max={selectedFormule.enfantsMax}
               valeur={childCount}
               onChange={setChildCount}
-              aide={`Forfait jusqu'à ${selectedFormule.enfantsInclus} enfants — maximum ${selectedFormule.enfantsMax}.`}
+              aide={`Forfait jusqu'à ${selectedFormule.enfantsInclus} participants — maximum ${selectedFormule.enfantsMax}.`}
             />
           </div>
 
@@ -359,14 +392,14 @@ export function AnniversaireFlow({
             <CardContent className="p-4 space-y-2 text-sm">
               <div className="flex justify-between">
                 <span className="text-muted-foreground">
-                  Formule {selectedFormule.nom} (jusqu&apos;à {selectedFormule.enfantsInclus} enfants)
+                  Formule {selectedFormule.nom} (jusqu&apos;à {selectedFormule.enfantsInclus} participants)
                 </span>
                 <span className="font-semibold whitespace-nowrap ml-3">{euros(selectedFormule.prixBase)}</span>
               </div>
               {extraChildren > 0 && (
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">
-                    {extraChildren} enfant{extraChildren > 1 ? "s" : ""} supplémentaire{extraChildren > 1 ? "s" : ""} × {euros(selectedFormule.prixEnfantSup)}
+                    {extraChildren} participant{extraChildren > 1 ? "s" : ""} supplémentaire{extraChildren > 1 ? "s" : ""} × {euros(selectedFormule.prixEnfantSup)}
                   </span>
                   <span className="font-semibold whitespace-nowrap ml-3">+{euros(extraChildren * selectedFormule.prixEnfantSup)}</span>
                 </div>
@@ -437,11 +470,23 @@ export function AnniversaireFlow({
             </>
           )}
 
-          <div className="mt-8 flex justify-between">
+          <div className="mt-8 flex flex-wrap items-center justify-between gap-3">
             <Button variant="ghost" onClick={() => setStep("formule")} className="gap-1.5"><FlecheGauche className="size-4" /> Retour</Button>
-            <Button onClick={() => setStep("creneau")} disabled={!childName || !childAge} className="btn-glass-field text-[#0a0a0b] border-0 gap-1.5">
-              Continuer <FlecheDroite className="size-4" />
-            </Button>
+            <div className="flex flex-col items-end gap-1.5">
+              <Button onClick={() => setStep("creneau")} disabled={manquantsDetails.length > 0} className="btn-glass-field text-[#0a0a0b] border-0 gap-1.5">
+                Continuer <FlecheDroite className="size-4" />
+              </Button>
+              {manquantsDetails.length > 0 && (
+                <p className="flex items-start gap-1.5 text-right text-sm text-muted-foreground">
+                  <AlerteCercle className="mt-0.5 size-4 shrink-0 text-kick" />
+                  <span>
+                    Il manque {manquantsDetails.length > 1
+                      ? `${manquantsDetails.slice(0, -1).join(", ")} et ${manquantsDetails[manquantsDetails.length - 1]}`
+                      : manquantsDetails[0]}.
+                  </span>
+                </p>
+              )}
+            </div>
           </div>
         </FadeIn>
       )}
@@ -458,7 +503,11 @@ export function AnniversaireFlow({
 
           {jours.length === 0 ? (
             <p className="mt-6 rounded-xl border border-field/20 bg-field/5 p-4 text-sm text-muted-foreground">
-              Aucun créneau n&apos;est ouvert pour le moment. Contactez-nous : nous trouverons une date.
+              Aucun créneau n&apos;est ouvert pour le moment. Écrivez-nous à{" "}
+              <a href={`mailto:${EMAIL}`} className="font-medium text-field underline underline-offset-2">
+                {EMAIL}
+              </a>{" "}
+              : nous trouverons une date.
             </p>
           ) : (
             <>
@@ -498,7 +547,7 @@ export function AnniversaireFlow({
                           <div>
                             <h3 className="font-bold">{espace.nom}</h3>
                             <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
-                              <Groupe className="size-3" /> Capacité : {espace.capacite} enfants
+                              <Groupe className="size-3" /> Capacité : {espace.capacite} personnes
                             </p>
                           </div>
                         </div>
@@ -558,8 +607,8 @@ export function AnniversaireFlow({
           <Card className="mt-6 border-2">
             <CardContent className="p-6 space-y-4">
               <div className="flex justify-between"><span className="text-muted-foreground">Formule</span><span className="font-semibold">{selectedFormule.nom}</span></div>
-              <div className="flex justify-between"><span className="text-muted-foreground">Enfant fêté</span><span className="font-semibold">{childName} ({childAge} ans)</span></div>
-              <div className="flex justify-between"><span className="text-muted-foreground">Nombre d&apos;enfants</span><span className="font-semibold">{childCount}</span></div>
+              <div className="flex justify-between"><span className="text-muted-foreground">Personne fêtée</span><span className="font-semibold">{childName} ({childAge} ans)</span></div>
+              <div className="flex justify-between"><span className="text-muted-foreground">Participants</span><span className="font-semibold">{childCount}</span></div>
               <div className="flex justify-between"><span className="text-muted-foreground">Date</span><span className="font-semibold">{selectedCreneau.jourLabel}</span></div>
               <div className="flex justify-between"><span className="text-muted-foreground">Espace</span><span className="font-semibold">{selectedCreneau.espaceNom}</span></div>
               <div className="flex justify-between"><span className="text-muted-foreground">Horaire</span><span className="font-semibold">{selectedCreneau.debut} – {selectedCreneau.fin}</span></div>
