@@ -23,7 +23,7 @@ import {
   type RecapEmail,
 } from "@/lib/email/modeles";
 import { heure, jourLisibleCap } from "@/lib/temps";
-import { autoriser } from "@/lib/limiteur";
+import { autoriserPartage } from "@/lib/limiteur-partage";
 import { baseConfiguree } from "@/lib/supabase/server";
 import { SaisieInvalide, booleen, email, entier, identifiants, jour, telephone, texte, texteFacultatif, uuid, vrai } from "@/lib/saisie";
 import {
@@ -86,9 +86,16 @@ async function appelant(): Promise<string> {
   return chaine.split(",")[0]?.trim() || "local";
 }
 
-/** 5 écritures par tranche de 10 minutes et par appelant. */
+/**
+ * 5 écritures par tranche de 10 minutes et par appelant.
+ *
+ * Compteur PARTAGÉ entre les instances depuis le 17 septembre 2026 : celui en
+ * mémoire se contournait en répartissant les requêtes, ce qui laissait remplir
+ * la base de fausses réservations — et, depuis que Stripe encaisse, ouvrir
+ * autant de sessions de paiement.
+ */
 async function quotaDepasse(action: string): Promise<boolean> {
-  return !autoriser(`${action}:${await appelant()}`, 5, 10 * 60_000);
+  return !(await autoriserPartage(`${action}:${await appelant()}`, 5, 10 * 60_000));
 }
 
 /** Traduit une exception en réponse affichable, sans jamais divulguer l'interne. */

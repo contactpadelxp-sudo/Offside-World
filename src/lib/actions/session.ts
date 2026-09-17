@@ -10,7 +10,7 @@ import {
   ouvrirSession,
   sessionCourante,
 } from "@/lib/admin/session";
-import { autoriser } from "@/lib/limiteur";
+import { autoriserPartage } from "@/lib/limiteur-partage";
 
 /**
  * Connexion et déconnexion du back-office.
@@ -35,8 +35,20 @@ export async function seConnecter(
     return { erreur: "Le back-office n'est pas configuré sur cet environnement." };
   }
 
+  /*
+    COMPTEUR PARTAGÉ, ET NON PLUS EN MÉMOIRE.
+
+    Le compteur mémoire vit dans l'instance qui traite la requête : cinq
+    tentatives autorisées par instance font cinq × N tentatives réelles, et
+    personne ne sait combien vaut N. Sur la page de CONNEXION du back-office,
+    qui ouvre sur des données d'enfants et sur l'argent encaissé, c'était la
+    limite la plus facile à contourner et la plus coûteuse à perdre.
+
+    Voir `limiteur-partage.ts` : le compteur mémoire reste en première ligne,
+    la base tranche.
+  */
   const cle = `connexion:${(await adresseAppelant()) ?? "local"}`;
-  if (!autoriser(cle, MAX_TENTATIVES, FENETRE_MS)) {
+  if (!(await autoriserPartage(cle, MAX_TENTATIVES, FENETRE_MS))) {
     return { erreur: "Trop de tentatives. Réessayez dans quelques minutes." };
   }
 

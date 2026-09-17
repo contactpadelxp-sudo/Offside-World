@@ -575,6 +575,14 @@ export type Database = {
         Args: { delai?: string }
         Returns: number
       }
+      consommer_quota: {
+        Args: { p_cle: string; p_fenetre: unknown; p_max: number }
+        Returns: boolean
+      }
+      purger_quotas: {
+        Args: { garde?: unknown }
+        Returns: number
+      }
       creer_creneau: {
         Args: {
           p_duree_minutes: number
