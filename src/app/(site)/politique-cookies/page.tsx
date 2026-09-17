@@ -86,14 +86,28 @@ export default function PolitiqueCookies() {
             <li key={c.categorie} className="rounded-xl border p-3">
               <p className="font-semibold">{c.categorie}</p>
               <p className="mt-1 text-sm text-muted-foreground">{c.finalite}</p>
+              {/*
+                `flex-wrap` ET `min-w-0` : SANS EUX, LA PAGE DÉFILE À
+                L'HORIZONTALE À 200 % DE TEXTE.
+
+                Le `<dt>` est `shrink-0` et le `<dd>` est un élément flex, dont
+                le `min-width` vaut `auto` par défaut : il refuse de rétrécir
+                sous la largeur minimale de son texte. Mesuré sur 390 px avec la
+                police doublée — ce qu'exige le critère 1.4.4 du WCAG — la page
+                débordait de 104 px, « Consentement : » et sa valeur ne tenant
+                plus côte à côte.
+
+                On laisse donc la valeur passer à la ligne sous son intitulé,
+                plutôt que de pousser la page hors de l'écran.
+              */}
               <dl className="mt-2 space-y-1 text-sm">
-                <div className="flex gap-2">
+                <div className="flex flex-wrap gap-x-2">
                   <dt className="shrink-0 text-muted-foreground">Durée :</dt>
-                  <dd>{c.duree}</dd>
+                  <dd className="min-w-0">{c.duree}</dd>
                 </div>
-                <div className="flex gap-2">
+                <div className="flex flex-wrap gap-x-2">
                   <dt className="shrink-0 text-muted-foreground">Consentement :</dt>
-                  <dd>{c.consentement}</dd>
+                  <dd className="min-w-0">{c.consentement}</dd>
                 </div>
               </dl>
             </li>

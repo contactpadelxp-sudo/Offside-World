@@ -34,7 +34,22 @@ export function ActivityChoice({
 
       <StaggerContainer className="mt-10 grid gap-6 sm:grid-cols-3" staggerDelay={0.1}>
         {activities.map((act) => (
-          <StaggerItem key={act.id} className="h-full">
+          /*
+            `min-w-0` : SANS LUI, LA PAGE DÉFILE À L'HORIZONTALE À 200 % DE TEXTE.
+
+            Un élément de grille a `min-width: auto` par défaut — il refuse de
+            rétrécir sous la largeur minimale de son contenu. Mesuré sur un
+            écran de 390 px avec la police doublée, ce que propose le réglage
+            « taille du texte » d'Android et ce qu'exige le critère 1.4.4 du
+            WCAG : le conteneur faisait 326 px et la colonne 438, soit 80 px de
+            défilement horizontal sur la page de RÉSERVATION.
+
+            Le défaut ne se voyait pas à taille normale, et pas non plus avec
+            les animations : c'est en activant « réduire les animations » que le
+            défilement devient réel. Autrement dit, il touchait exactement les
+            personnes qui agrandissent le texte ET coupent les animations.
+          */
+          <StaggerItem key={act.id} className="h-full min-w-0">
             <Tilt3D intensity={8} className="h-full">
               <button onClick={() => onSelect(act.id)} className="w-full text-left h-full group">
                 <Card className={`h-full overflow-hidden border-2 py-0 gap-0 transition-all duration-500 cursor-pointer ${act.border} bg-card flex flex-col`}>

@@ -31,7 +31,27 @@ export function Footer({ logoSrc }: { logoSrc: string | null }) {
             pour qu'un lecteur d'écran parcoure le pied de page dans l'ordre où
             il s'affiche.
           */}
-          <div className="grid grid-cols-2 gap-x-6 gap-y-10 lg:grid-cols-4">
+          {/*
+            `[&>*]:min-w-0` : SANS LUI, LE PIED DE PAGE COUPE SES PROPRES LIENS.
+
+            Un élément de grille a `min-width: auto` : il refuse de rétrécir
+            sous la largeur minimale de son contenu. Mesuré sur 390 px avec la
+            police doublée — critère 1.4.4 du WCAG — la colonne réclamait plus
+            de place qu'elle n'en avait, et « Politique de confidentialité »
+            sortait de 15 px. Le pied de page étant en `overflow-hidden`, la
+            page ne défilait pas : le lien était simplement TRONQUÉ, ce qui est
+            pire — on perd du contenu sans aucun signe.
+
+            `min-w-0` seul ne suffit pas : les liens sont en `inline-flex`,
+            donc dimensionnés sur leur contenu. Leur boîte grandit au lieu de
+            contraindre la ligne, et la césure automatique du `<body>` ne peut
+            jamais s'appliquer. `max-w-full` borne cette boîte à la colonne —
+            la coupure de mot redevient possible, et le mot passe à la ligne.
+
+            Rien ne change à taille de texte normale : sans débordement, il n'y
+            a rien à couper.
+          */}
+          <div className="grid grid-cols-2 gap-x-6 gap-y-10 lg:grid-cols-4 [&>*]:min-w-0 [&_a]:max-w-full [&_button]:max-w-full">
             {/* Marque */}
             <div className="col-span-2 lg:col-span-1">
               <Link href="/" aria-label={`${NOM_COMMERCIAL} — accueil`} className="inline-flex items-center">
