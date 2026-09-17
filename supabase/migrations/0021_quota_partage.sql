@@ -76,3 +76,19 @@ end $$;
 
 revoke execute on function consommer_quota(text, integer, interval) from anon, authenticated, public;
 revoke execute on function purger_quotas(interval) from anon, authenticated, public;
+
+-- ── La purge est PLANIFIÉE, pas seulement écrite ────────────────────────────
+--
+-- La migration 0010 ouvre sur ce constat : « deux fonctions existaient sans que
+-- rien ne les appelle : elles ne servaient donc à rien ». Une fonction de purge
+-- non planifiée laisse la table enfler d'une ligne par appelant et par action,
+-- indéfiniment.
+--
+-- 4h45 UTC, chaque nuit : 6h45 à Bruxelles en été, 5h45 en hiver, après les
+-- trois autres tâches d'entretien et alors que le complexe est fermé.
+
+select cron.schedule(
+  'purger-quotas',
+  '45 4 * * *',
+  $$ select purger_quotas() $$
+);
