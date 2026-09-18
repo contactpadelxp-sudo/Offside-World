@@ -263,8 +263,23 @@ export async function reserverAnniversaire(saisie: SaisieAnniversaire): Promise<
         description: `${jourLisibleCap(creneau.debut)}, ${heure(creneau.debut)} – ${heure(creneau.fin)} · ${nbEnfants} enfants`,
         montantCents: totalCents,
       },
-    }).catch(() => null);
+    });
 
+    /*
+      `paiement` vaut `null` UNIQUEMENT quand Stripe n'est pas configuré.
+
+      Un `.catch(() => null)` enveloppait cet appel, si bien qu'une panne de
+      Stripe — indisponibilité, délai dépassé, session sans URL — retombait sur
+      la même valeur que « le paiement en ligne n'existe pas ». Le client
+      recevait alors « votre créneau est retenu, nous vous recontactons »,
+      alors que le délai d'expiration, lui, suit la CONFIGURATION et non le
+      succès : 45 minutes, pas 48 heures. Le créneau était donc rendu à la
+      vente pendant que le client attendait un appel.
+
+      Sans le repli, l'exception remonte au `catch` de la fonction, qui rend un
+      message d'attente honnête. La réservation reste en base « en attente » et
+      tient 45 minutes : un nouvel essai aboutit sans rien ressaisir.
+    */
     if (!paiement) {
       after(() =>
         envoyerTous([auClientReservationEnregistree(recap), auComplexeNouvelleReservation(recap)])
@@ -383,8 +398,23 @@ export async function reserverBubble(saisie: SaisieBubble): Promise<Resultat> {
         description: `${jourLisibleCap(creneau.debut)}, ${heure(creneau.debut)} – ${heure(creneau.fin)} · ${nbPersonnes} personnes`,
         montantCents: totalCents,
       },
-    }).catch(() => null);
+    });
 
+    /*
+      `paiement` vaut `null` UNIQUEMENT quand Stripe n'est pas configuré.
+
+      Un `.catch(() => null)` enveloppait cet appel, si bien qu'une panne de
+      Stripe — indisponibilité, délai dépassé, session sans URL — retombait sur
+      la même valeur que « le paiement en ligne n'existe pas ». Le client
+      recevait alors « votre créneau est retenu, nous vous recontactons »,
+      alors que le délai d'expiration, lui, suit la CONFIGURATION et non le
+      succès : 45 minutes, pas 48 heures. Le créneau était donc rendu à la
+      vente pendant que le client attendait un appel.
+
+      Sans le repli, l'exception remonte au `catch` de la fonction, qui rend un
+      message d'attente honnête. La réservation reste en base « en attente » et
+      tient 45 minutes : un nouvel essai aboutit sans rien ressaisir.
+    */
     if (!paiement) {
       after(() =>
         envoyerTous([auClientReservationEnregistree(recap), auComplexeNouvelleReservation(recap)])

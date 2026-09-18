@@ -108,7 +108,19 @@ export async function verifierCreneau(
     .eq("type", type)
     .maybeSingle();
 
-  if (error || !data) return null;
+  /*
+    UNE PANNE N'EST PAS UNE INDISPONIBILITÉ.
+
+    `error || !data` confondait les deux. Quand Supabase répondait mal, le
+    client lisait « ce créneau n'est plus disponible » et allait en choisir un
+    autre — qui échouait pareil. On lui annonçait un fait commercial faux à
+    partir d'une panne technique, et rien ne signalait l'incident.
+
+    On lève : l'appelant produit alors son message d'attente (« réessayez dans
+    un instant »), et la trace part dans les journaux du serveur.
+  */
+  if (error) throw error;
+  if (!data) return null;
   if (!data.id || !data.type || !data.espace_id || !data.debut || !data.fin || data.capacite === null) return null;
   if (!data.libre) return null;
 

@@ -41,6 +41,23 @@ import {
 
 export const runtime = "nodejs";
 
+/**
+ * De quoi reconstruire une ligne de paiement absente.
+ *
+ * `metadata.reservation_id` est posé par `creerSessionPaiement` ; le montant
+ * vient de Stripe lui-même, donc de ce qui a réellement été débité. On ne rend
+ * rien si l'un des deux manque : reconstruire à moitié serait pire que de ne
+ * rien reconstruire.
+ */
+function secoursDepuis(
+  session: Stripe.Checkout.Session
+): { reservationId: string; montantCents: number } | undefined {
+  const id = session.metadata?.reservation_id;
+  const montant = session.amount_total;
+  if (!id || typeof montant !== "number") return undefined;
+  return { reservationId: id, montantCents: montant };
+}
+
 /** Réponse standard : Stripe ne lit que le code. */
 function recu(): Response {
   return new Response(null, { status: 200 });
@@ -86,7 +103,11 @@ export async function POST(req: Request) {
           // Le moyen RÉELLEMENT utilisé, lu sur l'imputation. Surtout pas
           // `session.payment_method_types[0]` : c'est la liste des moyens
           // proposés, dont le premier est toujours « bancontact » ici.
-          await moyenDePaiementUtilise(intention)
+          await moyenDePaiementUtilise(intention),
+          // De quoi reconstruire la ligne de paiement si elle manque. Ces
+          // métadonnées sont celles que le serveur a écrites en créant la
+          // session : le client n'a aucun moyen de les influencer.
+          secoursDepuis(session)
         );
 
         /*
@@ -147,7 +168,11 @@ export async function POST(req: Request) {
           // Le moyen RÉELLEMENT utilisé, lu sur l'imputation. Surtout pas
           // `session.payment_method_types[0]` : c'est la liste des moyens
           // proposés, dont le premier est toujours « bancontact » ici.
-          await moyenDePaiementUtilise(intention)
+          await moyenDePaiementUtilise(intention),
+          // De quoi reconstruire la ligne de paiement si elle manque. Ces
+          // métadonnées sont celles que le serveur a écrites en créant la
+          // session : le client n'a aucun moyen de les influencer.
+          secoursDepuis(session)
         );
         if (resultat.nouveau && resultat.reference && resultat.reservationId) {
           after(async () => {

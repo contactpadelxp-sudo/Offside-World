@@ -104,7 +104,10 @@ export async function lireTarifFormule(id: string): Promise<TarifFormule | null>
     .eq("actif", true)
     .maybeSingle();
 
-  if (error || !data) return null;
+  // Une panne de lecture ne doit pas se lire « cette formule n'est plus
+  // proposée » : on lève, l'appelant dit d'attendre.
+  if (error) throw error;
+  if (!data) return null;
   return {
     id: data.id,
     nom: data.nom,
@@ -131,6 +134,13 @@ export async function lireTarifsOptions(
     .in("id", ids)
     .eq("actif", true);
 
-  if (error || !data) return [];
+  /*
+    Rendre `[]` sur erreur était le plus trompeur des trois : l'appelant compare
+    la longueur obtenue au nombre d'options demandées et conclut « une des
+    options choisies n'est plus disponible ». Une panne devenait donc un refus
+    commercial nominatif, sur des extras qui existent bel et bien.
+  */
+  if (error) throw error;
+  if (!data) return [];
   return data.map((o) => ({ id: o.id, libelle: o.libelle, prixCents: o.prix_cents }));
 }

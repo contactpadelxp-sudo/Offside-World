@@ -526,11 +526,34 @@ export async function envoyerDevis(id: string, devis: SaisieDevis): Promise<Resu
       })
     );
 
-    // Après l'envoi seulement.
-    await base()
+    /*
+      Après l'envoi seulement — ET ON VÉRIFIE QUE ÇA S'ÉCRIT.
+
+      Le résultat n'était ni lu ni testé. Une écriture refusée laissait donc la
+      fiche afficher « À traiter » et `devis_envoye_le` vide, alors que le devis
+      était réellement parti chez le client. L'exploitant le renvoyait, et le
+      client recevait deux fois le même document avec deux dates d'émission.
+
+      L'e-mail, lui, est déjà parti : on ne peut plus le rattraper. On le dit
+      donc explicitement plutôt que d'annoncer un succès complet.
+    */
+    const { error: eEtat } = await base()
       .from("demandes_devis")
       .update({ devis_envoye_le: new Date().toISOString(), statut: "devis_envoye" })
       .eq("id", cible);
+
+    if (eEtat) {
+      console.error("Devis envoyé mais état non enregistré :", eEtat.message);
+      await journaliser(session, "devis.envoye", data.reference, {
+        montant_cents: totalDevisCents(propre.lignes),
+        etat_non_enregistre: true,
+      });
+      rafraichir();
+      return {
+        ok: false,
+        message: `Le devis est bien parti à ${data.contact_email}, mais son état n'a pas pu être enregistré. Ne le renvoyez pas : notez-le et prévenez Mathis.`,
+      };
+    }
 
     await journaliser(session, "devis.envoye", data.reference, {
       montant_cents: totalDevisCents(propre.lignes),
