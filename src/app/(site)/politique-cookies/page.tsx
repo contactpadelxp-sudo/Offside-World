@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
-import { MAJ_LEGALE } from "@/data/entreprise";
+import { MAJ_LEGALE, NOM_COMMERCIAL } from "@/data/entreprise";
 
 export const metadata: Metadata = {
-  title: "Politique cookies | Offside Foot Indoor",
-  description: "Politique d'utilisation des cookies sur Offside Foot Indoor.",
+  title: `Politique cookies | ${NOM_COMMERCIAL}`,
+  description: `Politique d’utilisation des cookies sur ${NOM_COMMERCIAL}.`,
 };
 
 /*
@@ -69,7 +69,7 @@ export default function PolitiqueCookies() {
       <p className="text-sm text-muted-foreground mb-8">Dernière mise à jour : {MAJ_LEGALE}</p>
       <h1 className="text-3xl font-bold">Politique cookies</h1>
       <p className="mt-4 text-muted-foreground">
-        Cette page explique comment Offside Foot Indoor utilise les cookies et technologies similaires.
+        Cette page explique comment {NOM_COMMERCIAL} utilise les cookies et technologies similaires.
       </p>
 
       <section className="mt-8 space-y-4">

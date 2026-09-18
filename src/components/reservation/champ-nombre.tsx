@@ -19,9 +19,10 @@ import { ChevronBas } from "@/components/icons";
  * hors bornes, ni champ vide, ni collage de texte — donc plus rien à rattraper
  * en aval.
  *
- * `<select>` NATIF, et non le composant `Select` du projet. Ce dernier existe
- * mais n'est utilisé nulle part, et il faudrait l'essuyer ici. Surtout, pour
- * une liste de nombres, le natif est meilleur : sur téléphone il ouvre le
+ * `<select>` NATIF. Le projet a longtemps porté un composant `Select` maison
+ * qui n'était utilisé nulle part ; il a été retiré le 18 septembre 2026 avec
+ * quatre autres composants jamais importés. Pour une liste de nombres, le
+ * natif est de toute façon meilleur : sur téléphone il ouvre le
  * sélecteur du système — la roulette sur iOS — bien plus rapide qu'un menu
  * déroulant maison. Il est navigable au clavier et annoncé correctement sans
  * qu'on écrive une ligne pour ça.

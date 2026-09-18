@@ -20,10 +20,15 @@ export default function CGU() {
 
         Elles engagent l'utilisateur envers une partie nommée « Offside » une
         douzaine de fois, sans jamais identifier la personne morale derrière ce
-        nom commercial — seule des cinq pages légales à ne pas le faire. Un
-        utilisateur ne pouvait donc pas savoir à qui il s'oppose, et l'article
-        2:20 du Code des sociétés impose de toute façon la dénomination et la
-        forme légale sur les documents émanant de la société.
+        nom commercial. Un utilisateur ne pouvait donc pas savoir à qui il
+        s'oppose, et l'article 2:20 du Code des sociétés impose de toute façon
+        la dénomination et la forme légale sur les documents émanant de la
+        société.
+
+        Trois des cinq pages légales nommaient déjà la société — mentions
+        légales, CGV, confidentialité. La politique cookies ne la nomme
+        toujours pas : elle n'engage personne et se contente de décrire des
+        traceurs, là où ces CGU sont un contrat.
 
         La valeur vient de `RAISON_SOCIALE` comme dans les mentions légales et
         les CGV : recopier « DBT Partners SRL » ici aurait fait une cinquième
@@ -31,8 +36,8 @@ export default function CGU() {
       */}
       <p className="mt-2 text-muted-foreground">
         Le site {NOM_COMMERCIAL} est édité et exploité par{" "}
-        <strong>{ouACompleter(RAISON_SOCIALE, "dénomination sociale à compléter")}</strong>, dont
-        l&apos;adresse d&apos;exploitation est {ADRESSE_LIGNE}, ci-après « Offside ». Les
+        <strong>{ouACompleter(RAISON_SOCIALE, "dénomination sociale à compléter")}</strong> (ci-après
+        « Offside »), dont l&apos;adresse d&apos;exploitation est {ADRESSE_LIGNE}. Les
         coordonnées complètes de l&apos;éditeur figurent dans les{" "}
         <a href="/mentions-legales" className="underline text-primary">mentions légales</a>.
       </p>

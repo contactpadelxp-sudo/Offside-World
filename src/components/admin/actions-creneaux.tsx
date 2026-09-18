@@ -13,6 +13,7 @@ import {
   useAction,
 } from "@/components/admin/retour";
 import { Cadenas, Coche, Croix, Plus } from "@/components/icons";
+import { BUBBLE_DUREE_MINUTES } from "@/data/bubble-team";
 
 /**
  * Ouverture et fermeture des créneaux.
@@ -194,13 +195,19 @@ type TypeCreneau = "anniversaire" | "bubble";
  * LE FORMULAIRE PROPOSAIT 2 h DANS TOUS LES CAS. C'est la durée d'une formule
  * anniversaire, mais le Bubble Foot se vend à l'heure : chaque créneau Bubble
  * créé sans penser à toucher la liste ouvrait à la vente deux heures de terrain
- * au prix d'une, et interdisait au créneau suivant de commencer — la contrainte
- * d'exclusion sur `creneaux` refuse tout chevauchement. Une journée saisie vite
- * fait perdait ainsi la moitié de ses créneaux Bubble.
+ * au prix d'une. La création n'échoue pas en silence pour autant — si le
+ * créneau suivant chevauche, le serveur répond « Un créneau ouvert occupe déjà
+ * cet horaire dans cet espace », et l'exclusion vaut par espace, pas
+ * globalement.
+ *
+ * LE CHIFFRE VIENT DE LÀ OÙ IL EST DÉJÀ ÉCRIT. `BUBBLE_DUREE_MINUTES` est la
+ * durée annoncée au client dans le tunnel : la recopier ici en ferait une
+ * seconde vérité, et passer le Bubble à 90 minutes afficherait « 90 minutes »
+ * au client pendant que ce formulaire continuerait d'en proposer 60.
  */
 const DUREE_PAR_DEFAUT: Record<TypeCreneau, number> = {
   anniversaire: 120,
-  bubble: 60,
+  bubble: BUBBLE_DUREE_MINUTES,
 };
 
 export function AjouterCreneau({

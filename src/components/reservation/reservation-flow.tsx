@@ -126,9 +126,24 @@ export function ReservationFlow({ donnees }: { donnees: DonneesReservation }) {
    * empiler une entrée en double.
    */
   useEffect(() => {
+    /*
+      LE DRAPEAU NE DOIT PAS SURVIVRE À UN CHANGEMENT QUI N'A PAS EU LIEU.
+
+      La barre de navigation émet cet événement dès qu'on clique « Réserver »
+      en étant déjà sur /reservation — y compris quand on est DÉJÀ sur l'écran
+      de choix. `setActivity(null)` ne change alors rien, React ne relance pas
+      l'effet, et le drapeau restait armé indéfiniment. Le prochain changement
+      d'activité le consommait, fût-il venu de l'URL — bouton « précédent » du
+      navigateur, ou lien direct suivi sans rechargement —, alors que le
+      commentaire ci-dessus promet précisément l'inverse.
+
+      On ne l'arme donc que si l'on quitte réellement un écran.
+    */
     const reset = () => {
-      focusDemande.current = true;
-      setActivity(null);
+      setActivity((precedente) => {
+        if (precedente !== null) focusDemande.current = true;
+        return null;
+      });
       window.history.replaceState(null, "", "/reservation");
     };
     window.addEventListener(RESERVER_RESET_EVENT, reset);
@@ -148,7 +163,7 @@ export function ReservationFlow({ donnees }: { donnees: DonneesReservation }) {
           creneaux={donnees.creneauxAnniversaire}
         />
       )}
-      {activity === "foot" && <FootFlow onBack={backToChoice} />}
+      {activity === "foot" && <FootFlow onBack={backToChoice} titreRef={titreEtape} />}
       {activity === "groupes" && (
         <GroupesFlow
           paiementActif={donnees.paiementActif}

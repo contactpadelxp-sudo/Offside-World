@@ -3,10 +3,14 @@ import type { MetadataRoute } from "next";
 import { URL_SITE as BASE_URL } from "@/lib/site";
 
 /**
- * Le fichier autorisait tout, `/admin` compris.
+ * Le fichier autorisait tout, sans exception.
  *
- * `/admin` est le back-office et `/api/` des points d'entrée, pas des pages :
- * les faire explorer ne produit que des erreurs. Ils sont écartés.
+ * `/admin` n'était pas pour autant une porte ouverte : `next.config.ts` y pose
+ * déjà `X-Robots-Tag: noindex, nofollow, noarchive`, et la zone est derrière
+ * une authentification. Le `Disallow` ajoute une couche — il évite l'
+ * exploration plutôt que l'indexation — il n'en ferme pas une qui manquait.
+ * `/api/` suit la même logique : ce sont des points d'entrée, pas des pages,
+ * et les explorer ne produit que des erreurs.
  *
  * `/confirmation` NE L'EST PAS, ET C'EST VOLONTAIRE — c'est même l'inverse de
  * ce qu'on croit devoir faire.

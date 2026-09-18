@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { lireArticlesPublies } from "@/lib/db/blog";
+import { NOM_COMMERCIAL } from "@/data/entreprise";
 
 export const metadata: Metadata = {
-  title: "Blog | Offside Foot Indoor",
+  title: `Blog | ${NOM_COMMERCIAL}`,
   description: "Actualités, conseils et coulisses du complexe de foot indoor de Gembloux.",
 };
 

@@ -8,12 +8,28 @@ import { usePhoto } from "@/components/photos-provider";
 import { SPORTFINDER_URL, FOOT_INCLUS } from "@/data/foot";
 import { Ampoule, Coche, FlecheGauche, Horloge, LienExterne, Trophee, Visuel } from "@/components/icons";
 
-export function FootFlow({ onBack }: { onBack: () => void }) {
+export function FootFlow({
+  onBack,
+  titreRef,
+}: {
+  onBack: () => void;
+  /*
+    Le titre de l'étape, pour que le focus y soit déplacé au changement
+    d'activité. Les trois autres écrans du tunnel l'ont reçue ; celui-ci avait
+    été oublié, si bien que choisir « Louer un terrain » laissait le focus sur
+    un bouton démonté — exactement le défaut que le mécanisme corrige ailleurs.
+  */
+  titreRef?: React.Ref<HTMLHeadingElement>;
+}) {
   const photo = usePhoto("joueur-ballon");
 
   return (
     <div>
-      <h1 className="text-2xl font-bold font-[family-name:var(--font-heading)] md:text-3xl flex items-center gap-2">
+      <h1
+        ref={titreRef}
+        tabIndex={-1}
+        className="text-2xl font-bold font-[family-name:var(--font-heading)] md:text-3xl flex items-center gap-2"
+      >
         <Trophee className="size-7 text-field" /> Louer un terrain
       </h1>
       <p className="mt-1 text-muted-foreground">Terrain privé entre amis, à l&apos;heure.</p>

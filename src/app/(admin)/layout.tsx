@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { NOM_COMMERCIAL } from "@/data/entreprise";
 
 /**
  * Coquille du back-office.
@@ -19,7 +20,7 @@ import type { Metadata } from "next";
  * pour les mesures de contraste.
  */
 export const metadata: Metadata = {
-  title: "Back-office — Offside Foot Indoor",
+  title: `Back-office — ${NOM_COMMERCIAL}`,
   robots: { index: false, follow: false, nocache: true },
 };
 

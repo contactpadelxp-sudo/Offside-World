@@ -30,11 +30,15 @@ export default function ErreurRacine({
 
   return (
     /*
-      `pt-32` (128 px) et non `py-24` (96 px) : la barre fixe de l'en-tête
-      descend jusqu'à 104 px et recouvrait le titre quand cet écran remplace une
-      page du site.
+      Un espacement simple, sans réserve pour une barre fixe.
+
+      Il avait été porté à `pt-32` par alignement avec les pages du site, au
+      motif que la barre de navigation recouvrait le titre. Ce motif ne vaut
+      pas ici : cet écran n'a précisément aucun en-tête — c'est ce que dit le
+      bloc ci-dessus — et réserver 128 px pour une barre absente laissait un
+      vide en haut d'une page qui tient en six lignes.
     */
-    <div className="mx-auto max-w-lg px-4 pt-32 pb-12 text-center md:pt-36 md:pb-20">
+    <div className="mx-auto max-w-lg px-4 py-20 text-center">
       <span className="mx-auto flex size-14 items-center justify-center rounded-2xl bg-kick/15 text-kick">
         <AlerteTriangle className="size-7" />
       </span>

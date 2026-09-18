@@ -162,8 +162,6 @@ export function MagneticButton({
   );
 }
 
-/* ═══ TEXT REVEAL (word by word) ═══ */
-
 /* ═══ MARQUEE ═══ */
 export function Marquee({
   children, className, speed = 30,
@@ -177,8 +175,6 @@ export function Marquee({
     </div>
   );
 }
-
-/* ═══ GRADIENT BORDER WRAPPER ═══ */
 
 /* ═══ WAVE DIVIDER ═══ */
 export function WaveDivider({ fill = "#ffffff", flip = false, className }: { fill?: string; flip?: boolean; className?: string }) {

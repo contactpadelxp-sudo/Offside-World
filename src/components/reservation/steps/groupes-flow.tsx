@@ -515,22 +515,44 @@ export function GroupesFlow({
           */}
           <div className="mt-8 flex flex-wrap items-center justify-between gap-3">
             <Button variant="ghost" onClick={() => setStep("offre")} className="gap-1.5"><FlecheGauche className="size-4" /> Retour</Button>
-            <div className="flex flex-col items-end gap-1.5">
+            <div className="flex flex-col items-end">
               <Button onClick={() => setStep("recap")} disabled={!demiJournee} className="btn-glass-field text-[#0a0a0b] border-0 gap-1.5">
                 Continuer <FlecheDroite className="size-4" />
               </Button>
               {/*
-                `aria-live="polite"` : c'est une consigne, pas une erreur —
-                une alerte interromprait la lecture de l'étape. Sans région
-                vivante, ce rappel restait purement visuel et le bouton grisé
-                redevenait muet pour qui ne le voit pas.
+                LA RÉGION VIVANTE DOIT ÊTRE LÀ AVANT LE MESSAGE.
+
+                Elle était montée AVEC son texte puis démontée d'un bloc. Or un
+                lecteur d'écran n'annonce que ce qui CHANGE dans une région déjà
+                présente : une région insérée avec son contenu est ignorée, et
+                sa disparition ne l'est pas davantage. Le rappel restait donc
+                purement visuel — exactement ce que la région prétendait
+                corriger.
+
+                Le paragraphe est désormais toujours rendu ; seul son contenu
+                varie. Vide, un conteneur flex ne fait aucune hauteur — et
+                surtout pas `hidden`, qui retire l'élément de l'arbre
+                d'accessibilité et ramènerait le défaut. L'interligne est porté
+                par le paragraphe quand il a du texte, pas par le parent, qui
+                l'aurait appliqué même à vide.
+
+                `polite` et non `alert` : c'est une consigne, pas une erreur —
+                une alerte interromprait la lecture de l'étape.
               */}
-              {!demiJournee && (
-                <p aria-live="polite" className="flex items-start gap-1.5 text-right text-sm text-muted-foreground">
-                  <AlerteCercle className="mt-0.5 size-4 shrink-0 text-kick" />
-                  <span>Choisissez d&apos;abord une demi-journée ci-dessus.</span>
-                </p>
-              )}
+              <p
+                aria-live="polite"
+                aria-atomic="true"
+                className={`flex items-start gap-1.5 text-right text-sm text-muted-foreground ${
+                  demiJournee ? "" : "mt-1.5"
+                }`}
+              >
+                {!demiJournee && (
+                  <>
+                    <AlerteCercle className="mt-0.5 size-4 shrink-0 text-kick" />
+                    <span>Choisissez d&apos;abord une demi-journée ci-dessus.</span>
+                  </>
+                )}
+              </p>
             </div>
           </div>
         </FadeIn>

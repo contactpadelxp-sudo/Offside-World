@@ -138,10 +138,31 @@ export function AnniversaireFlow({
     qui sait, lui, distinguer un clic sur une activité d'un simple chargement
     de page avec `?activite=…` dans l'URL.
   */
+  /*
+    QUAND UNE ERREUR PROVOQUE LE CHANGEMENT D'ÉTAPE, C'EST ELLE QU'IL FAUT
+    ENTENDRE — PAS LE TITRE.
+
+    Un refus du serveur sur le créneau fait deux choses dans le même rendu :
+    il pose le message d'erreur, et il ramène à l'étape du choix. Le focus
+    partait alors sur le titre « Choisissez votre créneau » au moment précis où
+    le `role="alert"` s'insérait — et déplacer le focus relance la lecture à
+    l'endroit visé, ce qui écrase l'annonce de l'alerte. Des deux messages, le
+    plus important se perdait.
+
+    On retient donc l'origine du changement : venu d'une erreur, le focus va
+    sur l'alerte, qui est aussi l'endroit où il faut lire.
+  */
+  const retourSurErreur = useRef(false);
+  const alerteRef = useRef<HTMLParagraphElement>(null);
   const premiereEtape = useRef(true);
   useEffect(() => {
     if (premiereEtape.current) {
       premiereEtape.current = false;
+      return;
+    }
+    if (retourSurErreur.current) {
+      retourSurErreur.current = false;
+      alerteRef.current?.focus({ preventScroll: true });
       return;
     }
     titreRef.current?.focus({ preventScroll: true });
@@ -206,8 +227,10 @@ export function AnniversaireFlow({
     if (!resultat.ok) {
       setEnvoi(false);
       setErreur(resultat.message);
-      // Un créneau pris entre-temps : on renvoie l'utilisateur au choix.
+      // Un créneau pris entre-temps : on renvoie l'utilisateur au choix, et
+      // c'est le message d'erreur — pas le titre — qui doit prendre le focus.
       if (resultat.champ === "creneau") {
+        retourSurErreur.current = true;
         setSelectedCreneau(null);
         setStep("creneau");
       }
@@ -504,7 +527,7 @@ export function AnniversaireFlow({
 
           <div className="mt-8 flex flex-wrap items-center justify-between gap-3">
             <Button variant="ghost" onClick={() => setStep("formule")} className="gap-1.5"><FlecheGauche className="size-4" /> Retour</Button>
-            <div className="flex flex-col items-end gap-1.5">
+            <div className="flex flex-col items-end">
               <Button onClick={() => setStep("creneau")} disabled={manquantsDetails.length > 0} className="btn-glass-field text-[#0a0a0b] border-0 gap-1.5">
                 Continuer <FlecheDroite className="size-4" />
               </Button>
@@ -518,17 +541,39 @@ export function AnniversaireFlow({
                 Sans cela, la liste ne servait qu'à ceux qui la voyaient : le
                 bouton « Continuer » restait grisé, muet, sans dire ce qui
                 manque — exactement le défaut que cette liste devait corriger.
+
+                La région est TOUJOURS rendue, seul son contenu varie. Montée en
+                même temps que son texte, elle ne serait pas annoncée du tout :
+                un lecteur d'écran ne rapporte que ce qui CHANGE dans une région
+                déjà présente. C'est la première apparition — la plus utile —
+                qui était perdue.
+
+                ET JAMAIS `hidden`. `display: none` retire l'élément de l'arbre
+                d'accessibilité : une région ainsi masquée puis démasquée avec
+                son texte revient au défaut qu'on vient de corriger. Le
+                paragraphe reste donc affiché en permanence — vide, un conteneur
+                flex ne fait aucune hauteur. Seul l'interligne demandait un
+                réglage : il est porté par le paragraphe quand il a du texte,
+                et non par le parent, qui l'aurait appliqué même à vide.
               */}
-              {manquantsDetails.length > 0 && (
-                <p aria-live="polite" aria-atomic="true" className="flex items-start gap-1.5 text-right text-sm text-muted-foreground">
-                  <AlerteCercle className="mt-0.5 size-4 shrink-0 text-kick" />
-                  <span>
-                    Il manque {manquantsDetails.length > 1
-                      ? `${manquantsDetails.slice(0, -1).join(", ")} et ${manquantsDetails[manquantsDetails.length - 1]}`
-                      : manquantsDetails[0]}.
-                  </span>
-                </p>
-              )}
+              <p
+                aria-live="polite"
+                aria-atomic="true"
+                className={`flex items-start gap-1.5 text-right text-sm text-muted-foreground ${
+                  manquantsDetails.length > 0 ? "mt-1.5" : ""
+                }`}
+              >
+                {manquantsDetails.length > 0 && (
+                  <>
+                    <AlerteCercle className="mt-0.5 size-4 shrink-0 text-kick" />
+                    <span>
+                      Il manque {manquantsDetails.length > 1
+                        ? `${manquantsDetails.slice(0, -1).join(", ")} et ${manquantsDetails[manquantsDetails.length - 1]}`
+                        : manquantsDetails[0]}.
+                    </span>
+                  </>
+                )}
+              </p>
             </div>
           </div>
         </FadeIn>
@@ -636,9 +681,14 @@ export function AnniversaireFlow({
             récapitulatif (créneau pris entre-temps). Sans annonce, on se
             retrouvait sur une page qui a changé toute seule, sans savoir
             pourquoi ni que la réservation avait échoué.
+
+            `tabIndex={-1}` : c'est ce message, et non le titre de l'étape, qui
+            reçoit le focus quand c'est une erreur qui a provoqué le retour.
+            Voir `retourSurErreur` plus haut — sans quoi les deux annonces se
+            chevauchaient et l'alerte était la perdante.
           */}
           {erreur && (
-            <p role="alert" className="mt-6 rounded-xl border border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive flex items-start gap-2">
+            <p ref={alerteRef} tabIndex={-1} role="alert" className="mt-6 rounded-xl border border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive flex items-start gap-2">
               <AlerteCercle className="size-4 shrink-0 mt-0.5" /> {erreur}
             </p>
           )}

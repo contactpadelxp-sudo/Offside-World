@@ -8,6 +8,7 @@ import { expirerReservationsAbandonnees } from "@/lib/db/reservations";
 import { prochainesDemiJournees } from "@/lib/demi-journees";
 import { baseConfiguree } from "@/lib/supabase/server";
 import { paiementConfigure } from "@/lib/paiement/stripe";
+import { NOM_COMMERCIAL } from "@/data/entreprise";
 
 /**
  * Page de réservation — rendue à chaque visite.
@@ -25,7 +26,7 @@ export const dynamic = "force-dynamic";
   Indoor Gembloux — Anniversaires… » sans jamais dire qu'on pouvait y réserver.
 */
 export const metadata: Metadata = metadonneesPage({
-  titre: "Réserver en ligne — anniversaire foot & Bubble Foot | Offside Foot Indoor",
+  titre: `Réserver en ligne — anniversaire foot & Bubble Foot | ${NOM_COMMERCIAL}`,
   description:
     "Réservez en quelques minutes votre anniversaire foot ou votre session de Bubble Foot à Gembloux : formule, date, créneau et options en ligne.",
   chemin: "/reservation",

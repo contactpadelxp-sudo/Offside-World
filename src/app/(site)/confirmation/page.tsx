@@ -2,6 +2,7 @@ import { Suspense } from "react";
 import type { Metadata } from "next";
 import { ConfirmationContent } from "./confirmation-content";
 import { metadonneesPage } from "@/lib/site";
+import { NOM_COMMERCIAL } from "@/data/entreprise";
 
 /*
   La directive « use client » a quitté ce fichier : Next interdit d'exporter
@@ -16,9 +17,9 @@ import { metadonneesPage } from "@/lib/site";
   n'est pas censée ouvrir.
 */
 export const metadata: Metadata = metadonneesPage({
-  titre: "Votre réservation est confirmée | Offside Foot Indoor",
+  titre: `Votre réservation est confirmée | ${NOM_COMMERCIAL}`,
   description:
-    "Le récapitulatif de votre réservation chez Offside Foot Indoor, le complexe de foot indoor de Gembloux.",
+    `Le récapitulatif de votre réservation chez ${NOM_COMMERCIAL}, le complexe de foot indoor de Gembloux.`,
   chemin: "/confirmation",
   indexable: false,
 });

@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { lireArticlePublie, lireArticlesPublies } from "@/lib/db/blog";
 import { FlecheGauche } from "@/components/icons";
+import { NOM_COMMERCIAL } from "@/data/entreprise";
 
 export const revalidate = 600;
 
@@ -19,9 +20,9 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { slug } = await params;
   const a = await lireArticlePublie(slug);
-  if (!a) return { title: "Article introuvable | Offside Foot Indoor" };
+  if (!a) return { title: `Article introuvable | ${NOM_COMMERCIAL}` };
   return {
-    title: `${a.titre} | Offside Foot Indoor`,
+    title: `${a.titre} | ${NOM_COMMERCIAL}`,
     description: a.chapo,
     openGraph: {
       title: a.titre,

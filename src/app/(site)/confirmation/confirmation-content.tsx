@@ -86,13 +86,18 @@ export function ConfirmationContent() {
           <AnimatedCheck />
           <FadeIn delay={0.6}>
             <h1 className="mt-8 text-3xl md:text-4xl font-bold font-[family-name:var(--font-heading)] text-foreground">
-              {surDevis
-                ? "Demande envoyée !"
-                : paye
-                  ? "C’est réservé !"
-                  : recap
-                    ? "Réservation enregistrée !"
-                    : "Demande bien reçue !"}
+              {/*
+                LE TITRE NE DÉPEND PLUS DE `recap`, ET C'EST VOULU.
+
+                `recap` est relu APRÈS le premier rendu : le faire entrer dans le
+                titre faisait lire « Demande bien reçue ! » puis basculer en
+                « Réservation enregistrée ! » sous les yeux du client, sur le
+                parcours le plus courant.
+
+                Ce qu'on sait avec certitude vient de l'URL — devis ou non, payé ou
+                non. Le titre s'y tient ; le détail, lui, attend d'avoir été relu.
+              */}
+              {surDevis ? "Demande envoyée !" : paye ? "C’est réservé !" : "Demande bien reçue !"}
             </h1>
             {/*
               TROIS SITUATIONS, TROIS MESSAGES. Cette page annonçait
@@ -101,15 +106,19 @@ export function ConfirmationContent() {
               arrivait ici avec paiement=ok. Lui dire qu’il reste à payer
               l’expose à payer deux fois, et c’est une information trompeuse
               sur le prix.
+
+              Comme le titre, ce texte ne dépend que de l’URL. Une quatrième
+              branche le faisait varier selon que le récapitulatif avait été
+              relu ou non, alors que les deux formulations disaient la même
+              chose : le client voyait la phrase changer sous ses yeux sans
+              rien apprendre de plus.
             */}
             <p className="mt-3 text-muted-foreground text-lg">
               {surDevis
-                ? "Merci ! Nous revenons vers vous avec un devis sous 48 heures ouvrables."
+                ? "Merci ! Nous revenons vers vous avec un devis sous 48 heures ouvrables."
                 : paye
                   ? "Votre paiement est accepté et votre créneau est réservé. Vous recevez la confirmation par e-mail."
-                  : recap
-                    ? "Merci ! Nous vous recontactons pour confirmer votre créneau et convenir du règlement."
-                    : "Merci ! Votre demande est bien enregistrée. Nous vous recontactons très vite."}
+                  : "Merci ! Nous vous recontactons très vite pour confirmer votre créneau et convenir du règlement."}
             </p>
           </FadeIn>
         </div>
@@ -173,7 +182,7 @@ export function ConfirmationContent() {
                 <p className="text-sm text-muted-foreground">
                   {reference
                     ? "Le détail — formule, date, montant — n’est gardé que dans le navigateur qui a servi à remplir la demande : il ne peut pas s’afficher ici. Votre référence suffit à la retrouver."
-                    : "Ce lien ne porte aucune référence : nous ne pouvons rien afficher de votre demande. La référence figure dans l’e-mail de confirmation."}
+                    : "Ce lien ne porte aucune référence : nous ne pouvons rien afficher de votre demande. Elle figure dans l’e-mail reçu au moment de l’envoi, dont l’objet commence par « Votre demande »."}
                 </p>
               )}
             </CardContent>

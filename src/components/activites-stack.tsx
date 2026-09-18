@@ -133,9 +133,13 @@ export default function ActivitesStack({ children }: { children?: React.ReactNod
         sont passées en props à `Accueil`, qui ne les lui transmet pas. Plutôt
         qu'une copie codée en dur ou un repli statique (`FORMULES_REPLI` n'est
         qu'un filet pour la page prérendue, pas une vérité), la carte cesse
-        d'avancer un chiffre : elle décrit ce qui ne dépend pas du catalogue.
-        La liste réelle, avec ses prix, est juste en dessous dans la section
-        « formules », elle, alimentée par la base.
+        d'avancer un chiffre et de citer un nom. Elle décrit encore ce qui est
+        compris — décoration, boissons, espace gâteau — et cela reste, soit dit
+        franchement, une promesse écrite à la main : si ces inclusions changent,
+        il faudra la corriger ici. La différence est qu'une promesse vague qui
+        se démode gêne moins qu'un nombre et des noms démentis par la page
+        elle-même. La liste réelle, avec ses prix, est juste en dessous dans la
+        section « formules », elle, alimentée par la base.
       */
       desc: "L'anniversaire 100 % foot : terrain rien que pour le groupe, décoration, boissons et espace gâteau compris.",
       itemClassName: "bg-gradient-to-br from-field to-kick text-[#0a0a0b]",

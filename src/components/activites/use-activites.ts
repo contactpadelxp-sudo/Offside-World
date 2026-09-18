@@ -75,6 +75,35 @@ function prixDAppel(formules: FormuleVue[]): number | null {
   return prix.length ? Math.min(...prix) : null;
 }
 
+/**
+ * Description de la carte « Anniversaire », construite sur les formules
+ * réelles.
+ *
+ * Elle annonçait « Deux formules 100 % foot — Kick-Off et Bubble — jusqu'à
+ * 10 enfants » : trois affirmations écrites en dur, alors que les trois
+ * viennent de la base et s'éditent depuis /admin/tarifs. Le nombre était
+ * d'ailleurs déjà faux — c'était le nombre d'enfants INCLUS au forfait, pas le
+ * maximum, qui vaut 18 depuis le 17 septembre 2026. Ajouter une formule ou
+ * changer une capacité laissait la page d'accueil mentir sans que rien ne le
+ * signale.
+ *
+ * Sans formule exploitable, on n'annonce aucun chiffre plutôt qu'un chiffre
+ * inventé — même règle que pour le prix d'appel juste au-dessus.
+ */
+function descriptionAnniversaire(formules: FormuleVue[]): string {
+  const noms = formules.map((f) => f.nom).filter(Boolean);
+  const max = Math.max(0, ...formules.map((f) => f.enfantsMax).filter((n) => Number.isFinite(n)));
+
+  const debut =
+    noms.length >= 2
+      ? `${noms.length} formules 100 % foot — ${noms.slice(0, -1).join(", ")} et ${noms[noms.length - 1]}`
+      : noms.length === 1
+        ? `Formule ${noms[0]}, 100 % foot`
+        : "Des formules 100 % foot";
+
+  return max > 0 ? `${debut} — jusqu'à ${max} participants.` : `${debut}.`;
+}
+
 export function useActivites(formules: FormuleVue[]): ActiviteVue[] {
   const depuis = prixDAppel(formules);
   const photoAnniv = usePhoto("anniversaire-carte");
@@ -86,7 +115,7 @@ export function useActivites(formules: FormuleVue[]): ActiviteVue[] {
       id: "anniversaire",
       icone: Gateau,
       titre: "Anniversaire",
-      description: "Deux formules 100 % foot — Kick-Off et Bubble — jusqu'à 10 enfants.",
+      description: descriptionAnniversaire(formules),
       href: hrefActivite("anniversaire"),
       img: photoAnniv,
       // `euros()` plutôt qu'un montant recollé à la main : le prix vient de la
