@@ -192,3 +192,64 @@ export async function echouerPaiement(sessionId: string, raison: string | null):
     .eq("statut", "en_cours");
   if (error) console.error("Échec de paiement non enregistré :", error.message);
 }
+
+/**
+ * Rapatrie un remboursement fait AILLEURS qu'ici — typiquement à la main dans
+ * le tableau de bord Stripe.
+ *
+ * POURQUOI C'EST INDISPENSABLE, ET PAS UN CONFORT.
+ *
+ * Rien n'écoutait les événements de remboursement. `montant_rembourse_cents`
+ * n'était donc écrit que par notre propre bouton. Or le code envoie lui-même
+ * l'exploitant rembourser dans Stripe quand l'appel échoue — « À effectuer à la
+ * main depuis Stripe », dit le message. Ce remboursement-là ne revenait jamais.
+ *
+ * Deux conséquences, toutes deux fausses au détriment du complexe :
+ *   - le solde restant à rendre était surévalué, donc un second remboursement
+ *     pouvait repartir sur un montant déjà rendu en partie ;
+ *   - le chiffre d'affaires du tableau de bord, calculé en soustrayant les
+ *     remboursements, restait trop haut.
+ *
+ * ON ÉCRIT LE CUMUL DE STRIPE, ON NE L'INCRÉMENTE PAS. `amount_refunded` est le
+ * total remboursé sur cette imputation, tel que Stripe le connaît. L'ajouter à
+ * ce qu'on a déjà compté doublerait nos propres remboursements, qui déclenchent
+ * eux aussi cet événement. Stripe fait autorité, on recopie.
+ */
+export async function synchroniserRemboursement(
+  paymentIntent: string,
+  cumulRembourseCents: number
+): Promise<void> {
+  if (!baseConfiguree()) return;
+
+  const { data: paiement, error } = await base()
+    .from("paiements")
+    .select("id, montant_cents, montant_rembourse_cents")
+    .eq("stripe_payment_intent", paymentIntent)
+    .maybeSingle();
+
+  if (error) {
+    console.error("Remboursement Stripe non rapatrié :", error.message);
+    return;
+  }
+  if (!paiement) {
+    console.error(
+      `Remboursement Stripe sur une imputation inconnue (${paymentIntent}) : rien à mettre à jour.`
+    );
+    return;
+  }
+
+  // Rien de neuf : c'est notre propre remboursement qui nous revient, ou une
+  // relivraison. On évite une écriture pour rien.
+  if (paiement.montant_rembourse_cents === cumulRembourseCents) return;
+
+  const { error: e2 } = await base()
+    .from("paiements")
+    .update({
+      montant_rembourse_cents: cumulRembourseCents,
+      statut: cumulRembourseCents >= paiement.montant_cents ? "rembourse" : "partiellement_rembourse",
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", paiement.id);
+
+  if (e2) console.error("Remboursement Stripe non rapatrié :", e2.message);
+}

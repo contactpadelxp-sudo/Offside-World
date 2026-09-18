@@ -284,6 +284,8 @@ Stripe → Developers → Webhooks → **Add endpoint**.
   | `checkout.session.expired` | le client n'a pas payé dans les 30 minutes |
   | `checkout.session.async_payment_succeeded` | **Bancontact se dénoue dans l'application bancaire**, souvent après la fermeture de la page. Sans cet événement, l'argent part sans que la réservation soit confirmée — sur le moyen de paiement le plus utilisé en Belgique |
   | `checkout.session.async_payment_failed` | le paiement différé a été refusé |
+  | `charge.refunded` | **un remboursement fait à la main dans Stripe.** Sans lui, le montant déjà rendu n'est jamais rapatrié : le solde restant à rembourser reste surévalué, et le chiffre d'affaires du back-office trop haut. Le cas se produit forcément — le site envoie lui-même l'exploitant rembourser dans Stripe quand l'appel automatique échoue |
+  | `charge.dispute.created` | **une contestation bancaire.** Stripe retire aussitôt la somme du solde, ajoute des frais, et laisse quelques jours pour fournir des preuves ; passé ce délai, la contestation est perdue par défaut. C'est le seul événement du système qui ait une date limite, et sans lui personne n'est prévenu |
 
 Copier le **Signing secret** affiché après création : c'est
 `STRIPE_WEBHOOK_SECRET`. Sans lui, le site **refuse** de traiter les

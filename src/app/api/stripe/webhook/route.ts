@@ -6,11 +6,16 @@ import {
   webhookConfigure,
   moyenDePaiementUtilise,
 } from "@/lib/paiement/stripe";
-import { confirmerPaiement, echouerPaiement } from "@/lib/db/paiements";
+import {
+  confirmerPaiement,
+  echouerPaiement,
+  synchroniserRemboursement,
+} from "@/lib/db/paiements";
 import { lireRecapEmail } from "@/lib/db/backoffice";
 import { envoyerTous } from "@/lib/email/envoi";
 import {
   auClientReservationConfirmee,
+  auComplexeContestation,
   auComplexeNouvelleReservation,
 } from "@/lib/email/modeles";
 
@@ -190,6 +195,57 @@ export async function POST(req: Request) {
 
       case "checkout.session.async_payment_failed": {
         await echouerPaiement(evenement.data.object.id, "Paiement refusé");
+        break;
+      }
+
+      /*
+        UN REMBOURSEMENT FAIT AILLEURS REVIENT QUAND MÊME ICI.
+
+        Aucun événement de remboursement n'était écouté. `montant_rembourse_cents`
+        n'était donc écrit que par notre propre bouton — alors que le code envoie
+        lui-même l'exploitant rembourser dans le tableau de bord Stripe quand
+        l'appel échoue. Ce remboursement-là n'était jamais rapatrié : le solde
+        restant à rendre restait surévalué, et le chiffre d'affaires du
+        back-office trop haut.
+
+        `charge.refunded` porte le CUMUL remboursé sur l'imputation, pas le
+        montant de la dernière opération — c'est donc lui qui fait autorité.
+      */
+      case "charge.refunded": {
+        const imputation = evenement.data.object;
+        const intention =
+          typeof imputation.payment_intent === "string" ? imputation.payment_intent : null;
+        if (intention) {
+          await synchroniserRemboursement(intention, imputation.amount_refunded);
+        }
+        break;
+      }
+
+      /*
+        UNE CONTESTATION EST UNE URGENCE, ET ELLE A UNE DATE LIMITE.
+
+        Le client conteste le débit auprès de sa banque. Stripe retire aussitôt
+        la somme du solde, y ajoute des frais, et laisse quelques jours pour
+        fournir des preuves — passé ce délai, la contestation est perdue par
+        défaut. Personne n'était prévenu de rien.
+
+        On ne tente pas de répondre automatiquement : c'est à l'exploitant de
+        fournir les éléments. On s'assure seulement qu'il l'apprenne.
+      */
+      case "charge.dispute.created": {
+        const litige = evenement.data.object;
+        console.error(
+          `CONTESTATION Stripe ${litige.id} : ${litige.amount} centimes, motif « ${litige.reason} ». À traiter dans le tableau de bord Stripe avant la date limite.`
+        );
+        after(async () => {
+          await envoyerTous([
+            auComplexeContestation({
+              montantCents: litige.amount,
+              motif: litige.reason,
+              echeance: litige.evidence_details?.due_by ?? null,
+            }),
+          ]);
+        });
         break;
       }
 

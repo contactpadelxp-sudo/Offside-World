@@ -11,6 +11,7 @@ import {
   TVA,
 } from "@/data/entreprise";
 import { RESUME_ANNULATION } from "@/data/reglement";
+import { jourLisibleCap } from "@/lib/temps";
 import { montantLisible } from "@/lib/tarification";
 import { montantsDevis, totalLigneCents, type LigneDevis } from "@/lib/devis";
 
@@ -647,5 +648,50 @@ export function emailDeTest(destinataire: string, acteur: string): Message {
       "Aucune réservation n'a été créée par ce test.",
     ],
     EMAIL
+  );
+}
+
+/**
+ * Avis de CONTESTATION bancaire.
+ *
+ * Le client a contesté le débit auprès de sa banque. Stripe retire aussitôt la
+ * somme du solde, y ajoute des frais, et laisse quelques jours pour fournir des
+ * preuves — passé ce délai, la contestation est perdue par défaut.
+ *
+ * Rien n'écoutait cet événement : l'exploitant l'apprenait en consultant Stripe,
+ * ou ne l'apprenait pas. C'est pourtant le seul message de tout le système qui
+ * ait une date limite.
+ *
+ * On n'y met AUCUNE donnée du client. Le back-office et Stripe portent déjà le
+ * détail ; un avis d'incident n'a pas à le recopier dans une boîte mail.
+ */
+export function auComplexeContestation(c: {
+  montantCents: number;
+  motif: string;
+  /** Horodatage Unix de la date limite de réponse, si Stripe l'a fourni. */
+  echeance: number | null;
+}): Message {
+  const limite =
+    typeof c.echeance === "number"
+      ? jourLisibleCap(new Date(c.echeance * 1000))
+      : null;
+
+  return composer(
+    adresseComplexe(),
+    `Contestation bancaire — ${montantLisible(c.montantCents)}`,
+    "Un paiement est contesté",
+    limite
+      ? `À traiter avant le ${limite}, sans quoi la contestation est perdue.`
+      : "À traiter rapidement : la réponse est soumise à un délai.",
+    [
+      { cle: "Montant contesté", valeur: montantLisible(c.montantCents) },
+      { cle: "Motif indiqué", valeur: c.motif },
+      { cle: "Date limite de réponse", valeur: limite ?? "voir Stripe" },
+    ],
+    [
+      "La somme a déjà été retirée de votre solde Stripe, et des frais de dossier s'y ajoutent.",
+      "Répondez depuis votre tableau de bord Stripe, rubrique « Litiges » : ce sont les preuves fournies là-bas qui tranchent, pas ce message.",
+      "Sans réponse avant la date limite, la contestation est perdue automatiquement.",
+    ]
   );
 }
