@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -21,6 +21,7 @@ import { useScrollTop } from "@/lib/use-scroll-top";
 import { demanderDevis, reserverBubble } from "@/lib/actions/reservation";
 import type { CreneauVue } from "@/lib/vues";
 import type { DemiJourneeVue } from "@/lib/demi-journees";
+import type { RefTitre } from "../reservation-flow";
 import {
   BUBBLE_PRIX_PAR_PERSONNE,
   BUBBLE_MIN_PERSONNES,
@@ -48,11 +49,14 @@ type Step = "offre" | "creneau" | "recap";
 export function GroupesFlow({
   paiementActif,
   onBack,
+  titreRef,
   creneaux,
   demiJournees,
 }: {
   paiementActif: boolean;
   onBack: () => void;
+  /** Titre de l'étape affichée, qui reçoit le focus — voir `reservation-flow`. */
+  titreRef: RefTitre;
   creneaux: CreneauVue[];
   demiJournees: DemiJourneeVue[];
 }) {
@@ -104,6 +108,18 @@ export function GroupesFlow({
 
   // Chaque changement d'étape repart du haut de la page.
   useScrollTop(step);
+
+  // …et le focus va au titre de la nouvelle étape, sinon il resterait sur un
+  // bouton démonté et rien n'annoncerait le changement d'écran. Même
+  // mécanique que sur le tunnel anniversaire, voir le commentaire là-bas.
+  const premiereEtape = useRef(true);
+  useEffect(() => {
+    if (premiereEtape.current) {
+      premiereEtape.current = false;
+      return;
+    }
+    titreRef.current?.focus({ preventScroll: true });
+  }, [step, titreRef]);
 
   const photoBubble = usePhoto("bubble-portrait");
   const photoEntree = usePhoto("entree-double-ballon");
@@ -253,7 +269,13 @@ export function GroupesFlow({
 
   return (
     <div>
-      <h1 className="text-2xl font-bold font-[family-name:var(--font-heading)] md:text-3xl flex items-center gap-2">
+      {/*
+        Ce titre reste affiché d'un bout à l'autre : il ne prend la référence
+        qu'à l'étape du choix de l'offre, où il est le seul titre. Aux étapes
+        suivantes, c'est le titre de l'étape qui reçoit le focus — deux
+        éléments ne peuvent pas porter la même référence en même temps.
+      */}
+      <h1 ref={step === "offre" ? titreRef : null} tabIndex={-1} className="text-2xl font-bold font-[family-name:var(--font-heading)] md:text-3xl flex items-center gap-2">
         <Groupe className="size-7 text-field" /> Bubble Foot &amp; Team Building
       </h1>
       <p className="mt-1 text-muted-foreground">Entre amis, entre collègues ou en équipe.</p>
@@ -327,7 +349,7 @@ export function GroupesFlow({
       {/* ÉTAPE 2 — créneau Bubble Foot */}
       {step === "creneau" && isBubble && (
         <FadeIn className="mt-6">
-          <h2 className="text-xl font-bold font-[family-name:var(--font-heading)]">Choisissez votre créneau</h2>
+          <h2 ref={titreRef} tabIndex={-1} className="text-xl font-bold font-[family-name:var(--font-heading)]">Choisissez votre créneau</h2>
 
           {creneauxAffiches.length === 0 ? (
             <p className="mt-4 rounded-xl border border-field/20 bg-field/5 p-4 text-sm text-muted-foreground">
@@ -353,8 +375,14 @@ export function GroupesFlow({
             </p>
           ) : (
             <div className="mt-4 grid gap-3 sm:grid-cols-2">
+              {/*
+                `aria-pressed` : le créneau retenu n'était marqué que par une
+                bordure verte. Les demi-journées du team building l'exposaient
+                déjà, pas ces cartes-ci — on ne savait pas qu'un clic avait
+                enregistré un choix, ni lequel.
+              */}
               {creneauxAffiches.map((c) => (
-                <button key={c.id} onClick={() => c.libre && setBubbleCreneau(c)} disabled={!c.libre} className="text-left">
+                <button key={c.id} onClick={() => c.libre && setBubbleCreneau(c)} disabled={!c.libre} aria-pressed={bubbleCreneau?.id === c.id} className="text-left">
                   <Card className={`border-2 transition-all duration-300 ${
                     !c.libre ? "opacity-50 cursor-not-allowed"
                     : bubbleCreneau?.id === c.id ? "border-field ring-2 ring-field/20"
@@ -388,8 +416,13 @@ export function GroupesFlow({
             </div>
           )}
 
+          {/*
+            `role="alert"` : un créneau pris entre-temps renvoie ici depuis le
+            récapitulatif. L'écran change tout seul et le message explique
+            pourquoi ; sans annonce, il ne restait que l'écran changé.
+          */}
           {erreur && (
-            <p className="mt-6 rounded-xl border border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive flex items-start gap-2">
+            <p role="alert" className="mt-6 rounded-xl border border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive flex items-start gap-2">
               <AlerteCercle className="size-4 shrink-0 mt-0.5" /> {erreur}
             </p>
           )}
@@ -406,7 +439,7 @@ export function GroupesFlow({
       {/* ÉTAPE 2 — demi-journée team building */}
       {step === "creneau" && !isBubble && (
         <FadeIn className="mt-6">
-          <h2 className="text-xl font-bold font-[family-name:var(--font-heading)]">Choisissez votre demi-journée</h2>
+          <h2 ref={titreRef} tabIndex={-1} className="text-xl font-bold font-[family-name:var(--font-heading)]">Choisissez votre demi-journée</h2>
           <p className="mt-1 text-sm text-muted-foreground">
             Le team building se réserve à la demi-journée. Indiquez votre préférence : nous revenons
             vers vous avec un devis et la confirmation de la disponibilité.
@@ -486,8 +519,14 @@ export function GroupesFlow({
               <Button onClick={() => setStep("recap")} disabled={!demiJournee} className="btn-glass-field text-[#0a0a0b] border-0 gap-1.5">
                 Continuer <FlecheDroite className="size-4" />
               </Button>
+              {/*
+                `aria-live="polite"` : c'est une consigne, pas une erreur —
+                une alerte interromprait la lecture de l'étape. Sans région
+                vivante, ce rappel restait purement visuel et le bouton grisé
+                redevenait muet pour qui ne le voit pas.
+              */}
               {!demiJournee && (
-                <p className="flex items-start gap-1.5 text-right text-sm text-muted-foreground">
+                <p aria-live="polite" className="flex items-start gap-1.5 text-right text-sm text-muted-foreground">
                   <AlerteCercle className="mt-0.5 size-4 shrink-0 text-kick" />
                   <span>Choisissez d&apos;abord une demi-journée ci-dessus.</span>
                 </p>
@@ -500,7 +539,7 @@ export function GroupesFlow({
       {/* ÉTAPE 3 — récapitulatif + coordonnées */}
       {step === "recap" && (
         <FadeIn className="mt-6">
-          <h2 className="text-xl font-bold font-[family-name:var(--font-heading)] flex items-center gap-2">
+          <h2 ref={titreRef} tabIndex={-1} className="text-xl font-bold font-[family-name:var(--font-heading)] flex items-center gap-2">
             {isBubble ? <Coche className="size-5 text-field" /> : <Document className="size-5 text-kick" />}
             {isBubble ? "Récapitulatif & coordonnées" : "Votre demande de devis"}
           </h2>
@@ -584,8 +623,13 @@ export function GroupesFlow({
               <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)}
                 onBlur={() => setEmailTouched(true)} maxLength={254}
                 className={emailTouched && email && !emailValid ? "border-destructive" : ""} />
+              {/*
+                `role="alert"` : le message n'apparaît qu'à la sortie du champ,
+                quand le focus est déjà ailleurs. Il passait donc inaperçu, et
+                le bouton d'envoi restait grisé sans raison apparente.
+              */}
               {emailTouched && email && !emailValid && (
-                <p className="mt-1 text-sm text-destructive flex items-center gap-1">
+                <p role="alert" className="mt-1 text-sm text-destructive flex items-center gap-1">
                   <AlerteCercle className="size-3.5" /> Adresse email invalide.
                 </p>
               )}
@@ -614,8 +658,9 @@ export function GroupesFlow({
                 </div>
               </div>
 
+              {/* Un refus d'envoi muet donne l'impression que le bouton n'a rien fait. */}
               {erreur && (
-                <p className="mb-4 rounded-xl border border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive flex items-start gap-2">
+                <p role="alert" className="mb-4 rounded-xl border border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive flex items-start gap-2">
                   <AlerteCercle className="size-4 shrink-0 mt-0.5" /> {erreur}
                 </p>
               )}
@@ -637,8 +682,14 @@ export function GroupesFlow({
                 )}
               </button>
 
+              {/*
+                Informatif et non urgent : « poli » laisse finir la phrase en
+                cours au lieu de la couper à chaque frappe. `aria-atomic` fait
+                relire la phrase entière, sinon seule la partie modifiée de la
+                liste serait annoncée, hors contexte.
+              */}
               {manquants.length > 0 && (
-                <p className="mt-3 flex items-start justify-center gap-2 text-center text-sm text-muted-foreground">
+                <p aria-live="polite" aria-atomic="true" className="mt-3 flex items-start justify-center gap-2 text-center text-sm text-muted-foreground">
                   <AlerteCercle className="mt-0.5 size-4 shrink-0 text-kick" />
                   <span>
                     Il manque {manquants.length > 1

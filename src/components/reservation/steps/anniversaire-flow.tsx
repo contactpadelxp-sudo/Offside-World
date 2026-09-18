@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -18,6 +18,7 @@ import { EMAIL } from "@/data/entreprise";
 import { useScrollTop } from "@/lib/use-scroll-top";
 import { reserverAnniversaire } from "@/lib/actions/reservation";
 import type { CreneauVue, FormuleVue, OptionVue } from "@/lib/vues";
+import type { RefTitre } from "../reservation-flow";
 import { GATEAU_NOTE, OPTION_IMAGES } from "@/data/formules";
 import { RESUME_ANNULATION, DELAI_RESERVATION_HEURES } from "@/data/reglement";
 import { AlerteCercle, Ballon, Bouclier, Calendrier, ChevronBas, Coche, FlecheDroite, FlecheGauche, Gateau, Groupe, Info } from "@/components/icons";
@@ -38,12 +39,15 @@ const DATES_VISIBLES = 12;
 export function AnniversaireFlow({
   paiementActif,
   onBack,
+  titreRef,
   formules,
   options,
   creneaux,
 }: {
   paiementActif: boolean;
   onBack: () => void;
+  /** Titre de l'étape affichée, qui reçoit le focus — voir `reservation-flow`. */
+  titreRef: RefTitre;
   formules: FormuleVue[];
   options: OptionVue[];
   creneaux: CreneauVue[];
@@ -124,6 +128,24 @@ export function AnniversaireFlow({
 
   // Chaque changement d'étape repart du haut de la page.
   useScrollTop(step);
+
+  /*
+    …et le focus repart du titre de l'étape, sans quoi il resterait sur le
+    bouton « Continuer » que l'on vient de quitter : au clavier comme au
+    lecteur d'écran, rien ne signalait le passage à l'étape suivante.
+
+    L'arrivée sur le tunnel n'est pas traitée ici mais dans `reservation-flow`,
+    qui sait, lui, distinguer un clic sur une activité d'un simple chargement
+    de page avec `?activite=…` dans l'URL.
+  */
+  const premiereEtape = useRef(true);
+  useEffect(() => {
+    if (premiereEtape.current) {
+      premiereEtape.current = false;
+      return;
+    }
+    titreRef.current?.focus({ preventScroll: true });
+  }, [step, titreRef]);
 
   /*
     CE QUI MANQUE, DIT EN TOUTES LETTRES.
@@ -220,7 +242,8 @@ export function AnniversaireFlow({
   if (formules.length === 0) {
     return (
       <div>
-        <h1 className="text-2xl font-bold font-[family-name:var(--font-heading)] md:text-3xl">Anniversaires</h1>
+        {/* `tabIndex={-1}` : focalisable par programme seulement, pas à la tabulation. */}
+        <h1 ref={titreRef} tabIndex={-1} className="text-2xl font-bold font-[family-name:var(--font-heading)] md:text-3xl">Anniversaires</h1>
         <p className="mt-4 text-muted-foreground">
           La réservation en ligne est momentanément indisponible. Contactez-nous directement, nous
           prendrons votre demande.
@@ -264,13 +287,21 @@ export function AnniversaireFlow({
       {/* STEP 1: Formule */}
       {step === "formule" && (
         <FadeIn>
-          <h2 className="text-2xl font-bold font-[family-name:var(--font-heading)]">
+          <h2 ref={titreRef} tabIndex={-1} className="text-2xl font-bold font-[family-name:var(--font-heading)]">
             {formules.length} formules, {formules.length} façons de fêter son anniversaire
           </h2>
           <p className="mt-1 text-muted-foreground">Sélectionnez la formule idéale pour l&apos;anniversaire.</p>
           <div className="mt-6 grid gap-4 sm:grid-cols-2">
+            {/*
+              `aria-pressed` : LA FORMULE CHOISIE NE SE VOYAIT QU'À SA BORDURE.
+
+              Une bordure verte est invisible pour un lecteur d'écran, et pour
+              quiconque ne distingue pas cette nuance. On entendait quatre fois
+              « Formule Découverte, bouton », sans jamais savoir laquelle était
+              retenue — ni même qu'un choix avait été enregistré au clic.
+            */}
             {formules.map((f) => (
-              <button key={f.id} onClick={() => setSelectedFormule(f)} className="text-left">
+              <button key={f.id} onClick={() => setSelectedFormule(f)} aria-pressed={selectedFormule?.id === f.id} className="text-left">
                 <Card
                   className={`h-full border-2 transition-all duration-300 card-hover ${
                     selectedFormule?.id === f.id ? "border-field ring-2 ring-field/20" : "hover:border-field/40"
@@ -317,7 +348,7 @@ export function AnniversaireFlow({
       {/* STEP 2: Détails (enfant + options) */}
       {step === "details" && selectedFormule && (
         <FadeIn>
-          <h2 className="text-2xl font-bold font-[family-name:var(--font-heading)] flex items-center gap-2">
+          <h2 ref={titreRef} tabIndex={-1} className="text-2xl font-bold font-[family-name:var(--font-heading)] flex items-center gap-2">
             <Groupe className="size-6 text-field" /> Détails de l&apos;anniversaire
           </h2>
           <p className="mt-1 text-muted-foreground">
@@ -428,7 +459,8 @@ export function AnniversaireFlow({
               </p>
               <div className="mt-4 space-y-3">
                 {options.map((opt) => (
-                  <button key={opt.id} onClick={() => toggleOption(opt.id)} className="w-full text-left">
+                  // `aria-pressed` : une option cochée ne se distinguait, elle aussi, que par sa bordure.
+                  <button key={opt.id} onClick={() => toggleOption(opt.id)} aria-pressed={selectedOptions.includes(opt.id)} className="w-full text-left">
                     <Card className={`border-2 transition-all duration-300 ${
                       selectedOptions.includes(opt.id) ? "border-field ring-2 ring-field/20" : "hover:border-field/40 card-hover"
                     }`}>
@@ -476,8 +508,19 @@ export function AnniversaireFlow({
               <Button onClick={() => setStep("creneau")} disabled={manquantsDetails.length > 0} className="btn-glass-field text-[#0a0a0b] border-0 gap-1.5">
                 Continuer <FlecheDroite className="size-4" />
               </Button>
+              {/*
+                `aria-live="polite"` et non `role="alert"` : ce n'est pas une
+                erreur, c'est l'état d'un formulaire en cours de remplissage.
+                Une alerte couperait la parole à chaque frappe ; « poli »
+                attend une pause. `aria-atomic` fait relire la phrase entière,
+                sinon seule la moitié modifiée de la liste serait annoncée.
+
+                Sans cela, la liste ne servait qu'à ceux qui la voyaient : le
+                bouton « Continuer » restait grisé, muet, sans dire ce qui
+                manque — exactement le défaut que cette liste devait corriger.
+              */}
               {manquantsDetails.length > 0 && (
-                <p className="flex items-start gap-1.5 text-right text-sm text-muted-foreground">
+                <p aria-live="polite" aria-atomic="true" className="flex items-start gap-1.5 text-right text-sm text-muted-foreground">
                   <AlerteCercle className="mt-0.5 size-4 shrink-0 text-kick" />
                   <span>
                     Il manque {manquantsDetails.length > 1
@@ -494,7 +537,7 @@ export function AnniversaireFlow({
       {/* STEP 3: Créneau + espace */}
       {step === "creneau" && (
         <FadeIn>
-          <h2 className="text-2xl font-bold font-[family-name:var(--font-heading)] flex items-center gap-2">
+          <h2 ref={titreRef} tabIndex={-1} className="text-2xl font-bold font-[family-name:var(--font-heading)] flex items-center gap-2">
             <Calendrier className="size-6 text-field" /> Choisissez votre créneau
           </h2>
           <p className="mt-1 text-muted-foreground">
@@ -518,6 +561,8 @@ export function AnniversaireFlow({
                     <button
                       key={j.jour}
                       onClick={() => { setSelectedJour(j.jour); setSelectedCreneau(null); }}
+                      // La date active n'était signalée que par la couleur de sa bordure.
+                      aria-pressed={jourCourant === j.jour}
                       className={`rounded-xl border-2 px-4 py-2.5 text-sm font-medium transition-all duration-300 ${
                         jourCourant === j.jour ? "border-field bg-field/10 text-field" : "border-muted hover:border-field/40"
                       }`}
@@ -559,6 +604,8 @@ export function AnniversaireFlow({
                                 key={c.id}
                                 disabled={!c.libre}
                                 onClick={() => setSelectedCreneau(c)}
+                                // Le créneau retenu n'était signalé que par son fond vert.
+                                aria-pressed={choisi}
                                 className={`rounded-xl border-2 px-3 py-2 text-sm font-medium transition-all duration-300 ${
                                   !c.libre
                                     ? "border-destructive/30 bg-destructive/10 text-destructive/70 cursor-not-allowed line-through"
@@ -581,8 +628,17 @@ export function AnniversaireFlow({
             </>
           )}
 
+          {/*
+            `role="alert"` : LE REFUS DU SERVEUR N'ÉTAIT JAMAIS ANNONCÉ.
+
+            Le message apparaît loin du bouton qui vient d'être cliqué, et sur
+            cette étape il arrive APRÈS un retour automatique depuis le
+            récapitulatif (créneau pris entre-temps). Sans annonce, on se
+            retrouvait sur une page qui a changé toute seule, sans savoir
+            pourquoi ni que la réservation avait échoué.
+          */}
           {erreur && (
-            <p className="mt-6 rounded-xl border border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive flex items-start gap-2">
+            <p role="alert" className="mt-6 rounded-xl border border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive flex items-start gap-2">
               <AlerteCercle className="size-4 shrink-0 mt-0.5" /> {erreur}
             </p>
           )}
@@ -599,7 +655,7 @@ export function AnniversaireFlow({
       {/* STEP 4: Récapitulatif + coordonnées */}
       {step === "paiement" && selectedFormule && selectedCreneau && (
         <FadeIn>
-          <h2 className="text-2xl font-bold font-[family-name:var(--font-heading)] flex items-center gap-2">
+          <h2 ref={titreRef} tabIndex={-1} className="text-2xl font-bold font-[family-name:var(--font-heading)] flex items-center gap-2">
             <Coche className="size-6 text-field" /> Récapitulatif &amp; coordonnées
           </h2>
 
@@ -645,8 +701,14 @@ export function AnniversaireFlow({
             <div>
               <Label htmlFor="parentEmail">Email</Label>
               <Input id="parentEmail" type="email" value={parentEmail} onChange={(e) => setParentEmail(e.target.value)} onBlur={() => setEmailTouched(true)} maxLength={254} className={emailTouched && parentEmail && !emailValid ? "border-destructive" : ""} />
+              {/*
+                `role="alert"` : le message surgit quand on QUITTE le champ,
+                donc au moment où le focus est déjà ailleurs. Sans annonce, on
+                continuait le formulaire sans savoir que l'adresse était
+                refusée — et le bouton final restait grisé sans explication.
+              */}
               {emailTouched && parentEmail && !emailValid && (
-                <p className="mt-1 text-sm text-destructive flex items-center gap-1">
+                <p role="alert" className="mt-1 text-sm text-destructive flex items-center gap-1">
                   <AlerteCercle className="size-3.5" /> Adresse email invalide.
                 </p>
               )}
@@ -677,8 +739,9 @@ export function AnniversaireFlow({
                 </div>
               </div>
 
+              {/* Même raison qu'à l'étape des créneaux : un refus muet laisse croire que le clic n'a rien fait. */}
               {erreur && (
-                <p className="mb-4 rounded-xl border border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive flex items-start gap-2">
+                <p role="alert" className="mb-4 rounded-xl border border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive flex items-start gap-2">
                   <AlerteCercle className="size-4 shrink-0 mt-0.5" /> {erreur}
                 </p>
               )}
@@ -696,8 +759,9 @@ export function AnniversaireFlow({
                     : "Confirmer ma réservation"}
               </button>
 
+              {/* Informatif, comme à l'étape des détails : « poli » plutôt qu'alerte. */}
               {manquants.length > 0 && (
-                <p className="mt-3 flex items-start justify-center gap-2 text-center text-sm text-muted-foreground">
+                <p aria-live="polite" aria-atomic="true" className="mt-3 flex items-start justify-center gap-2 text-center text-sm text-muted-foreground">
                   <AlerteCercle className="mt-0.5 size-4 shrink-0 text-kick" />
                   <span>
                     Il manque {manquants.length > 1

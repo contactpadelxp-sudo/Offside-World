@@ -5,7 +5,7 @@ import { StaggerContainer, StaggerItem, Tilt3D } from "@/components/motion";
 import { Photo } from "@/components/photo";
 import { FlecheDroite, Visuel } from "@/components/icons";
 import { useActivites } from "@/components/activites/use-activites";
-import type { Activity } from "../reservation-flow";
+import type { Activity, RefTitre } from "../reservation-flow";
 import type { FormuleVue } from "@/lib/vues";
 
 /**
@@ -21,15 +21,23 @@ import type { FormuleVue } from "@/lib/vues";
 export function ActivityChoice({
   onSelect,
   formules,
+  titreRef,
 }: {
   onSelect: (a: Activity) => void;
   formules: FormuleVue[];
+  /** Cible du focus quand on revient ici depuis une activité — voir `reservation-flow`. */
+  titreRef: RefTitre;
 }) {
   const activities = useActivites(formules);
 
   return (
     <div>
-      <h1 className="font-[family-name:var(--font-heading)] text-3xl md:text-4xl font-bold">Réserver</h1>
+      {/*
+        `tabIndex={-1}` ne met pas ce titre dans l'ordre de tabulation : il le
+        rend seulement focalisable par programme, pour que le retour au choix
+        des activités soit annoncé au lieu de se faire en silence.
+      */}
+      <h1 ref={titreRef} tabIndex={-1} className="font-[family-name:var(--font-heading)] text-3xl md:text-4xl font-bold">Réserver</h1>
       <p className="mt-2 text-muted-foreground">Choisissez votre activité pour commencer.</p>
 
       <StaggerContainer className="mt-10 grid gap-6 sm:grid-cols-3" staggerDelay={0.1}>

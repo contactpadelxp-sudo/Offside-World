@@ -4,6 +4,28 @@ import {
   ADRESSE, ADRESSE_LIGNE, EMAIL,
   MAJ_LEGALE, ouACompleter,
 } from "@/data/entreprise";
+import { PALIERS_ANNULATION, RESUME_ANNULATION } from "@/data/reglement";
+
+/*
+  LE BARÈME N'EST PLUS RECOPIÉ À LA MAIN DANS CETTE PAGE.
+
+  Les trois encadrés de l'article 6 écrivaient « 7 jours », « 48 heures » et
+  « 50 % » en dur. Or ce sont les paliers de `reglement.ts` qui décident du
+  montant réellement renvoyé au client : `partRemboursee()` les lit à chaque
+  annulation traitée depuis le back-office, et c'est cette somme-là qui part
+  chez Stripe. Deux barèmes pour une seule règle : au premier palier modifié,
+  la page publiée aurait continué de promettre l'ancien — et c'est le texte des
+  CGV que le client oppose au vendeur, pas le code.
+
+  Le détail rédigé (report, remboursement partiel, non-présentation) est
+  conservé : il dit ce que la constante ne dit pas. Seuls les NOMBRES sont lus
+  ici.
+*/
+const [PALIER_INTEGRAL, PALIER_PARTIEL] = PALIERS_ANNULATION;
+const JOURS_REMBOURSEMENT_INTEGRAL = PALIER_INTEGRAL.seuilHeures / 24;
+const HEURES_REMBOURSEMENT_PARTIEL = PALIER_PARTIEL.seuilHeures;
+const PART_REMBOURSEE = Math.round(PALIER_PARTIEL.remboursement * 100);
+const PART_RESTANT_DUE = 100 - PART_REMBOURSEE;
 
 export const metadata: Metadata = {
   title: `Conditions Générales de Vente | ${NOM_COMMERCIAL}`,
@@ -162,23 +184,50 @@ export default function CGV() {
           Sauf conditions particulières communiquées au moment de la réservation, les règles
           suivantes s&apos;appliquent :
         </P>
+        {/*
+          La phrase affichée au client au moment de payer est reprise telle
+          quelle : le tunnel de réservation, les e-mails de confirmation et les
+          CGV doivent annoncer le même barème mot pour mot, sans quoi le client
+          peut se prévaloir de la version qui l'arrange.
+        */}
+        <P>
+          {/*
+            « Annulation : » et non « En résumé : ». La constante est rédigée
+            pour suivre ce mot-là — elle commence par « Gratuite », dont
+            l'accord se rattache au nom qui la précède. « En résumé : Gratuite
+            jusqu'à 7 jours avant » laissait cet accord en l'air.
+
+            C'est aussi la formulation employée par le tunnel de réservation et
+            par les e-mails : les trois annoncent désormais le barème dans les
+            mêmes termes, ce qui est tout l'intérêt d'une constante partagée.
+          */}
+          <strong className="text-foreground">Annulation :</strong> {RESUME_ANNULATION}
+        </P>
         <div className="space-y-3">
           <div className="rounded-xl border border-primary/20 bg-primary/5 p-4">
-            <p className="font-semibold">Plus de 7 jours calendrier avant l&apos;activité</p>
+            <p className="font-semibold">
+              Plus de {JOURS_REMBOURSEMENT_INTEGRAL} jours calendrier avant l&apos;activité
+            </p>
             <p className="text-muted-foreground text-sm mt-1">
               Le client peut demander le remboursement des sommes versées ou le report de la
               réservation vers une autre date disponible.
             </p>
           </div>
           <div className="rounded-xl border border-primary/20 bg-primary/5 p-4">
-            <p className="font-semibold">Entre 7 jours et 48 heures avant l&apos;activité</p>
+            <p className="font-semibold">
+              Entre {JOURS_REMBOURSEMENT_INTEGRAL} jours et {HEURES_REMBOURSEMENT_PARTIEL} heures
+              avant l&apos;activité
+            </p>
             <p className="text-muted-foreground text-sm mt-1">
-              50 % du prix de la réservation reste dû. Si le montant a déjà été payé intégralement,
-              50 % est remboursé.
+              {PART_RESTANT_DUE}&nbsp;% du prix de la réservation reste dû. Si le montant a déjà été
+              payé intégralement, {PART_REMBOURSEE}&nbsp;% est remboursé.
             </p>
           </div>
           <div className="rounded-xl border border-primary/20 bg-primary/5 p-4">
-            <p className="font-semibold">Moins de 48 heures avant l&apos;activité ou non-présentation</p>
+            <p className="font-semibold">
+              Moins de {HEURES_REMBOURSEMENT_PARTIEL} heures avant l&apos;activité ou
+              non-présentation
+            </p>
             <p className="text-muted-foreground text-sm mt-1">
               Le prix de la réservation reste intégralement dû et aucun remboursement n&apos;est prévu.
             </p>

@@ -8,6 +8,14 @@ import {
   type LigneDevis,
 } from "@/lib/devis";
 import { montantLisible } from "@/lib/tarification";
+/*
+  L'adresse du site vient de `@/lib/site`, et de nulle part ailleurs.
+
+  Ce module avait son propre repli, différent de celui-là : sans `SITE_URL`
+  renseignée, un devis renvoyait aux conditions générales sur un domaine et le
+  sitemap sur un autre. Un même déploiement annonçait donc deux sites.
+*/
+import { URL_SITE } from "@/lib/site";
 import {
   ADRESSE_LIGNE,
   BCE,
@@ -333,7 +341,7 @@ export async function genererDevisPdf(d: DevisPourPdf): Promise<Uint8Array> {
   */
   const conditions =
     "Passé cette date, les montants sont à reconfirmer. Ce devis est gratuit et ne vous engage à rien. "
-    + `La prestation est régie par nos conditions générales de vente, sur ${urlDevis()}/cgv ou sur demande.`;
+    + `La prestation est régie par nos conditions générales de vente, sur ${URL_SITE}/cgv ou sur demande.`;
   for (const ligne of decouper(winAnsi(conditions), e.normale, 7.5, LARGEUR_PIED)) {
     texte(e, ligne, MARGE, bas, { taille: 7.5, couleur: GRIS });
     bas -= 10;
@@ -379,11 +387,6 @@ function decouper(v: string, police: PDFFont, taille: number, largeur: number): 
   if (courante) lignes.push(courante);
   // Un mot d'introduction n'est pas un roman : au-delà, on coupe.
   return lignes.slice(0, 8);
-}
-
-/** L'adresse publique du site, pour renvoyer aux conditions générales. */
-function urlDevis(): string {
-  return (process.env.SITE_URL || "https://offsidefootindoor.be").replace(/\/+$/, "");
 }
 
 /**

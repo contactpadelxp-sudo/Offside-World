@@ -1,5 +1,7 @@
 import { Suspense } from "react";
+import type { Metadata } from "next";
 import { ReservationFlow } from "@/components/reservation/reservation-flow";
+import { metadonneesPage } from "@/lib/site";
 import { lireCreneaux } from "@/lib/db/creneaux";
 import { lireFormules, lireOptions } from "@/lib/db/referentiel";
 import { expirerReservationsAbandonnees } from "@/lib/db/reservations";
@@ -15,6 +17,19 @@ import { paiementConfigure } from "@/lib/paiement/stripe";
  * prérendue, et c'est délibéré.
  */
 export const dynamic = "force-dynamic";
+
+/*
+  Faute de métadonnées propres, cette page héritait du titre et de la
+  description de l'accueil : deux pages annonçaient la même chose aux moteurs,
+  et le lien partagé vers le tunnel de réservation s'affichait « Offside Foot
+  Indoor Gembloux — Anniversaires… » sans jamais dire qu'on pouvait y réserver.
+*/
+export const metadata: Metadata = metadonneesPage({
+  titre: "Réserver en ligne — anniversaire foot & Bubble Foot | Offside Foot Indoor",
+  description:
+    "Réservez en quelques minutes votre anniversaire foot ou votre session de Bubble Foot à Gembloux : formule, date, créneau et options en ligne.",
+  chemin: "/reservation",
+});
 
 export default async function ReservationPage() {
   // Libère les créneaux tenus par des réservations jamais confirmées avant

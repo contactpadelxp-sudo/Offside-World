@@ -186,6 +186,23 @@ export function AllerAuJour({ jour }: { jour: string }) {
 const CHAMP_CRENEAU =
   "h-10 rounded-xl border border-border bg-input/30 px-3 text-sm text-foreground outline-none transition-colors focus-visible:ring-2 focus-visible:ring-field/60";
 
+type TypeCreneau = "anniversaire" | "bubble";
+
+/**
+ * Durée proposée d'office selon l'activité.
+ *
+ * LE FORMULAIRE PROPOSAIT 2 h DANS TOUS LES CAS. C'est la durée d'une formule
+ * anniversaire, mais le Bubble Foot se vend à l'heure : chaque créneau Bubble
+ * créé sans penser à toucher la liste ouvrait à la vente deux heures de terrain
+ * au prix d'une, et interdisait au créneau suivant de commencer — la contrainte
+ * d'exclusion sur `creneaux` refuse tout chevauchement. Une journée saisie vite
+ * fait perdait ainsi la moitié de ses créneaux Bubble.
+ */
+const DUREE_PAR_DEFAUT: Record<TypeCreneau, number> = {
+  anniversaire: 120,
+  bubble: 60,
+};
+
 export function AjouterCreneau({
   jour,
   espaces,
@@ -195,9 +212,9 @@ export function AjouterCreneau({
 }) {
   const { enCours, occupe, retour, lancer } = useAction();
   const [heure, setHeure] = useState("");
-  const [duree, setDuree] = useState(120);
+  const [type, setType] = useState<TypeCreneau>("anniversaire");
+  const [duree, setDuree] = useState(DUREE_PAR_DEFAUT.anniversaire);
   const [espaceId, setEspaceId] = useState(espaces[0]?.id ?? "");
-  const [type, setType] = useState<"anniversaire" | "bubble">("anniversaire");
 
   if (espaces.length === 0) return null;
 
@@ -281,7 +298,19 @@ export function AjouterCreneau({
           <select
             id="c-type"
             value={type}
-            onChange={(e) => setType(e.target.value as "anniversaire" | "bubble")}
+            onChange={(e) => {
+              const nouveau = e.target.value as TypeCreneau;
+              /*
+                On ne réécrit la durée que si elle est encore celle proposée
+                d'office pour l'activité précédente : une durée choisie à la
+                main est une décision de l'exploitant, changer d'activité ne
+                doit pas l'effacer sous ses yeux.
+              */
+              setDuree((actuelle) =>
+                actuelle === DUREE_PAR_DEFAUT[type] ? DUREE_PAR_DEFAUT[nouveau] : actuelle,
+              );
+              setType(nouveau);
+            }}
             style={{ colorScheme: "dark" }}
             className={CHAMP_CRENEAU}
           >

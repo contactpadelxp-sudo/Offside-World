@@ -17,7 +17,28 @@ import type { FormuleVue } from "@/lib/vues";
 /** Mention commune aux deux formules. */
 export const GATEAU_NOTE = "Le gâteau est apporté par les parents.";
 
-/** Illustration de chaque option (chemins exacts dans public/images/). */
+/**
+ * Illustration de chaque option (chemins exacts dans public/images/).
+ *
+ * CETTE TABLE NE PRODUIT PLUS AUCUNE VIGNETTE AUJOURD'HUI, et c'est voulu.
+ *
+ * Ses deux seules entrées sont les deux options désactivées le 17 septembre
+ * 2026 à la demande de l'exploitant (`update options set actif = false`, voir
+ * la migration 0020). Or le tunnel public lit `lireOptions()` — donc les
+ * options ACTIVES seulement : ballon, hot dog, crêpes, dont aucune n'est
+ * indexée ici. Le garde `OPTION_IMAGES[opt.id] &&` d'anniversaire-flow est
+ * donc toujours faux.
+ *
+ * POURQUOI ON NE LA SUPPRIME PAS. Le back-office peut remettre le pack photo
+ * ou la piñata en vente d'un clic (`actif` est modifiable depuis l'écran des
+ * extras). Le jour où ça arrive, l'option doit retrouver sa vignette sans
+ * qu'on redéploie. La table coûte deux lignes ; la reconstruire dans l'urgence
+ * coûterait davantage.
+ *
+ * En revanche, n'y ajoutez rien pour une option créée depuis le back-office :
+ * un extra nouveau reçoit un identifiant qui ne figurera jamais dans un
+ * fichier écrit en dur. Une vignette pour tous passerait par la base.
+ */
 export const OPTION_IMAGES: Record<string, string> = {
   photo: "/images/photos.jpeg",
   pinata: "/images/pinata.webp",

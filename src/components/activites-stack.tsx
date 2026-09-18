@@ -120,7 +120,24 @@ export default function ActivitesStack({ children }: { children?: React.ReactNod
         protection parce que la prestation n'est plus vendue serait le mauvais
         raisonnement — les caméras du complexe, elles, n'ont pas disparu.
       */
-      desc: "Deux formules 100 % foot, Kick-Off et Bubble. Décoration, boissons et espace gâteau compris.",
+      /*
+        NI LE NOMBRE DE FORMULES, NI LEURS NOMS NE SONT ANNONCÉS ICI.
+
+        La carte affirmait « Deux formules 100 % foot, Kick-Off et Bubble »,
+        alors que les formules vivent dans la table `formules` : Brahim les
+        renomme, en désactive ou en ajoute depuis /admin/tarifs, et la page
+        d'accueil aurait continué d'en promettre deux, sous d'anciens noms.
+
+        On ne peut pas les lire ici : ce composant est chargé avec
+        `ssr: false` et ne reçoit que ses enfants — les formules de la base
+        sont passées en props à `Accueil`, qui ne les lui transmet pas. Plutôt
+        qu'une copie codée en dur ou un repli statique (`FORMULES_REPLI` n'est
+        qu'un filet pour la page prérendue, pas une vérité), la carte cesse
+        d'avancer un chiffre : elle décrit ce qui ne dépend pas du catalogue.
+        La liste réelle, avec ses prix, est juste en dessous dans la section
+        « formules », elle, alimentée par la base.
+      */
+      desc: "L'anniversaire 100 % foot : terrain rien que pour le groupe, décoration, boissons et espace gâteau compris.",
       itemClassName: "bg-gradient-to-br from-field to-kick text-[#0a0a0b]",
       badgeClass: "bg-black/15 text-[#0a0a0b]",
       ctaClass: "text-[#0a0a0b]",

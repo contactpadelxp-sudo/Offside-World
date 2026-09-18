@@ -1,9 +1,12 @@
 import type { Metadata } from "next";
-import { MAJ_LEGALE } from "@/data/entreprise";
+import {
+  NOM_COMMERCIAL, RAISON_SOCIALE, ADRESSE_LIGNE, EMAIL,
+  MAJ_LEGALE, ouACompleter,
+} from "@/data/entreprise";
 
 export const metadata: Metadata = {
-  title: "Conditions Générales d'Utilisation | Offside Foot Indoor",
-  description: "Conditions Générales d'Utilisation du site Offside Foot Indoor.",
+  title: `Conditions Générales d'Utilisation | ${NOM_COMMERCIAL}`,
+  description: `Conditions Générales d'Utilisation du site ${NOM_COMMERCIAL}.`,
 };
 
 export default function CGU() {
@@ -12,10 +15,32 @@ export default function CGU() {
       <p className="text-sm text-muted-foreground mb-8">Dernière mise à jour : {MAJ_LEGALE}</p>
       <h1 className="text-3xl font-bold">Conditions Générales d&apos;Utilisation</h1>
 
+      {/*
+        CES CGU NE DISAIENT PAS QUI EST « OFFSIDE ».
+
+        Elles engagent l'utilisateur envers une partie nommée « Offside » une
+        douzaine de fois, sans jamais identifier la personne morale derrière ce
+        nom commercial — seule des cinq pages légales à ne pas le faire. Un
+        utilisateur ne pouvait donc pas savoir à qui il s'oppose, et l'article
+        2:20 du Code des sociétés impose de toute façon la dénomination et la
+        forme légale sur les documents émanant de la société.
+
+        La valeur vient de `RAISON_SOCIALE` comme dans les mentions légales et
+        les CGV : recopier « DBT Partners SRL » ici aurait fait une cinquième
+        copie d'un nom qui a déjà changé une fois (Belantis → DBT Partners).
+      */}
+      <p className="mt-2 text-muted-foreground">
+        Le site {NOM_COMMERCIAL} est édité et exploité par{" "}
+        <strong>{ouACompleter(RAISON_SOCIALE, "dénomination sociale à compléter")}</strong>, dont
+        l&apos;adresse d&apos;exploitation est {ADRESSE_LIGNE}, ci-après « Offside ». Les
+        coordonnées complètes de l&apos;éditeur figurent dans les{" "}
+        <a href="/mentions-legales" className="underline text-primary">mentions légales</a>.
+      </p>
+
       <section className="mt-8 space-y-4">
         <h2 className="text-xl font-bold">1. Accès au site</h2>
         <p className="text-muted-foreground">
-          Le site Offside Foot Indoor est accessible gratuitement à tout utilisateur disposant d&apos;un accès à Internet. Offside met tout en œuvre pour assurer l&apos;accès au site 24h/24, 7j/7, mais ne saurait être tenu responsable en cas d&apos;interruption pour maintenance, mise à jour ou cause de force majeure.
+          Le site {NOM_COMMERCIAL} est accessible gratuitement à tout utilisateur disposant d&apos;un accès à Internet. Offside met tout en œuvre pour assurer l&apos;accès au site 24h/24, 7j/7, mais ne saurait être tenu responsable en cas d&apos;interruption pour maintenance, mise à jour ou cause de force majeure.
         </p>
       </section>
 
@@ -104,8 +129,14 @@ export default function CGU() {
       <section className="mt-8 space-y-4">
         <h2 className="text-xl font-bold">8. Contact</h2>
         <p className="text-muted-foreground">
+          {/*
+            L'adresse était recopiée en dur, alors que `EMAIL` est l'unique
+            moyen de contact légalement obligatoire (art. III.74 du Code de
+            droit économique) : le jour où elle change, une page légale
+            continuerait d'envoyer les questions dans le vide.
+          */}
           Pour toute question relative aux présentes CGU :{" "}
-          <a href="mailto:info@offsidefootindoor.be" className="underline text-primary">info@offsidefootindoor.be</a>
+          <a href={`mailto:${EMAIL}`} className="underline text-primary">{EMAIL}</a>
         </p>
       </section>
     </div>

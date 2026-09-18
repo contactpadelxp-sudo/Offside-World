@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef, type RefObject } from "react";
 import { useSearchParams } from "next/navigation";
 import { useScrollTop } from "@/lib/use-scroll-top";
 import { RESERVER_RESET_EVENT } from "@/lib/events";
@@ -23,6 +23,15 @@ import { estActivite, type ActiviteId } from "@/data/activites";
   comme si le lien n'avait pas été cliqué.
 */
 export type Activity = ActiviteId | null;
+
+/**
+ * Titre de l'écran affiché, celui qui reçoit le focus quand on change d'étape.
+ *
+ * Le même objet est partagé entre ce composant et l'écran affiché : chaque
+ * écran n'accroche la référence qu'à SON titre, et comme un seul écran est
+ * monté à la fois, `titreEtape.current` désigne toujours le titre visible.
+ */
+export type RefTitre = RefObject<HTMLHeadingElement | null>;
 
 
 
@@ -60,6 +69,31 @@ export function ReservationFlow({ donnees }: { donnees: DonneesReservation }) {
   // Changer d'activité ramène en haut de page.
   useScrollTop(activity);
 
+  /*
+    LE FOCUS SUIT L'ÉCRAN, IL NE RESTAIT NULLE PART.
+
+    Changer d'activité ou d'étape ne change pas de page : seul le contenu est
+    remplacé. `useScrollTop` remontait bien la fenêtre, mais le focus restait
+    sur le bouton cliqué — un bouton aussitôt démonté. Au clavier, la
+    tabulation suivante repartait donc du tout début du document (logo, menu,
+    bandeau cookies) au lieu de continuer dans la nouvelle étape, et un lecteur
+    d'écran ne lisait rien du tout : rien n'annonçait que l'écran avait changé.
+
+    Le déplacement n'est demandé que par les actions qui viennent d'un clic
+    dans la page. La synchronisation depuis l'URL, elle, ne le demande pas :
+    elle s'exécute aussi à l'ouverture de /reservation?activite=…, où voler le
+    focus couperait la lecture de l'en-tête à quelqu'un qui arrive sur le site.
+  */
+  const titreEtape = useRef<HTMLHeadingElement>(null);
+  const focusDemande = useRef(false);
+  useEffect(() => {
+    if (!focusDemande.current) return;
+    focusDemande.current = false;
+    // `preventScroll` : on vient de remonter en haut, laisser le navigateur
+    // redescendre vers le titre annulerait ce retour.
+    titreEtape.current?.focus({ preventScroll: true });
+  }, [activity]);
+
   /**
    * Synchronisation depuis l'URL : gère les liens directs
    * (/reservation?activite=…) ainsi que les boutons « précédent » et
@@ -78,6 +112,7 @@ export function ReservationFlow({ donnees }: { donnees: DonneesReservation }) {
    * « retour » du navigateur continue de fonctionner.
    */
   const selectActivity = useCallback((a: Activity) => {
+    focusDemande.current = true;
     setActivity(a);
     window.history.pushState(null, "", a ? `/reservation?activite=${a}` : "/reservation");
   }, []);
@@ -92,6 +127,7 @@ export function ReservationFlow({ donnees }: { donnees: DonneesReservation }) {
    */
   useEffect(() => {
     const reset = () => {
+      focusDemande.current = true;
       setActivity(null);
       window.history.replaceState(null, "", "/reservation");
     };
@@ -101,11 +137,12 @@ export function ReservationFlow({ donnees }: { donnees: DonneesReservation }) {
 
   return (
     <div className="mx-auto max-w-4xl px-4 pt-32 pb-8 md:pb-12">
-      {!activity && <ActivityChoice onSelect={selectActivity} formules={donnees.formules} />}
+      {!activity && <ActivityChoice onSelect={selectActivity} formules={donnees.formules} titreRef={titreEtape} />}
       {activity === "anniversaire" && (
         <AnniversaireFlow
           paiementActif={donnees.paiementActif}
           onBack={backToChoice}
+          titreRef={titreEtape}
           formules={donnees.formules}
           options={donnees.options}
           creneaux={donnees.creneauxAnniversaire}
@@ -116,6 +153,7 @@ export function ReservationFlow({ donnees }: { donnees: DonneesReservation }) {
         <GroupesFlow
           paiementActif={donnees.paiementActif}
           onBack={backToChoice}
+          titreRef={titreEtape}
           creneaux={donnees.creneauxBubble}
           demiJournees={donnees.demiJournees}
         />

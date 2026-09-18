@@ -1,8 +1,8 @@
 "use client";
 
-import { MotionConfig, motion, useMotionValue, useSpring, useTransform, useInView } from "framer-motion";
+import { MotionConfig, motion, useMotionValue, useSpring } from "framer-motion";
 import type { HTMLMotionProps } from "framer-motion";
-import { useRef, useEffect, useState, type ReactNode, type MouseEvent } from "react";
+import { useRef, type ReactNode, type MouseEvent } from "react";
 
 /* ═══ RÉGLAGES DE MOUVEMENT ═══ */
 
@@ -163,23 +163,6 @@ export function MagneticButton({
 }
 
 /* ═══ TEXT REVEAL (word by word) ═══ */
-
-/* ═══ COUNT UP ═══ */
-export function CountUp({
-  target, duration = 2, prefix = "", suffix = "", className,
-}: { target: number; duration?: number; prefix?: string; suffix?: string; className?: string }) {
-  const ref = useRef(null);
-  const isInView = useInView(ref, { once: true });
-  const motionVal = useMotionValue(0);
-  const springVal = useSpring(motionVal, { duration: duration * 1000 });
-  const display = useTransform(springVal, (v) => `${prefix}${Math.round(v)}${suffix}`);
-
-  useEffect(() => {
-    if (isInView) motionVal.set(target);
-  }, [isInView, motionVal, target]);
-
-  return <motion.span ref={ref} className={className}>{display}</motion.span>;
-}
 
 /* ═══ MARQUEE ═══ */
 export function Marquee({

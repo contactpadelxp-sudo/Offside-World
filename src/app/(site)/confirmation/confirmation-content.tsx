@@ -59,6 +59,7 @@ export function ConfirmationContent() {
   const paye = params.get("paiement") === "ok";
   const ref = params.get("ref") || "";
   const [recap, setRecap] = useState<RecapReservation | null>(null);
+  const [recapRelu, setRecapRelu] = useState(false);
   /**
    * Le récapitulatif est relu dans sessionStorage : aucune donnée personnelle
    * ne transite par l'URL, et la référence seule ne permet à personne d'autre
@@ -66,8 +67,15 @@ export function ConfirmationContent() {
    */
   useEffect(() => {
     setRecap(lireRecap(ref));
+    setRecapRelu(true);
   }, [ref]);
-  const type = recap?.type ?? "anniversaire";
+  /*
+    DEUX ABSENCES À NE PAS CONFONDRE : « pas encore relu » (premier rendu, avant
+    l'effet) et « introuvable » (lien ouvert sur un autre appareil, stockage
+    vidé). Sans ce drapeau, la page annoncerait qu'elle ne sait rien avant même
+    d'avoir cherché.
+  */
+  const detailIntrouvable = recapRelu && recap === null;
   const surDevis = recap?.surDevis === true;
   const reference = recap?.ref || ref;
   return (
@@ -82,7 +90,9 @@ export function ConfirmationContent() {
                 ? "Demande envoyée !"
                 : paye
                   ? "C’est réservé !"
-                  : "Réservation enregistrée !"}
+                  : recap
+                    ? "Réservation enregistrée !"
+                    : "Demande bien reçue !"}
             </h1>
             {/*
               TROIS SITUATIONS, TROIS MESSAGES. Cette page annonçait
@@ -97,60 +107,86 @@ export function ConfirmationContent() {
                 ? "Merci ! Nous revenons vers vous avec un devis sous 48 heures ouvrables."
                 : paye
                   ? "Votre paiement est accepté et votre créneau est réservé. Vous recevez la confirmation par e-mail."
-                  : "Merci ! Nous vous recontactons pour confirmer votre créneau et convenir du règlement."}
+                  : recap
+                    ? "Merci ! Nous vous recontactons pour confirmer votre créneau et convenir du règlement."
+                    : "Merci ! Votre demande est bien enregistrée. Nous vous recontactons très vite."}
             </p>
           </FadeIn>
         </div>
         <FadeIn delay={0.8}>
           <Card className="mt-10 border-2">
             <CardContent className="p-6 space-y-3">
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Type</span>
-                <span className="font-semibold">{LIBELLES_TYPE[type] ?? type}</span>
-              </div>
-              {recap?.formule && (
+              {/*
+                RIEN N’EST INVENTÉ ICI. Le type retombait sur « anniversaire » et
+                le montant sur « 0 € » dès que le récapitulatif manquait — lien de
+                confirmation ouvert sur un autre appareil, stockage vidé. La page
+                affichait alors une réservation qui n’existait pas, au mauvais
+                prix. Seule la référence vient de l’URL : elle seule est sûre.
+              */}
+              {recap && (
+                <>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Type</span>
+                    <span className="font-semibold">{LIBELLES_TYPE[recap.type] ?? recap.type}</span>
+                  </div>
+                  {recap.formule && (
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Formule</span>
+                      <span className="font-semibold">{recap.formule}</span>
+                    </div>
+                  )}
+                  {recap.enfant && (
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Enfant fêté</span>
+                      <span className="font-semibold">{recap.enfant}</span>
+                    </div>
+                  )}
+                  {recap.date && (
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Date</span>
+                      <span className="font-semibold">{recap.date}</span>
+                    </div>
+                  )}
+                  {recap.horaire && (
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Horaire</span>
+                      <span className="font-semibold">{recap.horaire}</span>
+                    </div>
+                  )}
+                </>
+              )}
+              {reference && (
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Formule</span>
-                  <span className="font-semibold">{recap.formule}</span>
+                  <span className="text-muted-foreground">Référence</span>
+                  <span className="font-mono font-semibold">{reference}</span>
                 </div>
               )}
-              {recap?.enfant && (
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Enfant fêté</span>
-                  <span className="font-semibold">{recap.enfant}</span>
+              {recap && (
+                <div className="border-t pt-3 flex justify-between text-lg">
+                  <span className="font-bold">{surDevis ? "Tarif" : "Montant TVAC"}</span>
+                  <span className="font-bold text-gradient-field">
+                    {surDevis ? "Sur devis" : euros(recap.total)}
+                  </span>
                 </div>
               )}
-              {recap?.date && (
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Date</span>
-                  <span className="font-semibold">{recap.date}</span>
-                </div>
+              {detailIntrouvable && (
+                <p className="text-sm text-muted-foreground">
+                  {reference
+                    ? "Le détail — formule, date, montant — n’est gardé que dans le navigateur qui a servi à remplir la demande : il ne peut pas s’afficher ici. Votre référence suffit à la retrouver."
+                    : "Ce lien ne porte aucune référence : nous ne pouvons rien afficher de votre demande. La référence figure dans l’e-mail de confirmation."}
+                </p>
               )}
-              {recap?.horaire && (
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Horaire</span>
-                  <span className="font-semibold">{recap.horaire}</span>
-                </div>
-              )}
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Référence</span>
-                <span className="font-mono font-semibold">{reference}</span>
-              </div>
-              <div className="border-t pt-3 flex justify-between text-lg">
-                <span className="font-bold">{surDevis ? "Tarif" : "Montant TVAC"}</span>
-                <span className="font-bold text-gradient-field">
-                  {surDevis ? "Sur devis" : euros(recap?.total ?? 0)}
-                </span>
-              </div>
             </CardContent>
           </Card>
         </FadeIn>
-        <FadeIn delay={1}>
-          <p className="mt-6 text-center text-sm text-muted-foreground">
-            Notez votre référence <span className="font-mono font-semibold text-foreground">{reference}</span> :
-            elle nous permet de retrouver votre demande.
-          </p>
-        </FadeIn>
+        {reference && (
+          <FadeIn delay={1}>
+            <p className="mt-6 text-center text-sm text-muted-foreground">
+              Notez votre référence <span className="font-mono font-semibold text-foreground">{reference}</span> :
+              elle nous permet de retrouver votre demande.
+            </p>
+          </FadeIn>
+        )}
         <FadeIn delay={1.2}>
           <div className="mt-10 flex flex-col gap-3 sm:flex-row sm:justify-center">
             <Link href="/" className="btn-glass-field inline-flex items-center justify-center gap-2 text-[#0a0a0b] px-6 h-12 rounded-2xl">
