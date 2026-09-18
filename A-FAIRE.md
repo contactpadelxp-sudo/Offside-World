@@ -204,6 +204,45 @@ deux étaient fausses et sont corrigées, la troisième est à confirmer.
       d'en douter, mais elle n'est pas sourcée. Si le parking est payant ou
       partagé, la phrase doit partir.
 
+## Images déjà fournies mais jamais affichées
+
+Relevé le 18 septembre 2026. `public/images/` pèse 7,2 Mo, dont **2,7 Mo ne
+sont jamais servis** — ni au visiteur, ni au build. Ces fichiers sont pourtant
+déployés à chaque mise en ligne.
+
+> **Piège de méthode.** Un premier balayage en annonçait 19 : faux. Les photos
+> sont résolues par `src/lib/photos.ts`, qui les cherche par un NOM LOGIQUE
+> (« bubble-portrait ») et non par leur nom de fichier. Chercher le nom de
+> fichier dans le code ne les trouve donc jamais. Toujours passer par le
+> registre.
+
+**Onze fichiers jamais affichés**, dont plusieurs pourraient combler les
+emplacements qu'on attend justement de Brahim :
+
+| Fichier | Poids | Piste |
+|---|---|---|
+| `entrée.JPG` | 641 Ko | façade — utilisable en page d'accueil |
+| `entrée contre-plongée.JPG` | 666 Ko | idem |
+| `terrain vide portrait.JPG` | 548 Ko | format portrait, utile sur téléphone |
+| `terrain vide.JPG` | 501 Ko | **doublon perdu**, voir plus bas |
+| `boissons.webp` | 97 Ko | illustre « boissons comprises » |
+| `anniv2.webp` | 86 Ko | seconde photo d'anniversaire |
+| `deco.jpeg` | 67 Ko | illustre « décoration comprise » |
+| `foot2.avif` | 47 Ko | |
+| `gateau.jpeg` | 29 Ko | illustre « espace gâteau » |
+| `accueil.jpeg` | 26 Ko | |
+| `foot3.jpeg` | 10 Ko | |
+
+- [ ] **Décider de leur sort.** Soit on les branche sur des emplacements —
+      plusieurs répondent à des besoins listés plus bas dans « Contenus
+      manquants » —, soit on les retire du dépôt. Les laisser sans emploi est
+      le seul choix qui ne serve à rien.
+- [ ] **`terrain vide.JPG` (501 Ko) est perdu par collision.** Deux fichiers
+      visent le même emplacement `terrain-vide` : « terrains vide.JPG » et
+      « terrain vide.JPG ». Le registre départage par ordre alphabétique, donc
+      le second ne sera JAMAIS affiché, quoi qu'on fasse. Le renommer ou le
+      supprimer — mais pas le laisser croire disponible.
+
 ## Contenus manquants
 
 - [ ] Photo pour la carte « Anniversaire » de la page de réservation
