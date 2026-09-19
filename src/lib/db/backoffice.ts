@@ -6,6 +6,7 @@ import { partRemboursee } from "@/data/reglement";
 import { lignesDepuisJson } from "@/lib/devis";
 import { decrireAction, lienJournal } from "@/lib/journal";
 import type { Database } from "@/lib/supabase/types";
+type TypeActivite = Database["public"]["Enums"]["type_activite"];
 import type { RecapEmail } from "@/lib/email/modeles";
 import type {
   CreneauAdmin,
@@ -497,30 +498,98 @@ const LIBELLES_MOYEN_PAIEMENT: Record<string, string> = {
 };
 
 /**
- * Dans combien de jours le dernier créneau ouvert tombe-t-il ?
+ * Dans combien de jours chaque activité cesse-t-elle d'être vendable ?
  *
  * POURQUOI CETTE FONCTION EXISTE. Les créneaux sont générés par lots, à la
  * main, depuis « Ouvrir une période ». Rien ne les prolonge tout seul — c'est
  * un choix assumé (voir la migration 0010), mais il a un défaut : le jour où
  * le dernier créneau est passé, la page de réservation n'affiche plus rien.
  * Aucune erreur, aucune alerte : juste un tunnel vide, et des clients qui
- * repartent. On ne s'en aperçoit que si quelqu'un essaie de réserver.
+ * repartent.
  *
- * Renvoie `null` si la base est injoignable ou s'il n'y a aucun créneau — dans
- * ce dernier cas l'appelant décide quoi dire, « aucun créneau » et « il en
- * reste pour six mois » n'appelant pas le même message.
+ * POURQUOI ELLE COMPTE PAR ACTIVITÉ, ET NON EN BLOC. Elle regardait le dernier
+ * créneau toutes activités confondues. Avec 943 créneaux d'anniversaire ouverts
+ * jusqu'en mars 2027, elle restait donc éteinte — pendant que le Bubble Foot
+ * était à ZÉRO créneau et invendable depuis le premier jour. Une activité
+ * entière ne se vendait pas, et l'écran conçu pour le dire affichait le calme.
+ * Un total ne dit jamais qu'une part est vide.
+ *
+ * TROIS FILTRES, ET AUCUN N'EST DÉCORATIF. On lit `creneaux_disponibles`, pas
+ * `creneaux` : la vue écarte déjà les créneaux fermés et les espaces inactifs.
+ * On y ajoute `libre` — un créneau déjà réservé ne se vend plus — et le fait
+ * qu'il soit à venir. Sans ces trois conditions, la dernière date trouvée peut
+ * être celle d'un créneau que personne ne peut acheter.
+ *
+ * `jours` vaut `null` quand l'activité n'a plus rien à vendre du tout. C'est
+ * un cas distinct de « il reste trois jours », et l'appelant ne doit pas les
+ * confondre : l'un est une alerte, l'autre est une panne.
  */
-export async function joursDeCreneauxRestants(): Promise<number | null> {
+export type HorizonActivite = {
+  type: TypeActivite;
+  libelle: string;
+  /** Jours avant le dernier créneau vendable, ou `null` s'il n'y en a aucun. */
+  jours: number | null;
+};
+
+const LIBELLES_ACTIVITE: Record<TypeActivite, string> = {
+  anniversaire: "Anniversaires",
+  bubble: "Bubble Foot",
+};
+
+export async function horizonParActivite(): Promise<HorizonActivite[] | null> {
   if (!baseConfiguree()) return null;
-  const { data, error } = await base()
-    .from("creneaux")
-    .select("debut")
-    .order("debut", { ascending: false })
-    .limit(1)
-    .maybeSingle();
-  if (error || !data) return null;
-  const restant = new Date(data.debut).getTime() - Date.now();
-  return Math.floor(restant / 86_400_000);
+
+  const maintenant = new Date().toISOString();
+  const types = Object.keys(LIBELLES_ACTIVITE) as TypeActivite[];
+
+  /*
+    `null` SIGNIFIE « JE NE SAIS PAS », ET C'EST UN TROISIÈME ÉTAT.
+
+    Il y a trois situations à distinguer, pas deux : l'activité se vend, elle
+    ne se vend plus, ou l'on n'a pas pu le savoir. Laisser une requête ratée
+    ressembler au premier cas éteindrait l'alerte au pire moment ; la laisser
+    remonter ferait tomber tout le back-office pour une bannière. On renvoie
+    donc `null`, et l'appelant le dit.
+  */
+  try {
+    return await lignesParType(types, maintenant);
+  } catch (e) {
+    console.error("Horizon des créneaux illisible :", e);
+    return null;
+  }
+}
+
+async function lignesParType(
+  types: TypeActivite[],
+  maintenant: string
+): Promise<HorizonActivite[]> {
+  return Promise.all(
+    types.map(async (type) => {
+      const { data, error } = await base()
+        .from("creneaux_disponibles")
+        .select("debut")
+        .eq("type", type)
+        .eq("libre", true)
+        .gt("debut", maintenant)
+        .order("debut", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      // Une erreur n'est PAS « aucun créneau » : la remonter évite d'annoncer
+      // une panne de vente là où il n'y a qu'une requête ratée.
+      if (error) throw error;
+
+      // Les colonnes d'une vue sont typées nullables : Postgres ne garantit
+      // pas le contraire à travers une jointure. Une date absente se traite
+      // comme une absence de créneau, pas comme une date à zéro.
+      const debut = data?.debut ?? null;
+      return {
+        type,
+        libelle: LIBELLES_ACTIVITE[type],
+        jours: debut ? Math.floor((new Date(debut).getTime() - Date.now()) / 86_400_000) : null,
+      };
+    })
+  );
 }
 
 /**

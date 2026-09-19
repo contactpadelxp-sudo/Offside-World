@@ -6,7 +6,7 @@ import { exigerSession } from "@/lib/admin/session";
 import {
   compterAConfirmer,
   compterDevisANouveau,
-  joursDeCreneauxRestants,
+  horizonParActivite,
 } from "@/lib/db/backoffice";
 import { expirerReservationsAbandonnees } from "@/lib/db/reservations";
 import { resolveLogoSrc } from "@/lib/logo";
@@ -34,18 +34,28 @@ export default async function GabaritProtege({
   // les compteurs et les listes reflètent l'état réel.
   await expirerReservationsAbandonnees();
 
-  const [aConfirmer, devisNouveaux, joursRestants] = await Promise.all([
+  const [aConfirmer, devisNouveaux, horizons] = await Promise.all([
     compterAConfirmer(),
     compterDevisANouveau(),
-    joursDeCreneauxRestants(),
+    horizonParActivite(),
   ]);
 
   /*
     Deux mois d'avance : de quoi ouvrir une nouvelle période sans se presser,
     et bien avant qu'un client cherchant une date lointaine tombe sur un
-    calendrier vide. En dessous de zéro, le tunnel n'affiche déjà plus rien.
+    calendrier vide.
+
+    DEUX SITUATIONS, ET IL NE FAUT PAS LES CONFONDRE. « Il reste 12 jours » est
+    un rappel : on a le temps. « Aucun créneau » est une panne de vente en
+    cours — l'activité ne se vend pas, maintenant, et personne ne l'apprendra
+    autrement. Elles ne se disent donc pas avec la même phrase, et la seconde
+    passe devant.
   */
-  const creneauxSEpuisent = joursRestants !== null && joursRestants < 60;
+  const epuisees = (horizons ?? []).filter((h) => h.jours === null);
+  const bientot = (horizons ?? []).filter((h) => h.jours !== null && h.jours < 60);
+  // Troisième état : la lecture a échoué. Le taire ferait passer une panne
+  // d'alerte pour un calme plat — exactement ce qu'on vient de corriger.
+  const horizonInconnu = horizons === null;
 
   return (
     <>
@@ -81,15 +91,52 @@ export default async function GabaritProtege({
         Les créneaux ne se régénèrent pas tout seuls. Sans cette bannière, le
         jour où le dernier est passé, la page de réservation se vide en silence
         et personne ne l'apprend avant qu'un client renonce.
+
+        Chaque activité a sa ligne : c'est tout l'intérêt. La version précédente
+        regardait le dernier créneau toutes activités confondues et restait donc
+        muette pendant que le Bubble Foot était à zéro, masqué par 943 créneaux
+        d'anniversaire.
       */}
-      {creneauxSEpuisent && (
+      {epuisees.length > 0 && (
+        <div className="border-b border-destructive/30 bg-destructive/10">
+          <p className="mx-auto flex max-w-6xl items-start gap-2 px-4 py-2.5 text-sm text-destructive">
+            <AlerteTriangle className="mt-0.5 size-4 shrink-0" />
+            <span>
+              {epuisees.map((h) => h.libelle).join(" et ")}
+              {epuisees.length > 1 ? " ne se vendent pas" : " ne se vend pas"} : aucun créneau
+              disponible, le tunnel affiche « aucun créneau ouvert ».{" "}
+              <Link href="/admin/creneaux" className="font-semibold underline">
+                Ouvrir une période
+              </Link>
+            </span>
+          </p>
+        </div>
+      )}
+
+      {horizonInconnu && (
         <div className="border-b border-kick/25 bg-kick/10">
           <p className="mx-auto flex max-w-6xl items-start gap-2 px-4 py-2.5 text-sm text-kick">
             <AlerteTriangle className="mt-0.5 size-4 shrink-0" />
             <span>
-              {joursRestants! > 0
-                ? `Les créneaux s'arrêtent dans ${joursRestants} jour${joursRestants! > 1 ? "s" : ""}.`
-                : "Il n'y a plus aucun créneau ouvert : le site n'accepte plus de réservation."}{" "}
+              Impossible de vérifier l&apos;état des créneaux. Ouvrez la page pour voir ce qui est
+              réellement en vente.{" "}
+              <Link href="/admin/creneaux" className="font-semibold underline">
+                Voir les créneaux
+              </Link>
+            </span>
+          </p>
+        </div>
+      )}
+
+      {bientot.length > 0 && (
+        <div className="border-b border-kick/25 bg-kick/10">
+          <p className="mx-auto flex max-w-6xl items-start gap-2 px-4 py-2.5 text-sm text-kick">
+            <AlerteTriangle className="mt-0.5 size-4 shrink-0" />
+            <span>
+              {bientot
+                .map((h) => `${h.libelle} : ${h.jours} jour${h.jours! > 1 ? "s" : ""}`)
+                .join(" · ")}{" "}
+              avant le dernier créneau.{" "}
               <Link href="/admin/creneaux" className="font-semibold underline">
                 Ouvrir une période
               </Link>
