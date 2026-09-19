@@ -30,7 +30,7 @@ export type TypeActivite = Database["public"]["Enums"]["type_activite"];
  * jours selon le mois de départ, et rogner trois jours ferait disparaître du
  * sélecteur la date que le client vient justement d'entendre au téléphone.
  */
-const HORIZON_JOURS = 183;
+export const HORIZON_JOURS = 183;
 
 /** Instant à partir duquel un créneau est encore réservable. */
 export function premierInstantReservable(maintenant = new Date()): Date {

@@ -2,11 +2,16 @@ import Link from "next/link";
 import {
   AjouterCreneau,
   AllerAuJour,
+  FermerJournee,
   ListeCreneaux,
   OuvrirPeriode,
 } from "@/components/admin/actions-creneaux";
 import { LienOnglet } from "@/components/admin/onglets";
 import { lireCreneauxDuJour, lireEspaces } from "@/lib/db/backoffice";
+// Le raccourci d'« Ouvrir une période » s'arrêtait 3 jours avant l'horizon
+// réellement proposé au client : les trois derniers jours du sélecteur
+// restaient vides à chaque fois qu'on acceptait les dates par défaut.
+import { HORIZON_JOURS } from "@/lib/db/creneaux";
 import { jourCompact, jourISO, jourLisibleCap } from "@/lib/temps";
 import { Calendrier, FlecheDroite, FlecheGauche } from "@/components/icons";
 
@@ -133,12 +138,23 @@ export default async function PageCreneaux({
         </p>
       )}
 
+      {/*
+        Le geste à l'échelle de la journée, posé juste sous la phrase qui en
+        décrit l'usage — « un jour de fermeture » — plutôt qu'en tête de page :
+        on y arrive après avoir vu ce qu'on s'apprête à fermer.
+      */}
+      {creneaux.length > 0 && (
+        <div className="mt-4">
+          <FermerJournee jour={jour} ouverts={libres} fermes={fermes} />
+        </div>
+      )}
+
       <div className="mt-8">
         <AjouterCreneau jour={jour} espaces={espaces} />
       </div>
 
       <div className="mt-6">
-        <OuvrirPeriode debutParDefaut={aujourdhui} finParDefaut={decaler(aujourdhui, 180)} />
+        <OuvrirPeriode debutParDefaut={aujourdhui} finParDefaut={decaler(aujourdhui, HORIZON_JOURS)} />
       </div>
     </div>
   );

@@ -3,7 +3,13 @@
 import { useOptimistic, useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { basculerCreneau, creerCreneau, genererCreneaux, supprimerCreneau } from "@/lib/actions/admin";
+import {
+  basculerCreneau,
+  basculerJournee,
+  creerCreneau,
+  genererCreneaux,
+  supprimerCreneau,
+} from "@/lib/actions/admin";
 import type { CreneauAdmin } from "@/lib/vues";
 import {
   BOUTON_NEUTRE,
@@ -169,6 +175,88 @@ export function AllerAuJour({ jour }: { jour: string }) {
       />
       {enCours && <Rotative />}
     </label>
+  );
+}
+
+/**
+ * FERMER OU ROUVRIR UNE JOURNÉE ENTIÈRE.
+ *
+ * L'écran annonçait l'usage — « un tournoi, un jour de fermeture » — sans
+ * donner le geste correspondant. Fermer un vendredi férié demandait six clics,
+ * un samedi douze, et il fallait penser à revenir les rouvrir. Résultat
+ * prévisible : le 25 décembre et le 1er janvier étaient encore en vente.
+ *
+ * LA FERMETURE DEMANDE UNE CONFIRMATION, PAS LA RÉOUVERTURE. Les deux ne
+ * coûtent pas la même chose. Retirer une journée de la vente se voit des jours
+ * plus tard, quand plus personne ne se souvient du clic ; rouvrir ne fait que
+ * remettre en vente ce qui existait déjà. On ne met un obstacle que là où
+ * l'erreur est coûteuse — en mettre partout apprend surtout à cliquer sans
+ * lire.
+ *
+ * Le nombre est dans le bouton : « Fermer les 12 créneaux du jour » dit ce qui
+ * va se passer mieux que « Fermer la journée », et se relit avant de confirmer.
+ */
+export function FermerJournee({
+  jour,
+  ouverts,
+  fermes,
+}: {
+  jour: string;
+  /** Créneaux ouverts et non réservés — les seuls que la fermeture peut toucher. */
+  ouverts: number;
+  fermes: number;
+}) {
+  const { occupe, retour, lancer } = useAction();
+  const [confirme, setConfirme] = useState(false);
+
+  if (ouverts === 0 && fermes === 0) return null;
+
+  return (
+    <div className="flex flex-wrap items-center gap-3">
+      {ouverts > 0 &&
+        (confirme ? (
+          <>
+            <button
+              type="button"
+              disabled={occupe("fermer")}
+              onClick={() => {
+                setConfirme(false);
+                lancer("fermer", () => basculerJournee(jour, false));
+              }}
+              className={`${BOUTON_PRINCIPAL} gap-2`}
+            >
+              {occupe("fermer") && <Rotative />}
+              Confirmer la fermeture
+            </button>
+            <button type="button" onClick={() => setConfirme(false)} className={BOUTON_NEUTRE}>
+              Annuler
+            </button>
+          </>
+        ) : (
+          <button
+            type="button"
+            onClick={() => setConfirme(true)}
+            className={`${BOUTON_NEUTRE} gap-2`}
+          >
+            <Cadenas className="size-4" />
+            Fermer les {ouverts} créneau{ouverts > 1 ? "x" : ""} du jour
+          </button>
+        ))}
+
+      {fermes > 0 && !confirme && (
+        <button
+          type="button"
+          disabled={occupe("rouvrir")}
+          onClick={() => lancer("rouvrir", () => basculerJournee(jour, true))}
+          className={`${BOUTON_NEUTRE} gap-2`}
+        >
+          {occupe("rouvrir") ? <Rotative /> : <Coche className="size-4" />}
+          Rouvrir les {fermes} créneau{fermes > 1 ? "x" : ""} fermé{fermes > 1 ? "s" : ""}
+        </button>
+      )}
+
+      <MessageAction retour={retour} />
+    </div>
   );
 }
 

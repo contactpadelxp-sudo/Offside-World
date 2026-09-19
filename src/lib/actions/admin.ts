@@ -1081,6 +1081,118 @@ export async function supprimerCreneau(id: string): Promise<Resultat> {
 }
 
 /**
+ * Ferme ou rouvre TOUS les créneaux d'une journée.
+ *
+ * UN JOUR DE FERMETURE SE FERMAIT CRÉNEAU PAR CRÉNEAU. L'écran annonce
+ * pourtant l'usage — « Fermer retire de la vente en gardant le créneau — un
+ * tournoi, un jour de fermeture » — mais ne donnait aucun geste à l'échelle de
+ * la journée. Un vendredi férié coûte six clics, un samedi douze, et il faut
+ * penser à revenir les rouvrir. Personne ne le fait : le 25 décembre 2026 et
+ * le 1er janvier 2027 étaient encore en vente au moment d'écrire ceci.
+ *
+ * LES CRÉNEAUX RÉSERVÉS NE SONT PAS TOUCHÉS, et c'est dit. Fermer une place
+ * déjà vendue reviendrait à la retirer sous le client sans l'en avertir — ce
+ * que `basculerCreneau` refuse déjà un par un. Ici on ne peut pas refuser
+ * l'opération entière pour un seul créneau pris : on écarte celui-là, on fait
+ * le reste, et on nomme la réservation en cause pour que l'exploitant sache
+ * qu'il lui reste un appel à passer.
+ */
+export async function basculerJournee(jourDemande: string, ouvrir: boolean): Promise<Resultat> {
+  const session = await garde();
+  if (!session) return REFUS_SESSION;
+
+  try {
+    const cible = jour(jourDemande, "Jour");
+
+    /*
+      Mêmes bornes que `lireCreneauxDuJour` : la journée est celle de Bruxelles,
+      pas celle d'UTC. Sans cela, fermer le 25 décembre laisserait ouvert le
+      créneau de 23 h — qui est encore le 25 chez nous et déjà le 26 en UTC.
+    */
+    const debutJour = new Date(`${cible}T00:00:00`);
+    const finJour = new Date(`${cible}T23:59:59.999`);
+
+    const { data: creneaux, error: erreurLecture } = await base()
+      .from("creneaux")
+      .select("id")
+      .gte("debut", debutJour.toISOString())
+      .lte("debut", finJour.toISOString())
+      .eq("ouvert", !ouvrir);
+
+    if (erreurLecture) throw erreurLecture;
+    if (!creneaux || creneaux.length === 0) {
+      return {
+        ok: false,
+        message: ouvrir
+          ? "Aucun créneau fermé ce jour-là."
+          : "Aucun créneau ouvert ce jour-là.",
+      };
+    }
+
+    const ids = creneaux.map((c) => c.id);
+
+    const { data: prises, error: erreurPrises } = await base()
+      .from("reservations")
+      .select("creneau_id, reference")
+      .in("statut", ["en_attente", "confirmee"])
+      .in("creneau_id", ids);
+
+    if (erreurPrises) throw erreurPrises;
+
+    const occupes = new Map((prises ?? []).map((r) => [r.creneau_id, r.reference]));
+    const aBasculer = ouvrir ? ids : ids.filter((id) => !occupes.has(id));
+
+    if (aBasculer.length === 0) {
+      return {
+        ok: false,
+        message: "Tous les créneaux de cette journée sont réservés : aucun ne peut être fermé.",
+      };
+    }
+
+    const { data, error } = await base()
+      .from("creneaux")
+      .update({ ouvert: ouvrir })
+      .in("id", aBasculer)
+      .select("id");
+
+    if (error) {
+      // À la réouverture seulement : un créneau ajouté depuis peut occuper la
+      // même plage dans le même espace, et la contrainte d'exclusion refuse.
+      if (error.code === VIOLATION_EXCLUSION) {
+        return {
+          ok: false,
+          message:
+            "Réouverture impossible : un créneau ouvert chevauche déjà l'un de ceux-ci. " +
+            "Rouvrez-les un par un pour voir lequel.",
+        };
+      }
+      throw error;
+    }
+
+    const touches = data?.length ?? 0;
+    await journaliser(session, ouvrir ? "creneaux.journee_ouverte" : "creneaux.journee_fermee", null, {
+      jour: cible,
+      creneaux: touches,
+    });
+    rafraichir();
+
+    const phrases = [
+      `${touches} créneau${touches > 1 ? "x" : ""} ${ouvrir ? "rouvert" : "fermé"}${touches > 1 ? "s" : ""}.`,
+    ];
+    if (!ouvrir && occupes.size > 0) {
+      const refs = [...new Set(occupes.values())].join(", ");
+      phrases.push(
+        `${occupes.size} créneau${occupes.size > 1 ? "x" : ""} laissé${occupes.size > 1 ? "s" : ""} ouvert${occupes.size > 1 ? "s" : ""} : ` +
+          `${occupes.size > 1 ? "les réservations" : "la réservation"} ${refs} ${occupes.size > 1 ? "les occupent" : "l'occupe"}.`
+      );
+    }
+    return { ok: true, message: phrases.join(" ") };
+  } catch (e) {
+    return echec(e);
+  }
+}
+
+/**
  * Change l'état d'une demande de team building.
  *
  * IL N'Y AVAIT AUCUN MOYEN DE CLORE UNE DEMANDE. Le seul changement d'état

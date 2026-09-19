@@ -1,3 +1,4 @@
+import { jourLisibleCap } from "@/lib/temps";
 import { montantLisible } from "@/lib/tarification";
 import type { FamilleJournal } from "@/lib/vues";
 
@@ -70,6 +71,16 @@ const ACTIONS: Record<
   "creneau.supprime": { libelle: "Créneau supprimé", famille: "catalogue" },
   "creneau.ouvert": { libelle: "Créneau rouvert", famille: "catalogue" },
   "creneau.ferme": { libelle: "Créneau fermé", famille: "catalogue" },
+  "creneaux.journee_fermee": {
+    libelle: "Journée fermée",
+    famille: "catalogue",
+    precision: (d) => precisionJournee(d),
+  },
+  "creneaux.journee_ouverte": {
+    libelle: "Journée rouverte",
+    famille: "catalogue",
+    precision: (d) => precisionJournee(d),
+  },
   "creneaux.generes": {
     libelle: "Créneaux générés",
     famille: "catalogue",
@@ -99,7 +110,34 @@ const ACTIONS: Record<
     },
   },
   "article.cree": { libelle: "Article de blog créé", famille: "catalogue" },
+  "article.enregistre": { libelle: "Article de blog enregistré", famille: "catalogue" },
+  "article.publie": {
+    libelle: "Article de blog publié",
+    famille: "catalogue",
+    precision: (d) => (d.publie === false ? "remis en brouillon" : null),
+  },
+  "article.supprime": { libelle: "Article de blog supprimé", famille: "catalogue" },
+  "article.image": { libelle: "Image d’article envoyée", famille: "catalogue" },
 };
+
+/**
+ * « Journée fermée » sans dire laquelle ne sert à rien : c'est justement
+ * l'écran qu'on rouvre quand un client affirme que son créneau existait.
+ *
+ * Le jour est stocké au format ISO dans le détail de l'action ; on le rend
+ * lisible, et on ajoute le nombre de créneaux touchés quand il est connu.
+ */
+function precisionJournee(d: Record<string, unknown>): string | null {
+  const brut = typeof d.jour === "string" ? d.jour : null;
+  if (!brut || !/^\d{4}-\d{2}-\d{2}$/.test(brut)) return null;
+  const date = new Date(`${brut}T12:00:00Z`);
+  if (Number.isNaN(date.getTime())) return null;
+
+  const bouts = [jourLisibleCap(date)];
+  const n = Number(d.creneaux);
+  if (Number.isFinite(n) && n > 0) bouts.push(`${n} créneau${n > 1 ? "x" : ""}`);
+  return bouts.join(" · ");
+}
 
 const REMBOURSEMENTS: Record<string, string> = {
   aucun: "sans remboursement",

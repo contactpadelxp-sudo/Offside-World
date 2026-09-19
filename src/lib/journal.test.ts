@@ -161,3 +161,56 @@ describe("les liens mènent quelque part, ou n'existent pas", () => {
     expect(lienJournal("reservation.note", "OW A&B")).toBe("/admin?q=OW%20A%26B");
   });
 });
+
+describe("une journée fermée dit laquelle", () => {
+  it("rend la date lisible plutôt que son format ISO", () => {
+    const d = decrireAction("creneaux.journee_fermee", { jour: "2026-12-25", creneaux: 6 });
+    expect(d.libelle).toBe("Journée fermée");
+    expect(d.famille).toBe("catalogue");
+    // La date sous les yeux de l'exploitant, pas « 2026-12-25 ».
+    expect(d.precision).toContain("décembre");
+    expect(d.precision).toContain("6 créneaux");
+  });
+
+  it("distingue une fermeture d'une réouverture", () => {
+    const f = decrireAction("creneaux.journee_fermee", { jour: "2027-01-01" });
+    const o = decrireAction("creneaux.journee_ouverte", { jour: "2027-01-01" });
+    expect(f.libelle).not.toBe(o.libelle);
+  });
+
+  it("accorde le singulier", () => {
+    const d = decrireAction("creneaux.journee_fermee", { jour: "2026-12-25", creneaux: 1 });
+    expect(d.precision).toContain("1 créneau");
+    expect(d.precision).not.toContain("créneaux");
+  });
+
+  it("n'invente rien quand le détail est absent ou inutilisable", () => {
+    // Une ligne ancienne, ou un détail tronqué : mieux vaut pas de précision
+    // qu'une date fausse. C'est l'écran qu'on rouvre quand un client conteste.
+    expect(decrireAction("creneaux.journee_fermee", null).precision).toBeNull();
+    expect(decrireAction("creneaux.journee_fermee", { jour: "25/12/2026" }).precision).toBeNull();
+    expect(decrireAction("creneaux.journee_fermee", { jour: "2026-13-45" }).precision).toBeNull();
+  });
+
+  it("omet le nombre plutôt que d'afficher « 0 créneau »", () => {
+    const d = decrireAction("creneaux.journee_fermee", { jour: "2026-12-25", creneaux: 0 });
+    expect(d.precision).not.toContain("0");
+  });
+});
+
+describe("les actions du blog ne sortent plus sous leur clé technique", () => {
+  it("traduit les quatre, et les range dans le catalogue", () => {
+    for (const cle of ["article.enregistre", "article.publie", "article.supprime", "article.image"]) {
+      const d = decrireAction(cle, null);
+      expect(d.libelle).not.toBe(cle);
+      // Sans entrée, la famille retombait sur « acces » : une suppression
+      // d'article se rangeait à côté des connexions.
+      expect(d.famille).toBe("catalogue");
+    }
+  });
+
+  it("dit qu'un article a été remis en brouillon", () => {
+    expect(decrireAction("article.publie", { publie: false }).precision).toBe("remis en brouillon");
+    expect(decrireAction("article.publie", { publie: true }).precision).toBeNull();
+  });
+});
