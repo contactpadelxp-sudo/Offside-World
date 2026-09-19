@@ -15,6 +15,7 @@
       "Bash(npx eslint*)",
       "Bash(npx tsc*)",
       "Bash(npx next*)",
+      "Bash(npx vitest*)",
       "Bash(node *)",
 
       "Bash(git status*)",
@@ -70,7 +71,12 @@
       "mcp__Supabase__get_project",
       "mcp__Supabase__get_project_url",
       "mcp__Supabase__get_advisors",
-      "mcp__Supabase__search_docs"
+      "mcp__Supabase__search_docs",
+      "mcp__Supabase__generate_typescript_types",
+
+      "mcp__Vercel__list_projects",
+      "mcp__Vercel__list_teams",
+      "mcp__Vercel__get_project"
     ],
     "deny": [
       "Bash(rm -rf /*)",
