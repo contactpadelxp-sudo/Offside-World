@@ -706,13 +706,21 @@ export async function genererCreneaux(du: string, au: string): Promise<Resultat>
 
     // Les deux fonctions renvoient une ligne unique : créés, déjà présents,
     // refusés pour chevauchement. Voir la migration 0014.
+    //
+    // `sansHoraire` n'existe que sur la fonction Bubble, depuis la migration
+    // 0023. Il distingue deux zéros que rien ne séparait : « la période était
+    // déjà ouverte » et « je n'ai aucun horaire à ouvrir ». C'est exactement la
+    // confusion qui a laissé le Bubble Foot à zéro créneau sans que personne
+    // ne le voie.
     const compte = (r: unknown) => {
       const ligne = Array.isArray(r) ? r[0] : r;
-      const l = (ligne ?? {}) as Record<string, number>;
+      const l = (ligne ?? {}) as Record<string, unknown>;
+      const nombre = (v: unknown) => (typeof v === "number" ? v : 0);
       return {
-        crees: l.crees ?? 0,
-        deja: l.deja_presents ?? 0,
-        refuses: l.refuses ?? 0,
+        crees: nombre(l.crees),
+        deja: nombre(l.deja_presents),
+        refuses: nombre(l.refuses),
+        sansHoraire: l.sans_horaire === true,
       };
     };
     const a = compte(anniversaire.data);
@@ -748,6 +756,17 @@ export async function genererCreneaux(du: string, au: string): Promise<Resultat>
     }
     if (phrases.length === 0) {
       phrases.push("Aucun nouveau créneau : la période était déjà ouverte.");
+    }
+    /*
+      Dit à la fin, et même quand des anniversaires ont été ouverts : c'est
+      précisément le cas où l'on croit avoir tout fait. Le bouton ouvre les
+      deux activités d'un coup ; sans cette phrase, une période « ouverte »
+      peut ne contenir aucun Bubble Foot.
+    */
+    if (b.sansHoraire) {
+      phrases.push(
+        "Aucun créneau Bubble Foot : ses horaires ne sont pas encore renseignés."
+      );
     }
 
     return { ok: true, message: phrases.join(" ") };

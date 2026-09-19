@@ -317,6 +317,35 @@ export type Database = {
         }
         Relationships: []
       }
+      horaires_bubble: {
+        Row: {
+          duree_minutes: number
+          espace_id: string
+          heure: string
+          jour_semaine: number
+        }
+        Insert: {
+          duree_minutes?: number
+          espace_id: string
+          heure: string
+          jour_semaine: number
+        }
+        Update: {
+          duree_minutes?: number
+          espace_id?: string
+          heure?: string
+          jour_semaine?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "horaires_bubble_espace_id_fkey"
+            columns: ["espace_id"]
+            isOneToOne: false
+            referencedRelation: "espaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       journal_admin: {
         Row: {
           acteur: string
@@ -611,6 +640,7 @@ export type Database = {
           crees: number
           deja_presents: number
           refuses: number
+          sans_horaire: boolean
         }[]
       }
       purger_sessions_admin: {
