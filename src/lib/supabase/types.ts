@@ -94,6 +94,7 @@ export type Database = {
       }
       demandes_devis: {
         Row: {
+          anonymisee_le: string | null
           cgv_acceptees_le: string | null
           contact_email: string
           contact_nom: string
@@ -112,6 +113,7 @@ export type Database = {
           message: string | null
           nb_participants: number | null
           newsletter: boolean
+          newsletter_le: string | null
           note_interne: string | null
           periode: string | null
           reference: string
@@ -119,6 +121,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          anonymisee_le?: string | null
           cgv_acceptees_le?: string | null
           contact_email: string
           contact_nom: string
@@ -137,6 +140,7 @@ export type Database = {
           message?: string | null
           nb_participants?: number | null
           newsletter?: boolean
+          newsletter_le?: string | null
           note_interne?: string | null
           periode?: string | null
           reference: string
@@ -144,6 +148,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          anonymisee_le?: string | null
           cgv_acceptees_le?: string | null
           contact_email?: string
           contact_nom?: string
@@ -162,6 +167,7 @@ export type Database = {
           message?: string | null
           nb_participants?: number | null
           newsletter?: boolean
+          newsletter_le?: string | null
           note_interne?: string | null
           periode?: string | null
           reference?: string
@@ -467,6 +473,7 @@ export type Database = {
           nb_enfants: number | null
           nb_personnes: number | null
           newsletter: boolean
+          newsletter_le: string | null
           note_interne: string | null
           options_ids: string[]
           reference: string
@@ -492,6 +499,7 @@ export type Database = {
           nb_enfants?: number | null
           nb_personnes?: number | null
           newsletter?: boolean
+          newsletter_le?: string | null
           note_interne?: string | null
           options_ids?: string[]
           reference: string
@@ -517,6 +525,7 @@ export type Database = {
           nb_enfants?: number | null
           nb_personnes?: number | null
           newsletter?: boolean
+          newsletter_le?: string | null
           note_interne?: string | null
           options_ids?: string[]
           reference?: string
@@ -596,6 +605,10 @@ export type Database = {
       }
     }
     Functions: {
+      anonymiser_devis_anciens: {
+        Args: { delai?: string }
+        Returns: number
+      }
       anonymiser_reservations_anciennes: {
         Args: { delai?: string }
         Returns: number

@@ -215,6 +215,10 @@ export async function reserverAnniversaire(saisie: SaisieAnniversaire): Promise<
       client_email: clientEmail,
       client_telephone: clientTelephone,
       newsletter,
+      // L'ARTICLE 7.1 DU RGPD DEMANDE DE POUVOIR DÉMONTRER LE CONSENTEMENT, et
+      // un booléen ne démontre rien : il ne dit ni quand, ni à quoi. Nul quand
+      // la case n'est pas cochée — « non consenti le 3 mars » n'existe pas.
+      newsletter_le: newsletter ? new Date().toISOString() : null,
       cgv_acceptees_le: new Date().toISOString(),
       allergies,
       remarques,
@@ -355,6 +359,7 @@ export async function reserverBubble(saisie: SaisieBubble): Promise<Resultat> {
       client_email: clientEmail,
       client_telephone: clientTelephone,
       newsletter,
+      newsletter_le: newsletter ? new Date().toISOString() : null,
       cgv_acceptees_le: new Date().toISOString(),
       remarques,
     });
@@ -484,6 +489,7 @@ export async function demanderDevis(saisie: SaisieDevis): Promise<Resultat> {
       max: TEAM_BUILDING_MAX_PARTICIPANTS,
     });
     vrai(saisie?.cgv, "cgv", "Les conditions générales de vente doivent être acceptées.");
+    const newsletterDevis = booleen(saisie?.newsletter);
 
     const periode = saisie?.periode;
     if (periode !== "matin" && periode !== "apres-midi") {
@@ -501,7 +507,8 @@ export async function demanderDevis(saisie: SaisieDevis): Promise<Resultat> {
       client_adresse: clientAdresse,
       client_tva: clientTva,
       message,
-      newsletter: booleen(saisie?.newsletter),
+      newsletter: newsletterDevis,
+      newsletter_le: newsletterDevis ? new Date().toISOString() : null,
       cgv_acceptees_le: new Date().toISOString(),
     });
 

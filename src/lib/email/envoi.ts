@@ -6,9 +6,18 @@ import { EMAIL as EMAIL_CONTACT } from "@/data/entreprise";
  *
  * TRANSACTIONNEL UNIQUEMENT. Ce module ne sert qu'à informer quelqu'un d'une
  * opération qu'il vient de déclencher : sa réservation est enregistrée,
- * confirmée, annulée. Aucune newsletter, aucune offre. Le consentement
- * marketing est bien recueilli et horodaté en base, mais rien ici ne s'en sert
- * — et rien ne doit s'en servir sans un vrai mécanisme de désinscription.
+ * confirmée, annulée. Aucune newsletter, aucune offre.
+ *
+ * Le consentement marketing est recueilli ET HORODATÉ — `newsletter` et
+ * `newsletter_le` sur `reservations` et `demandes_devis`. Cette phrase était
+ * fausse jusqu'au 19 septembre 2026 : seul le booléen existait, et l'article
+ * 7.1 du RGPD demande de pouvoir DÉMONTRER le consentement, ce qu'un booléen
+ * ne fait pas — il ne dit ni quand, ni à quoi.
+ *
+ * Rien ici ne s'en sert, et rien ne doit s'en servir sans un vrai mécanisme de
+ * désinscription. Les lignes antérieures à cette date portent une date nulle :
+ * elles resteront hors de tout envoi, car on ne reconstitue pas après coup la
+ * date d'un consentement.
  *
  * UN ENVOI RATÉ NE DOIT JAMAIS FAIRE ÉCHOUER UNE RÉSERVATION. Toutes les
  * erreurs sont avalées et journalisées : la réservation est déjà en base, elle

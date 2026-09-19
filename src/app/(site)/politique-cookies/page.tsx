@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { MAJ_LEGALE, NOM_COMMERCIAL } from "@/data/entreprise";
+import { EMAIL, MAJ_LEGALE, NOM_COMMERCIAL } from "@/data/entreprise";
 
 export const metadata: Metadata = {
   title: `Politique cookies | ${NOM_COMMERCIAL}`,
@@ -54,10 +54,11 @@ const CATEGORIES: { categorie: string; finalite: string; duree: string; consente
     categorie: "Mesure d'audience",
     finalite:
       "Statistiques de fréquentation : pages consultées, provenance, type d'appareil, " +
-      "étapes franchies dans le parcours de réservation. Outil interne au complexe — " +
-      "aucune donnée n'est transmise à un tiers, aucune adresse IP n'est conservée, et " +
-      "l'identifiant de visite est tiré au hasard puis oublié après 30 minutes, ce qui " +
-      "rend impossible le rapprochement de deux visites.",
+      "pays, langue du navigateur, étapes franchies dans le parcours de réservation. " +
+      "Outil interne au complexe — aucune donnée n'est transmise à un tiers. Le pays est " +
+      "déduit de l'adresse IP par l'hébergeur, mais l'adresse elle-même n'est jamais " +
+      "conservée, et l'identifiant de visite est tiré au hasard puis oublié après " +
+      "30 minutes, ce qui rend impossible le rapprochement de deux visites.",
     duree: "Identifiant de visite : 30 minutes. Statistiques : 13 mois.",
     consentement: "Requis",
   },
@@ -155,7 +156,7 @@ export default function PolitiqueCookies() {
         <h2 className="text-xl font-bold">4. Contact</h2>
         <p className="text-muted-foreground">
           Pour toute question concernant notre utilisation des cookies :{" "}
-          <a href="mailto:info@offsidefootindoor.be" className="underline text-primary">info@offsidefootindoor.be</a>
+          <a href={`mailto:${EMAIL}`} className="underline text-primary">{EMAIL}</a>
         </p>
       </section>
     </div>

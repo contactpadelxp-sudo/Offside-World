@@ -67,7 +67,7 @@ export default function Confidentialite() {
         <Liste items={[
           "nom ;", "prénom ;", "adresse e-mail ;", "numéro de téléphone ;",
           "éventuellement adresse de facturation ;",
-          "informations communiquées dans un formulaire de contact.",
+          "informations communiquées dans le formulaire de demande de devis (nom de l'entreprise, numéro de TVA, adresse de facturation, message)."
         ]} />
 
         <SousTitre>Données liées aux réservations</SousTitre>
@@ -151,8 +151,8 @@ export default function Confidentialite() {
 
         <SousTitre>Répondre aux demandes</SousTitre>
         <P>
-          Lorsque vous nous contactez par e-mail, téléphone ou formulaire, nous utilisons les
-          informations communiquées pour répondre à votre demande. Selon la nature de celle-ci, le
+          Lorsque vous nous contactez par e-mail, par téléphone ou via le formulaire de demande
+          de devis, nous utilisons les informations communiquées pour répondre à votre demande. Selon la nature de celle-ci, le
           traitement repose sur les démarches précontractuelles demandées par vous ou sur notre
           intérêt légitime à assurer le suivi des demandes reçues.
         </P>
@@ -219,7 +219,9 @@ export default function Confidentialite() {
         <SousTitre>Mesure d&apos;audience — avec votre consentement</SousTitre>
         <P>
           Si vous l&apos;acceptez, nous comptons les pages consultées, la provenance, le type
-          d&apos;appareil et les étapes franchies dans le parcours de réservation. L&apos;outil est
+          d&apos;appareil, le pays, la langue de votre navigateur et les étapes franchies dans le
+          parcours de réservation. Le pays est déduit de votre adresse IP par notre hébergeur ;
+          l&apos;adresse elle-même n&apos;est pas conservée. L&apos;outil est
           le nôtre : aucune donnée n&apos;est transmise à un tiers, aucune adresse IP n&apos;est
           conservée, et l&apos;identifiant de visite est tiré au hasard puis oublié après trente
           minutes, ce qui rend impossible le rapprochement de deux visites. Les statistiques sont
@@ -278,9 +280,9 @@ export default function Confidentialite() {
           applicables. À titre général :
         </P>
         <Liste items={[
-          "Données de réservation et de relation client : pendant la durée nécessaire à la gestion de la réservation et ensuite pendant la période raisonnablement nécessaire à la gestion des réclamations ou litiges éventuels.",
+          "Données de réservation et de relation client : 13 mois, après quoi le nom, l'e-mail, le téléphone, le prénom et l'âge de l'enfant, les allergies signalées et les remarques sont effacés automatiquement. Le montant, la date et la prestation subsistent, pour la comptabilité.",
           "Documents comptables et factures : pendant la durée de conservation légalement applicable, qui peut atteindre 10 ans en Belgique.",
-          "Demandes de contact sans réservation : le temps nécessaire pour répondre à la demande, puis pendant une durée limitée permettant d'en assurer le suivi.",
+          "Demandes de devis : 13 mois, après quoi les coordonnées du contact et le contenu du message sont effacés automatiquement. Seuls le nom de l'entreprise, le montant et la date subsistent, pour la comptabilité.",
           "Données utilisées pour le marketing avec consentement : jusqu'au retrait du consentement ou jusqu'à ce que les données ne soient plus nécessaires à cette finalité.",
           "Images et vidéos Replay : pendant la durée nécessaire à la fourniture de la fonctionnalité ou du souvenir annoncé. Offside veille à ne pas les conserver indéfiniment sans justification.",
           "Statistiques de fréquentation : 13 mois, après quoi elles sont effacées automatiquement. L'identifiant de visite, lui, est oublié après 30 minutes.",
