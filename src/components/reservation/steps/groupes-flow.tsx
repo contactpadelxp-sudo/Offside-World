@@ -4,9 +4,9 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { BandeDates } from "@/components/reservation/bande-dates";
 import { ChampNombre } from "@/components/reservation/champ-nombre";
 import { Checkbox } from "@/components/ui/checkbox";
 import { FadeIn, StaggerContainer, StaggerItem, Tilt3D } from "@/components/motion";
@@ -124,8 +124,63 @@ export function GroupesFlow({
   const photoBubble = usePhoto("bubble-portrait");
   const photoEntree = usePhoto("entree-double-ballon");
 
-  /** Les créneaux Bubble arrivent triés par date : on limite l'affichage. */
-  const creneauxAffiches = useMemo(() => creneaux.slice(0, 12), [creneaux]);
+  /*
+    LES DOUZE PREMIERS CRÉNEAUX NE SONT PAS DOUZE PREMIERS JOURS.
+
+    Cette ligne était `creneaux.slice(0, 12)` : une liste plate des douze
+    premiers créneaux, sans aucun moyen de choisir une date. Tant que le Bubble
+    Foot n'avait aucun horaire, personne ne pouvait s'en apercevoir — l'écran
+    affichait son message « aucun créneau ouvert ».
+
+    Le jour où les horaires arrivent, ça casse. Brahim a confirmé le
+    20 septembre 2026 que le Bubble suit les heures du foot : 14 h–1 h les
+    lundi, mardi et jeudi, 20 h–1 h les mercredi, samedi et dimanche. Simulé
+    sans rien écrire : 2506 créneaux d'une heure sur six mois, dont 22 rien que
+    sur le premier lundi. Les douze premiers tombent donc tous le MÊME JOUR, et
+    les 2494 autres deviennent inatteignables.
+
+    On reprend donc la mécanique du tunnel anniversaire : une bande de dates,
+    puis les heures du jour choisi. C'est aussi ce qui rend les deux parcours
+    cohérents — ils choisissaient la même chose de deux façons différentes.
+  */
+  const jours = useMemo(() => {
+    const vus = new Map<string, string>();
+    for (const c of creneaux) if (!vus.has(c.jour)) vus.set(c.jour, c.jourLabel);
+    return [...vus].map(([jour, label]) => ({ jour, label }));
+  }, [creneaux]);
+
+  const [jourBubble, setJourBubble] = useState("");
+  const jourCourantBubble = jourBubble || jours[0]?.jour || "";
+  /*
+    UNE HEURE, UN BOUTON — MÊME QUAND DEUX FUN ZONES LA PROPOSENT.
+
+    Le même créneau existe dans chaque zone active. Listés tels quels, les
+    boutons apparaissaient en double : « 14:00 – 15:00 » puis « 14:00 – 15:00 »,
+    vingt boutons pour dix heures, sans rien qui les distingue à l'œil.
+
+    Le tunnel ANNIVERSAIRE, lui, groupe par zone et c'est justifié : le client y
+    réserve un espace décoré pour son groupe, il veut savoir lequel et combien
+    il accueille. Pour le Bubble Foot, les zones sont interchangeables — même
+    capacité, même matériel — et lui demander de choisir entre « Fun zone 1 » et
+    « Fun zone 2 » à 14 h est une question sans réponse utile.
+
+    On regroupe donc par heure de début. Une heure reste proposée tant qu'une
+    seule zone est libre, et le clic retient la première libre. Autre gain :
+    zone 1 prise et zone 2 libre affichait auparavant la même heure barrée ET
+    disponible, côte à côte.
+  */
+  const heuresDuJour = useMemo(() => {
+    const parHeure = new Map<string, { debut: string; fin: string; libres: CreneauVue[]; total: number }>();
+    for (const c of creneaux) {
+      if (c.jour !== jourCourantBubble) continue;
+      const cle = c.debut;
+      const entree = parHeure.get(cle) ?? { debut: c.debut, fin: c.fin, libres: [], total: 0 };
+      entree.total += 1;
+      if (c.libre) entree.libres.push(c);
+      parHeure.set(cle, entree);
+    }
+    return [...parHeure.values()].sort((a, b) => a.debut.localeCompare(b.debut));
+  }, [creneaux, jourCourantBubble]);
 
   /**
    * Les demi-journées arrivent à plat, deux par date. Les afficher telles
@@ -351,7 +406,7 @@ export function GroupesFlow({
         <FadeIn className="mt-6">
           <h2 ref={titreRef} tabIndex={-1} className="text-xl font-bold font-[family-name:var(--font-heading)]">Choisissez votre créneau</h2>
 
-          {creneauxAffiches.length === 0 ? (
+          {jours.length === 0 ? (
             <p className="mt-4 rounded-xl border border-field/20 bg-field/5 p-4 text-sm text-muted-foreground">
               {/*
                 UN « CONTACTEZ-NOUS » QUI NE DONNE AUCUN MOYEN DE LE FAIRE EST
@@ -374,33 +429,66 @@ export function GroupesFlow({
               : nous trouverons un horaire.
             </p>
           ) : (
-            <div className="mt-4 grid gap-3 sm:grid-cols-2">
-              {/*
-                `aria-pressed` : le créneau retenu n'était marqué que par une
-                bordure verte. Les demi-journées du team building l'exposaient
-                déjà, pas ces cartes-ci — on ne savait pas qu'un clic avait
-                enregistré un choix, ni lequel.
-              */}
-              {creneauxAffiches.map((c) => (
-                <button key={c.id} onClick={() => c.libre && setBubbleCreneau(c)} disabled={!c.libre} aria-pressed={bubbleCreneau?.id === c.id} className="text-left">
-                  <Card className={`border-2 transition-all duration-300 ${
-                    !c.libre ? "opacity-50 cursor-not-allowed"
-                    : bubbleCreneau?.id === c.id ? "border-field ring-2 ring-field/20"
-                    : "hover:border-field/40 card-hover"
-                  }`}>
-                    <CardContent className="p-4 flex items-center justify-between">
-                      <div>
-                        <p className="font-bold">{c.jourLabel}</p>
-                        <p className="text-sm text-muted-foreground">{c.debut} – {c.fin}</p>
-                      </div>
-                      <Badge variant={c.libre ? "secondary" : "destructive"}>
-                        {c.libre ? "Disponible" : "Complet"}
-                      </Badge>
-                    </CardContent>
-                  </Card>
-                </button>
-              ))}
-            </div>
+            <>
+              <div className="mt-4">
+                <Label>Date</Label>
+                <div className="mt-2">
+                  <BandeDates
+                    jours={jours}
+                    choisi={jourCourantBubble}
+                    onChoisir={(jour: string) => { setJourBubble(jour); setBubbleCreneau(null); }}
+                  />
+                </div>
+                {/*
+                  Les puces sont abrégées pour tenir toutes la même largeur ;
+                  la date complète est réécrite ici. Une abréviation ne doit pas
+                  être le seul endroit où figure ce qu'on s'apprête à réserver.
+                */}
+                <p aria-live="polite" className="mt-1 text-sm font-medium text-foreground">
+                  {jours.find((j) => j.jour === jourCourantBubble)?.label ?? ""}
+                </p>
+              </div>
+
+              <div className="mt-6">
+                <Label>Heure</Label>
+                {/*
+                  `aria-pressed` : le créneau retenu n'était marqué que par une
+                  bordure verte. Les demi-journées du team building l'exposaient
+                  déjà, pas ces boutons-ci — on ne savait pas qu'un clic avait
+                  enregistré un choix, ni lequel.
+
+                  La date ne figure plus sur chaque bouton : elle est choisie
+                  juste au-dessus et écrite en toutes lettres. La répéter douze
+                  fois volait la place de l'heure, qui est la seule chose qui
+                  distingue ces boutons entre eux.
+                */}
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {heuresDuJour.map((h) => {
+                    const libre = h.libres.length > 0;
+                    const choisi = libre && h.libres.some((c) => c.id === bubbleCreneau?.id);
+                    return (
+                      <button
+                        key={h.debut}
+                        type="button"
+                        disabled={!libre}
+                        onClick={() => setBubbleCreneau(h.libres[0])}
+                        aria-pressed={choisi}
+                        className={`rounded-xl border-2 px-3 py-2 text-sm font-medium transition-all duration-300 ${
+                          !libre
+                            ? "cursor-not-allowed border-destructive/30 bg-destructive/10 text-destructive/70 line-through"
+                            : choisi
+                              ? "border-field bg-field text-[#0a0a0b] shadow-lg shadow-field/20"
+                              : "border-muted hover:border-field/40"
+                        }`}
+                      >
+                        {h.debut} – {h.fin}
+                        {!libre && <span className="ml-1 text-xs">(pris)</span>}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            </>
           )}
 
           {bubbleCreneau && (
