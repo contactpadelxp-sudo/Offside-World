@@ -25,6 +25,39 @@ export type * from "@/lib/vues";
  * Tout ce qui sort d'ici contient des données personnelles — dont des données
  * de mineurs et de santé. L'accès est fermé par la session vérifiée dans le
  * gabarit du back-office, et les pages ne sont ni mises en cache ni indexables.
+ *
+ * UNE LISTE VIDE NE VEUT PLUS DIRE « TOUT VA BIEN ».
+ *
+ * Six lectures attrapaient leur erreur, l'écrivaient dans la console du
+ * serveur — que personne ne lit — et rendaient `[]`. L'écran affichait alors
+ * « Aucune réservation », exactement comme un samedi matin sans client. Un
+ * délai dépassé sur la vue `reservations_detaillees`, un droit retiré, une
+ * coupure passagère : Brahim n'avait aucun moyen de faire la différence entre
+ * une journée calme et une base qui ne répond plus.
+ *
+ * L'écran qu'il fallait existait déjà et ne s'affichait jamais :
+ * `(protege)/error.tsx` dit « Rien n'a été modifié. Réessayez : si l'erreur
+ * persiste, la base de données est probablement injoignable », et propose de
+ * recommencer sans perdre la session. Il ne manquait que de laisser l'erreur
+ * monter jusqu'à lui.
+ *
+ * `if (error) throw error;` PUIS `if (!data) return [];` — dans cet ordre, et
+ * jamais les deux dans la même condition. Une erreur est une panne, une
+ * absence de données est une réponse : les confondre est précisément ce qui
+ * produisait le faux calme. C'est la conversion déjà appliquée à
+ * `db/creneaux.ts` et `db/referentiel.ts`, terminée ici.
+ *
+ * Les compteurs du gabarit (`compterAConfirmer`, `compterDevisANouveau`) et
+ * `horizonParActivite` ne suivent PAS cette règle, et c'est délibéré. La
+ * documentation de Next est explicite : `error.js` « does not wrap the
+ * layout.js or template.js above it in the same segment »
+ * (`03-file-conventions/error.md`). Une erreur levée dans le gabarit du
+ * back-office échapperait donc à son propre écran d'erreur et remonterait
+ * jusqu'à la racine — plus de barre de navigation, plus de session visible,
+ * tout le back-office par terre pour une pastille. Ces trois-là dégradent
+ * donc : la pastille se tait, la bannière dit qu'elle n'a pas pu vérifier.
+ *
+ * La liste, elle, échoue bruyamment — et c'est elle qui fait foi.
  */
 
 
@@ -101,10 +134,8 @@ export async function lireReservations(
       .order("debut", { ascending: false })
       .limit(50);
     const { data, error } = await requete;
-    if (error || !data) {
-      console.error("Recherche impossible :", error?.message);
-      return [];
-    }
+    if (error) throw error;
+    if (!data) return [];
     return construire(data, await lireOptions(false), await lirePaiements(data), maintenant);
   }
 
@@ -140,10 +171,8 @@ export async function lireReservations(
   // d'une ancienne réservation continue de nommer ce qui a été commandé.
   const [{ data, error }, options] = await Promise.all([requete, lireOptions(false)]);
 
-  if (error || !data) {
-    console.error("Lecture des réservations impossible :", error?.message);
-    return [];
-  }
+  if (error) throw error;
+  if (!data) return [];
 
   return construire(data, options, await lirePaiements(data), maintenant);
 }
@@ -285,10 +314,8 @@ export async function lireDevis(inclureTraites = false): Promise<DevisAdmin[]> {
     .order("created_at", { ascending: false })
     .limit(100);
 
-  if (error || !data) {
-    console.error("Lecture des demandes de devis impossible :", error?.message);
-    return [];
-  }
+  if (error) throw error;
+  if (!data) return [];
 
   return data.map((d) => ({
     id: d.id,
@@ -350,11 +377,8 @@ export async function lireCreneauxDuJour(jour: string): Promise<CreneauAdmin[]> 
     .lte("debut", finJour.toISOString())
     .order("debut");
 
-  if (error || !data) {
-    console.error("Lecture des créneaux impossible :", error?.message);
-    return [];
-  }
-  if (data.length === 0) return [];
+  if (error) throw error;
+  if (!data || data.length === 0) return [];
 
   const { data: prises } = await base()
     .from("reservations")
@@ -393,10 +417,8 @@ export async function lireJournal(limite = 150): Promise<EntreeJournal[]> {
     .order("created_at", { ascending: false })
     .limit(limite);
 
-  if (error || !data) {
-    console.error("Lecture du journal impossible :", error?.message);
-    return [];
-  }
+  if (error) throw error;
+  if (!data) return [];
 
   return data.map((e) => {
     const quand = new Date(e.created_at);
@@ -607,9 +629,7 @@ export async function lireEspaces(): Promise<{ id: string; nom: string }[]> {
     .select("id, nom")
     .eq("actif", true)
     .order("nom");
-  if (error || !data) {
-    console.error("Lecture des espaces impossible :", error?.message);
-    return [];
-  }
+  if (error) throw error;
+  if (!data) return [];
   return data;
 }
