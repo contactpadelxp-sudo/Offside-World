@@ -467,15 +467,6 @@ le dépôt.
 
 Vérifiés un par un, pas seulement signalés.
 
-- [ ] **Aucune intégration continue.** `.github/` n'existe pas. Les 188 tests
-      et ESLint ne s'exécutent que si quelqu'un y pense : un push sur `main`
-      déclenche un build Vercel qui ne lance ni l'un ni l'autre. Les 9 erreurs
-      ESLint actuelles sont parties en production sans que rien ne les arrête.
-- [ ] **Les 9 erreurs ESLint.** Toutes de la famille `react-hooks` (setState
-      synchrone dans un effet, pureté). Elles sont antérieures à cette session
-      et inchangées depuis. À trancher : les corriger, ou les désactiver ligne
-      à ligne avec une justification écrite. Les laisser sans les nommer est le
-      seul choix qui n'apprend rien.
 - [ ] **Le build trace tout le projet.** `next build` avertit que l'accès
       disque de `lib/logo.ts` force le traçage de l'ensemble du dépôt, donc la
       copie des 7,2 Mo de `public/` dans chaque fonction serverless. Attention
@@ -490,11 +481,20 @@ Vérifiés un par un, pas seulement signalés.
       sur `offside-world.vercel.app`. Il vit donc sur un autre compte — à
       identifier avant de toucher à `SITE_URL`, aux clés Stripe ou à l'URL du
       webhook.
-- [ ] **`MISE-EN-LIGNE.md` annonce « les quatre » événements Stripe puis en
-      liste six.** Les deux en trop sont `charge.refunded` et
-      `charge.dispute.created` — précisément ceux sans lesquels un
-      remboursement fait à la main dans Stripe ne revient jamais dans la base.
-      Qui compte jusqu'à quatre les perd.
+- [x] ~~**`MISE-EN-LIGNE.md` annonce « les quatre » événements Stripe puis en
+      liste six.**~~ **CORRIGÉ le 19 septembre.** Le code en traite bien six.
+- [x] ~~**Aucune intégration continue.**~~ **AJOUTÉE le 20 septembre**
+      (`.github/workflows/verifications.yml`) : types, tests, linter et build à
+      chaque push et chaque pull request, les quatre étapes tournant même après
+      un échec pour qu'un seul passage donne toute la liste. Aucun secret n'y
+      est nécessaire — vérifié, `next build` sort avec le code 0 sans aucune
+      variable d'environnement.
+- [x] ~~**Les 9 erreurs ESLint.**~~ **TRAITÉES le 20 septembre.** Six étaient
+      des défauts réels — cinq `Math.random()` pendant le rendu d'une page
+      prérendue, donc une désynchronisation d'hydratation sur 40 éléments, et
+      une écriture dans une référence pendant le rendu. Les trois autres sont
+      des faux positifs, désormais justifiés par écrit là où ils se trouvent.
+      `npx eslint .` ne rend plus rien.
 
 # Conformité — état au 9 septembre 2026
 
@@ -566,11 +566,14 @@ du consentement). **13 tables**, RLS activé et forcé sur chacune, sans aucune
 politique : rien n'est accessible par les clés publiques, tout passe par le
 serveur. Cinq tâches planifiées actives.
 
-> **Le registre de migrations de Supabase ne liste pas tout le dépôt.** Les
-> fichiers `0001`, `0002` et quelques autres ont été appliqués hors du registre
-> et n'y figurent pas. Les objets existent bien — rien n'est cassé — mais une
-> restauration repartirait d'un schéma incomplet. À réconcilier avant la mise
-> en ligne.
+> **Le registre de Supabase ne liste pas tout le dépôt, et c'est normal.**
+> Noté ici le 19 septembre comme un défaut à réconcilier : c'était un faux
+> diagnostic, corrigé le lendemain. Il n'y a pas de `supabase/config.toml`, le
+> CLI n'est pas en place, et les fichiers portent une numérotation séquentielle
+> et non l'horodatage qu'il exige. Le registre n'est donc qu'un sous-produit de
+> l'outil employé chaque jour-là ; le dossier `supabase/migrations/` est l'état
+> de référence, et il est complet. Vérifié objet par objet le 20 septembre.
+> Voir `supabase/migrations/README.md`.
 
 **Le site est branché sur la base.** Ce qui en vient désormais :
 - les formules et leurs tarifs (page d'accueil et funnel) ;
