@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { BandeDates } from "@/components/reservation/bande-dates";
 import { ChampNombre } from "@/components/reservation/champ-nombre";
 import { Checkbox } from "@/components/ui/checkbox";
 import { FadeIn } from "@/components/motion";
@@ -32,9 +33,6 @@ const STEPS: { key: Step; label: string }[] = [
   { key: "creneau", label: "Créneau" },
   { key: "paiement", label: "Récapitulatif" },
 ];
-
-/** Dates affichées avant le bouton « voir plus ». */
-const DATES_VISIBLES = 12;
 
 export function AnniversaireFlow({
   paiementActif,
@@ -73,7 +71,6 @@ export function AnniversaireFlow({
   // explicite plutôt que sur un âge présélectionné au hasard.
   const [childAge, setChildAge] = useState(0);
   const [selectedOptions, setSelectedOptions] = useState<string[]>([]);
-  const [toutesLesDates, setToutesLesDates] = useState(false);
   const [parentName, setParentName] = useState("");
   const [parentEmail, setParentEmail] = useState("");
   const [emailTouched, setEmailTouched] = useState(false);
@@ -601,29 +598,26 @@ export function AnniversaireFlow({
             <>
               <div className="mt-6">
                 <Label>Date</Label>
-                <div className="mt-2 flex gap-2 flex-wrap">
-                  {(toutesLesDates ? jours : jours.slice(0, DATES_VISIBLES)).map((j) => (
-                    <button
-                      key={j.jour}
-                      onClick={() => { setSelectedJour(j.jour); setSelectedCreneau(null); }}
-                      // La date active n'était signalée que par la couleur de sa bordure.
-                      aria-pressed={jourCourant === j.jour}
-                      className={`rounded-xl border-2 px-4 py-2.5 text-sm font-medium transition-all duration-300 ${
-                        jourCourant === j.jour ? "border-field bg-field/10 text-field" : "border-muted hover:border-field/40"
-                      }`}
-                    >
-                      {j.label}
-                    </button>
-                  ))}
-                  {!toutesLesDates && jours.length > DATES_VISIBLES && (
-                    <button
-                      onClick={() => setToutesLesDates(true)}
-                      className="rounded-xl border-2 border-dashed border-muted px-4 py-2.5 text-sm font-medium text-muted-foreground hover:border-field/40 hover:text-foreground transition-all duration-300"
-                    >
-                      + {jours.length - DATES_VISIBLES} autres dates
-                    </button>
-                  )}
+                {/*
+                  LA DATE RETENUE EST ÉCRITE EN TOUTES LETTRES SOUS LA BANDE.
+
+                  Les puces sont abrégées — « Dim / 20 / sept » — pour tenir
+                  toutes la même largeur. C'est ce qui rend la bande lisible,
+                  mais une abréviation ne doit pas être le seul endroit où
+                  figure ce qu'on s'apprête à réserver. La ligne ci-dessous
+                  redit la date complète, et elle est la seule à changer quand
+                  on fait défiler puis qu'on choisit.
+                */}
+                <div className="mt-2">
+                  <BandeDates
+                    jours={jours}
+                    choisi={jourCourant}
+                    onChoisir={(jour) => { setSelectedJour(jour); setSelectedCreneau(null); }}
+                  />
                 </div>
+                <p aria-live="polite" className="mt-1 text-sm font-medium text-foreground">
+                  {jours.find((j) => j.jour === jourCourant)?.label ?? ""}
+                </p>
               </div>
 
               <div className="mt-8 space-y-4">

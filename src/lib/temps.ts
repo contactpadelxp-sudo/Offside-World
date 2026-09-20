@@ -76,6 +76,51 @@ export function jourCompact(instant: Date): string {
   return capitaliser(JOUR_COMPACT.format(instant));
 }
 
+/**
+ * Les trois morceaux d'une puce de date : « Dim. », « 20 », « sept. ».
+ *
+ * POURQUOI DÉCOUPÉ PLUTÔT QU'EN UNE CHAÎNE. Une bande de dates défilante a
+ * besoin de puces de LARGEUR IDENTIQUE, sinon elle se lit comme une suite
+ * d'accidents : « Mer. 2 sept. » et « Dimanche 20 septembre » n'occupent pas la
+ * même place, et une rangée de tailles inégales est exactement ce qui donnait
+ * l'impression que les dates étaient posées au hasard. Sur trois lignes de
+ * largeur fixe, le jour du mois devient l'ancre visuelle et le reste se range
+ * autour.
+ *
+ * L'ENTRÉE EST UN JOUR ISO, PAS UN INSTANT, et ce n'est pas indifférent. Les
+ * créneaux portent déjà `jour` — « 2026-09-20 » — calculé côté serveur en heure
+ * de Bruxelles. Repartir de l'instant ici referait ce calcul dans le navigateur
+ * du visiteur, avec son fuseau à lui : un client à Londres verrait la veille
+ * sur la puce et le bon jour dans le récapitulatif.
+ *
+ * Midi UTC pour reconstruire la date : Bruxelles est à UTC+1 ou +2, donc 13 h
+ * ou 14 h locales — le même jour calendaire dans les deux cas, changement
+ * d'heure compris. Minuit aurait basculé au jour précédent.
+ */
+const PUCE_SEMAINE = new Intl.DateTimeFormat("fr-BE", { timeZone: FUSEAU, weekday: "short" });
+const PUCE_JOUR = new Intl.DateTimeFormat("fr-BE", { timeZone: FUSEAU, day: "numeric" });
+const PUCE_MOIS = new Intl.DateTimeFormat("fr-BE", { timeZone: FUSEAU, month: "short" });
+/** « septembre 2026 » — séparateur de mois dans la bande. */
+const MOIS_LONG = new Intl.DateTimeFormat("fr-BE", { timeZone: FUSEAU, month: "long", year: "numeric" });
+
+function instantDepuisJourISO(jour: string): Date {
+  return new Date(`${jour}T12:00:00Z`);
+}
+
+export function partiesDuJour(jour: string): { semaine: string; numero: string; mois: string } {
+  const d = instantDepuisJourISO(jour);
+  return {
+    semaine: capitaliser(PUCE_SEMAINE.format(d)).replace(/\.$/, ""),
+    numero: PUCE_JOUR.format(d),
+    mois: PUCE_MOIS.format(d).replace(/\.$/, ""),
+  };
+}
+
+/** « Septembre 2026 » — pour séparer les mois dans une bande de dates. */
+export function moisDuJour(jour: string): string {
+  return capitaliser(MOIS_LONG.format(instantDepuisJourISO(jour)));
+}
+
 export function heure(instant: Date): string {
   return HEURE.format(instant);
 }

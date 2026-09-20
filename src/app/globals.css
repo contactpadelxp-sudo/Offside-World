@@ -539,6 +539,28 @@
    l'élément à la première image de l'animation, ce qui, pour le bandeau
    défilant, le laisserait décalé.
 */
+/*
+  Bande défilante : on masque la barre, jamais le défilement.
+
+  Une bande de dates qui défile à l'horizontale porte, sous Windows et sur
+  certains réglages de macOS, une barre permanente de 15 px. Sur des puces de
+  56 px de haut, elle ajoute un quart de hauteur pour une information que
+  l'accrochage et la puce coupée au bord donnent déjà.
+
+  `scrollbar-width: none` et le pseudo-élément WebKit masquent l'indicateur
+  SANS toucher au défilement : la molette, le doigt, les flèches et la
+  tabulation continuent tous de fonctionner. C'est la différence avec
+  `overflow: hidden`, qui couperait l'accès au contenu — ce que le critère
+  2.1.1 du WCAG interdit.
+*/
+.scrollbar-mince {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.scrollbar-mince::-webkit-scrollbar {
+  display: none;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .aurora-bg::before,
   .aurora-bg::after,

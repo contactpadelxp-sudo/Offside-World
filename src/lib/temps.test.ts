@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { capitaliser, heure, heuresAvant, jourCompact, jourISO, jourLisible, jourLisibleCap } from "./temps";
+import { capitaliser, heure, heuresAvant, jourCompact, jourISO, jourLisible, jourLisibleCap, moisDuJour, partiesDuJour } from "./temps";
 
 /**
  * Le fuseau horaire, et pourquoi ces tests existent.
@@ -186,5 +186,45 @@ describe("délai avant l'activité — le nombre dont dépend chaque rembourseme
     */
     expect(() => heuresAvant("pas une date")).toThrow(/illisible/);
     expect(() => heuresAvant("")).toThrow(/illisible/);
+  });
+});
+
+describe("les morceaux d'une puce de date", () => {
+  it("découpe un jour ISO en semaine, numéro et mois", () => {
+    expect(partiesDuJour("2026-09-20")).toEqual({ semaine: "Dim", numero: "20", mois: "sept" });
+    expect(partiesDuJour("2027-03-19")).toEqual({ semaine: "Ven", numero: "19", mois: "mars" });
+  });
+
+  it("ne dépend pas du fuseau du navigateur", () => {
+    // Le jour ISO vient du serveur, en heure de Bruxelles. Le reconstruire à
+    // midi UTC garantit le même jour calendaire quel que soit le décalage —
+    // minuit aurait basculé à la veille pour un visiteur à l'ouest.
+    const tz = process.env.TZ;
+    try {
+      process.env.TZ = "Pacific/Auckland";
+      expect(partiesDuJour("2026-09-20").numero).toBe("20");
+      process.env.TZ = "America/Los_Angeles";
+      expect(partiesDuJour("2026-09-20").numero).toBe("20");
+    } finally {
+      process.env.TZ = tz;
+    }
+  });
+
+  it("traverse le changement d'heure sans changer de jour", () => {
+    // Dernier dimanche d'octobre 2026 : retour à l'heure d'hiver.
+    expect(partiesDuJour("2026-10-25").numero).toBe("25");
+    // Dernier dimanche de mars 2027 : passage à l'heure d'été.
+    expect(partiesDuJour("2027-03-28").numero).toBe("28");
+  });
+
+  it("retire le point des abréviations, que la puce met sur trois lignes", () => {
+    const p = partiesDuJour("2026-09-23");
+    expect(p.semaine).not.toContain(".");
+    expect(p.mois).not.toContain(".");
+  });
+
+  it("nomme le mois et l'année pour le séparateur", () => {
+    expect(moisDuJour("2026-09-20")).toBe("Septembre 2026");
+    expect(moisDuJour("2027-01-03")).toBe("Janvier 2027");
   });
 });
