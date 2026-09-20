@@ -47,9 +47,12 @@ export function ActivitesHero({ activites }: { activites: ActiviteVue[] }) {
     /*
       L'ÉCART AU-DESSUS DES CARTES N'EST PAS LE MÊME PARTOUT, ET C'EST VOULU.
 
-      Sur téléphone, `mt-6` plutôt que `mt-8` : la quatrième carte ajoute une
-      ligne, et chaque pixel repris ici est un pixel qui la garde au-dessus de
-      la ligne de flottaison.
+      Sur téléphone, `mt-4` plutôt que `mt-8` : chaque pixel repris ici est un
+      pixel qui garde la seconde rangée de vignettes au-dessus de la ligne de
+      flottaison. Il valait `mt-6` quand les activités étaient quatre lignes
+      empilées ; les huit pixels de plus sont exactement ce qui manquait pour
+      que l'iPhone SE — le plus petit écran courant — montre les quatre sans
+      défiler.
 
       Sur grand écran, l'inverse. La rangée de chiffres qui suivait les cartes a
       été retirée ; sans compensation, tout le contenu du hero remontait et
@@ -58,74 +61,145 @@ export function ActivitesHero({ activites }: { activites: ActiviteVue[] }) {
       elles redescendent vers le centre optique du hero au lieu de se tasser
       sous les boutons.
     */
-    <div className="mt-6 sm:mt-8 lg:mt-12">
+    <div className="mt-4 sm:mt-8 lg:mt-12">
       {/*
-        ── Téléphone : quatre lignes, les quatre au-dessus de la ligne ──
+        ── Téléphone : une grille 2 × 2, photo comprise ──
 
-        Le rembourrage est à `py-2` et non `py-2.5`, et le `min-h-13` ne mord
-        pas : la hauteur réelle d'une ligne vient de son contenu, pas du
-        minimum. C'est la mesure au navigateur qui l'a montré — baisser le
-        `min-h` de 56 à 52 n'a rien changé du tout, les lignes faisaient 58 px
-        dans les deux cas. Avec `py-2` elles en font 54.
+        CE QUI A CHANGÉ, ET POURQUOI CE N'EST PAS QU'UNE QUESTION DE GOÛT.
 
-        La cible tactile reste très au-dessus du minimum de 24 px exigé par le
-        critère 2.5.8 du WCAG 2.2.
+        C'étaient quatre lignes de texte avec une icône. Aucune photo : le
+        visiteur arrivait sur un complexe de loisirs sans en voir un seul mètre
+        carré, alors que les quatre images existent et sont déjà servies à
+        partir de 640 px.
+
+        Et les quatre lignes ne tenaient pas. Mesuré avant de toucher à quoi
+        que ce soit : 234 px de liste finissant à 703 px sur un iPhone SE
+        (667 px visibles) — la carte « Bounce Park » dépassait de 36 px, donc il
+        FALLAIT défiler pour la découvrir. Sur un Galaxy Z Fold fermé (280 px),
+        trois des quatre tombaient hors de l'écran.
+
+        Une grille 2 × 2 fait 196 px là où l'empilement en faisait 234, et montre
+        une photo par activité.
+
+        Le 16/9 n'est pas un choix esthétique : en 16/10 la grille fait 217 px,
+        et l'iPhone SE dépassait encore de 20 px — soit très exactement les deux
+        fois dix pixels que le passage en 16/9 lui rend. On gagne de la place EN AJOUTANT de
+        l'image — c'est le contraire de l'arbitrage habituel, et c'est
+        simplement parce que deux colonnes utilisent une largeur qui était
+        perdue.
+
+        LE TITRE EST POSÉ SUR LA PHOTO, DONC IL LUI FAUT UN FOND. Le dégradé
+        n'est pas décoratif : sans lui, un titre blanc sur une photo claire
+        descend sous le rapport de 4,5:1 qu'exige le critère 1.4.3 du WCAG, et
+        il y descend de façon imprévisible puisque Brahim peut remplacer les
+        photos. Le dégradé rend le contraste indépendant de l'image.
+
+        IL EST DOSÉ, PAS MAXIMAL. Le premier essai montait à `via-black/45` au
+        milieu de la vignette : le titre passait alors à 17,5:1 — presque quatre
+        fois le seuil — mais la photo du Bubble Foot, déjà sombre, devenait une
+        tache noire. Or le voile n'a à protéger que le BAS, où se trouve le
+        texte ; le milieu et le haut ne portent rien. Le calcul donne la marge
+        réelle : pour tenir 4,5:1 sous du blanc, le fond peut monter jusqu'à
+        rgb(119), soit un voile de 53 % seulement. À 85 % en bas on garde une
+        marge confortable, et les 20 % du milieu laissent enfin voir l'image.
       */}
-      <ul className="flex flex-col gap-1.5 text-left sm:hidden">
+      <div className="grid grid-cols-2 gap-2 text-left sm:hidden">
         {activites.map((a) => (
-          <li key={a.id}>
-            <Link
-              href={a.href}
-              className={`flex min-h-13 items-center gap-3 rounded-2xl border bg-white/[0.05] px-3 py-2 backdrop-blur-sm transition-colors duration-300 ${a.border}`}
+          <Link
+            key={a.id}
+            href={a.href}
+            className={`group relative block aspect-[16/9] overflow-hidden rounded-2xl border ${a.border}`}
+          >
+            {a.img ? (
+              <Photo
+                src={a.img}
+                /*
+                  `alt` VIDE : le titre est écrit en toutes lettres dans le même
+                  lien. Le répéter ferait annoncer « Anniversaire Anniversaire »
+                  dans la liste des liens d'un lecteur d'écran (technique H67).
+                */
+                alt=""
+                /*
+                  Deux colonnes dans un conteneur à `px-4` : chaque vignette fait
+                  un peu moins de la moitié de la largeur. `50vw` est le plus
+                  proche des tailles standard, et n'existe que sous 640 px — la
+                  grille disparaît au-delà.
+                */
+                sizes="50vw"
+                className={`object-cover ${a.imgPosition ?? "object-center"}`}
+              />
+            ) : (
+              <div className="absolute inset-0 flex items-center justify-center bg-card">
+                <div aria-hidden className="absolute inset-0 dot-grid fade-mask-radial opacity-70" />
+                <div
+                  aria-hidden
+                  className={`absolute left-1/2 top-1/2 size-20 -translate-x-1/2 -translate-y-1/2 rounded-full blur-2xl ${a.glow}`}
+                />
+                <a.icone className="relative size-7 text-foreground/25" />
+              </div>
+            )}
+
+            <div
+              aria-hidden
+              className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/90 from-[8%] via-black/70 via-[38%] to-transparent to-[78%]"
+            />
+
+            <span
+              className={`absolute left-2 top-2 inline-flex max-w-[calc(100%-1rem)] items-center truncate rounded-full bg-black/75 px-2 py-0.5 text-[11px] font-semibold ring-1 ring-white/15 backdrop-blur-md ${a.accentText}`}
             >
-              <span
-                className={`inline-flex shrink-0 items-center justify-center rounded-xl p-2 ${a.iconBg}`}
-              >
-                <a.icone className="size-5" />
+              {a.tag}
+            </span>
+
+            <span className="absolute inset-x-2 bottom-2 flex items-end gap-1">
+              {/*
+                `line-clamp-2` et non `truncate` : à 280 px de large, une
+                vignette fait 120 px et « Bubble Foot & Team Building » perdrait
+                la moitié de son nom. C'est précisément l'activité que le hero
+                ne nomme nulle part ailleurs — la tronquer, c'est la faire
+                disparaître.
+              */}
+              <span className="min-w-0 flex-1 text-[13px] font-semibold leading-tight text-white line-clamp-2">
+                {a.titre}
               </span>
-              <span className="min-w-0 flex-1">
-                {/*
-                  DEUX LIGNES PLUTÔT QU'UNE COUPURE. Le titre était `truncate` :
-                  à 320 px, « Bubble Foot & Team Building » perdait 19 px et
-                  s'affichait « Bubble Foot & Team Buil… ». C'est précisément
-                  l'activité que le hero ne nomme nulle part ailleurs — la
-                  tronquer, c'est la faire disparaître. `line-clamp-2` laisse le
-                  titre se replier sur une deuxième ligne quand il le faut, et
-                  garde la garantie que rien ne s'emballe au-delà.
-                */}
-                <span className="block line-clamp-2 text-[15px] font-semibold leading-tight">
-                  {a.titre}
-                </span>
-                <span className={`block text-xs font-medium ${a.accentText}`}>{a.tag}</span>
-              </span>
-              <FlecheDroite className="size-4 shrink-0 text-muted-foreground" />
-            </Link>
-          </li>
+              <FlecheDroite className="mb-px size-3.5 shrink-0 text-white/80" />
+            </span>
+          </Link>
         ))}
 
         {/*
-          LE TEASER N'EST PAS UN LIEN, sur mobile comme ailleurs. Un <li> qui
-          contient un <div> n'entre pas dans l'ordre de tabulation et n'est pas
-          annoncé comme cliquable : un lecteur d'écran dira « Bounce Park,
-          bientôt », et s'arrêtera là. C'est exactement ce qu'on veut d'une
-          annonce.
+          LE TEASER N'EST PAS UN LIEN, sur mobile comme ailleurs. Un <div> ne
+          rentre pas dans l'ordre de tabulation et n'est pas annoncé comme
+          cliquable : un lecteur d'écran dira « Bounce Park, bientôt » et
+          s'arrêtera là. C'est exactement ce qu'on veut d'une annonce — il n'y a
+          rien au bout, ni page, ni créneau, ni tarif.
+
+          Le trait discontinu, l'absence de flèche et la pastille « Bientôt »
+          disent la même chose trois fois, parce qu'un seul signal se rate.
         */}
-        <li>
-          <div className="flex min-h-13 items-center gap-3 rounded-2xl border border-dashed border-white/25 bg-white/[0.03] px-3 py-2 backdrop-blur-sm">
-            <span className="inline-flex shrink-0 items-center justify-center rounded-xl bg-white/10 p-2 text-foreground/70">
-              <Ballon className="size-5" />
-            </span>
-            <span className="min-w-0 flex-1">
-              <span className="block line-clamp-2 text-[15px] font-semibold leading-tight text-foreground/85">
-                {BOUNCE_PARK.titre}
-              </span>
-              <span className="block text-xs font-medium text-muted-foreground">
-                {BOUNCE_PARK.tag}
-              </span>
-            </span>
-          </div>
-        </li>
-      </ul>
+        <div className="relative block aspect-[16/9] overflow-hidden rounded-2xl border border-dashed border-white/25">
+          {planParc ? (
+            <Photo src={planParc} alt="" sizes="50vw" className="object-cover object-center opacity-70" />
+          ) : (
+            <div className="absolute inset-0 flex items-center justify-center bg-card">
+              <div aria-hidden className="absolute inset-0 dot-grid fade-mask-radial opacity-70" />
+              <Ballon className="relative size-7 text-foreground/25" />
+            </div>
+          )}
+
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/90 from-[8%] via-black/70 via-[38%] to-transparent to-[78%]"
+          />
+
+          <span className="absolute left-2 top-2 inline-flex items-center rounded-full bg-black/75 px-2 py-0.5 text-[11px] font-semibold text-foreground/85 ring-1 ring-white/15 backdrop-blur-md">
+            {BOUNCE_PARK.tag}
+          </span>
+
+          <span className="absolute inset-x-2 bottom-2 block text-[13px] font-semibold leading-tight text-white/90 line-clamp-2">
+            {BOUNCE_PARK.titre}
+          </span>
+        </div>
+      </div>
 
       {/* ── À partir de 640 px : quatre cartes ── */}
       {/*

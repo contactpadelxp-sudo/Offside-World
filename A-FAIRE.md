@@ -496,6 +496,22 @@ Vérifiés un par un, pas seulement signalés.
       des faux positifs, désormais justifiés par écrit là où ils se trouvent.
       `npx eslint .` ne rend plus rien.
 
+## Deux limites mesurées sur le hero mobile — 20 septembre 2026
+
+- [ ] **Le Galaxy Z Fold fermé (280 px) demande encore 44 px de défilement**
+      pour voir la quatrième activité. C'était 159 px avant la grille 2 × 2.
+      Mesuré : 26 de ces 44 px viennent du bouton « Réserver maintenant », dont
+      le libellé passe à la ligne à cette largeur et qui fait alors 82 px au
+      lieu de 56. Le reste vient du titre, qui s'y déplie sur quatre lignes.
+      Corriger les deux ne suffirait pas ; il faudrait retoucher le hero
+      entier, pour un écran de couverture de téléphone pliable.
+- [ ] **À 200 % de taille de texte, « Bubble Foot & Team Building » est
+      tronqué** par `line-clamp-2` dans sa vignette. Rien ne déborde et il n'y a
+      aucun défilement horizontal — le critère 1.4.4 tient sur ce point —, mais
+      la fin du nom n'est plus visible à l'œil. Elle reste lue en entier par un
+      lecteur d'écran, le texte étant complet dans le document. C'était déjà le
+      cas avec les lignes empilées, sur la même chaîne.
+
 # Conformité — état au 9 septembre 2026
 
 L'audit juridique du tunnel de paiement est purgé. Ce qui a été corrigé, et
