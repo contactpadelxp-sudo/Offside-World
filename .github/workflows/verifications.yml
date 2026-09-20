@@ -1,0 +1,62 @@
+# Ce qui doit passer avant qu'un commit parte en production.
+#
+# POURQUOI CE FICHIER EXISTE. Rien ne lançait les tests. Un push sur `main`
+# déclenche un déploiement Vercel qui compile, et c'est tout : ni les 188
+# tests, ni le linter, ni la vérification des types au-delà de ce que le build
+# exige. Les neuf erreurs ESLint qui viennent d'être traitées étaient parties
+# en production sans que rien ne les arrête, et une régression sur le calcul
+# des remboursements n'aurait rencontré aucun obstacle.
+#
+# LES QUATRE ÉTAPES TOURNENT TOUTES, MÊME APRÈS UN ÉCHEC (`if: always()`).
+# Sans cela, une erreur de type masque l'état des tests : on corrige, on
+# repousse, et on découvre la suivante. Un seul passage doit donner toute la
+# liste.
+#
+# AUCUN SECRET N'EST NÉCESSAIRE, et c'est voulu. `next build` réussit sans
+# variables d'environnement — les pages retombent sur leurs données de repli.
+# Donner à la CI la clé de service de Supabase ferait courir un risque bien
+# supérieur à ce qu'elle apporterait, dans un dépôt public.
+
+name: Vérifications
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# Un push qui suit de près le précédent annule la vérification en cours :
+# c'est le dernier état du code qui nous intéresse, pas l'avant-dernier.
+concurrency:
+  group: verifications-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verifier:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      # `npm ci` et non `npm install` : il installe EXACTEMENT ce que décrit
+      # `package-lock.json`. Une CI qui résout ses versions elle-même ne teste
+      # pas le code qu'on déploie.
+      - run: npm ci
+
+      - name: Types
+        run: npx tsc --noEmit
+
+      - name: Tests
+        if: always()
+        run: npm test
+
+      - name: Linter
+        if: always()
+        run: npm run lint
+
+      - name: Build
+        if: always()
+        run: npm run build
