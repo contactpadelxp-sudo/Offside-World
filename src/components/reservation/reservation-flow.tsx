@@ -101,6 +101,28 @@ export function ReservationFlow({ donnees }: { donnees: DonneesReservation }) {
    */
   useEffect(() => {
     const a = searchParams.get("activite");
+    /*
+      `set-state-in-effect` DÉSACTIVÉE ICI, APRÈS AVOIR PESÉ L'AUTRE OPTION.
+
+      La règle a raison sur le fond : `activity` POURRAIT être dérivé du rendu
+      plutôt que gardé en état. La documentation de la version installée
+      confirme même que la voie est ouverte — « `pushState` and `replaceState`
+      calls integrate into the Next.js Router, allowing you to sync with
+      `usePathname` and `useSearchParams` »
+      (`01-getting-started/04-linking-and-navigating.md`). L'état et cet effet
+      disparaîtraient tous les deux.
+
+      On ne le fait pas, et c'est un arbitrage, pas un oubli. `activity` a deux
+      sources — l'URL et le clic — et la seconde porte le drapeau de focus, dont
+      le comportement vient d'être corrigé au prix d'un défaut subtil (le
+      drapeau restait armé quand l'état ne changeait pas). Refondre le cœur du
+      tunnel de réservation pour supprimer un rendu supplémentaire n'est pas un
+      échange raisonnable : le coût réel est un rendu d'un petit arbre à chaque
+      changement d'URL, le risque porte sur le parcours qui encaisse l'argent.
+
+      À reprendre le jour où ce fichier sera touché pour une autre raison.
+    */
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setActivity(estActivite(a) ? a : null);
   }, [searchParams]);
 

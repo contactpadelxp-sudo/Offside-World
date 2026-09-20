@@ -66,6 +66,18 @@ export function ConfirmationContent() {
    * d'afficher le détail d'une réservation.
    */
   useEffect(() => {
+    /*
+      `set-state-in-effect` DÉSACTIVÉE ICI, EN CONNAISSANCE DE CAUSE.
+
+      `sessionStorage` n'existe pas côté serveur, et cette page est prérendue :
+      le récapitulatif ne PEUT pas être calculé pendant le rendu. La règle vise
+      les états dérivables des props ; celui-ci vient du navigateur.
+
+      C'est aussi la raison d'être du drapeau `recapRelu` juste en dessous — il
+      distingue « pas encore lu » de « introuvable », deux absences que la page
+      ne doit pas confondre.
+    */
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setRecap(lireRecap(ref));
     setRecapRelu(true);
   }, [ref]);

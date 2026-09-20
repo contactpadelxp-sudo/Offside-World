@@ -188,15 +188,41 @@ export function WaveDivider({ fill = "#ffffff", flip = false, className }: { fil
 }
 
 /* ═══ CONFETTI ═══ */
+
+/**
+ * Pseudo-hasard DÉTERMINISTE, et ce n'est pas une préférence de style.
+ *
+ * Les cinq caractéristiques de chaque confetti venaient de `Math.random()`,
+ * appelé PENDANT LE RENDU. Or `/confirmation` est prérendue : le serveur tire
+ * 200 nombres au moment du build, le navigateur en tire 200 autres à
+ * l'hydratation, et React se retrouve devant un arbre qui ne correspond pas à
+ * celui qu'on lui avait annoncé — sur 40 éléments d'un coup. Il le signale et
+ * refait le sous-arbre.
+ *
+ * Le confetti n'a aucun besoin de VRAI hasard : il a besoin de ne pas
+ * s'aligner. Une fonction pure de l'index donne exactement cela, et les deux
+ * rendus tombent alors d'accord.
+ *
+ * Suite de Weyl : on avance d'un pas irrationnel et on ne garde que la partie
+ * décimale. Deux pas différents — le nombre d'or et √2 − 1 — donnent cinq
+ * séries qui ne se répètent pas et ne se suivent pas entre elles, ce qu'un
+ * simple `(i * 37) % 100` ne fait pas.
+ */
+function varie(i: number, serie: number): number {
+  const x = (i + 1) * 0.618_033_988_7 + serie * 0.414_213_562_4;
+  return x - Math.floor(x);
+}
+
 export function Confetti() {
   const colors = ["#f4b23f", "#f9a03f", "#ffd48a", "#e07c10", "#ffffff", "#ffc266"];
   const pieces = Array.from({ length: 40 }, (_, i) => ({
     id: i,
     color: colors[i % colors.length],
-    left: `${Math.random() * 100}%`,
-    delay: `${Math.random() * 2}s`,
-    duration: `${2 + Math.random() * 2}s`,
-    size: `${6 + Math.random() * 8}px`,
+    left: `${varie(i, 0) * 100}%`,
+    delay: `${varie(i, 1) * 2}s`,
+    duration: `${2 + varie(i, 2) * 2}s`,
+    size: `${6 + varie(i, 3) * 8}px`,
+    rond: varie(i, 4) > 0.5,
   }));
 
   return (
@@ -215,7 +241,7 @@ export function Confetti() {
             height: p.size,
             animationDelay: p.delay,
             animationDuration: p.duration,
-            borderRadius: Math.random() > 0.5 ? "50%" : "2px",
+            borderRadius: p.rond ? "50%" : "2px",
           }}
         />
       ))}

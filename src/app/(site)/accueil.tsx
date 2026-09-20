@@ -50,6 +50,20 @@ export function Accueil({ formules }: { formules: FormuleVue[] }) {
     const v = getComputedStyle(document.documentElement)
       .getPropertyValue("--color-field")
       .trim();
+    /*
+      `set-state-in-effect` DÉSACTIVÉE ICI, EN CONNAISSANCE DE CAUSE.
+
+      La règle vise les états qu'on pourrait calculer pendant le rendu. Celui-ci
+      ne le peut pas : `getComputedStyle` lit le style RÉSOLU par le navigateur,
+      qui n'existe pas côté serveur. C'est le cas que la règle autorise
+      explicitement — se synchroniser avec un système extérieur à React, ici le
+      moteur de style — mais qu'elle ne sait pas reconnaître.
+
+      L'effet ne s'exécute qu'une fois, et la valeur littérale sert de repli
+      avant l'hydratation : un seul rendu supplémentaire, sur une valeur qui ne
+      changera plus.
+    */
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (v) setJauneCharte(v);
   }, []);
 

@@ -112,19 +112,40 @@ export default function MagicRings({
   clickBurst = false,
 }: MagicRingsProps) {
   const mountRef = useRef<HTMLDivElement>(null);
-  const propsRef = useRef<MagicRingsProps | null>(null);
   const mouseRef = useRef([0, 0]);
   const smoothMouseRef = useRef([0, 0]);
   const hoverAmountRef = useRef(0);
   const isHoveredRef = useRef(false);
   const burstRef = useRef(0);
 
-  propsRef.current = {
+  /*
+    POURQUOI CETTE BOÎTE, ET POURQUOI ELLE NE SE REMPLIT PLUS PENDANT LE RENDU.
+
+    La boucle d'animation tourne dans `requestAnimationFrame`, hors de React,
+    et ne doit surtout pas être recréée à chaque changement de prop : reconstruire
+    la scène WebGL à chaque image ferait clignoter le fond. Elle lit donc les
+    props dans une référence, que le rendu tenait à jour.
+
+    Écrire dans une référence PENDANT le rendu est une violation des règles de
+    React, et pas une formalité : en rendu concurrent, un rendu peut être
+    abandonné. La boîte aurait alors gardé les valeurs d'un écran qui n'a
+    jamais existé, et la boucle les aurait peintes.
+
+    L'affectation passe donc dans un effet sans tableau de dépendances — il
+    s'exécute après CHAQUE rendu réellement validé, ce qui est exactement la
+    garantie qu'on cherchait. La valeur initiale est passée à `useRef`, qui ne
+    la lit qu'au premier rendu : la boucle ne voit jamais `null`.
+  */
+  const props: MagicRingsProps = {
     color, colorTwo, speed, ringCount, attenuation, lineThickness,
     baseRadius, radiusStep, scaleRate, opacity, noiseAmount,
     rotation, ringGap, fadeIn, fadeOut, followMouse, mouseInfluence,
     hoverScale, parallax, clickBurst,
   };
+  const propsRef = useRef<MagicRingsProps>(props);
+  useEffect(() => {
+    propsRef.current = props;
+  });
 
   useEffect(() => {
     const mount = mountRef.current;
@@ -213,7 +234,7 @@ export default function MagicRings({
     let frameId = 0;
     const animate = (t: number) => {
       frameId = requestAnimationFrame(animate);
-      const p = propsRef.current!;
+      const p = propsRef.current;
 
       smoothMouseRef.current[0] += (mouseRef.current[0] - smoothMouseRef.current[0]) * 0.08;
       smoothMouseRef.current[1] += (mouseRef.current[1] - smoothMouseRef.current[1]) * 0.08;
