@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { useReducedMotion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import Link from "next/link";
 import Lenis from "lenis";
 import { FlecheDroite, Gateau, Groupe, Trophee } from "@/components/icons";
@@ -326,8 +326,34 @@ export default function ActivitesStack({ children }: { children?: React.ReactNod
           }`}
         >
           {cards.map((card, i) => (
-            <div
+            /*
+              L'ANIMATION D'ENTRÉE N'EXISTE QUE HORS EMPILEMENT.
+
+              Au-dessus de 768 px, les cartes sont déjà animées — c'est toute la
+              mécanique d'empilement épinglé, qui pose leur `transform` image par
+              image. Y superposer une seconde animation reviendrait à écrire
+              deux fois la même propriété : `motion` poserait son `transform`
+              d'entrée, la boucle de défilement l'écraserait à la frame
+              suivante, et on ne verrait ni l'une ni l'autre correctement.
+
+              Sous ce seuil, en revanche, il ne se passait RIEN : les trois
+              cartes étaient simplement là, posées. L'empilement a été retiré
+              du mobile pour de bonnes raisons — il coûtait 2152 px de hauteur
+              et cassait le défilement au doigt —, mais rien n'avait pris sa
+              place. Une entrée en fondu décalée coûte, elle, zéro pixel de
+              hauteur et ne touche pas au défilement.
+
+              `once: true` : elle se joue une fois. Une animation qui rejoue à
+              chaque passage devient un clignotement quand on remonte la page.
+              Et `useReducedMotion` est déjà respecté globalement par le
+              `MotionConfig` de la coquille du site.
+            */
+            <motion.div
               key={card.href}
+              initial={empile ? false : { opacity: 0, y: 28 }}
+              whileInView={empile ? undefined : { opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: "-80px" }}
+              transition={{ duration: 0.55, delay: i * 0.12, ease: [0.25, 0.46, 0.45, 0.94] }}
               ref={(el) => { cardRefs.current[i] = el; }}
               className={`scroll-stack-card ${empile && i > 0 ? "inset-x-4 lg:inset-x-8" : ""} ${card.itemClassName}`}
               style={{
@@ -344,7 +370,18 @@ export default function ActivitesStack({ children }: { children?: React.ReactNod
                 transform: empile && i > 0 ? "translate3d(0, 120vh, 0)" : undefined,
               }}
             >
-              <div className="flex h-full items-stretch gap-4 md:gap-8">
+              {/*
+                `flex-col-reverse` SUR MOBILE, ET CE N'EST PAS UN CAPRICE
+                D'ORDRE.
+
+                Le titre reste PREMIER dans le document — un lecteur d'écran
+                annonce donc « Anniversaires » avant de rencontrer la photo,
+                qui ne porte aucune information qu'il ne vienne de lire. C'est
+                l'inverse visuellement : la photo passe au-dessus, là où l'œil
+                arrive. Mettre la photo première dans le document aurait donné
+                le même dessin et une lecture à l'envers.
+              */}
+              <div className="flex h-full flex-col-reverse gap-4 md:flex-row md:items-stretch md:gap-8">
                 <div className="flex h-full flex-1 flex-col justify-between gap-5 min-w-0">
                   <div className="flex items-start gap-3.5 md:gap-6">
                     <div className={`flex h-11 w-11 md:h-16 md:w-16 shrink-0 items-center justify-center rounded-xl md:rounded-2xl ${card.badgeClass}`}>
@@ -366,19 +403,43 @@ export default function ActivitesStack({ children }: { children?: React.ReactNod
                     Réserver <FlecheDroite className="size-5" />
                   </Link>
                 </div>
-                {/* Cadre photo (même taille pour les 3 cartes) */}
-                <div className={`relative hidden md:block h-full w-64 lg:w-80 shrink-0 overflow-hidden rounded-2xl border-2 border-dashed ${card.frameClass}`}>
+                {/*
+                  LE CADRE PHOTO ÉTAIT `hidden md:block`.
+
+                  Sous 768 px, la section « Nos activités » ne montrait donc
+                  aucune image : trois cartes de texte pour présenter un
+                  complexe de loisirs, sur l'écran par lequel arrive la majorité
+                  des visiteurs. Les trois photos existaient pourtant et
+                  s'affichaient déjà sur ordinateur.
+
+                  En paysage sur mobile plutôt qu'en colonne : une bande 16/9
+                  sur la largeur de la carte coûte 179 px, là où une colonne de
+                  la même surface volerait la moitié de la largeur au texte et
+                  ferait passer les descriptions à six lignes.
+
+                  `max-h-56` parce qu'un rapport fixe suit la largeur sans
+                  limite. Téléphone à l'horizontale — 667 px de large pour 375
+                  de haut —, la bande atteignait 335 px : une carte de 560 px
+                  pour trois lignes de texte, et la section passait à 1901 px.
+                  Le plafond ne mord jamais en portrait, où la bande fait 175 px.
+                */}
+                <div className={`relative aspect-[16/9] max-h-56 w-full shrink-0 overflow-hidden rounded-2xl border-2 border-dashed md:aspect-auto md:max-h-none md:h-full md:w-64 lg:w-80 ${card.frameClass}`}>
                   {card.img && (
                     <Photo
                       src={card.img}
                       alt={card.title}
-                      sizes="(max-width: 1024px) 40vw, 320px"
+                      /*
+                        Pleine largeur de carte sous 768 px, colonne fixe au
+                        delà. L'ancien `40vw` décrivait la seule disposition qui
+                        existait alors.
+                      */
+                      sizes="(max-width: 767px) 92vw, (max-width: 1024px) 40vw, 320px"
                       className={`object-cover ${card.imgPosition ?? "object-center"}`}
                     />
                   )}
                 </div>
               </div>
-            </div>
+            </motion.div>
           ))}
         </div>
       </div>
