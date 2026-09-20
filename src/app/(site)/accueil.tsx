@@ -9,11 +9,10 @@ import {
 } from "@/components/motion";
 import { Photo } from "@/components/photo";
 import { ActivitesHero } from "@/components/activites/activites-hero";
+import { FormulesAnniversaire } from "@/components/formules-anniversaire";
 import { useActivites } from "@/components/activites/use-activites";
 import { hrefActivite } from "@/data/activites";
-import { euros } from "@/lib/tarification";
-import { Ballon, Batiment, Bouclier, Carte, Coche, Document, Enfant, Epingle, FlecheDroite, Gateau, Groupe, Horloge } from "@/components/icons";
-import { GATEAU_NOTE } from "@/data/formules";
+import { Ballon, Batiment, Bouclier, Carte, Document, Enfant, Epingle, FlecheDroite, Gateau, Groupe, Horloge } from "@/components/icons";
 import type { FormuleVue } from "@/lib/vues";
 import { RESUME_ANNULATION, DELAI_RESERVATION_HEURES } from "@/data/reglement";
 import {
@@ -296,68 +295,7 @@ export function Accueil({ formules }: { formules: FormuleVue[] }) {
             </div>
           </FadeInView>
 
-          <StaggerContainer className="mt-10 grid gap-6 md:grid-cols-2" staggerDelay={0.12}>
-            {formules.map((f) => (
-              <StaggerItem key={f.id} className="h-full">
-                <Tilt3D intensity={6} className="h-full">
-                  <div className="h-full flex flex-col rounded-3xl border border-white/10 bg-white/[0.04] p-7 hover:border-field/40 transition-colors duration-500">
-                    <div className="flex items-baseline justify-between gap-3">
-                      <h3 className="font-[family-name:var(--font-heading)] text-2xl font-bold">{f.nom}</h3>
-                      {/*
-                        Espace insécable avant le « € » : c'est la typographie
-                        française, et c'est surtout ce qu'affichent déjà le hero
-                        (« Dès 180 € ») et tout le tunnel de réservation, qui
-                        passent par `montantLisible()`. Ici le prix était collé
-                        au signe — deux écritures du même montant sur la même
-                        page.
-                      */}
-                      <p className="font-[family-name:var(--font-heading)] text-3xl font-bold text-field whitespace-nowrap">
-                        {euros(f.prixBase)}
-                      </p>
-                    </div>
-                    <p className="mt-1 text-sm font-medium text-kick">{f.accroche}</p>
-                    <p className="mt-3 text-muted-foreground leading-relaxed">{f.description}</p>
-
-                    <p className="mt-4 text-sm text-muted-foreground">
-                      Jusqu&apos;à <strong className="text-foreground">{f.enfantsInclus} enfants</strong>
-                      {" · "}+{euros(f.prixEnfantSup)} par enfant supplémentaire
-                    </p>
-
-                    <ul className="mt-5 space-y-2 flex-1">
-                      {f.inclus.map((inc) => (
-                        <li key={inc} className="flex items-start gap-2 text-sm text-muted-foreground">
-                          <Coche className="size-4 text-field mt-0.5 shrink-0" />
-                          {inc}
-                        </li>
-                      ))}
-                    </ul>
-
-                    <p className="mt-5 text-xs text-muted-foreground flex items-start gap-1.5">
-                      <Gateau className="size-3.5 mt-0.5 shrink-0 text-kick" /> {GATEAU_NOTE}
-                    </p>
-
-                    {/*
-                      Sur téléphone, le bouton portait « Réserver la formule
-                      Kick-Off » sur deux lignes alignées à gauche, la flèche
-                      restant seule au milieu de la hauteur, très à droite : le
-                      libellé et son signe ne se lisaient plus ensemble. Il
-                      occupe désormais toute la largeur de la carte, centré, et
-                      sa hauteur s'adapte au repli du texte (`min-h` et non `h`,
-                      sinon la deuxième ligne déborde du fond).
-                    */}
-                    <MagneticButton className="mt-6 block sm:inline-block">
-                      <Link
-                        href={hrefActivite("anniversaire")}
-                        className="btn-glass-field flex w-full items-center justify-center gap-2 text-center text-[#0a0a0b] px-5 py-3 min-h-12 rounded-2xl font-semibold text-sm sm:w-auto sm:px-6 sm:text-base"
-                      >
-                        Réserver la formule {f.nom} <FlecheDroite className="size-4 shrink-0" />
-                      </Link>
-                    </MagneticButton>
-                  </div>
-                </Tilt3D>
-              </StaggerItem>
-            ))}
-          </StaggerContainer>
+          <FormulesAnniversaire formules={formules} />
 
           {/*
             Une seule mention pour toute la grille, plutôt que « TVAC » collé à
