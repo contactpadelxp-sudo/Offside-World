@@ -276,7 +276,13 @@ Stripe → Developers → Webhooks → **Add endpoint**.
   webhook, en même temps que `SITE_URL`. Les deux vont ensemble : `SITE_URL`
   décide où le client est renvoyé après avoir payé.
 
-- **Événements à écouter** — les quatre, pas moins :
+- **Événements à écouter** — **les six**, pas moins :
+
+  > Ce tableau en a toujours compté six, et la phrase au-dessus en annonçait
+  > quatre. Qui s'arrête à quatre perd exactement les deux derniers —
+  > `charge.refunded` et `charge.dispute.created` —, c'est-à-dire l'argent
+  > rendu qui ne revient jamais dans la base, et la contestation bancaire que
+  > personne ne voit passer alors qu'elle a une date limite.
 
   | Événement | Pourquoi il est indispensable |
   |---|---|

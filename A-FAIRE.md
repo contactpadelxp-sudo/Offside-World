@@ -57,7 +57,15 @@ même (migration 0020) :
 | Samedi | 10:00 · 12:30 · 15:00 · 17:30 |
 | Dimanche | 10:00 · 12:30 · 15:00 · 17:30 |
 
-941 créneaux générés sur six mois, dans les trois Fun zones.
+943 créneaux générés sur six mois, jusqu'au 19 mars 2027.
+
+**Deux Fun zones seulement sont en vente depuis le 19 septembre 2026.** Brahim
+a écrit « il y en **aura** 3 » — au futur, en réponse à une question qui parlait
+de deux espaces. La migration 0020 avait pourtant ouvert la troisième, et 314
+créneaux y étaient à vendre : le site pouvait accepter trois groupes pour deux
+salles. `espaces.actif = false` sur `espace-3` les retire de la vente sans rien
+détruire (la vue `creneaux_disponibles` filtre dessus). Un `update` suffit à
+les rendre le jour où il confirme. 615 créneaux restent vendables.
 
 > **Piège de lecture, qui m'a eu.** Interroger la table sans préciser le fuseau
 > renvoie de l'UTC, et une même plage y apparaît DEUX FOIS — un créneau de
@@ -71,8 +79,9 @@ même (migration 0020) :
       ELLE-MÊME.** « 13h30–15h30 · 16h00–18h00 » ne laisse aucun doute : les
       30 minutes séparent la FIN d'un créneau du DÉBUT du suivant, et ne
       décalent pas deux groupes simultanés. C'était déjà ce qui était en place.
-- [x] ~~Nombre d'anniversaires en parallèle.~~ **Trois désormais**, soit les
-      trois Fun zones.
+- [ ] **Nombre d'anniversaires en parallèle : deux ou trois ?** Brahim a
+      répondu « il y en aura 3 » — au futur. Deux zones sont actives en
+      attendant sa confirmation. Voir ci-dessus.
 - [x] ~~Délai minimum avant le début.~~ **Une heure**, « même en dernière minute
       vu qu'il n'y a pas de coach » (Brahim). `DELAI_RESERVATION_HEURES = 1`.
 - [x] ~~**Horizon de réservation**~~ **SIX MOIS**, répondu le 17 septembre 2026.
@@ -86,18 +95,46 @@ même (migration 0020) :
       les heures de la **location de terrain**, qui se réserve sur Sport-Finder,
       pas ici.
 
-      La génération garde donc ses horaires provisoires — vendredi, samedi et
-      dimanche à 18h, 19h et 20h — et **l'anomalie connue subsiste** : les 18h
-      et 19h du week-end chevauchent l'anniversaire de 17h30–19h30 dans le même
-      espace, donc la contrainte d'exclusion les refuse en silence. Un client
-      qui cherche un Bubble Foot le samedi soir ne voit presque rien.
+      **La génération n'invente plus rien depuis la migration 0023.** Ses
+      horaires étaient écrits en dur dans `generer_creneaux_bubble` — vendredi,
+      samedi et dimanche à 18h, 19h et 20h — et le bouton « Ouvrir une période »
+      appelle cette fonction en même temps que celle des anniversaires. Un clic
+      mettait donc en vente, à 23 €/personne, des créneaux que personne n'avait
+      confirmés.
 
-      Inventer une plage reviendrait à vendre un créneau qui n'existe pas.
+      Les horaires vivent maintenant dans la table `horaires_bubble`, qui est
+      **vide** : sans ligne, la fonction ne crée rien et renvoie
+      `sans_horaire = true`, que le back-office affiche en toutes lettres. Trois
+      `insert` suffiront le jour où Brahim répond, sans toucher au code.
+      L'espace n'est plus figé sur `espace-1` non plus — la question « une zone
+      réservée au Bubble ou toutes » lui est posée en même temps que les heures.
+
+      Il y a donc **zéro créneau Bubble Foot en base**, et la bannière rouge du
+      back-office le dit depuis qu'elle compte par activité.
 
 - [ ] **LES HEURES DES DEMI-JOURNÉES DE TEAM BUILDING.** Les JOURS sont connus
       — lundi, mardi et jeudi matin et après-midi, vendredi matin seulement, et
       c'est appliqué — mais pas les heures. 9h–13h et 14h–18h restent des
       hypothèses, et elles partent sur chaque devis.
+
+## Jours de fermeture — jamais posés à Brahim
+
+Relevé le 19 septembre 2026 en interrogeant la base : **le 25 décembre 2026 et
+le 1er janvier 2027 comptent chacun six créneaux ouverts, le 26 décembre douze.**
+Un client peut réserver un anniversaire le jour de Noël.
+
+Ces journées n'ont PAS été fermées d'office. Savoir si le complexe ouvre le
+25 décembre est une décision d'exploitation, pas une déduction : il n'y a aucun
+élément, seulement une habitude belge. C'est la même règle qui a fait refuser
+d'inventer des horaires de Bubble Foot. La Fun zone 3, elle, a été fermée parce
+qu'il y avait une preuve — « il y en AURA 3 ».
+
+Le geste existe désormais : un bouton « Fermer les N créneaux du jour » sur la
+page Créneaux, qui épargne les créneaux réservés et nomme la réservation qui
+bloque. Avant lui, fermer un vendredi férié demandait six clics.
+
+- [ ] **Quels jours le complexe est-il fermé ?** Jours fériés, congés annuels,
+      fermeture technique. Au minimum : 25 décembre, 1er janvier, 26 décembre.
 
 ## Informations d'entreprise
 
@@ -164,9 +201,16 @@ facturation serait hors de proportion et mal placé.
 
       À trancher le moment venu : tout retirer, ou n'en garder qu'un état
       « configuré / pas configuré » sans mode d'emploi.
-- [ ] **Vidéo souvenir.** Elle est vendue dans les deux formules. La maintenir
-      suppose de pouvoir la produire, la livrer, et recueillir l'autorisation
-      parentale pour filmer des enfants. Sinon, la retirer des formules.
+- [x] ~~**Vidéo souvenir.**~~ **RETIRÉE DES DEUX FORMULES** le 17 septembre
+      2026, à la demande de Brahim (« retire la video, photo et pinata pour le
+      moment »). Migration 0020.
+
+      L'article 15 des CGV, lui, **reste**, et c'est délibéré : il est
+      conditionnel (« lorsqu'une telle fonctionnalité fait partie de la
+      prestation ») et encadre l'autorisation du représentant légal pour l'image
+      des mineurs. Les caméras du complexe n'ont pas disparu avec la prestation.
+      Retirer une protection parce qu'on ne vend plus le service qu'elle
+      accompagnait, c'est retirer la protection.
 - [x] ~~Réservations sans paiement : 48 heures est-il le bon délai ?~~
       **SANS OBJET dès que Stripe encaisse.** Le branchement est en cours
       (14-15 septembre 2026) ; le délai qui tient un créneau passe alors seul de
@@ -216,15 +260,18 @@ déployés à chaque mise en ligne.
 > fichier dans le code ne les trouve donc jamais. Toujours passer par le
 > registre.
 
-**Onze fichiers jamais affichés**, dont plusieurs pourraient combler les
-emplacements qu'on attend justement de Brahim :
+**Douze fichiers jamais affichés**, recomptés le 19 septembre 2026. Le relevé
+précédent en annonçait onze : il manquait `Logo Offside Foot Indoor.png`, mort
+pour la même raison que `terrain vide.JPG` — une collision, pas une absence
+d'emplacement. Les emplacements, eux, sont tous pourvus.
 
 | Fichier | Poids | Piste |
 |---|---|---|
 | `entrée.JPG` | 641 Ko | façade — utilisable en page d'accueil |
 | `entrée contre-plongée.JPG` | 666 Ko | idem |
 | `terrain vide portrait.JPG` | 548 Ko | format portrait, utile sur téléphone |
-| `terrain vide.JPG` | 501 Ko | **doublon perdu**, voir plus bas |
+| `terrain vide.JPG` | 501 Ko | **perdu par collision**, voir plus bas |
+| `Logo Offside Foot Indoor.png` | 70 Ko | **perdu par collision**, voir plus bas |
 | `boissons.webp` | 97 Ko | illustre « boissons comprises » |
 | `anniv2.webp` | 86 Ko | seconde photo d'anniversaire |
 | `deco.jpeg` | 67 Ko | illustre « décoration comprise » |
@@ -237,20 +284,32 @@ emplacements qu'on attend justement de Brahim :
       plusieurs répondent à des besoins listés plus bas dans « Contenus
       manquants » —, soit on les retire du dépôt. Les laisser sans emploi est
       le seul choix qui ne serve à rien.
-- [ ] **`terrain vide.JPG` (501 Ko) est perdu par collision.** Deux fichiers
-      visent le même emplacement `terrain-vide` : « terrains vide.JPG » et
-      « terrain vide.JPG ». Le registre départage par ordre alphabétique, donc
-      le second ne sera JAMAIS affiché, quoi qu'on fasse. Le renommer ou le
-      supprimer — mais pas le laisser croire disponible.
+- [ ] **Deux fichiers sont perdus par collision**, et aucun geste ne les
+      rendra visibles tant qu'ils portent ce nom.
+
+      `terrain vide.JPG` (501 Ko) et `terrains vide.JPG` visent le même
+      emplacement `terrain-vide` ; le registre départage par ordre alphabétique,
+      donc le premier ne sera JAMAIS affiché.
+
+      `Logo Offside Foot Indoor.png` (70 Ko) perd de la même façon contre
+      `logo.png` : `resolveLogoSrc()` donne la priorité au nom exact « logo »
+      avant l'ordre alphabétique (`lib/logo.ts`).
+
+      Les renommer ou les supprimer — mais pas les laisser croire disponibles.
+      2 787 Ko au total dorment dans le dépôt et partent à chaque déploiement.
 
 ## Contenus manquants
 
-- [ ] Photo pour la carte « Anniversaire » de la page de réservation
-- [ ] Photo de Bubble Foot pour la formule du même nom
+- [x] ~~Photo pour la carte « Anniversaire »~~ et ~~photo de Bubble Foot~~ :
+      **les huit emplacements du registre trouvent tous un fichier**, plan du
+      Bounce Park compris. Vérifié le 19 septembre 2026 en passant par
+      `resolvePhotos()`, et non par un grep des noms de fichiers — c'est le
+      piège décrit plus haut. Il n'en manque aucune.
 - [ ] Horaires réels des demi-journées de team building (9h–13h et 14h–18h sont
-      provisoires)
-- [ ] Noms réels des espaces (« Espace anniversaire 1 et 2 » ; ces mêmes espaces
-      accueillent aussi le Bubble Foot, le nom mériterait d'être neutre)
+      provisoires, et partent sur chaque devis)
+- [x] ~~Noms réels des espaces~~ **« Fun zone 1, 2 et 3 »**, communiqués le
+      17 septembre 2026 (migration 0020). La 3 est fermée en attendant
+      confirmation de son existence.
 
 Il suffit de déposer les photos dans `public/images/` : la résolution ignore
 majuscules, accents, espaces et tirets. Voir `src/lib/photos.ts`.
@@ -303,7 +362,7 @@ Questions posées, sans réponse à ce jour. Elles bloquent du travail déjà pr
 - [ ] **OUVRIR LE COMPTE STRIPE — c'est désormais le seul point bloquant du
       paiement.** Le code est écrit, branché et testé ; il ne manque que les
       deux clés. La marche à suivre complète — rôle d'équipe, activation de
-      Bancontact, les quatre événements du webhook, les tests en clés `test`,
+      Bancontact, les SIX événements du webhook, les tests en clés `test`,
       le passage en `live` — est dans **`MISE-EN-LIGNE.md`, section 4**.
 - [x] ~~« 2000+ fêtes organisées »~~ **RETIRÉ le 13 septembre 2026**, sur
       décision de Mathis. La rangée du hero est passée de trois à deux colonnes.
@@ -404,6 +463,39 @@ le dépôt.
 
 ---
 
+# Chantiers techniques relevés le 19 septembre 2026
+
+Vérifiés un par un, pas seulement signalés.
+
+- [ ] **Aucune intégration continue.** `.github/` n'existe pas. Les 188 tests
+      et ESLint ne s'exécutent que si quelqu'un y pense : un push sur `main`
+      déclenche un build Vercel qui ne lance ni l'un ni l'autre. Les 9 erreurs
+      ESLint actuelles sont parties en production sans que rien ne les arrête.
+- [ ] **Les 9 erreurs ESLint.** Toutes de la famille `react-hooks` (setState
+      synchrone dans un effet, pureté). Elles sont antérieures à cette session
+      et inchangées depuis. À trancher : les corriger, ou les désactiver ligne
+      à ligne avec une justification écrite. Les laisser sans les nommer est le
+      seul choix qui n'apprend rien.
+- [ ] **Le build trace tout le projet.** `next build` avertit que l'accès
+      disque de `lib/logo.ts` force le traçage de l'ensemble du dépôt, donc la
+      copie des 7,2 Mo de `public/` dans chaque fonction serverless. Attention
+      au correctif : `resolveLogoSrc()` est appelé au RENDU, pas au build.
+- [ ] **Aucune région de fonction fixée.** Pas de `vercel.json`, pas de clé
+      `regions`. Les fonctions tournent donc dans la région par défaut de
+      Vercel, aux États-Unis, pendant que la base est en Irlande (eu-west-1).
+      Chaque écran du tunnel et du back-office enchaîne plusieurs requêtes
+      Supabase séquentielles, chacune traversant l'Atlantique.
+- [ ] **Le projet Vercel n'est pas visible** depuis le compte joignable
+      (`resell`, `cockpit-agents`, `padel-xp`, `cie`). Le site répond pourtant
+      sur `offside-world.vercel.app`. Il vit donc sur un autre compte — à
+      identifier avant de toucher à `SITE_URL`, aux clés Stripe ou à l'URL du
+      webhook.
+- [ ] **`MISE-EN-LIGNE.md` annonce « les quatre » événements Stripe puis en
+      liste six.** Les deux en trop sont `charge.refunded` et
+      `charge.dispute.created` — précisément ceux sans lesquels un
+      remboursement fait à la main dans Stripe ne revient jamais dans la base.
+      Qui compte jusqu'à quatre les perd.
+
 # Conformité — état au 9 septembre 2026
 
 L'audit juridique du tunnel de paiement est purgé. Ce qui a été corrigé, et
@@ -435,11 +527,27 @@ qui est vérifiable page par page :
 
 Ce qui reste, et qui ne dépend plus du code :
 
-- [ ] **Les six valeurs d'identité de l'entreprise** (dénomination sociale,
-      siège, BCE, TVA, responsable de publication, et le siège s'il diffère).
-      Tant qu'elles manquent, les pages légales affichent « [à compléter] » —
-      et l'art. III.74 du Code de droit économique n'est pas respecté. C'est
-      le dernier point qui empêche formellement la mise en ligne.
+- [x] ~~**Les six valeurs d'identité de l'entreprise.**~~ **RENSEIGNÉES le
+      17 septembre 2026.** Plus aucun « [à compléter] » sur le site, et
+      l'art. III.74 du Code de droit économique est respecté. Ce n'est donc
+      **plus** le point qui empêche la mise en ligne — celui qui reste est
+      l'ouverture du compte Stripe.
+- [x] ~~**Durées de conservation.**~~ **TENUES PAR LA BASE depuis le
+      19 septembre 2026** (migration 0024). L'article 7 promettait aux demandes
+      de devis « une durée limitée » sans qu'aucune purge existe : elles sont
+      désormais anonymisées à 13 mois, comme les réservations, par une tâche
+      planifiée. La page annonce la vraie durée et ce qui subsiste.
+- [x] ~~**Consentement marketing.**~~ **HORODATÉ depuis le 19 septembre 2026.**
+      Les deux tables ne portaient qu'un booléen, alors que l'art. 7.1 du RGPD
+      demande de pouvoir DÉMONTRER le consentement. `newsletter_le` est écrite à
+      l'enregistrement. Les lignes antérieures gardent une date nulle : on ne
+      reconstitue pas après coup la date d'un consentement, et elles resteront
+      hors de tout envoi.
+- [x] ~~**Mesure d'audience : deux champs non déclarés.**~~ **CORRIGÉ.** Le
+      pays et la langue étaient réellement stockés et ne figuraient dans
+      l'énumération d'aucune des deux pages. Le pays est déduit de l'adresse IP,
+      juste à côté de « aucune adresse IP n'est conservée » : les deux phrases
+      sont vraies, ensemble elles trompaient.
 - [x] ~~« 2000+ fêtes organisées »~~ **Retiré le 13 septembre 2026.** Plus
       aucune allégation chiffrée invérifiable sur le site (art. VI.97).
 - [ ] **Autorisation à l'image** : aucun formulaire ne la recueille
@@ -452,10 +560,17 @@ Ce qui reste, et qui ne dépend plus du code :
 # État technique
 
 **Base de données** — projet `shybhkzgwxyajysjlrbv` (Offside World, eu-west-1),
-migrations `0001` à `0017` appliquées et vérifiées (les trois dernières :
-remboursements, devis modifiable, coordonnées et TVA du client sur le devis).
-RLS activé et forcé sur les 8 tables, sans aucune politique : rien n'est
-accessible par les clés publiques, tout passe par le serveur.
+migrations `0001` à `0024` appliquées et vérifiées (les trois dernières :
+quota de partage, horaires Bubble configurables, purge des devis et horodatage
+du consentement). **13 tables**, RLS activé et forcé sur chacune, sans aucune
+politique : rien n'est accessible par les clés publiques, tout passe par le
+serveur. Cinq tâches planifiées actives.
+
+> **Le registre de migrations de Supabase ne liste pas tout le dépôt.** Les
+> fichiers `0001`, `0002` et quelques autres ont été appliqués hors du registre
+> et n'y figurent pas. Les objets existent bien — rien n'est cassé — mais une
+> restauration repartirait d'un schéma incomplet. À réconcilier avant la mise
+> en ligne.
 
 **Le site est branché sur la base.** Ce qui en vient désormais :
 - les formules et leurs tarifs (page d'accueil et funnel) ;
@@ -489,7 +604,7 @@ Audité ligne à ligne le 13 septembre 2026. Ce qui existe :
 - création de la session Checkout, Bancontact en premier, expiration à 30 min,
   clé d'idempotence pour que deux clics ne créent pas deux paiements ;
 - webhook à signature vérifiée, corps lu brut, e-mails envoyés après la réponse,
-  et les quatre événements traités — dont `async_payment_succeeded`, sans lequel
+  et les six événements traités — dont `async_payment_succeeded`, sans lequel
   un paiement Bancontact partirait sans confirmer la réservation ;
 - confirmation idempotente : deux livraisons du même événement ne confirment pas
   deux fois et n'envoient pas deux e-mails ;
