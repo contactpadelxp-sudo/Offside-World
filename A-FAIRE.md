@@ -596,6 +596,73 @@ Vérifiés un par un, pas seulement signalés.
       lecteur d'écran, le texte étant complet dans le document. C'était déjà le
       cas avec les lignes empilées, sur la même chaîne.
 
+# Audit de la mécanique de réservation — 21 septembre 2026
+
+Lancé sur demande de Mathis : « faut que rien ne bloque, que tout soit fluide et
+qu'aucune résa ne tombe en même temps ou ne fonctionne pas, c'est très
+important. » Six agents, un par dimension. **Trois ont rendu, deux se sont
+arrêtés en cours, et la phase de contradiction n'a jamais tourné** — ce qui suit
+n'est donc PAS validé, sauf les deux points marqués vérifiés.
+
+Plusieurs constats ont été trouvés indépendamment par deux ou trois agents ;
+c'est le signe qu'ils tiennent, pas une répétition.
+
+## Corrigés le jour même, après vérification jusqu'à l'exécution
+
+- [x] ~~**L'expiration à 45 minutes libérait un créneau DÉJÀ PAYÉ.**~~
+      Migration 0026. `expirer_reservations_en_attente` n'avait aucune
+      condition sur `paiements` — vérifié sur le corps réel de la fonction.
+      `confirmerPaiement` écrit en deux fois : paiement « reussi », PUIS
+      réservation « confirmee ». Entre les deux, la réservation est encore
+      « en_attente » avec l'argent encaissé. L'expiration passait là, rendait
+      le créneau à la vente, un second client l'achetait. Sa jumelle portait
+      déjà la garde : les deux se contredisaient, et c'est la plus exposée qui
+      avait tort.
+- [x] ~~**`expirer_reservations_passees` n'a jamais tourné.**~~ Migration 0026.
+      Elle interrogeait `r.debut`, colonne inexistante — l'heure de début vit
+      sur `creneaux`. Vérifié en l'appelant : « 42703: column r.debut does not
+      exist ». Inopérante du 15 au 21 septembre, et son échec avalé par un
+      `console.error` que personne ne lit.
+
+## Restent à traiter, par cause racine
+
+- [ ] **`confirmerPaiement` fait deux écritures non transactionnelles.** Si la
+      seconde échoue, la relivraison de Stripe ne rattrape RIEN : la branche
+      « déjà réussi » court-circuite la confirmation. Argent encaissé,
+      réservation jamais confirmée, aucun e-mail. Trouvé par trois agents.
+- [ ] **La réservation est écrite AVANT l'appel à Stripe.** Si Stripe échoue,
+      elle reste en base : le client est refusé sur son propre créneau pendant
+      45 minutes, avec un message lui faisant croire qu'un autre l'a pris.
+- [ ] **`cancel_url` renvoie sur un tunnel vide.** Le bouton « Retour » de
+      Stripe ramène sur `/reservation?paiement=annule`, paramètre que rien
+      n'interprète : saisies perdues, et son propre créneau lui est refusé.
+- [ ] **Le back-office propose « Confirmer » et « Annuler » pendant qu'un
+      client paie.** Les paiements « en_cours » sont invisibles de la fiche,
+      qui affiche « non payé ». Confirmer fige un créneau jamais payé ;
+      annuler laisse l'argent tomber après coup, sans remboursement ni e-mail.
+- [ ] **Le perdant d'une course est renvoyé vers une liste périmée**, réessaie,
+      échoue, et le limiteur de débit finit par l'exclure — alors que les échecs
+      venaient du site.
+- [ ] **Le limiteur compte les saisies invalides et se ferme sur panne de
+      base.** Il est consommé avant toute validation.
+- [ ] **Fermer un créneau ou une journée est un « lire puis écrire » non
+      atomique.** Une réservation glissée entre les deux est payée sur un
+      créneau fermé.
+- [ ] **Un remboursement fait à la main dans Stripe ne libère pas le créneau et
+      ne prévient pas le client** — alors que le code envoie lui-même
+      l'exploitant rembourser là-bas quand l'appel automatique échoue.
+- [ ] **Une contestation bancaire ne laisse aucune trace en base.** Le créneau
+      reste bloqué, le chiffre d'affaires compte de l'argent déjà repris, et
+      l'alerte tient à un seul e-mail.
+- [ ] **La page de retour annonce « paiement accepté » avant que Bancontact ne
+      se dénoue**, et un refus asynchrone n'est jamais démenti.
+- [ ] **La clé d'idempotence Stripe ne protège rien** : elle est dérivée de
+      l'identifiant de réservation, neuf à chaque tentative. Sans conséquence
+      aujourd'hui, mais le commentaire affirme l'inverse.
+
+- [ ] **Relancer l'audit sur les deux dimensions manquantes** — contraintes de
+      base et back-office — et faire tourner la contradiction sur l'ensemble.
+
 # Conformité — état au 9 septembre 2026
 
 L'audit juridique du tunnel de paiement est purgé. Ce qui a été corrigé, et
