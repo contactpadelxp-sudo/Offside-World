@@ -38,6 +38,12 @@ import {
   type ChoixRemboursement,
 } from "@/lib/paiement/remboursement";
 import { montantLisible } from "@/lib/tarification";
+import {
+  conflitSportFinder,
+  conflitSurHeureLocale,
+  jourISODeLaDate,
+  messageConflit,
+} from "@/data/plages-sport-finder";
 import { paiementVivantSur } from "@/lib/db/paiements";
 
 /**
@@ -70,6 +76,18 @@ export interface Resultat {
  * envoi légitime depuis le même onglet se ferait refuser comme périmé alors
  * que c'est cet onglet-là qui vient d'envoyer.
  */
+/**
+ * Ce que rendent les actions sur les créneaux, quand un contrôle a mordu.
+ *
+ * `confirmationRequise` est lu par l'écran pour faire apparaître la case à
+ * cocher qui, seule, permet de passer outre. Elle n'existe jamais avant un
+ * refus : on ne propose pas de forcer une porte qu'on n'a pas encore trouvée
+ * fermée.
+ */
+export interface ResultatCreneau extends Resultat {
+  confirmationRequise?: boolean;
+}
+
 export interface ResultatEnvoiDevis extends Resultat {
   /** L'horodatage d'envoi après l'opération. Absent si rien n'a changé. */
   envoyeLe?: string;
@@ -777,7 +795,12 @@ export async function enregistrerNoteDevis(id: string, note: string): Promise<Re
 /** Contrainte d'exclusion PostgreSQL : deux créneaux ouverts se chevauchent. */
 const VIOLATION_EXCLUSION = "23P01";
 
-export async function basculerCreneau(id: string, ouvrir: boolean): Promise<Resultat> {
+export async function basculerCreneau(
+  id: string,
+  ouvrir: boolean,
+  /** Voir `creerCreneau` : l'exploitant a lu le refus et maintient son geste. */
+  confirme?: boolean
+): Promise<ResultatCreneau> {
   const session = await garde();
   if (!session) return REFUS_SESSION;
 
@@ -881,11 +904,47 @@ export async function basculerCreneau(id: string, ouvrir: boolean): Promise<Resu
       return { ok: true, message: "Créneau fermé." };
     }
 
+    /*
+      ROUVRIR DEMANDE LE MÊME CONTRÔLE QUE CRÉER, ET ON NE L'AVAIT PAS.
+
+      La réouverture tenait en un `update` nu, filtré sur le seul identifiant :
+      aucun contrôle d'horaire, aucun de jour, aucun d'état antérieur. Le seul
+      refus possible venait de la contrainte d'exclusion — et elle ne protège
+      de rien ici : un `tstzrange` exclut sa borne haute, donc 16h30-18h30 et
+      18h30-20h30 ne se chevauchent pas.
+
+      Concrètement : les 78 créneaux du vendredi 18h30-20h30 que la migration
+      0028 venait de fermer se rouvraient d'un clic, sans un mot. Ils finissent
+      à 20h30, trente minutes APRÈS le début de la location de terrain — le
+      conflit exact que 0028 a été écrite pour supprimer. Rien à l'écran ne
+      disait ni pourquoi ils étaient fermés, ni depuis quand : une fermeture
+      inexpliquée ressemble à une erreur, et on la corrige.
+
+      On lit donc l'horaire avant d'écrire, et on le confronte aux plages
+      vendues par Sport-Finder. Même porte de sortie que pour la création :
+      explicite, et seulement après avoir lu ce qu'on heurte.
+    */
+    if (!confirme) {
+      const { data: horaire, error: eHoraire } = await base()
+        .from("creneaux")
+        .select("debut, fin")
+        .eq("id", cible)
+        .maybeSingle();
+
+      if (eHoraire) throw eHoraire;
+      if (!horaire) return { ok: false, message: "Créneau introuvable." };
+
+      const conflit = conflitSportFinder(new Date(horaire.debut), new Date(horaire.fin));
+      if (conflit) {
+        return { ok: false, message: messageConflit(conflit), confirmationRequise: true };
+      }
+    }
+
     const { data, error } = await base()
       .from("creneaux")
       .update({ ouvert: ouvrir })
       .eq("id", cible)
-      .select("id")
+      .select("id, debut")
       .maybeSingle();
 
     if (error) {
@@ -899,9 +958,19 @@ export async function basculerCreneau(id: string, ouvrir: boolean): Promise<Resu
     }
     if (!data) return { ok: false, message: "Créneau introuvable." };
 
-    // Ce chemin ne sert plus qu'à la RÉOUVERTURE : la fermeture est traitée
-    // plus haut, dans l'ordre qui la rend sûre.
-    await journaliser(session, "creneau.ouvert", cible);
+    /*
+      Ce chemin ne sert plus qu'à la RÉOUVERTURE : la fermeture est traitée plus
+      haut, dans l'ordre qui la rend sûre.
+
+      L'HORAIRE EST JOURNALISÉ, PAS SEULEMENT L'IDENTIFIANT. Le journal portait
+      un UUID : relire « créneau rouvert 8f3a… » six mois plus tard n'apprend
+      rien, et surtout pas s'il s'agissait d'un vendredi 18h30 qu'on avait fermé
+      pour de bonnes raisons.
+    */
+    await journaliser(session, "creneau.ouvert", cible, {
+      debut: data.debut,
+      force: confirme === true,
+    });
     rafraichir();
     return { ok: true, message: "Créneau rouvert." };
   } catch (e) {
@@ -1338,7 +1407,17 @@ export async function creerCreneau(saisie: {
   dureeMinutes: number;
   espaceId: string;
   type: "anniversaire" | "bubble";
-}): Promise<Resultat> {
+  /**
+   * L'exploitant a lu le refus et maintient son geste.
+   *
+   * La seule échappatoire au contrôle Sport-Finder, et elle est volontairement
+   * explicite : le geste dangereux ici est le geste DISTRAIT — on ouvre un
+   * créneau sans penser que le terrain est loué ailleurs au même moment. Une
+   * case à cocher qui n'apparaît qu'après le refus, et qui nomme la plage
+   * heurtée, transforme ce geste en décision.
+   */
+  confirme?: boolean;
+}): Promise<ResultatCreneau> {
   const session = await garde();
   if (!session) return REFUS_SESSION;
 
@@ -1353,6 +1432,34 @@ export async function creerCreneau(saisie: {
     const type = saisie?.type;
     if (type !== "anniversaire" && type !== "bubble") {
       return { ok: false, message: "Choisissez le type d'activité." };
+    }
+
+    /*
+      RIEN NE CONNAISSAIT LES HEURES DE SPORT-FINDER, ET C'ÉTAIT LE TROU.
+
+      La validation tenait en trois lignes : une expression régulière sur
+      l'heure, une borne sur la durée, une longueur d'identifiant. `00:00` à
+      `23:59` passaient, tous les jours de la semaine. Un créneau ouvert un
+      samedi à 21h partait à la vente — `ouvert` vaut `true` par défaut — alors
+      que Sport-Finder loue les mêmes terrains de 20h à 1h. Deux clients, un
+      sol, et aucun des deux systèmes pour le signaler.
+
+      Le contrôle vit ici, dans la Server Action, et pas seulement à l'écran :
+      une Server Action est une adresse publique, appelable sans passer par la
+      page. Mais il n'est pas absolu — voir `confirme`. Ce qu'il empêche, c'est
+      le geste distrait, et c'est le seul geste réel : l'exploitant clique dans
+      son écran, il ne forge pas de requête.
+    */
+    if (!saisie?.confirme) {
+      const [hh, mm] = h.split(":");
+      const conflit = conflitSurHeureLocale(
+        jourISODeLaDate(j),
+        Number(hh) * 60 + Number(mm),
+        duree
+      );
+      if (conflit) {
+        return { ok: false, message: messageConflit(conflit), confirmationRequise: true };
+      }
     }
 
     /*

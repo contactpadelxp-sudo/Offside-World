@@ -16,13 +16,23 @@ import { AlerteCercle, Coche } from "@/components/icons";
  *     c'est un succès — un message d'erreur, lui, reste.
  */
 
-export function useAction() {
+/**
+ * `R` porte les champs qu'une action ajoute au retour commun.
+ *
+ * Les actions sur les créneaux répondent `confirmationRequise` pour faire
+ * apparaître une case à cocher ; celles sur les devis répondent l'horodatage
+ * d'envoi. Sans ce paramètre, `retour` était typé `Resultat` et ces champs
+ * disparaissaient à la frontière — l'écran ne pouvait pas les lire, alors que
+ * le serveur les envoyait bien. Il vaut `Resultat` par défaut : les appelants
+ * qui n'en ont pas besoin n'écrivent rien.
+ */
+export function useAction<R extends Resultat = Resultat>() {
   const [enCours, demarrer] = useTransition();
-  const [retour, setRetour] = useState<Resultat | null>(null);
+  const [retour, setRetour] = useState<R | null>(null);
   /** Quel bouton a été cliqué : permet de n'animer que celui-là. */
   const [encours, setEncours] = useState<string | null>(null);
 
-  const lancer = (nom: string, action: () => Promise<Resultat>) => {
+  const lancer = (nom: string, action: () => Promise<R>) => {
     setRetour(null);
     setEncours(nom);
     demarrer(async () => {

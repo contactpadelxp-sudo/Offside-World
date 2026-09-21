@@ -10,6 +10,7 @@ import {
   genererCreneaux,
   supprimerCreneau,
 } from "@/lib/actions/admin";
+import type { ResultatCreneau } from "@/lib/actions/admin";
 import type { CreneauAdmin } from "@/lib/vues";
 import {
   BOUTON_NEUTRE,
@@ -34,8 +35,10 @@ import { BUBBLE_DUREE_MINUTES } from "@/data/bubble-team";
  */
 
 function LigneCreneau({ c }: { c: CreneauAdmin }) {
-  const { enCours, occupe, retour, lancer } = useAction();
+  const { enCours, occupe, retour, lancer } = useAction<ResultatCreneau>();
   const [ouvert, projeter] = useOptimistic<boolean, boolean>(c.ouvert, (_a, vise) => vise);
+  /** Coché par l'exploitant après un refus Sport-Finder. Voir la case plus bas. */
+  const [forcer, setForcer] = useState(false);
 
   return (
     <li className="px-4 py-3">
@@ -82,7 +85,22 @@ function LigneCreneau({ c }: { c: CreneauAdmin }) {
               onClick={() =>
                 lancer("bascule", async () => {
                   projeter(!ouvert);
-                  return basculerCreneau(c.id, !ouvert);
+                  /*
+                    ROUVRIR PEUT ÊTRE REFUSÉ, ET LE REFUS SE RATTRAPE ICI.
+
+                    Le serveur compare l'horaire aux plages vendues par
+                    Sport-Finder et rend `confirmationRequise` plutôt que
+                    d'écrire. On ne coche rien à la place de l'exploitant :
+                    on lui montre la phrase, qui nomme la plage heurtée, et
+                    c'est le second clic qui force. Le premier clic ne peut
+                    donc jamais rouvrir par distraction un créneau fermé pour
+                    une bonne raison — c'est exactement ce qui pouvait défaire
+                    la migration 0028 sans un mot.
+                  */
+                  const r = await basculerCreneau(c.id, !ouvert, forcer);
+                  if (r.confirmationRequise) projeter(ouvert);
+                  setForcer(false);
+                  return r;
                 })
               }
               className={BOUTON_NEUTRE}
@@ -125,6 +143,27 @@ function LigneCreneau({ c }: { c: CreneauAdmin }) {
       </div>
 
       <MessageAction retour={retour} />
+      {/*
+        LA CASE N'EXISTE QU'APRÈS LE REFUS, ET ELLE NE SURVIT PAS À L'ACTION.
+
+        Proposer de forcer avant d'avoir montré ce qu'on heurte ferait du
+        contournement la voie normale. Elle apparaît donc quand le serveur a
+        rendu `confirmationRequise`, elle porte le mot « malgré tout », et elle
+        est décochée dès que l'action passe : le geste suivant repart protégé.
+      */}
+      {retour?.confirmationRequise && (
+        <label className="mt-2 flex cursor-pointer items-start gap-2 rounded-lg border border-kick/40 bg-kick/5 px-3 py-2 text-sm">
+          <input
+            type="checkbox"
+            checked={forcer}
+            onChange={(e) => setForcer(e.target.checked)}
+            className="mt-0.5 size-4 shrink-0 accent-[var(--color-kick)]"
+          />
+          <span>
+            J&apos;ai fermé cette plage sur Sport-Finder. Ouvrir ce créneau malgré tout.
+          </span>
+        </label>
+      )}
     </li>
   );
 }
@@ -305,11 +344,13 @@ export function AjouterCreneau({
   jour: string;
   espaces: { id: string; nom: string }[];
 }) {
-  const { enCours, occupe, retour, lancer } = useAction();
+  const { enCours, occupe, retour, lancer } = useAction<ResultatCreneau>();
   const [heure, setHeure] = useState("");
   const [type, setType] = useState<TypeCreneau>("anniversaire");
   const [duree, setDuree] = useState(DUREE_PAR_DEFAUT.anniversaire);
   const [espaceId, setEspaceId] = useState(espaces[0]?.id ?? "");
+  /** Coché par l'exploitant après un refus Sport-Finder. Voir la case plus bas. */
+  const [forcer, setForcer] = useState(false);
 
   if (espaces.length === 0) return null;
 
@@ -319,15 +360,36 @@ export function AjouterCreneau({
         <Plus className="size-4 text-field" /> Ajouter un créneau
       </h2>
       <p className="mt-1 text-sm text-muted-foreground">
-        Il s&apos;ajoute au jour affiché ci-dessus, et devient réservable aussitôt.
+        {/*
+          « RÉSERVABLE AUSSITÔT » ÉTAIT VRAI ET RASSURAIT À TORT.
+
+          C'était la seule phrase de l'écran, et elle ne disait que le confort.
+          Rien n'avertissait qu'un créneau ouvert pendant les heures de
+          Sport-Finder part à la vente sur un terrain déjà loué ailleurs — les
+          deux systèmes ne se voient pas. La phrase dit maintenant les deux :
+          l'effet immédiat, et la seule chose qu'il faut vérifier avant.
+        */}
+        Il s&apos;ajoute au jour affiché ci-dessus et devient réservable aussitôt.
+        Les heures vendues par Sport-Finder — le foot et le Bubble, sur ces mêmes
+        terrains — sont refusées : les deux systèmes ne se voient pas.
       </p>
 
       <form
         onSubmit={(e) => {
           e.preventDefault();
           lancer("ajouter", async () => {
-            const r = await creerCreneau({ jour, heure, dureeMinutes: duree, espaceId, type });
-            if (r.ok) setHeure("");
+            const r = await creerCreneau({
+              jour,
+              heure,
+              dureeMinutes: duree,
+              espaceId,
+              type,
+              confirme: forcer,
+            });
+            if (r.ok) {
+              setHeure("");
+              setForcer(false);
+            }
             return r;
           });
         }}
@@ -421,6 +483,27 @@ export function AjouterCreneau({
       </form>
 
       <MessageAction retour={retour} />
+      {/*
+        LA CASE N'EXISTE QU'APRÈS LE REFUS, ET ELLE NE SURVIT PAS À L'ACTION.
+
+        Proposer de forcer avant d'avoir montré ce qu'on heurte ferait du
+        contournement la voie normale. Elle apparaît donc quand le serveur a
+        rendu `confirmationRequise`, elle porte le mot « malgré tout », et elle
+        est décochée dès que l'action passe : le geste suivant repart protégé.
+      */}
+      {retour?.confirmationRequise && (
+        <label className="mt-2 flex cursor-pointer items-start gap-2 rounded-lg border border-kick/40 bg-kick/5 px-3 py-2 text-sm">
+          <input
+            type="checkbox"
+            checked={forcer}
+            onChange={(e) => setForcer(e.target.checked)}
+            className="mt-0.5 size-4 shrink-0 accent-[var(--color-kick)]"
+          />
+          <span>
+            J&apos;ai fermé cette plage sur Sport-Finder. Ouvrir ce créneau malgré tout.
+          </span>
+        </label>
+      )}
     </div>
   );
 }
