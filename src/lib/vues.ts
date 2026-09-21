@@ -95,6 +95,22 @@ export interface ReservationAdmin {
     /** Ce que le barème d'annulation rendrait si on annulait maintenant. */
     baremeCents: number;
   } | null;
+  /**
+   * Vrai quand une session Stripe est ouverte À CET INSTANT sur ce créneau.
+   *
+   * `paiement` ne porte que l'argent ENCAISSÉ : entre l'ouverture de la page
+   * Stripe et le webhook, il vaut `null`, et la fiche affichait alors « non
+   * payé » en proposant « Confirmer » et « Annuler ». Annuler à cette seconde
+   * rend à la vente un créneau que quelqu'un est en train de payer ; confirmer
+   * à la main fait basculer la réservation hors de « en_attente », et le
+   * webhook, qui conditionne son écriture à ce statut, ne trouve plus rien à
+   * confirmer — donc plus d'e-mail au client.
+   *
+   * Borné à la durée de vie de la session Stripe (30 minutes, voir
+   * `paiement/session.ts`) : au-delà, la session est morte, la tentative est
+   * abandonnée, et la fiche doit redevenir pilotable.
+   */
+  paiementEnCours: boolean;
 }
 
 /**

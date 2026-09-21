@@ -32,7 +32,28 @@ export const metadata: Metadata = metadonneesPage({
   chemin: "/reservation",
 });
 
-export default async function ReservationPage() {
+export default async function ReservationPage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
+  /*
+    LE RETOUR D'UN PAIEMENT ABANDONNÉ SE DIT, MAINTENANT.
+
+    `?paiement=annule` existait déjà dans le `cancel_url` de Stripe, et aucune
+    page ne le lisait : le client renonçait à payer, retombait sur un tunnel
+    vide, et rien ne lui disait ni qu'il n'avait pas été débité, ni que sa
+    demande n'était pas passée. C'est le moment où l'on abandonne pour de bon,
+    faute de comprendre où l'on en est.
+
+    Le message est délibérément prudent sur le créneau : la route d'annulation
+    essaie de le rendre à la vente, mais elle peut échouer, et promettre qu'il
+    est à nouveau libre serait une promesse que cette page ne peut pas tenir.
+  */
+  const params = await searchParams;
+  const brut = params.paiement;
+  const paiementAnnule = (Array.isArray(brut) ? brut[0] : brut) === "annule";
+
   // Libère les créneaux tenus par des réservations jamais confirmées avant
   // d'afficher les disponibilités, pour ne pas montrer « complet » à tort.
   if (baseConfiguree()) await expirerReservationsAbandonnees();
@@ -45,20 +66,42 @@ export default async function ReservationPage() {
   ]);
 
   return (
-    <Suspense fallback={<div className="flex items-center justify-center py-20 text-muted-foreground">Chargement…</div>}>
-      <ReservationFlow
-        donnees={{
-          formules,
-          options,
-          creneauxAnniversaire,
-          creneauxBubble,
-          demiJournees: prochainesDemiJournees(),
-          // Le tunnel doit annoncer un paiement SEULEMENT s'il va vraiment
-          // avoir lieu : promettre « on vous rappelle » puis débiter le client
-          // est une pratique trompeuse, et le bouton doit dire ce qu'il fait.
-          paiementActif: paiementConfigure(),
-        }}
-      />
-    </Suspense>
+    <>
+      {paiementAnnule && (
+        <div className="mx-auto w-full max-w-3xl px-4 pt-6">
+          {/*
+            `role="status"` et non `alert` : renoncer à payer n'est pas une
+            erreur, et l'annonce ne doit pas couper ce que le lecteur d'écran
+            est en train de lire.
+          */}
+          <div
+            role="status"
+            className="rounded-xl border border-border bg-muted/50 px-4 py-3 text-sm"
+          >
+            <p className="font-medium">Paiement annulé — vous n&apos;avez pas été débité.</p>
+            <p className="mt-0.5 text-muted-foreground">
+              Votre demande n&apos;a donc pas été enregistrée. Reprenez ci-dessous : le
+              créneau vous est proposé à nouveau s&apos;il est toujours libre.
+            </p>
+          </div>
+        </div>
+      )}
+      <Suspense fallback={<div className="flex items-center justify-center py-20 text-muted-foreground">Chargement…</div>}>
+        <ReservationFlow
+          donnees={{
+            formules,
+            options,
+            creneauxAnniversaire,
+            creneauxBubble,
+            demiJournees: prochainesDemiJournees(),
+            // Le tunnel doit annoncer un paiement SEULEMENT s'il va vraiment
+            // avoir lieu : promettre « on vous rappelle » puis débiter le
+            // client est une pratique trompeuse, et le bouton doit dire ce
+            // qu'il fait.
+            paiementActif: paiementConfigure(),
+          }}
+        />
+      </Suspense>
+    </>
   );
 }

@@ -117,6 +117,15 @@ export function FicheReservation({ r }: { r: ReservationAdmin }) {
     jamais, sauf si le tarif a changé depuis la réservation.
   */
   const etatArgent = (() => {
+    /*
+      « PAIEMENT EN COURS » N'EST PAS « NON PAYÉ ».
+
+      Une session Stripe ouverte laisse `paiement` à `null` jusqu'au webhook —
+      jusqu'à 30 minutes. La fiche annonçait donc « non payé » sur un client
+      qui a la page de paiement sous les yeux. Le serveur ne lève ce drapeau
+      que tant que la session vit ; ensuite la fiche repasse à « non payé ».
+    */
+    if (r.paiementEnCours) return { texte: "paiement en cours", classe: "text-kick" };
     if (!r.paiement) return { texte: "non payé", classe: "text-muted-foreground" };
     const memeMontant = Math.round(r.total * 100) === r.paiement.montantCents;
     if (r.paiement.rembourseCents <= 0) {
@@ -170,6 +179,21 @@ export function FicheReservation({ r }: { r: ReservationAdmin }) {
     rendre et que le barème l'a ramené à zéro.
   */
   const sansArgent = active && reste <= 0;
+
+  /*
+    TANT QUE LE CLIENT PAIE, ON NE TOUCHE PAS À SA RÉSERVATION.
+
+    « Confirmer » ferait basculer le statut hors de « en_attente » ; le webhook
+    conditionne son écriture à ce statut, ne trouverait plus rien à confirmer,
+    et l'e-mail de confirmation ne partirait jamais — argent encaissé, client
+    sans trace. « Annuler » rendrait à la vente un créneau en train d'être
+    payé, avec la double réservation au bout.
+
+    Aucun des deux ne presse : le drapeau s'éteint tout seul à la fin de la
+    session Stripe, réussite ou abandon. Le seul bouton qui reste est la note
+    interne, qui n'engage rien.
+  */
+  const gele = r.paiementEnCours && active;
 
   const situationsPossibles: { valeur: Situation; titre: string; aide: string }[] = sansArgent
     ? []
@@ -359,7 +383,18 @@ export function FicheReservation({ r }: { r: ReservationAdmin }) {
 
       <div className="mt-4 border-t border-border pt-4">
         <div className="flex flex-wrap items-center gap-2">
-          {statut === "en_attente" && !r.passee && (
+          {gele && (
+            <p className="w-full rounded-lg border border-border bg-muted/40 px-3 py-2 text-xs text-muted-foreground">
+              <span className="font-medium text-foreground">
+                Un paiement est en cours sur cette réservation.
+              </span>{" "}
+              Confirmer ou annuler maintenant couperait le paiement en deux.
+              Rafraîchissez la page dans quelques minutes : la fiche se débloque dès
+              que Stripe a tranché, et au plus tard au bout de 30 minutes.
+            </p>
+          )}
+
+          {!gele && statut === "en_attente" && !r.passee && (
             <button
               type="button"
               disabled={enCours}
@@ -414,7 +449,8 @@ export function FicheReservation({ r }: { r: ReservationAdmin }) {
             partiellement remboursée, « barème = reste » survient aussi à trois
             jours. Les phrases disent donc le RÉSULTAT, jamais le palier.
           */}
-          {(active || reste > 0) &&
+          {!gele &&
+            (active || reste > 0) &&
             (panneauOuvert ? (
               <div
                 className={`w-full rounded-lg border px-3 py-2.5 ${

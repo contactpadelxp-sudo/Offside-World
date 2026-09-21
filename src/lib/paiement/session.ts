@@ -1,6 +1,6 @@
 import "server-only";
 import { stripe, paiementConfigure } from "./stripe";
-import { ouvrirPaiement } from "@/lib/db/paiements";
+import { ouvrirPaiement, VIE_SESSION_STRIPE_MINUTES } from "@/lib/db/paiements";
 import { URL_SITE } from "@/lib/site";
 
 /**
@@ -64,11 +64,26 @@ export async function creerSessionPaiement(opts: {
         reservation_id: opts.reservationId,
         reference: opts.reference,
       },
-      expires_at: Math.floor(Date.now() / 1000) + 30 * 60,
+      // La même durée borne le drapeau « paiement en cours » du back-office :
+      // voir `VIE_SESSION_STRIPE_MINUTES`.
+      expires_at: Math.floor(Date.now() / 1000) + VIE_SESSION_STRIPE_MINUTES * 60,
       success_url: `${URL_SITE}/confirmation?ref=${encodeURIComponent(opts.reference)}&paiement=ok`,
-      // L'annulation ramène sur la page de réservation : le créneau est encore
-      // tenu quelques minutes, le client peut réessayer sans tout ressaisir.
-      cancel_url: `${URL_SITE}/reservation?paiement=annule`,
+      /*
+        L'ANNULATION PASSE PAR UNE ROUTE, PAS DIRECTEMENT PAR LA PAGE.
+
+        Elle renvoyait sur `/reservation?paiement=annule`, un paramètre que
+        rien ne lisait : le client retombait sur le tunnel vide et son créneau
+        restait tenu jusqu'à l'expiration. La route ferme la session chez
+        Stripe, rend le créneau à la vente, puis redirige sur cette même page —
+        qui, elle, dit maintenant ce qui s'est passé. Voir
+        `api/stripe/annule/route.ts`.
+
+        L'identifiant porté par l'adresse est celui de la RÉSERVATION, pas
+        celui de la session : Stripe ne documente la substitution de
+        `{CHECKOUT_SESSION_ID}` que pour `success_url` et `return_url`. La
+        route relit la session en base, puis la vérifie chez Stripe.
+      */
+      cancel_url: `${URL_SITE}/api/stripe/annule?r=${encodeURIComponent(opts.reservationId)}`,
     },
     {
       // Deux clics sur « Payer » ne doivent pas créer deux sessions, donc deux

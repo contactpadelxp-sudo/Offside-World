@@ -15,6 +15,21 @@ import { base, baseConfiguree } from "@/lib/supabase/server";
  * second e-mail au client.
  */
 
+/**
+ * Durée de vie d'une session Stripe, en minutes.
+ *
+ * SOURCE UNIQUE. `paiement/session.ts` la pose sur `expires_at`, le back-office
+ * s'en sert pour savoir si une ligne « en_cours » décrit encore un client
+ * devant son écran, et `paiementVivantSur` pour refuser une action pendant ce
+ * temps. Les trois doivent bouger ensemble : allonger la session sans allonger
+ * la borne rouvrirait « Confirmer » et « Annuler » pendant qu'un paiement
+ * court encore.
+ *
+ * Trente minutes est le minimum accepté par Stripe. Ce module ne dépend pas du
+ * SDK Stripe, ce qui permet au back-office de lire la constante sans l'embarquer.
+ */
+export const VIE_SESSION_STRIPE_MINUTES = 30;
+
 export type StatutPaiement =
   | "cree"
   | "en_cours"
@@ -51,6 +66,63 @@ export async function ouvrirPaiement(
     statut: "en_cours",
   });
   if (error) throw error;
+}
+
+/**
+ * Un paiement est-il EN TRAIN de se jouer sur cette réservation ?
+ *
+ * Le back-office cache « Confirmer » et « Annuler » pendant ce temps, mais un
+ * onglet ouvert avant l'ouverture de la session, lui, les affiche encore : la
+ * page n'est rendue qu'une fois. La garde doit donc exister côté serveur, où
+ * elle est la seule à valoir.
+ *
+ * Ce que chacune des deux actions casserait :
+ * — confirmer fait sortir la réservation de « en_attente », et `confirmerPaiement`
+ *   conditionne son écriture à ce statut ; le webhook ne trouve plus rien à
+ *   confirmer, l'e-mail au client ne part jamais, l'argent est encaissé sans
+ *   trace pour lui ;
+ * — annuler rend le créneau à la vente à la seconde où quelqu'un le paie.
+ *
+ * ON NE LÈVE PAS, ON RÉPOND `false`. Une lecture qui échoue ne doit pas bloquer
+ * le back-office : le pire cas est celui d'avant cette garde, et il reste rare.
+ */
+export async function paiementVivantSur(reservationId: string): Promise<boolean> {
+  return (await sessionPaiementVivante(reservationId)) !== null;
+}
+
+/**
+ * L'identifiant de la session Stripe encore ouverte sur cette réservation.
+ *
+ * `null` si aucune, si la dernière a plus de trente minutes — la page de
+ * paiement est alors morte — ou si la lecture échoue. Sert à `paiementVivantSur`
+ * et à la route d'abandon, qui a besoin de l'identifiant lui-même pour fermer
+ * la session chez Stripe.
+ *
+ * `stripe_payment_intent` porte l'identifiant de SESSION tant que le paiement
+ * n'a pas abouti : c'est ce qu'y écrit `ouvrirPaiement`, et c'est par lui que
+ * le webhook retrouve la ligne. Le vrai `pi_…` ne le remplace qu'à la
+ * confirmation.
+ *
+ * La plus récente d'abord : un client qui rouvre le tunnel laisse plusieurs
+ * lignes, et seule la dernière décrit ce qui se joue maintenant.
+ */
+export async function sessionPaiementVivante(reservationId: string): Promise<string | null> {
+  if (!baseConfiguree()) return null;
+  const depuis = new Date(Date.now() - VIE_SESSION_STRIPE_MINUTES * 60 * 1000).toISOString();
+  const { data, error } = await base()
+    .from("paiements")
+    .select("stripe_payment_intent")
+    .eq("reservation_id", reservationId)
+    .eq("statut", "en_cours")
+    .gte("created_at", depuis)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (error) {
+    console.error("Vérification d'un paiement en cours impossible :", error.message);
+    return null;
+  }
+  return data?.stripe_payment_intent ?? null;
 }
 
 export interface ResultatConfirmation {

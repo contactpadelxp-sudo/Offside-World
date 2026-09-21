@@ -2,6 +2,7 @@ import "server-only";
 import { base, baseConfiguree } from "@/lib/supabase/server";
 import { heure, heuresAvant, jourISO, jourLisible, jourLisibleCap } from "@/lib/temps";
 import { lireOptions } from "@/lib/db/referentiel";
+import { VIE_SESSION_STRIPE_MINUTES } from "@/lib/db/paiements";
 import { partRemboursee } from "@/data/reglement";
 import { BUBBLE_EN_LIGNE } from "@/data/bubble-team";
 import { lignesDepuisJson } from "@/lib/devis";
@@ -137,7 +138,12 @@ export async function lireReservations(
     const { data, error } = await requete;
     if (error) throw error;
     if (!data) return [];
-    return construire(data, await lireOptions(false), await lirePaiements(data), maintenant);
+    return construire(
+      data,
+      await lireOptions(false),
+      await lirePaiements(data, maintenant),
+      maintenant
+    );
   }
 
   switch (filtre) {
@@ -175,7 +181,7 @@ export async function lireReservations(
   if (error) throw error;
   if (!data) return [];
 
-  return construire(data, options, await lirePaiements(data), maintenant);
+  return construire(data, options, await lirePaiements(data, maintenant), maintenant);
 }
 
 type LigneReservation = Database["public"]["Views"]["reservations_detaillees"]["Row"];
@@ -185,48 +191,89 @@ interface PaiementLu {
   rembourseCents: number;
 }
 
+interface PaiementsLus {
+  /** Ce qui a été réellement encaissé, par réservation. */
+  payes: Map<string, PaiementLu>;
+  /** Les réservations dont une session Stripe est ouverte en ce moment. */
+  enCours: Set<string>;
+}
+
 /**
- * Les paiements encaissés des réservations affichées, en une requête.
+ * Durée de vie d'une session Stripe, en millisecondes.
+ *
+ * Passé ce délai la page de paiement est morte : une ligne restée « en_cours »
+ * ne signale plus un client devant son clavier, mais une tentative abandonnée.
+ * Sans cette borne, un panier abandonné gèlerait la fiche pour toujours. La
+ * minute exacte vient de `db/paiements.ts`, qui la partage avec l'`expires_at`
+ * réellement envoyé à Stripe.
+ */
+const VIE_SESSION_STRIPE_MS = VIE_SESSION_STRIPE_MINUTES * 60 * 1000;
+
+/**
+ * Les paiements des réservations affichées, en une requête.
  *
  * UNE REQUÊTE POUR LA PAGE, PAS UNE PAR LIGNE. La vue `reservations_detaillees`
  * ne porte pas le paiement, et l'y ajouter aurait demandé de la recréer — donc
  * une migration, sur une vue dont dépend déjà tout le back-office. Un `in (…)`
  * sur les identifiants déjà en main coûte moins cher, en travail comme en
  * risque.
+ *
+ * ON LIT AUSSI « en_cours », ET C'EST LE POINT.
+ *
+ * La lecture ne ramenait que l'argent encaissé. Entre le clic sur « Payer » et
+ * le webhook — jusqu'à 30 minutes avec Bancontact —, la fiche affichait donc
+ * « non payé » et offrait « Confirmer » et « Annuler » sur une réservation
+ * qu'un client était en train de régler. Les deux gestes cassent quelque
+ * chose : voir `ReservationAdmin.paiementEnCours`.
+ *
+ * Un encaissement l'emporte toujours sur une tentative : une réservation
+ * repayée après un premier abandon porte les deux lignes, et c'est la réussie
+ * qui décrit son état.
  */
-async function lirePaiements(lignes: LigneReservation[]): Promise<Map<string, PaiementLu>> {
+async function lirePaiements(
+  lignes: LigneReservation[],
+  maintenant: Date
+): Promise<PaiementsLus> {
   const ids = lignes.map((l) => l.id).filter((id): id is string => Boolean(id));
-  const par = new Map<string, PaiementLu>();
-  if (ids.length === 0) return par;
+  const lus: PaiementsLus = { payes: new Map(), enCours: new Set() };
+  if (ids.length === 0) return lus;
 
   const { data, error } = await base()
     .from("paiements")
-    .select("reservation_id, montant_cents, montant_rembourse_cents")
+    .select("reservation_id, montant_cents, montant_rembourse_cents, statut, created_at")
     .in("reservation_id", ids)
-    .in("statut", ["reussi", "rembourse", "partiellement_rembourse"]);
+    .in("statut", ["reussi", "rembourse", "partiellement_rembourse", "en_cours"]);
 
   if (error || !data) {
     // Un échec ici ne doit pas vider la liste des réservations : on affiche
     // les fiches sans leur volet paiement, et l'annulation ne proposera pas de
     // remboursement — le plus prudent des deux comportements.
     console.error("Lecture des paiements impossible :", error?.message);
-    return par;
+    return lus;
   }
 
+  const limite = maintenant.getTime() - VIE_SESSION_STRIPE_MS;
   for (const p of data) {
-    par.set(p.reservation_id, {
+    if (p.statut === "en_cours") {
+      if (new Date(p.created_at).getTime() >= limite) lus.enCours.add(p.reservation_id);
+      continue;
+    }
+    lus.payes.set(p.reservation_id, {
       montantCents: p.montant_cents,
       rembourseCents: p.montant_rembourse_cents,
     });
   }
-  return par;
+  // Payé bat « en train de payer » : la seconde tentative a abouti, ou la
+  // première ligne n'a jamais été refermée.
+  for (const id of lus.payes.keys()) lus.enCours.delete(id);
+  return lus;
 }
 
 /** Traduit les lignes de la vue en fiches affichables. */
 function construire(
   data: LigneReservation[],
   options: { id: string; libelle: string }[],
-  paiements: Map<string, PaiementLu>,
+  paiements: PaiementsLus,
   maintenant: Date
 ): ReservationAdmin[] {
   const libelles = new Map(options.map((o) => [o.id, o.libelle]));
@@ -237,7 +284,7 @@ function construire(
     // dont l'ossature manque plutôt que d'afficher des trous.
     if (!r.id || !r.reference || !r.type || !r.statut || !r.debut || !r.fin) continue;
     const debut = new Date(r.debut);
-    const paye = paiements.get(r.id);
+    const paye = paiements.payes.get(r.id);
     sortie.push({
       id: r.id,
       reference: r.reference,
@@ -281,6 +328,7 @@ function construire(
             ),
           }
         : null,
+      paiementEnCours: paiements.enCours.has(r.id),
     });
   }
   return sortie;

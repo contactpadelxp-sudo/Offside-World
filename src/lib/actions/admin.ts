@@ -38,6 +38,7 @@ import {
   type ChoixRemboursement,
 } from "@/lib/paiement/remboursement";
 import { montantLisible } from "@/lib/tarification";
+import { paiementVivantSur } from "@/lib/db/paiements";
 
 /**
  * Modifications du back-office.
@@ -87,12 +88,39 @@ function rafraichir(): void {
 
 // ── Réservations ─────────────────────────────────────────────────────────────
 
+/**
+ * Ce qu'on répond quand un paiement est en train de se jouer sur le créneau.
+ *
+ * La phrase dit l'attente et sa durée : l'exploitant n'a rien à faire, et il
+ * doit pouvoir le lire sans se demander si la fiche est cassée.
+ */
+const REFUS_PAIEMENT_EN_COURS: Resultat = {
+  ok: false,
+  message:
+    "Un paiement est en cours sur cette réservation : attendez qu'il aboutisse ou " +
+    "qu'il expire (30 minutes au plus), puis rafraîchissez la page.",
+};
+
 export async function confirmerReservation(id: string): Promise<Resultat> {
   const session = await garde();
   if (!session) return REFUS_SESSION;
 
   try {
     const cible = uuid(id, "Réservation");
+
+    /*
+      CONFIRMER PENDANT UN PAIEMENT COUPE LE WEBHOOK.
+
+      `confirmerPaiement` conditionne son écriture à `statut = "en_attente"` —
+      c'est ce qui la rend idempotente face aux relivraisons de Stripe. Une
+      confirmation manuelle passée entre-temps fait sortir la réservation de ce
+      statut : le webhook ne trouve plus rien à confirmer, et l'e-mail au
+      client ne part jamais. Il a payé, et n'a aucune trace de sa réservation.
+
+      Le back-office masque déjà le bouton, mais un onglet ouvert avant le début
+      du paiement l'affiche encore : c'est ici que la garde compte.
+    */
+    if (await paiementVivantSur(cible)) return REFUS_PAIEMENT_EN_COURS;
 
     // `eq("statut", "en_attente")` fait la vérification d'état ET la mise à
     // jour en une seule instruction : deux clics simultanés ne peuvent pas
@@ -150,6 +178,17 @@ export async function annulerReservation(
   try {
     const cible = uuid(id, "Réservation");
     const choix = choixRemboursement(remboursement);
+
+    /*
+      ANNULER PENDANT UN PAIEMENT REND À LA VENTE UN CRÉNEAU DÉJÀ PAYÉ.
+
+      L'annulation retire la ligne de l'index unique partiel : le créneau
+      redevient réservable à la seconde. Si le webhook arrive juste après, la
+      réservation est annulée, l'argent encaissé, et le créneau peut avoir été
+      repris par quelqu'un d'autre entre-temps. Trente minutes d'attente au
+      pire coûtent infiniment moins qu'une double réservation un samedi.
+    */
+    if (await paiementVivantSur(cible)) return REFUS_PAIEMENT_EN_COURS;
 
     // Lu AVANT la mise à jour : il faut l'heure du créneau pour appliquer le
     // barème, et la vue reste lisible après, mais autant tout tenir d'un coup.
