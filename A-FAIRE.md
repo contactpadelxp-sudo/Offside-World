@@ -268,31 +268,22 @@ facturation serait hors de proportion et mal placé.
 
 ## Affirmations du site à faire confirmer
 
-- [ ] **« Organisation et arbitrage du tournoi » — à confirmer d'urgence.**
-      C'est l'une des cinq choses que le site annonce comme comprises dans la
-      privatisation team building (`TEAM_BUILDING_INCLUS`). Or Brahim vient
-      d'écrire, le 21 septembre 2026 : « on met juste à disposition les
-      terrains ».
+- [x] ~~**« Organisation et arbitrage du tournoi ».**~~ **CONFIRMÉ LE
+      21 SEPTEMBRE 2026 : c'est bien fourni.** Mathis l'a vérifié auprès de
+      Brahim — « oui toujours le cas ». La ligne de `TEAM_BUILDING_INCLUS`
+      reste, et le site ne promet rien qu'il ne livre.
 
-      Les deux ne peuvent pas être vrais en même temps. Et c'est exactement la
-      faute déjà corrigée sur « encadrement adapté », retiré de l'accueil le
-      17 septembre parce qu'il avait écrit « il n'y a pas de coach » : un
-      arbitre EST un encadrement.
+      Le doute venait de sa phrase « on met juste à disposition les terrains »,
+      écrite le même jour. Elle portait sur la TVA, pas sur l'offre : c'était un
+      raccourci pour dire que la restauration se facture au bar et non sur le
+      devis. Noté ici pour que personne ne rouvre la question en relisant cette
+      phrase hors contexte.
 
-      Ce qui est en jeu n'est pas une formulation. Une entreprise qui réserve
-      une demi-journée en lisant « organisation et arbitrage du tournoi »
-      attend quelqu'un pour mener le jeu ; trouver un terrain vide est le genre
-      d'écart qui relève de l'article VI.97 du Code de droit économique, et qui
-      se règle en remboursement.
-
-      Sa phrase portait sur la TVA, pas sur l'offre — d'où le doute. Mais tant
-      qu'elle n'est pas levée, cette ligne promet peut-être une prestation qui
-      n'existe pas. À lui demander en clair : **fournis-tu un arbitre pour un
-      team building, oui ou non ?**
-
-Une allégation invérifiable engage le vendeur (art. VI.97 du Code de droit
-économique). Trois ont été relevées le 17 septembre 2026 en relisant le site ;
-deux étaient fausses et sont corrigées, la troisième est à confirmer.
+      Reste un point qui appartient à son comptable, pas au site : si la
+      privatisation comprend une prestation d'organisation et d'arbitrage, elle
+      n'est pas une pure mise à disposition d'installation — ce qui était la
+      prémisse du raisonnement à 6 %. Le devis porte un taux modifiable, donc
+      rien ne bloque de notre côté.
 
 - [x] ~~« Dès 6 ans » sur la page d'accueil~~ **CORRIGÉ en « Dès 4 ans »**, ce
       que Brahim a répondu. Un parent d'enfant de 5 ans se croyait exclu depuis
