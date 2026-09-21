@@ -740,22 +740,92 @@ export async function basculerCreneau(id: string, ouvrir: boolean): Promise<Resu
   try {
     const cible = uuid(id, "Créneau");
 
-    // Fermer un créneau qui porte une réservation active reviendrait à retirer
-    // de la vente une place déjà vendue : on refuse, et on dit laquelle.
+    /*
+      ON FERME D'ABORD, ON REGARDE ENSUITE — ET C'EST L'INVERSE DE CE QUI SE
+      FAISAIT.
+
+      La vérification « ce créneau porte-t-il une réservation ? » précédait la
+      fermeture. Entre les deux, un client pouvait réserver : la lecture
+      répondait « libre », l'écriture fermait, et une place vendue disparaissait
+      de la vente sans que rien ne le signale. Un samedi après-midi, c'est le
+      moment exact où l'on ferme un créneau ET où l'on réserve.
+
+      Dans l'ordre inverse, la fenêtre se referme presque entièrement : dès que
+      le créneau est fermé, plus aucune réservation ne peut s'y engager, et
+      celle qui vient de s'engager est retrouvée par la lecture qui suit — on
+      rouvre alors et on refuse, ce qui est le résultat attendu.
+
+      IL RESTE UNE FENÊTRE, ET ON NE PRÉTEND PAS LE CONTRAIRE : une réservation
+      partie avant la fermeture mais validée après la lecture passerait encore.
+      Elle est alors VISIBLE dans la liste du back-office, sur un créneau
+      fermé — un état que Brahim peut constater et corriger, là où l'ancien
+      ordre effaçait la place en silence. Supprimer complètement la fenêtre
+      demande une fonction SQL prenant le verrou, ce qui est le prochain pas.
+    */
     if (!ouvrir) {
-      const { data: prise } = await base()
+      const { data: ferme, error: eFermeture } = await base()
+        .from("creneaux")
+        .update({ ouvert: false })
+        .eq("id", cible)
+        // `ouvert = true` : on ne veut retenir que le créneau que CET appel a
+        // fermé. Sans ça, un créneau déjà fermé serait « rouvert » plus bas.
+        .eq("ouvert", true)
+        .select("id")
+        .maybeSingle();
+
+      if (eFermeture) throw eFermeture;
+      if (!ferme) {
+        const { data: existe } = await base()
+          .from("creneaux")
+          .select("ouvert")
+          .eq("id", cible)
+          .maybeSingle();
+        if (!existe) return { ok: false, message: "Créneau introuvable." };
+        return { ok: true, message: "Ce créneau était déjà fermé." };
+      }
+
+      const { data: prise, error: ePrise } = await base()
         .from("reservations")
         .select("reference")
         .eq("creneau_id", cible)
         .in("statut", ["en_attente", "confirmee"])
         .maybeSingle();
 
-      if (prise) {
+      if (ePrise || prise) {
+        // Une place vendue ne se retire pas de la vente. On remet le créneau
+        // comme on l'a trouvé — et si même ça échoue, on le dit : un créneau
+        // fermé qui porte une réservation doit être vu, pas deviné.
+        const { error: eRetour } = await base()
+          .from("creneaux")
+          .update({ ouvert: true })
+          .eq("id", cible);
+
+        if (eRetour) {
+          console.error("Réouverture après refus impossible :", eRetour.message);
+          return {
+            ok: false,
+            message:
+              "Ce créneau porte une réservation ET n'a pas pu être remis en vente. " +
+              "Rouvrez-le à la main depuis cet écran.",
+          };
+        }
+        if (ePrise) {
+          console.error("Lecture des réservations du créneau impossible :", ePrise.message);
+          return {
+            ok: false,
+            message:
+              "Impossible de vérifier si ce créneau est réservé. Rien n'a été modifié : réessayez.",
+          };
+        }
         return {
           ok: false,
-          message: `Impossible : la réservation ${prise.reference} occupe ce créneau. Annulez-la d'abord.`,
+          message: `Impossible : la réservation ${prise!.reference} occupe ce créneau. Annulez-la d'abord.`,
         };
       }
+
+      await journaliser(session, "creneau.ferme", cible);
+      rafraichir();
+      return { ok: true, message: "Créneau fermé." };
     }
 
     const { data, error } = await base()
@@ -776,9 +846,11 @@ export async function basculerCreneau(id: string, ouvrir: boolean): Promise<Resu
     }
     if (!data) return { ok: false, message: "Créneau introuvable." };
 
-    await journaliser(session, ouvrir ? "creneau.ouvert" : "creneau.ferme", cible);
+    // Ce chemin ne sert plus qu'à la RÉOUVERTURE : la fermeture est traitée
+    // plus haut, dans l'ordre qui la rend sûre.
+    await journaliser(session, "creneau.ouvert", cible);
     rafraichir();
-    return { ok: true, message: ouvrir ? "Créneau rouvert." : "Créneau fermé." };
+    return { ok: true, message: "Créneau rouvert." };
   } catch (e) {
     return echec(e);
   }
@@ -1351,24 +1423,75 @@ export async function basculerJournee(jourDemande: string, ouvrir: boolean): Pro
     const debutJour = new Date(`${cible}T00:00:00`);
     const finJour = new Date(`${cible}T23:59:59.999`);
 
-    const { data: creneaux, error: erreurLecture } = await base()
-      .from("creneaux")
-      .select("id")
-      .gte("debut", debutJour.toISOString())
-      .lte("debut", finJour.toISOString())
-      .eq("ouvert", !ouvrir);
+    if (ouvrir) {
+      const { data, error } = await base()
+        .from("creneaux")
+        .update({ ouvert: true })
+        .gte("debut", debutJour.toISOString())
+        .lte("debut", finJour.toISOString())
+        .eq("ouvert", false)
+        .select("id");
 
-    if (erreurLecture) throw erreurLecture;
-    if (!creneaux || creneaux.length === 0) {
+      if (error) {
+        // Un créneau ajouté depuis peut occuper la même plage dans le même
+        // espace, et la contrainte d'exclusion refuse.
+        if (error.code === VIOLATION_EXCLUSION) {
+          return {
+            ok: false,
+            message:
+              "Réouverture impossible : un créneau ouvert chevauche déjà l'un de ceux-ci. " +
+              "Rouvrez-les un par un pour voir lequel.",
+          };
+        }
+        throw error;
+      }
+
+      const touches = data?.length ?? 0;
+      if (touches === 0) return { ok: false, message: "Aucun créneau fermé ce jour-là." };
+
+      await journaliser(session, "creneaux.journee_ouverte", null, {
+        jour: cible,
+        creneaux: touches,
+      });
+      rafraichir();
       return {
-        ok: false,
-        message: ouvrir
-          ? "Aucun créneau fermé ce jour-là."
-          : "Aucun créneau ouvert ce jour-là.",
+        ok: true,
+        message: `${touches} créneau${touches > 1 ? "x" : ""} rouvert${touches > 1 ? "s" : ""}.`,
       };
     }
 
-    const ids = creneaux.map((c) => c.id);
+    /*
+      FERMETURE : ON FERME D'ABORD, ON REGARDE ENSUITE.
+
+      La lecture des réservations précédait l'écriture. Entre les deux, un
+      client pouvait réserver l'un de ces créneaux : la lecture le disait
+      libre, l'écriture le fermait, et une place vendue disparaissait de la
+      vente sans que rien ne le signale. Le bouton « fermer la journée » sert
+      justement les jours chargés.
+
+      Fermées d'abord, les places ne peuvent plus s'engager ; celles qui
+      venaient de s'engager sont retrouvées juste après et rouvertes une à une.
+      Voir `basculerCreneau` pour la fenêtre résiduelle, identique ici : une
+      réservation validée après la lecture resterait visible sur un créneau
+      fermé — un état constatable, là où l'ancien ordre effaçait la place en
+      silence.
+    */
+    const { data: fermes, error: eFermeture } = await base()
+      .from("creneaux")
+      .update({ ouvert: false })
+      .gte("debut", debutJour.toISOString())
+      .lte("debut", finJour.toISOString())
+      // Seuls ceux que CET appel a fermés : un créneau déjà fermé ne doit pas
+      // pouvoir être rouvert par le rattrapage ci-dessous.
+      .eq("ouvert", true)
+      .select("id");
+
+    if (eFermeture) throw eFermeture;
+    if (!fermes || fermes.length === 0) {
+      return { ok: false, message: "Aucun créneau ouvert ce jour-là." };
+    }
+
+    const ids = fermes.map((c) => c.id);
 
     const { data: prises, error: erreurPrises } = await base()
       .from("reservations")
@@ -1376,49 +1499,47 @@ export async function basculerJournee(jourDemande: string, ouvrir: boolean): Pro
       .in("statut", ["en_attente", "confirmee"])
       .in("creneau_id", ids);
 
-    if (erreurPrises) throw erreurPrises;
-
-    const occupes = new Map((prises ?? []).map((r) => [r.creneau_id, r.reference]));
-    const aBasculer = ouvrir ? ids : ids.filter((id) => !occupes.has(id));
-
-    if (aBasculer.length === 0) {
-      return {
-        ok: false,
-        message: "Tous les créneaux de cette journée sont réservés : aucun ne peut être fermé.",
-      };
+    /*
+      SI LA LECTURE ÉCHOUE, ON REMET TOUT COMME C'ÉTAIT. Garder la journée
+      fermée sans savoir ce qu'elle portait reviendrait à retirer de la vente
+      des places peut-être vendues, en le présentant comme une réussite.
+    */
+    if (erreurPrises) {
+      await base().from("creneaux").update({ ouvert: true }).in("id", ids);
+      throw erreurPrises;
     }
 
-    const { data, error } = await base()
-      .from("creneaux")
-      .update({ ouvert: ouvrir })
-      .in("id", aBasculer)
-      .select("id");
+    const occupes = new Map((prises ?? []).map((r) => [r.creneau_id, r.reference]));
 
-    if (error) {
-      // À la réouverture seulement : un créneau ajouté depuis peut occuper la
-      // même plage dans le même espace, et la contrainte d'exclusion refuse.
-      if (error.code === VIOLATION_EXCLUSION) {
+    if (occupes.size > 0) {
+      const { error: eRetour } = await base()
+        .from("creneaux")
+        .update({ ouvert: true })
+        .in("id", [...occupes.keys()]);
+
+      if (eRetour) {
+        console.error("Réouverture des créneaux réservés impossible :", eRetour.message);
+        const refs = [...new Set(occupes.values())].join(", ");
         return {
           ok: false,
           message:
-            "Réouverture impossible : un créneau ouvert chevauche déjà l'un de ceux-ci. " +
-            "Rouvrez-les un par un pour voir lequel.",
+            `La journée a été fermée, mais ${occupes.size > 1 ? "les créneaux réservés" : "le créneau réservé"} ` +
+            `(${refs}) n'${occupes.size > 1 ? "ont" : "a"} pas pu être remis en vente. Rouvrez-${occupes.size > 1 ? "les" : "le"} à la main.`,
         };
       }
-      throw error;
     }
 
-    const touches = data?.length ?? 0;
-    await journaliser(session, ouvrir ? "creneaux.journee_ouverte" : "creneaux.journee_fermee", null, {
+    const touches = ids.length - occupes.size;
+    await journaliser(session, "creneaux.journee_fermee", null, {
       jour: cible,
       creneaux: touches,
     });
     rafraichir();
 
     const phrases = [
-      `${touches} créneau${touches > 1 ? "x" : ""} ${ouvrir ? "rouvert" : "fermé"}${touches > 1 ? "s" : ""}.`,
+      `${touches} créneau${touches > 1 ? "x" : ""} fermé${touches > 1 ? "s" : ""}.`,
     ];
-    if (!ouvrir && occupes.size > 0) {
+    if (occupes.size > 0) {
       const refs = [...new Set(occupes.values())].join(", ");
       phrases.push(
         `${occupes.size} créneau${occupes.size > 1 ? "x" : ""} laissé${occupes.size > 1 ? "s" : ""} ouvert${occupes.size > 1 ? "s" : ""} : ` +

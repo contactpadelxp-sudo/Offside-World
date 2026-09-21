@@ -100,6 +100,23 @@ export function AnniversaireFlow({
   const [selectedJour, setSelectedJour] = useState(() => jours[0]?.jour ?? "");
   const [selectedCreneau, setSelectedCreneau] = useState<CreneauVue | null>(null);
 
+  /*
+    LA PLUS GRANDE SALLE OUVERTE, ET POURQUOI ELLE BORNE LE FORMULAIRE.
+
+    Une réservation occupe UN créneau dans UNE salle : la capacité de cette
+    salle est donc un plafond dur, indépendant de la formule. Le formulaire
+    n'en tenait aucun compte et proposait d'aller jusqu'à `enfantsMax` — 40
+    participants pour une salle qui en accueille 25. Le serveur refusait
+    (« Cet espace accueille 25 participants au maximum »), mais seulement à la
+    toute fin, après le choix de la date, du créneau et la saisie de toutes les
+    coordonnées. Trois étapes remplies pour rien.
+
+    `-Infinity` sur un tableau vide : sans ce repli, un jour sans aucun créneau
+    ouvert rendrait le champ impossible à remplir. On retombe alors sur la
+    seule borne connue, celle de la formule.
+  */
+  const capaciteMax = espaces.length > 0 ? Math.max(...espaces.map((e) => e.capacite)) : null;
+
   const jourCourant = selectedJour || jours[0]?.jour || "";
   const creneauxDuJour = useMemo(
     () => creneaux.filter((c) => c.jour === jourCourant),
@@ -462,15 +479,42 @@ export function AnniversaireFlow({
                 <ChevronBas aria-hidden className="pointer-events-none absolute right-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
               </div>
             </div>
-            <ChampNombre
-              id="childCount"
-              label="Nombre de participants"
-              min={1}
-              max={selectedFormule.enfantsMax}
-              valeur={childCount}
-              onChange={setChildCount}
-              aide={`Forfait jusqu'à ${selectedFormule.enfantsInclus} participants — maximum ${selectedFormule.enfantsMax}.`}
-            />
+            {(() => {
+              /*
+                Le plus BAS des deux plafonds : ce que la formule autorise, et
+                ce que la plus grande salle ouverte peut recevoir. Proposer
+                au-delà n'aurait mené qu'à un refus du serveur trois étapes
+                plus loin.
+              */
+              const plafond = Math.min(
+                selectedFormule.enfantsMax,
+                capaciteMax ?? selectedFormule.enfantsMax
+              );
+              // L'aide nomme CE QUI BORNE réellement. Dire « maximum 40 » quand
+              // la salle en accueille 25 serait la même promesse qu'avant.
+              const salleBorne = capaciteMax !== null && capaciteMax < selectedFormule.enfantsMax;
+              return (
+                <ChampNombre
+                  id="childCount"
+                  label="Nombre de participants"
+                  min={1}
+                  max={plafond}
+                  valeur={childCount}
+                  onChange={(n) => {
+                    setChildCount(n);
+                    // Un créneau déjà retenu peut devenir trop petit si l'on
+                    // revient augmenter le groupe : on le relâche plutôt que
+                    // de laisser avancer vers un refus.
+                    setSelectedCreneau((c) => (c && n > c.capacite ? null : c));
+                  }}
+                  aide={
+                    salleBorne
+                      ? `Forfait jusqu'à ${selectedFormule.enfantsInclus} participants — maximum ${plafond}, capacité de nos salles.`
+                      : `Forfait jusqu'à ${selectedFormule.enfantsInclus} participants — maximum ${plafond}.`
+                  }
+                />
+              );
+            })()}
           </div>
 
           {/* Détail du prix */}
@@ -659,9 +703,20 @@ export function AnniversaireFlow({
                 {espaces.map((espace) => {
                   const horaires = creneauxDuJour.filter((c) => c.espaceId === espace.id);
                   if (horaires.length === 0) return null;
+                  /*
+                    TROP PETITE POUR CE GROUPE — DIT ICI, PAS À LA FIN.
+
+                    Le serveur refuse déjà (« Cet espace accueille N
+                    participants au maximum »), mais après le choix du créneau
+                    ET la saisie de toutes les coordonnées. La salle, elle, est
+                    connue dès cet écran : le nombre de participants a été
+                    choisi à l'étape précédente. On le dit donc là où la
+                    décision se prend.
+                  */
+                  const tropPetite = childCount > espace.capacite;
                   return (
                     <Card key={espace.id} className="overflow-hidden">
-                      <CardContent className="p-4">
+                      <CardContent className={`p-4 ${tropPetite ? "opacity-60" : ""}`}>
                         <div className="flex items-start justify-between">
                           <div>
                             <h3 className="font-bold">{espace.nom}</h3>
@@ -670,19 +725,28 @@ export function AnniversaireFlow({
                             </p>
                           </div>
                         </div>
+                        {tropPetite && (
+                          <p className="mt-2 text-xs font-medium text-kick">
+                            Trop petite pour {childCount} participants. Réduisez le groupe à
+                            l&apos;étape précédente, ou choisissez une autre salle.
+                          </p>
+                        )}
                         <div className="mt-3 flex flex-wrap gap-2">
                           {horaires.map((c) => {
                             const choisi = selectedCreneau?.id === c.id;
+                            const indisponible = !c.libre || tropPetite;
                             return (
                               <button
                                 key={c.id}
-                                disabled={!c.libre}
+                                disabled={indisponible}
                                 onClick={() => setSelectedCreneau(c)}
                                 // Le créneau retenu n'était signalé que par son fond vert.
                                 aria-pressed={choisi}
                                 className={`rounded-xl border-2 px-3 py-2 text-sm font-medium transition-all duration-300 ${
                                   !c.libre
                                     ? "border-destructive/30 bg-destructive/10 text-destructive/70 cursor-not-allowed line-through"
+                                    : tropPetite
+                                    ? "border-muted bg-muted/40 text-muted-foreground cursor-not-allowed"
                                     : choisi
                                     ? "border-field bg-field text-[#0a0a0b] shadow-lg shadow-field/20"
                                     : "border-muted hover:border-field/40"
