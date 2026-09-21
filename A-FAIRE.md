@@ -213,9 +213,20 @@ facturation serait hors de proportion et mal placé.
       sportives. C'est désormais la valeur proposée d'office sur un devis
       (`TVA_TAUX_DEFAUT`), et elle reste modifiable au cas par cas : une
       prestation qui sortirait du simple accès peut relever d'un autre taux.
+- [x] ~~**Un taux unique par devis suffit-il ?**~~ **OUI — confirmé le
+      21 septembre 2026.** C'était la seule question TVA qui nous concernait,
+      parce qu'elle décidait de la STRUCTURE du devis : `LigneDevis` ne porte
+      pas de taux, un seul s'applique au document entier.
+
+      Brahim : « on met juste à disposition les terrains donc 6 %, et ils
+      consomment au bar donc la TVA sera correcte pour boissons, food etc. » La
+      restauration est donc facturée AU BAR, hors devis. Le devis ne porte que
+      la privatisation — `devisPreRempli` ne génère d'ailleurs qu'une seule
+      ligne. Rien à changer.
 - [ ] **Faire confirmer le détail par son comptable** : régime
       d'assujettissement, exemptions de l'article 44, clients non établis en
-      Belgique. C'est du droit fiscal, pas du développement.
+      Belgique. C'est du droit fiscal, pas du développement — et c'est son
+      sujet, pas celui du site, qui n'émet aucune facture.
 
 ## Décisions à trancher
 
@@ -256,6 +267,28 @@ facturation serait hors de proportion et mal placé.
       auraient plus de poids que ce qui a été retiré. Sinon on reste comme ça.
 
 ## Affirmations du site à faire confirmer
+
+- [ ] **« Organisation et arbitrage du tournoi » — à confirmer d'urgence.**
+      C'est l'une des cinq choses que le site annonce comme comprises dans la
+      privatisation team building (`TEAM_BUILDING_INCLUS`). Or Brahim vient
+      d'écrire, le 21 septembre 2026 : « on met juste à disposition les
+      terrains ».
+
+      Les deux ne peuvent pas être vrais en même temps. Et c'est exactement la
+      faute déjà corrigée sur « encadrement adapté », retiré de l'accueil le
+      17 septembre parce qu'il avait écrit « il n'y a pas de coach » : un
+      arbitre EST un encadrement.
+
+      Ce qui est en jeu n'est pas une formulation. Une entreprise qui réserve
+      une demi-journée en lisant « organisation et arbitrage du tournoi »
+      attend quelqu'un pour mener le jeu ; trouver un terrain vide est le genre
+      d'écart qui relève de l'article VI.97 du Code de droit économique, et qui
+      se règle en remboursement.
+
+      Sa phrase portait sur la TVA, pas sur l'offre — d'où le doute. Mais tant
+      qu'elle n'est pas levée, cette ligne promet peut-être une prestation qui
+      n'existe pas. À lui demander en clair : **fournis-tu un arbitre pour un
+      team building, oui ou non ?**
 
 Une allégation invérifiable engage le vendeur (art. VI.97 du Code de droit
 économique). Trois ont été relevées le 17 septembre 2026 en relisant le site ;
