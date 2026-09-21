@@ -18,6 +18,48 @@
  * moment de calculer le total. À déplacer dans une table dédiée le jour où le
  * tarif devra changer sans redéploiement.
  */
+/**
+ * LE BUBBLE FOOT NE SE RÉSERVE PLUS SUR LE SITE — décidé le 21 septembre 2026.
+ *
+ * POURQUOI. Le Bubble se joue aux mêmes heures que la location de terrain, sur
+ * les mêmes espaces — Brahim l'a confirmé. Or la location vit sur Sport-Finder,
+ * qui pilote aussi l'ouverture automatique du complexe. Deux systèmes qui
+ * vendent le même terrain aux mêmes heures, sans se voir, finissent par le
+ * vendre deux fois : le site ignore les réservations de Sport-Finder, et
+ * l'inverse est vrai.
+ *
+ * On a cherché la place restante, et elle n'existe pas. En croisant les heures
+ * d'ouverture, les créneaux d'anniversaire et les plages de location, il reste
+ * au Bubble : mercredi 18h–20h, vendredi 15h–16h, et une demi-heure le samedi
+ * et le dimanche. Rien le week-end après 20h, qui est justement le moment où
+ * il se vend — et c'est aussi l'heure où plus personne n'est sur place pour
+ * sortir les bulles, puisque la porte s'ouvre toute seule.
+ *
+ * La ligne de partage qui en découle n'est pas un arbitrage, c'est un constat :
+ * le SITE vend ce qui se passe quand quelqu'un est là (anniversaires, et le
+ * Bounce Park à venir), SPORT-FINDER vend ce qui se passe quand personne n'y
+ * est (foot, Bubble). Aucun chevauchement possible, donc rien à surveiller, et
+ * aucune intégration à construire.
+ *
+ * CE FICHIER SUFFIT À REVENIR EN ARRIÈRE. Le tunnel, l'action serveur, la table
+ * `horaires_bubble` et le générateur de créneaux restent en place et compilent.
+ * Passer cette constante à `true` remet le Bubble en vente sur le site — ce qui
+ * n'aura de sens que le jour où l'ouverture automatique sera pilotable depuis
+ * le site, objectif que Brahim a posé pour plus tard.
+ */
+export const BUBBLE_EN_LIGNE = false;
+
+/**
+ * Où l'on envoie le visiteur pour réserver un Bubble Foot.
+ *
+ * C'est la page du complexe, et non la fiche du produit : l'URL de la location
+ * de terrain porte l'identifiant `107` chez Sport-Finder, celui du Bubble n'a
+ * pas été communiqué. Deviner un numéro mènerait au mauvais produit ou à une
+ * page inexistante ; la page du centre coûte un clic de plus et ne ment pas.
+ * À remplacer par le lien direct dès que Brahim le donne.
+ */
+export const SPORTFINDER_BUBBLE_URL = "https://www.sport-finder.com/fr/center/offside-foot-indoor";
+
 export const BUBBLE_PRIX_PAR_PERSONNE = 23; // €
 export const BUBBLE_MIN_PERSONNES = 6;
 export const BUBBLE_MAX_PERSONNES = 20;

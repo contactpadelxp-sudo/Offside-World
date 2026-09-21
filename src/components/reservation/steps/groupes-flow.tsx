@@ -23,6 +23,8 @@ import type { CreneauVue } from "@/lib/vues";
 import type { DemiJourneeVue } from "@/lib/demi-journees";
 import type { RefTitre } from "../reservation-flow";
 import {
+  BUBBLE_EN_LIGNE,
+  SPORTFINDER_BUBBLE_URL,
   BUBBLE_PRIX_PAR_PERSONNE,
   BUBBLE_MIN_PERSONNES,
   BUBBLE_MAX_PERSONNES,
@@ -34,7 +36,7 @@ import {
 import { RESUME_ANNULATION } from "@/data/reglement";
 import { euros } from "@/lib/tarification";
 import {
-  AlerteCercle, Ballon, Batiment, Bouclier, Coche, Document, FlecheDroite, FlecheGauche, Groupe, Horloge, Info, Visuel,
+  AlerteCercle, Ballon, Batiment, Bouclier, Coche, Document, FlecheDroite, FlecheGauche, Groupe, Horloge, Info, LienExterne, Visuel,
 } from "@/components/icons";
 
 /** « Matin », ou « Matin · 09:00 – 13:00 » quand les heures sont connues. */
@@ -297,6 +299,13 @@ export function GroupesFlow({
       // site, et c'est elle qui garantit la virgule et l'espace insécable.
       tag: `Dès ${euros(BUBBLE_PRIX_PAR_PERSONNE)}/pers.`,
       detail: `${BUBBLE_DUREE_MINUTES} minutes • à partir de ${BUBBLE_MIN_PERSONNES} personnes`,
+      /*
+        Le Bubble se réserve sur Sport-Finder, pas ici — voir `BUBBLE_EN_LIGNE`.
+        La carte reste : le complexe propose bien cette activité, et la faire
+        disparaître ferait croire qu'elle n'existe plus. Seule la destination
+        change, comme pour « Louer un terrain ».
+      */
+      lien: BUBBLE_EN_LIGNE ? null : SPORTFINDER_BUBBLE_URL,
       accentText: "text-field",
       accentBadge: "bg-field/15 text-field",
       iconBg: "bg-field/15 text-field",
@@ -305,6 +314,7 @@ export function GroupesFlow({
     },
     {
       id: "team-building" as Offre,
+      lien: null,
       icon: Batiment,
       title: "Team Building",
       description: "Privatisation du complexe pour votre équipe, à la demi-journée.",
@@ -339,61 +349,109 @@ export function GroupesFlow({
       {step === "offre" && (
         <FadeIn className="mt-6">
           <StaggerContainer className="grid gap-6 sm:grid-cols-2" staggerDelay={0.1}>
-            {offres.map((o) => (
-              <StaggerItem key={o.id} className="h-full">
-                <Tilt3D intensity={8} className="h-full">
-                  <button
-                    onClick={() => { setOffre(o.id); setStep("creneau"); }}
-                    className="w-full text-left h-full group"
-                  >
-                    <Card className={`h-full overflow-hidden border-2 py-0 gap-0 transition-all duration-500 cursor-pointer ${o.border} bg-card flex flex-col`}>
-                      {/* Emplacement photo — fondu dans le corps de la carte */}
-                      {/* Cadre portrait sur mobile, plus ramassé dès deux colonnes
-                          pour que les deux cartes tiennent dans l'écran sans défiler. */}
-                      <div className="relative aspect-[4/5] sm:aspect-[4/3] overflow-hidden">
-                        {o.img ? (
-                          <Photo
-                            src={o.img}
-                            alt={o.title}
-                            sizes="(max-width: 640px) 100vw, 420px"
-                            className={`object-cover ${o.imgPosition} transition-transform duration-700 group-hover:scale-105`}
-                          />
-                        ) : (
-                          <div className="absolute inset-0 flex flex-col items-center justify-center gap-3">
-                            <div aria-hidden className="absolute inset-0 bg-gradient-to-b from-white/[0.035] to-transparent" />
-                            <div aria-hidden className="absolute inset-0 dot-grid fade-mask-radial opacity-70" />
-                            <div aria-hidden className={`absolute left-1/2 top-[46%] -translate-x-1/2 -translate-y-1/2 size-44 rounded-full blur-3xl ${o.glow}`} />
-                            <o.icon className="relative size-12 text-foreground/25" />
-                            <span className="relative inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground/60">
-                              <Visuel className="size-3.5" /> Photo à venir
-                            </span>
-                          </div>
-                        )}
-                        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-28 bg-gradient-to-b from-transparent to-card" />
-                        <div className={`absolute left-4 top-4 inline-flex items-center rounded-full bg-black/65 px-3 py-1 text-xs font-semibold ring-1 ring-white/15 backdrop-blur-md ${o.accentText}`}>
-                          {o.tag}
-                        </div>
-                      </div>
+            {offres.map((o) => {
+              /*
+                UN LIEN N'EST PAS UN BOUTON, ET LA DIFFÉRENCE S'ENTEND.
 
-                      {/* Contenu — remonte légèrement pour chevaucher le fondu */}
-                      <div className="-mt-6 p-6 flex flex-col flex-1">
-                        <div className="flex items-center gap-2.5">
-                          <div className={`inline-flex items-center justify-center rounded-xl p-2.5 ${o.iconBg} group-hover:scale-110 transition-transform duration-500`}>
-                            <o.icon className="size-5" />
-                          </div>
-                          <h2 className="text-xl font-bold font-[family-name:var(--font-heading)] leading-tight">{o.title}</h2>
-                        </div>
-                        <p className="mt-3 text-[15px] leading-relaxed text-muted-foreground">{o.description}</p>
-                        <p className="mt-2 text-xs text-muted-foreground flex-1">{o.detail}</p>
-                        <span className={`mt-5 inline-flex items-center gap-1.5 text-sm font-semibold ${o.accentText} group-hover:gap-2.5 transition-all duration-300`}>
-                          Choisir <FlecheDroite className="size-4" />
+                Le Bubble Foot se réserve sur Sport-Finder depuis le
+                21 septembre 2026 — voir `BUBBLE_EN_LIGNE`. Sa carte mène donc
+                hors du site, et doit être un `<a>` : un lecteur d'écran
+                l'annonce comme un lien, le clic du milieu ouvre un onglet, et
+                l'adresse s'affiche au survol. Un `<button>` qui navigue prive
+                de tout cela.
+
+                La carte elle-même est écrite UNE fois et partagée par les deux
+                enveloppes. La recopier ferait diverger les deux rendus au
+                premier changement de style — c'est la faute que ce projet a
+                déjà corrigée sur les cartes d'activité et sur les formules.
+              */
+              const carte = (
+                <Card className={`h-full overflow-hidden border-2 py-0 gap-0 transition-all duration-500 cursor-pointer ${o.border} bg-card flex flex-col`}>
+                  {/* Emplacement photo — fondu dans le corps de la carte */}
+                  {/* Cadre portrait sur mobile, plus ramassé dès deux colonnes
+                      pour que les deux cartes tiennent dans l'écran sans défiler. */}
+                  <div className="relative aspect-[4/5] sm:aspect-[4/3] overflow-hidden">
+                    {o.img ? (
+                      <Photo
+                        src={o.img}
+                        alt={o.title}
+                        sizes="(max-width: 640px) 100vw, 420px"
+                        className={`object-cover ${o.imgPosition} transition-transform duration-700 group-hover:scale-105`}
+                      />
+                    ) : (
+                      <div className="absolute inset-0 flex flex-col items-center justify-center gap-3">
+                        <div aria-hidden className="absolute inset-0 bg-gradient-to-b from-white/[0.035] to-transparent" />
+                        <div aria-hidden className="absolute inset-0 dot-grid fade-mask-radial opacity-70" />
+                        <div aria-hidden className={`absolute left-1/2 top-[46%] -translate-x-1/2 -translate-y-1/2 size-44 rounded-full blur-3xl ${o.glow}`} />
+                        <o.icon className="relative size-12 text-foreground/25" />
+                        <span className="relative inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground/60">
+                          <Visuel className="size-3.5" /> Photo à venir
                         </span>
                       </div>
-                    </Card>
-                  </button>
-                </Tilt3D>
-              </StaggerItem>
-            ))}
+                    )}
+                    <div className="pointer-events-none absolute inset-x-0 bottom-0 h-28 bg-gradient-to-b from-transparent to-card" />
+                    <div className={`absolute left-4 top-4 inline-flex items-center rounded-full bg-black/65 px-3 py-1 text-xs font-semibold ring-1 ring-white/15 backdrop-blur-md ${o.accentText}`}>
+                      {o.tag}
+                    </div>
+                  </div>
+
+                  {/* Contenu — remonte légèrement pour chevaucher le fondu */}
+                  <div className="-mt-6 p-6 flex flex-col flex-1">
+                    <div className="flex items-center gap-2.5">
+                      <div className={`inline-flex items-center justify-center rounded-xl p-2.5 ${o.iconBg} group-hover:scale-110 transition-transform duration-500`}>
+                        <o.icon className="size-5" />
+                      </div>
+                      <h2 className="text-xl font-bold font-[family-name:var(--font-heading)] leading-tight">{o.title}</h2>
+                    </div>
+                    <p className="mt-3 text-[15px] leading-relaxed text-muted-foreground">{o.description}</p>
+                    <p className="mt-2 text-xs text-muted-foreground flex-1">{o.detail}</p>
+                    {/*
+                      « CHOISIR » MENTIRAIT SUR UNE CARTE QUI QUITTE LE SITE.
+
+                      Le libellé et l'icône disent où l'on va. Un visiteur qui
+                      clique « Choisir » attend l'étape suivante du tunnel ; se
+                      retrouver sur un autre site sans prévenir est le genre de
+                      surprise qui fait fermer l'onglet. La flèche oblique est
+                      la convention du lien sortant, et elle double
+                      l'information portée par le texte.
+                    */}
+                    <span className={`mt-5 inline-flex items-center gap-1.5 text-sm font-semibold ${o.accentText} group-hover:gap-2.5 transition-all duration-300`}>
+                      {o.lien ? (
+                        <>Réserver sur Sport-Finder <LienExterne className="size-4" /></>
+                      ) : (
+                        <>Choisir <FlecheDroite className="size-4" /></>
+                      )}
+                    </span>
+                  </div>
+                </Card>
+              );
+
+              return (
+                <StaggerItem key={o.id} className="h-full">
+                  <Tilt3D intensity={8} className="h-full">
+                    {o.lien ? (
+                      <a
+                        href={o.lien}
+                        target="_blank"
+                        // Sans `noreferrer`, la page ouverte reçoit une
+                        // référence à la nôtre via `window.opener`.
+                        rel="noreferrer"
+                        className="block h-full w-full text-left group"
+                      >
+                        {carte}
+                      </a>
+                    ) : (
+                      <button
+                        onClick={() => { setOffre(o.id); setStep("creneau"); }}
+                        className="w-full text-left h-full group"
+                      >
+                        {carte}
+                      </button>
+                    )}
+                  </Tilt3D>
+                </StaggerItem>
+              );
+            })}
           </StaggerContainer>
           <div className="mt-8">
             <Button variant="ghost" onClick={onBack} className="gap-1.5"><FlecheGauche className="size-4" /> Retour</Button>

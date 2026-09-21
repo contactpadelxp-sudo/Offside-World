@@ -3,6 +3,7 @@ import { base, baseConfiguree } from "@/lib/supabase/server";
 import { heure, heuresAvant, jourISO, jourLisible, jourLisibleCap } from "@/lib/temps";
 import { lireOptions } from "@/lib/db/referentiel";
 import { partRemboursee } from "@/data/reglement";
+import { BUBBLE_EN_LIGNE } from "@/data/bubble-team";
 import { lignesDepuisJson } from "@/lib/devis";
 import { decrireAction, lienJournal } from "@/lib/journal";
 import type { Database } from "@/lib/supabase/types";
@@ -553,16 +554,36 @@ export type HorizonActivite = {
   jours: number | null;
 };
 
+/*
+  ON N'ALERTE QUE SUR CE QUE LE SITE VEND.
+
+  Le Bubble Foot se réserve sur Sport-Finder depuis le 21 septembre 2026 — voir
+  `BUBBLE_EN_LIGNE`. Le laisser dans cette liste ferait s'allumer la bannière
+  rouge « le Bubble Foot ne se vend pas, aucun créneau disponible » à chaque
+  ouverture du back-office, pour toujours et à juste titre : il n'y a aucun
+  créneau, et il n'y en aura pas.
+
+  Une alerte qui a raison mais qu'on ne peut pas éteindre est pire qu'une
+  alerte absente : on apprend à passer devant sans lire, et le jour où elle dit
+  autre chose, personne ne le voit. C'est exactement ce qu'on vient de corriger
+  en la rendant sensible par activité.
+
+  Elle revient d'elle-même si le Bubble repasse en vente sur le site.
+*/
 const LIBELLES_ACTIVITE: Record<TypeActivite, string> = {
   anniversaire: "Anniversaires",
   bubble: "Bubble Foot",
 };
 
+const VENDUES_EN_LIGNE: TypeActivite[] = (
+  Object.keys(LIBELLES_ACTIVITE) as TypeActivite[]
+).filter((t) => t !== "bubble" || BUBBLE_EN_LIGNE);
+
 export async function horizonParActivite(): Promise<HorizonActivite[] | null> {
   if (!baseConfiguree()) return null;
 
   const maintenant = new Date().toISOString();
-  const types = Object.keys(LIBELLES_ACTIVITE) as TypeActivite[];
+  const types = VENDUES_EN_LIGNE;
 
   /*
     `null` SIGNIFIE « JE NE SAIS PAS », ET C'EST UN TROISIÈME ÉTAT.
