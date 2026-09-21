@@ -80,6 +80,66 @@ vérification Google — puis seulement changer les serveurs de noms.
 
 ---
 
+## ⚠ Préalable bloquant : fermer la porte de Sport-Finder
+
+**À faire AVANT le basculement du domaine, ou au même moment. Jamais après.**
+
+Tant que `offsidefootindoor.be` pointe sur Wix, personne n'atteint le tunnel de
+réservation : aucun anniversaire ne peut être vendu, et ce qui suit n'a aucun
+effet. Le jour du basculement, les créneaux deviennent achetables par de vrais
+clients — il y en a six mois d'avance en base — et le problème s'ouvre dans la
+même minute.
+
+**Le complexe n'a que DEUX espaces physiques**, les Fun zones 1 et 2. Les mêmes
+servent aux anniversaires, au Bubble Foot et à la location de terrain. Le site
+vend les premiers, Sport-Finder les deux autres, et **les deux systèmes ne se
+voient pas**. Aucune intégration n'existe ni n'est prévue : le seul garde-fou
+est que leurs plages horaires ne se touchent jamais.
+
+**État relevé le 21 septembre 2026** — Sport-Finder ouvre le centre
+18h00–00h00 du lundi au vendredi et 16h00–00h00 le week-end. Croisé avec les
+créneaux d'anniversaire, cela donne trois chevauchements :
+
+| Jour | Anniversaires (site) | Sport-Finder ouvre | Chevauchement |
+|---|---|---|---|
+| Vendredi | 16h30 → 18h30 | 18h00 | **30 min** |
+| Samedi | 10h00 → 19h30 | 16h00 | **3 h 30** |
+| Dimanche | 10h00 → 19h30 | 16h00 | **3 h 30** |
+
+Un terrain loué samedi à 17h et un anniversaire vendu sur le site à la même
+heure, c'est le même sol. Les deux clients sont dans leur droit, aucun des deux
+systèmes ne signale quoi que ce soit, et personne ne l'apprend avant que les
+deux groupes se présentent à la porte.
+
+**Ce qu'il faut régler** — Sport-Finder → Horaires → Horaire d'ouverture →
+*Détailler par jour* :
+
+| Jour | Ouverture |
+|---|---|
+| Lundi, mardi, jeudi | 14h00 → 01h00 |
+| Mercredi, vendredi, samedi, dimanche | 20h00 → 01h00 |
+
+Ce sont les horaires de Brahim lui-même, donnés par mail le 21 septembre 2026
+— il n'y a rien à arbitrer. Ses deux groupes tombent exactement sur la
+séparation : 14h–01h les jours **sans** anniversaire, 20h–01h les jours
+**avec**. Le vendredi appartient au second groupe depuis qu'il a répondu ce
+jour-là, et c'est ce qui a fait passer son créneau d'anniversaire de deux à un
+(migration 0028).
+
+Le dernier anniversaire finit à 19h30 le week-end, 18h00 le mercredi et 18h30
+le vendredi : l'ouverture à 20h00 laisse au minimum trente minutes pour vider
+la salle, soit le même battement que celui qui sépare déjà deux groupes.
+
+Si le champ de fin refuse `01:00` parce qu'il franchit minuit, mettre `00:00`
+et le signaler à Brahim : c'est le seul point où sa demande pourrait ne pas
+entrer dans l'outil.
+
+**Reste hors de portée du code.** Rien côté site ne connaît les horaires de
+Sport-Finder, donc rien ne peut vérifier que ce réglage a bien été fait. Ce
+paragraphe est le seul garde-fou ; il vaut ce que vaut la personne qui le lit.
+
+---
+
 ## 1. Faire pointer le domaine sur le site
 
 Dans Vercel : projet → Settings → Domains → ajouter `offsidefootindoor.be` et
