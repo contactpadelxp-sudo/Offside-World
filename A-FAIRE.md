@@ -79,9 +79,14 @@ les rendre le jour où il confirme. 615 créneaux restent vendables.
       ELLE-MÊME.** « 13h30–15h30 · 16h00–18h00 » ne laisse aucun doute : les
       30 minutes séparent la FIN d'un créneau du DÉBUT du suivant, et ne
       décalent pas deux groupes simultanés. C'était déjà ce qui était en place.
-- [ ] **Nombre d'anniversaires en parallèle : deux ou trois ?** Brahim a
-      répondu « il y en aura 3 » — au futur. Deux zones sont actives en
-      attendant sa confirmation. Voir ci-dessus.
+- [x] ~~**Nombre d'anniversaires en parallèle.**~~ **DEUX aujourd'hui.**
+      Brahim a précisé le 21 septembre 2026 : « Il y aura à terme 4 zones. Mais
+      actuellement que deux de prête. Je n'ai pas 3 terrains, j'en ai que
+      deux. » Fermer la Fun zone 3 était donc le bon geste.
+- [ ] **Ouvrir les Fun zones 3 et 4 quand elles seront prêtes.** Un `update
+      espaces set actif = true` pour la 3, un `insert` pour la 4, puis
+      régénérer les créneaux sur la période voulue depuis le back-office. Elles
+      porteront alors les anniversaires comme les deux autres.
 - [x] ~~Délai minimum avant le début.~~ **Une heure**, « même en dernière minute
       vu qu'il n'y a pas de coach » (Brahim). `DELAI_RESERVATION_HEURES = 1`.
 - [x] ~~**Horizon de réservation**~~ **SIX MOIS**, répondu le 17 septembre 2026.
@@ -89,11 +94,22 @@ les rendre le jour où il confirme. 615 créneaux restent vendables.
       et 184 jours, et rogner trois jours ferait disparaître du sélecteur la
       date que le client vient d'entendre au téléphone.
 
-- [ ] **LES PLAGES DU BUBBLE FOOT RESTENT INCONNUES.** À la question « et le
-      Bubble Foot ? », Brahim a répondu par les horaires du FOOT : 14h–01h les
-      lundi, mardi et jeudi ; 20h–01h les mercredi, samedi et dimanche. Ce sont
-      les heures de la **location de terrain**, qui se réserve sur Sport-Finder,
-      pas ici.
+- [x] ~~**LES PLAGES DU BUBBLE FOOT.**~~ **SANS OBJET DEPUIS LE 21 SEPTEMBRE
+      2026 : le Bubble Foot ne se réserve plus sur le site.** Brahim a confirmé
+      qu'il se joue aux mêmes heures que la location de terrain, sur les mêmes
+      espaces — donc sur Sport-Finder, qui pilote aussi l'ouverture automatique.
+
+      Deux systèmes qui vendent le même terrain à la même heure sans se voir le
+      vendent deux fois. Et la place qui restait au Bubble dans les heures
+      habitées a été mesurée : mercredi 18h–20h, vendredi 15h–16h, une
+      demi-heure le samedi et le dimanche. Rien le week-end après 20h, quand il
+      se vend justement — et quand plus personne n'est sur place.
+
+      Le partage retenu ne demande aucune surveillance : le SITE vend ce qui se
+      passe quand quelqu'un est là (anniversaires, Bounce Park à venir),
+      SPORT-FINDER vend ce qui se passe quand personne n'y est (foot, Bubble).
+      `BUBBLE_EN_LIGNE` à `true` inverse la décision sans rien réécrire, le jour
+      où l'ouverture automatique sera pilotable depuis le site.
 
       **La génération n'invente plus rien depuis la migration 0023.** Ses
       horaires étaient écrits en dur dans `generer_creneaux_bubble` — vendredi,
@@ -318,8 +334,10 @@ d'emplacement. Les emplacements, eux, sont tous pourvus.
       Bounce Park compris. Vérifié le 19 septembre 2026 en passant par
       `resolvePhotos()`, et non par un grep des noms de fichiers — c'est le
       piège décrit plus haut. Il n'en manque aucune.
-- [ ] Horaires réels des demi-journées de team building (9h–13h et 14h–18h sont
-      provisoires, et partent sur chaque devis)
+- [x] ~~Horaires réels des demi-journées de team building~~ **SANS OBJET** :
+      les constantes valent `null`, le devis affiche « Matin » et
+      « Après-midi », qui sont vrais et suffisent (confirmé le 21 septembre
+      2026). Cette ligne était la seconde occurrence de la même note périmée.
 - [x] ~~Noms réels des espaces~~ **« Fun zone 1, 2 et 3 »**, communiqués le
       17 septembre 2026 (migration 0020). La 3 est fermée en attendant
       confirmation de son existence.
@@ -475,6 +493,26 @@ le dépôt.
       des sessions chaque dimanche. Voir `supabase/migrations/0010`.
 
 ---
+
+## Le Bounce Park arrive sur le site
+
+Décidé avec Brahim le 21 septembre 2026 : le site vend les anniversaires ET le
+Bounce Park, Sport-Finder garde le foot et le Bubble. Le Bounce Park est un
+espace à part — pas un terrain —, il n'entre donc en concurrence avec rien, et
+ses horaires tombent dans les heures habitées : mercredi 12h–19h, vendredi
+15h–20h, samedi 10h–20h, dimanche 10h–19h.
+
+**Mais il n'existe pas encore sur le site.** Ni activité, ni espace en base, ni
+créneaux, ni tarif, ni tunnel. Aujourd'hui c'est une carte « Bientôt » qui ne
+mène nulle part, volontairement.
+
+- [ ] **Obtenir le prix, l'âge minimum et la date d'ouverture.** Sans eux on ne
+      peut rien annoncer : c'est la règle qui a déjà fait retirer « dès 6 ans »
+      et « encadrement adapté » de l'accueil.
+- [ ] **Le construire.** Le parcours le plus proche est celui du Bubble Foot,
+      qui reste en place et compile : créneaux d'une heure, par espace, bande
+      de dates. L'essentiel du travail est de créer l'espace, la valeur
+      `type_activite` et le tarif — pas de réécrire un tunnel.
 
 # Chantiers techniques relevés le 19 septembre 2026
 
