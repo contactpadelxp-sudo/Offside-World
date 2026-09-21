@@ -6,6 +6,7 @@ import {
   enregistrerDevis,
   enregistrerNoteDevis,
   envoyerDevis,
+  rouvrirDemandeDevis,
 } from "@/lib/actions/admin";
 import type { DevisAdmin, StatutDevis } from "@/lib/vues";
 import {
@@ -83,6 +84,20 @@ export function FicheDevis({ d }: { d: DevisAdmin }) {
   const [mot, setMot] = useState(d.devis.message);
   const [validite, setValidite] = useState(d.devis.validite);
   const [envoye, setEnvoye] = useState(d.devis.envoyeLe);
+  /*
+    LE JETON DE CONCURRENCE, PAS UN AFFICHAGE.
+
+    Il part avec chaque envoi : le serveur refuse si la base porte un autre
+    horodatage, c'est-à-dire si un autre écran a envoyé le devis entre-temps.
+    Sans ça, deux onglets ouverts sur la même demande expédiaient deux PDF
+    portant la même référence et des montants différents.
+
+    On le remet à jour depuis la réponse du serveur plutôt que depuis les
+    propriétés rafraîchies : sinon un second envoi légitime, fait depuis CET
+    onglet, se ferait refuser comme périmé le temps que la revalidation
+    redescende.
+  */
+  const [jetonEnvoi, setJetonEnvoi] = useState(d.devis.envoyeLeExact);
   /*
     `??` et non `||` : un taux de 0 % est un choix valable — une exonération se
     saisit ainsi — et `||` le remplacerait par 6. Seul un taux ABSENT prend la
@@ -448,9 +463,10 @@ export function FicheDevis({ d }: { d: DevisAdmin }) {
             disabled={enCours || obstacles.length > 0}
             onClick={() =>
               lancer("envoyer", async () => {
-                const r = await envoyerDevis(d.id, devis);
+                const r = await envoyerDevis(d.id, devis, jetonEnvoi);
                 if (r.ok) {
                   setEnvoye("à l'instant");
+                  if (r.envoyeLe) setJetonEnvoi(r.envoyeLe);
                   // L'envoi enregistre aussi : ce qui vient de partir au client
                   // devient la nouvelle référence.
                   setEmpreinteEnregistree(empreinte);
@@ -517,8 +533,16 @@ export function FicheDevis({ d }: { d: DevisAdmin }) {
               disabled={enCours}
               onClick={() =>
                 lancer("statut", async () => {
+                  /*
+                    La projection et l'écriture suivent désormais LA MÊME
+                    RÈGLE. La fiche affichait « Devis envoyé » pendant que le
+                    serveur écrivait « traitee » : la pastille reculait vers
+                    « Prise en charge » une seconde plus tard, et la fiche
+                    perdait l'information la plus utile de l'écran. Le serveur
+                    tranche maintenant seul, d'après `devis_envoye_le`.
+                  */
                   projeterStatut(d.devis.envoyeLe ? "devis_envoye" : "nouvelle");
-                  return changerStatutDevis(d.id, d.devis.envoyeLe ? "traitee" : "nouvelle");
+                  return rouvrirDemandeDevis(d.id);
                 })
               }
               className={BOUTON_NEUTRE}

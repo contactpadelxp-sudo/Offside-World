@@ -119,6 +119,34 @@ export async function enregistrerArticle(
       return { ok: false, message: "Un article vide ne peut pas être publié." };
     }
 
+    /*
+      LA BORNE DE LA BASE, DITE EN FRANÇAIS AVANT D'Y ARRIVER.
+
+      `articles.corps` porte `check (length(corps) <= 100000)` (migration
+      0012). Rien ne la reprenait ici : un article trop long partait vers
+      PostgREST, revenait en violation de contrainte, et `echec()` affichait
+      « L'opération a échoué. Réessayez. » — un conseil impossible à suivre,
+      puisque réessayer échouerait exactement pareil, sur un texte qui a pris
+      une heure à écrire.
+
+      MESURÉE APRÈS NETTOYAGE, et c'est le seul endroit juste : `nettoyerCorps`
+      peut ALLONGER le texte en échappant des entités. Mesurer avant laisserait
+      passer un corps qui franchit la borne en cours de route.
+
+      On refuse plutôt que de tronquer : couper du HTML au caractère près
+      laisserait une balise ouverte, donc une page cassée.
+    */
+    const CORPS_MAX = 100_000;
+    if (corps.length > CORPS_MAX) {
+      return {
+        ok: false,
+        message:
+          `Cet article est trop long : ${corps.length.toLocaleString("fr-BE")} caractères de ` +
+          `mise en forme comprise, pour un maximum de ${CORPS_MAX.toLocaleString("fr-BE")}. ` +
+          "Rien n'a été enregistré — raccourcissez-le ou coupez-le en deux articles.",
+      };
+    }
+
     // Publier sans date choisie date l'article de maintenant : la contrainte
     // `publie_date` l'exige, et la liste publique est triée là-dessus.
     const dateSaisie = saisie.publieLe?.trim();
@@ -128,7 +156,16 @@ export async function enregistrerArticle(
       return { ok: false, message: "La date de publication n'est pas valable." };
     }
 
-    const { error } = await base()
+    /*
+      `select` + `maybeSingle` : ON VÉRIFIE QUE LA LIGNE EXISTE ENCORE.
+
+      Le résultat n'était pas lu. Un `update` qui ne trouve aucune ligne n'est
+      pas une erreur pour PostgREST : il réussit en ne touchant rien. L'écran
+      annonçait donc « Publié : mon-article » sur un article supprimé depuis un
+      autre onglet — et l'action était même journalisée comme une publication.
+      Brahim repartait en croyant son texte en ligne ; il n'existait nulle part.
+    */
+    const { data, error } = await base()
       .from("articles")
       .update({
         titre,
@@ -139,8 +176,18 @@ export async function enregistrerArticle(
         publie,
         publie_le: publieLe,
       })
-      .eq("id", cible);
+      .eq("id", cible)
+      .select("id")
+      .maybeSingle();
     if (error) throw error;
+    if (!data) {
+      return {
+        ok: false,
+        message:
+          "Cet article n'existe plus : il a été supprimé depuis un autre écran. Rien n'a " +
+          "été enregistré — copiez votre texte avant de quitter cette page.",
+      };
+    }
 
     await journaliser(session, publie ? "article.publie" : "article.enregistre", slug);
     rafraichir(slug);

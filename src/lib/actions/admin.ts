@@ -30,7 +30,7 @@ import { lignesDepuisJson, obstaclesEnvoi, totalDevisCents } from "@/lib/devis";
 import { heuresAvant, jourLisibleCap } from "@/lib/temps";
 import { AGE_MINIMUM } from "@/data/reglement";
 import { genererDevisPdf } from "@/lib/devis-pdf";
-import type { SaisieDevis } from "@/lib/vues";
+import type { FormuleAdmin, OptionAdmin, SaisieDevis } from "@/lib/vues";
 import {
   montantARembourser,
   paiementRemboursable,
@@ -61,6 +61,18 @@ import { paiementVivantSur } from "@/lib/db/paiements";
 export interface Resultat {
   ok: boolean;
   message?: string;
+}
+
+/**
+ * Ce que rend `envoyerDevis`, jeton de concurrence compris.
+ *
+ * La fiche doit repartir de l'horodatage RÉELLEMENT écrit, sinon un second
+ * envoi légitime depuis le même onglet se ferait refuser comme périmé alors
+ * que c'est cet onglet-là qui vient d'envoyer.
+ */
+export interface ResultatEnvoiDevis extends Resultat {
+  /** L'horodatage d'envoi après l'opération. Absent si rien n'a changé. */
+  envoyeLe?: string;
 }
 
 const REFUS_SESSION: Resultat = {
@@ -492,8 +504,33 @@ export async function enregistrerDevis(id: string, devis: SaisieDevis): Promise<
  * e-mail raté est avalé pour ne jamais faire échouer une réservation. Ici c'est
  * le contraire — l'envoi EST l'action demandée, et l'exploitant doit savoir si
  * elle a échoué, sans quoi il attendrait une réponse à un devis jamais parti.
+ *
+ * `vuEnvoyeLe` EST UN JETON DE CONCURRENCE, PAS UN ORNEMENT.
+ *
+ * L'action ne lisait jamais `devis_envoye_le`. Deux onglets ouverts sur la
+ * même demande — ou un onglet laissé ouvert la veille — pouvaient donc envoyer
+ * deux fois : le client recevait deux PDF portant LA MÊME RÉFÉRENCE, des
+ * montants différents et deux dates d'émission, les deux se présentant comme
+ * l'offre en cours. Lequel engage le complexe ? La question ne doit pas se
+ * poser.
+ *
+ * Un simple « déjà envoyé, je refuse » serait faux dans l'autre sens :
+ * renvoyer un devis corrigé après un appel du client est une opération
+ * normale. On compare donc CE QUE L'ÉCRAN CROYAIT à ce que la base porte. Le
+ * renvoi délibéré part d'une page à jour et passe ; le renvoi involontaire
+ * part d'une page périmée et est arrêté.
  */
-export async function envoyerDevis(id: string, devis: SaisieDevis): Promise<Resultat> {
+export async function envoyerDevis(
+  id: string,
+  devis: SaisieDevis,
+  /**
+   * L'horodatage d'envoi que la fiche avait sous les yeux, brut. `null` si
+   * elle voyait une demande jamais envoyée. `undefined` n'est pas accepté :
+   * ce serait un appelant qui ne sait pas, et on ne devine pas sur un document
+   * commercial.
+   */
+  vuEnvoyeLe: string | null
+): Promise<ResultatEnvoiDevis> {
   const session = await garde();
   if (!session) return REFUS_SESSION;
 
@@ -507,6 +544,29 @@ export async function envoyerDevis(id: string, devis: SaisieDevis): Promise<Resu
     const obstacles = obstaclesEnvoi(propre);
     if (obstacles.length > 0) {
       return { ok: false, message: `Il manque ${obstacles.join(", ")}.` };
+    }
+
+    const { data: etat, error: eEtatLu } = await base()
+      .from("demandes_devis")
+      .select("devis_envoye_le")
+      .eq("id", cible)
+      .maybeSingle();
+
+    if (eEtatLu) throw eEtatLu;
+    if (!etat) return { ok: false, message: "Demande introuvable." };
+
+    // Comparaison sur l'instant, pas sur la chaîne : PostgREST peut rendre le
+    // même horodatage écrit autrement (fuseau, précision des fractions).
+    const enBase = etat.devis_envoye_le ? Date.parse(etat.devis_envoye_le) : null;
+    const vu = vuEnvoyeLe ? Date.parse(vuEnvoyeLe) : null;
+    if (enBase !== vu) {
+      return {
+        ok: false,
+        message:
+          "Ce devis a déjà été envoyé depuis un autre écran. Rafraîchissez la page pour " +
+          "voir la version partie : si vous voulez vraiment en envoyer une nouvelle, " +
+          "relancez l'envoi depuis la page à jour.",
+      };
     }
 
     const { data, error } = await base()
@@ -577,9 +637,10 @@ export async function envoyerDevis(id: string, devis: SaisieDevis): Promise<Resu
       L'e-mail, lui, est déjà parti : on ne peut plus le rattraper. On le dit
       donc explicitement plutôt que d'annoncer un succès complet.
     */
+    const envoyeLe = new Date().toISOString();
     const { error: eEtat } = await base()
       .from("demandes_devis")
-      .update({ devis_envoye_le: new Date().toISOString(), statut: "devis_envoye" })
+      .update({ devis_envoye_le: envoyeLe, statut: "devis_envoye" })
       .eq("id", cible);
 
     if (eEtat) {
@@ -599,7 +660,7 @@ export async function envoyerDevis(id: string, devis: SaisieDevis): Promise<Resu
       montant_cents: totalDevisCents(propre.lignes),
     });
     rafraichir();
-    return { ok: true, message: `Devis envoyé à ${data.contact_email}.` };
+    return { ok: true, message: `Devis envoyé à ${data.contact_email}.`, envoyeLe };
   } catch (e) {
     if (e instanceof SaisieInvalide) return { ok: false, message: e.message };
     const detail = e instanceof Error ? e.message : String(e);
@@ -853,7 +914,84 @@ export interface SaisieFormule {
   actif: boolean;
 }
 
-export async function modifierFormule(id: string, saisie: SaisieFormule): Promise<Resultat> {
+/**
+ * Ce que l'écran avait sous les yeux quand on a commencé à modifier.
+ *
+ * Exactement la forme rendue par `lireTarifsAdmin`, renvoyée telle quelle par
+ * la fiche. Elle ne sert QU'À COMPARER : aucune de ces valeurs n'est écrite,
+ * donc un appelant qui les truquerait ne pourrait que se faire refuser sa
+ * propre modification.
+ */
+type SnapshotFormule = Omit<FormuleAdmin, "id">;
+
+/**
+ * La base porte-t-elle encore ce que l'écran croyait ?
+ *
+ * Comparaison en CENTIMES, jamais en euros : `lireTarifsAdmin` divise par 100
+ * pour l'affichage, et comparer des flottants ferait échouer l'égalité sur des
+ * montants parfaitement identiques.
+ *
+ * Tout écart, y compris un champ absent ou d'un type inattendu, répond
+ * « changé ». C'est le sens sûr : on refuse l'écriture et on demande de
+ * rafraîchir, au lieu d'écraser à l'aveugle.
+ */
+function formuleInchangee(
+  actuel: {
+    nom: string;
+    accroche: string | null;
+    description: string;
+    prix_base_cents: number;
+    enfants_inclus: number;
+    prix_enfant_sup_cents: number;
+    enfants_max: number;
+    age_max: number | null;
+    duree_minutes: number;
+    inclus: string[];
+    actif: boolean;
+  },
+  vu: SnapshotFormule
+): boolean {
+  if (!vu || !Array.isArray(vu.inclus)) return false;
+  return (
+    actuel.nom === vu.nom &&
+    (actuel.accroche ?? "") === vu.accroche &&
+    actuel.description === vu.description &&
+    actuel.prix_base_cents === Math.round(Number(vu.prixBase) * 100) &&
+    actuel.enfants_inclus === vu.enfantsInclus &&
+    actuel.prix_enfant_sup_cents === Math.round(Number(vu.prixEnfantSup) * 100) &&
+    actuel.enfants_max === vu.enfantsMax &&
+    actuel.age_max === vu.ageMax &&
+    actuel.duree_minutes === vu.dureeMinutes &&
+    actuel.actif === vu.actif &&
+    actuel.inclus.length === vu.inclus.length &&
+    actuel.inclus.every((l, i) => l === vu.inclus[i])
+  );
+}
+
+/**
+ * Ce qu'on répond quand la fiche modifie une ligne qui a bougé ailleurs.
+ *
+ * Le mot « écrasé » est délibéré : c'est ce qui se passait, et l'exploitant
+ * doit comprendre qu'on vient de l'éviter, pas qu'on a raté quelque chose.
+ */
+const REFUS_TARIF_PERIME: Resultat = {
+  ok: false,
+  message:
+    "Cette ligne a été modifiée ailleurs depuis l'ouverture de cette page. Rien n'a été " +
+    "écrasé. Rafraîchissez pour voir les valeurs à jour, puis refaites votre modification.",
+};
+
+export async function modifierFormule(
+  id: string,
+  saisie: SaisieFormule,
+  /**
+   * L'état que la fiche avait chargé. Sans lui, enregistrer depuis un onglet
+   * resté ouvert réécrivait TOUTE la ligne avec des valeurs périmées : un prix
+   * changé ailleurs revenait à l'ancien, sans un mot, et le site vendait au
+   * mauvais tarif jusqu'à ce que quelqu'un s'en aperçoive.
+   */
+  vu: SnapshotFormule
+): Promise<Resultat> {
   const session = await garde();
   if (!session) return REFUS_SESSION;
 
@@ -890,6 +1028,18 @@ export async function modifierFormule(id: string, saisie: SaisieFormule): Promis
         message: "Le maximum de participants ne peut pas être inférieur au nombre inclus dans le forfait.",
       };
     }
+
+    const { data: actuel, error: eLu } = await base()
+      .from("formules")
+      .select(
+        "nom, accroche, description, prix_base_cents, enfants_inclus, prix_enfant_sup_cents, enfants_max, age_max, duree_minutes, inclus, actif"
+      )
+      .eq("id", cible)
+      .maybeSingle();
+
+    if (eLu) throw eLu;
+    if (!actuel) return { ok: false, message: "Formule introuvable." };
+    if (!formuleInchangee(actuel, vu)) return REFUS_TARIF_PERIME;
 
     const { data, error } = await base()
       .from("formules")
@@ -935,7 +1085,28 @@ export interface SaisieOption {
   actif: boolean;
 }
 
-export async function modifierOption(id: string, saisie: SaisieOption): Promise<Resultat> {
+/** Voir `SnapshotFormule` : même rôle, mêmes garanties, pour une option. */
+type SnapshotOption = Omit<OptionAdmin, "id">;
+
+function optionInchangee(
+  actuel: { libelle: string; description: string | null; prix_cents: number; actif: boolean },
+  vu: SnapshotOption
+): boolean {
+  if (!vu) return false;
+  return (
+    actuel.libelle === vu.libelle &&
+    (actuel.description ?? "") === vu.description &&
+    actuel.prix_cents === Math.round(Number(vu.prix) * 100) &&
+    actuel.actif === vu.actif
+  );
+}
+
+export async function modifierOption(
+  id: string,
+  saisie: SaisieOption,
+  /** L'état chargé par la fiche. Voir `modifierFormule`. */
+  vu: SnapshotOption
+): Promise<Resultat> {
   const session = await garde();
   if (!session) return REFUS_SESSION;
 
@@ -944,6 +1115,16 @@ export async function modifierOption(id: string, saisie: SaisieOption): Promise<
     const libelle = texte(saisie?.libelle, "Libellé", { min: 2, max: 80 });
     const description = texteFacultatif(saisie?.description, "Description", { max: 300 });
     const prix = montantEnCents(saisie?.prix, "Prix", { max: 100_000 });
+
+    const { data: actuel, error: eLu } = await base()
+      .from("options")
+      .select("libelle, description, prix_cents, actif")
+      .eq("id", cible)
+      .maybeSingle();
+
+    if (eLu) throw eLu;
+    if (!actuel) return { ok: false, message: "Option introuvable." };
+    if (!optionInchangee(actuel, vu)) return REFUS_TARIF_PERIME;
 
     const { data, error } = await base()
       .from("options")
@@ -1290,6 +1471,62 @@ export async function changerStatutDevis(
     await journaliser(session, "devis.statut", data.reference, { statut });
     rafraichir();
     return { ok: true, message: "État mis à jour." };
+  } catch (e) {
+    return echec(e);
+  }
+}
+
+/**
+ * Sort une demande close et la remet dans l'état qui la décrit vraiment.
+ *
+ * LA FICHE ET LE SERVEUR NE DISAIENT PAS LA MÊME CHOSE. « Rouvrir la demande »
+ * affichait aussitôt « Devis envoyé » puis appelait `changerStatutDevis` avec
+ * « traitee » : la pastille passait de « Devis envoyé » à « Prise en charge »
+ * une seconde plus tard, sans que rien n'explique le recul. Et la fiche
+ * perdait l'information la plus utile de l'écran — ce client a bien reçu un
+ * devis.
+ *
+ * Le détour venait d'une bonne règle mal appliquée : `changerStatutDevis`
+ * refuse « devis_envoye » pour qu'on ne puisse pas prétendre qu'un devis est
+ * parti. La règle tient toujours — ici ce n'est pas le navigateur qui décide,
+ * c'est `devis_envoye_le` en base, c'est-à-dire la trace d'un envoi réel. Le
+ * serveur la lit lui-même ; l'appelant n'a rien à proposer.
+ */
+export async function rouvrirDemandeDevis(id: string): Promise<Resultat> {
+  const session = await garde();
+  if (!session) return REFUS_SESSION;
+
+  try {
+    const cible = uuid(id, "Demande");
+
+    const { data: etat, error: eLu } = await base()
+      .from("demandes_devis")
+      .select("devis_envoye_le")
+      .eq("id", cible)
+      .maybeSingle();
+
+    if (eLu) throw eLu;
+    if (!etat) return { ok: false, message: "Demande introuvable." };
+
+    const statut = etat.devis_envoye_le ? "devis_envoye" : "nouvelle";
+
+    const { data, error } = await base()
+      .from("demandes_devis")
+      .update({ statut })
+      // Rouvrir n'a de sens que sur une demande close : sans cette condition,
+      // un onglet périmé ramènerait à « nouvelle » une demande que quelqu'un
+      // vient d'accepter.
+      .eq("id", cible)
+      .in("statut", ["acceptee", "refusee"])
+      .select("reference")
+      .maybeSingle();
+
+    if (error) throw error;
+    if (!data) return { ok: false, message: "Cette demande n'est pas close." };
+
+    await journaliser(session, "devis.statut", data.reference, { statut });
+    rafraichir();
+    return { ok: true, message: "Demande rouverte." };
   } catch (e) {
     return echec(e);
   }

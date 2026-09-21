@@ -218,7 +218,16 @@ export function FicheFormule({ f }: { f: FormuleAdmin }) {
         <button
           type="button"
           disabled={enCours || !modifie}
-          onClick={() => lancer("formule", () => modifierFormule(f.id, v))}
+          /*
+            `f` PART AVEC LA MODIFICATION, ET CE N'EST PAS REDONDANT.
+
+            L'action réécrit TOUTE la ligne à partir de ce que ce navigateur
+            porte. Depuis un onglet resté ouvert, un prix changé ailleurs
+            revenait donc à l'ancien sans un mot, et le site vendait au mauvais
+            tarif jusqu'à ce que quelqu'un s'en aperçoive. `f` est ce que cet
+            écran avait chargé : le serveur refuse si la base a bougé depuis.
+          */
+          onClick={() => lancer("formule", () => modifierFormule(f.id, v, f))}
           className={BOUTON_PRINCIPAL}
         >
           {occupe("formule") && <Rotative />}
@@ -318,7 +327,7 @@ export function FicheOption({ o }: { o: OptionAdmin }) {
         <button
           type="button"
           disabled={enCours || !modifie}
-          onClick={() => lancer("option", () => modifierOption(o.id, v))}
+          onClick={() => lancer("option", () => modifierOption(o.id, v, o))}
           className={BOUTON_PRINCIPAL}
         >
           {occupe("option") && <Rotative />}

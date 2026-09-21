@@ -385,6 +385,7 @@ export async function lireDevis(inclureTraites = false): Promise<DevisAdmin[]> {
       message: d.devis_message ?? "",
       validite: d.devis_validite ?? "",
       envoyeLe: d.devis_envoye_le ? jourLisible(new Date(d.devis_envoye_le)) : null,
+      envoyeLeExact: d.devis_envoye_le,
       tvaPourcent: d.devis_tva_pourcent,
     },
     client: { adresse: d.client_adresse ?? "", tva: d.client_tva ?? "" },

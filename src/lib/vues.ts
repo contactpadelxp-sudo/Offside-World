@@ -149,6 +149,15 @@ export interface DevisAdmin {
     validite: string;
     /** Horodatage lisible de l'envoi réel, `null` si le devis n'est pas parti. */
     envoyeLe: string | null;
+    /**
+     * Le même instant, brut, tel que la base le porte.
+     *
+     * Sert de JETON DE CONCURRENCE, pas d'affichage : la fiche le renvoie au
+     * serveur en expédiant, et le serveur refuse si la base a bougé depuis.
+     * `envoyeLe` ne peut pas jouer ce rôle — il est arrondi au jour, donc deux
+     * envois le même jour s'y ressemblent.
+     */
+    envoyeLeExact: string | null;
     /** Taux de TVA, `null` tant qu'il n'est pas renseigné. */
     tvaPourcent: number | null;
   };
