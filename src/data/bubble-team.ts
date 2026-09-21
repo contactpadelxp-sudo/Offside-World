@@ -50,13 +50,35 @@
 export const BUBBLE_EN_LIGNE = false;
 
 /**
- * Où l'on envoie le visiteur pour réserver un Bubble Foot.
+ * La fiche Sport-Finder du Bubble Foot, connue depuis le 21 septembre 2026.
  *
- * C'est la page du complexe, et non la fiche du produit : l'URL de la location
- * de terrain porte l'identifiant `107` chez Sport-Finder, celui du Bubble n'a
- * pas été communiqué. Deviner un numéro mènerait au mauvais produit ou à une
- * page inexistante ; la page du centre coûte un clic de plus et ne ment pas.
- * À remplacer par le lien direct dès que Brahim le donne.
+ * `/activity/228`, et non `/booking/field_rental/107/book?sport=1` comme la
+ * location de terrain : chez Sport-Finder, le Bubble est une ACTIVITÉ et pas
+ * une location, donc une autre forme d'adresse et un autre identifiant. C'est
+ * exactement pourquoi on ne l'a jamais devinée.
+ *
+ * ELLE N'EST PAS ENCORE UTILISÉE, ET C'EST LE POINT. La fiche existe mais
+ * n'est pas activée : y envoyer un client aujourd'hui, c'est l'envoyer sur une
+ * page qui ne vend rien. On la garde écrite ici pour n'avoir qu'une ligne à
+ * changer le jour de l'activation — pas pour s'en servir avant.
+ */
+export const SPORTFINDER_BUBBLE_FICHE =
+  "https://www.sport-finder.com/fr/center/offside-foot-indoor/activity/228";
+
+/**
+ * Où l'on envoie RÉELLEMENT le visiteur pour réserver un Bubble Foot.
+ *
+ * La page du complexe, faute de mieux : voir `SPORTFINDER_BUBBLE_FICHE`. Elle
+ * coûte un clic de plus, mais elle existe et elle est à jour, ce que la fiche
+ * du produit n'est pas encore.
+ *
+ * ⚠ AUJOURD'HUI, LE BUBBLE N'EST RÉSERVABLE NULLE PART. Il est retiré du site
+ * (`BUBBLE_EN_LIGNE = false`) ET pas encore activé sur Sport-Finder. Le tunnel
+ * continue pourtant d'afficher sa carte, son prix et un bouton — qui mène à
+ * une page du centre où l'activité ne figure pas. C'est la situation que
+ * `data/bounce-park.ts` décrit comme pire qu'une carte inerte : « elle promet
+ * une réponse qu'elle n'a pas ». Elle se résout en activant la fiche 228, ce
+ * qui est du ressort de Brahim.
  */
 export const SPORTFINDER_BUBBLE_URL = "https://www.sport-finder.com/fr/center/offside-foot-indoor";
 
