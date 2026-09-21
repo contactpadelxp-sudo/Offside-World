@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef, type RefObject } from "react";
+import { useState, useEffect, useCallback, useRef, type ReactNode, type RefObject } from "react";
 import { useSearchParams } from "next/navigation";
 import { useScrollTop } from "@/lib/use-scroll-top";
 import { RESERVER_RESET_EVENT } from "@/lib/events";
@@ -51,7 +51,22 @@ export interface DonneesReservation {
   paiementActif: boolean;
 }
 
-export function ReservationFlow({ donnees }: { donnees: DonneesReservation }) {
+export function ReservationFlow({
+  donnees,
+  bandeau,
+}: {
+  donnees: DonneesReservation;
+  /*
+    UN MESSAGE À AFFICHER AU-DESSUS DU TUNNEL, ET IL DOIT PASSER PAR ICI.
+
+    L'en-tête du site est en `position: fixed` et son bord inférieur tombe à
+    104 px : tout ce qui est rendu plus haut est caché dessous. C'est ce
+    conteneur, et lui seul, qui porte le `pt-32` qui dégage la zone. Un bandeau
+    rendu à côté du tunnel, dans la page, serait donc invisible — mesuré sur le
+    retour « paiement annulé », qui tombait exactement là.
+  */
+  bandeau?: ReactNode;
+}) {
   const searchParams = useSearchParams();
   const [activity, setActivity] = useState<Activity>(null);
 
@@ -174,6 +189,7 @@ export function ReservationFlow({ donnees }: { donnees: DonneesReservation }) {
 
   return (
     <div className="mx-auto max-w-4xl px-4 pt-32 pb-8 md:pb-12">
+      {bandeau}
       {!activity && <ActivityChoice onSelect={selectActivity} formules={donnees.formules} titreRef={titreEtape} />}
       {activity === "anniversaire" && (
         <AnniversaireFlow

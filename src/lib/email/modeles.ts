@@ -430,21 +430,27 @@ export function auClientReservationAnnulee(r: RecapEmail): Message {
  * dit : il découvre le jour dit, devant une porte, qu'il n'avait pas de
  * réservation.
  *
- * DEUX LECTEURS TRÈS DIFFÉRENTS, UN SEUL TEXTE.
+ * DEUX LECTEURS TRÈS DIFFÉRENTS, ET ON NE LEUR ÉCRIT PAS LA MÊME CHOSE.
  *
- * Sans paiement en ligne, il a attendu un appel pendant 48 heures. Avec
- * paiement, il a quitté la page Stripe il y a trois quarts d'heure — souvent
- * sans le vouloir : onglet fermé, réseau perdu, application bancaire qui ne
- * s'ouvre pas. Le texte ne suppose donc ni faute ni intention, et se contente
- * du fait : rien n'a abouti, rien n'a été prélevé, le créneau est à reprendre.
+ * Avec paiement en ligne, il a quitté la page Stripe il y a trois quarts
+ * d'heure — souvent sans le vouloir : onglet fermé, réseau perdu, application
+ * bancaire qui ne s'ouvre pas. Lui dire qu'aucun paiement n'est arrivé décrit
+ * exactement ce qui s'est passé.
  *
- * IL NE JURE PAS QU'AUCUN ARGENT N'A BOUGÉ. Un paiement Bancontact peut se
- * dénouer dans l'application bancaire après l'expiration : l'expiration ne
- * touche jamais une réservation dont le paiement a abouti (migration 0026),
- * mais la fenêtre existe. « Nous n'avons reçu aucun paiement » est un constat
- * vérifiable ; « vous n'avez pas été débité » serait une promesse sur le
- * compte de quelqu'un d'autre. D'où la porte de sortie explicite : si la
- * banque a débité, on régularise.
+ * SANS PAIEMENT EN LIGNE, LA MÊME PHRASE EST UNE ACCUSATION FAUSSE. Le tunnel
+ * lui a écrit « nous vous recontactons rapidement pour convenir du règlement » :
+ * il n'a jamais eu le moyen de payer, et s'il est là c'est que personne ne l'a
+ * rappelé. Lui reprocher un défaut de paiement, puis l'envoyer vérifier un
+ * débit qui ne peut pas exister, retourne contre lui une négligence qui n'est
+ * pas la sienne. D'où `paiementEnLigne` : le fait énoncé change, le ton non.
+ *
+ * QUAND IL Y A PAIEMENT, ON NE JURE PAS POUR AUTANT QU'AUCUN ARGENT N'A BOUGÉ.
+ * Un paiement Bancontact peut se dénouer dans l'application bancaire après
+ * l'expiration : celle-ci ne touche jamais une réservation dont le paiement a
+ * abouti (migration 0026), mais la fenêtre existe. « Nous n'avons reçu aucun
+ * paiement » est un constat vérifiable ; « vous n'avez pas été débité » serait
+ * une promesse sur le compte de quelqu'un d'autre. D'où la porte de sortie : si
+ * la banque a débité, on régularise. Elle n'a de sens que dans ce cas-là.
  */
 export function auClientReservationExpiree(r: {
   reference: string;
@@ -454,23 +460,41 @@ export function auClientReservationExpiree(r: {
   jourLabel: string;
   debut: string;
   fin: string;
+  /** Le paiement en ligne était-il actif quand la demande a expiré ? */
+  paiementEnLigne: boolean;
 }): Message {
+  const intro = r.paiementEnLigne
+    ? `Bonjour ${ech(r.clientNom)}, nous n'avons reçu aucun paiement pour la demande ci-dessous : elle n'a pas été enregistrée, et le créneau est de nouveau proposé à la réservation.`
+    : `Bonjour ${ech(r.clientNom)}, nous n'avons pas pu confirmer la demande ci-dessous à temps. Elle n'est donc pas enregistrée, et le créneau est de nouveau proposé à la réservation. Nous en sommes désolés.`;
+
+  const apres: string[] = [
+    `<strong>Le créneau vous intéresse toujours ?</strong> Il est à reprendre sur <a href="${ech(urlAbsolue("/reservation"))}" style="color:${ACCENT};">notre page de réservation</a>, s'il n'a pas été pris entre-temps.`,
+  ];
+  if (r.paiementEnLigne) {
+    apres.push(
+      "<strong>Votre banque vous a débité ?</strong> Répondez à cet e-mail en indiquant la référence ci-dessus : nous régularisons."
+    );
+  } else {
+    // Il n'a rien pu payer : la seule chose utile est de lui rendre la main
+    // sur la date, sans lui faire porter l'attente.
+    apres.push(
+      "<strong>Vous tenez à cette date ?</strong> Répondez à cet e-mail ou appelez-nous : nous verrons ce qu'il est encore possible de faire."
+    );
+  }
+  apres.push(`Une question : <a href="mailto:${ech(EMAIL)}" style="color:${ACCENT};">${ech(EMAIL)}</a>.`);
+
   return composer(
     r.clientEmail,
     `Demande ${r.reference} sans suite — ${NOM_COMMERCIAL}`,
     "Votre demande n'a pas abouti",
-    `Bonjour ${ech(r.clientNom)}, nous n'avons reçu aucun paiement pour la demande ci-dessous : elle n'a pas été enregistrée, et le créneau est de nouveau proposé à la réservation.`,
+    intro,
     [
       { cle: "Référence", valeur: r.reference },
       { cle: "Activité", valeur: r.activite },
       { cle: "Date", valeur: r.jourLabel },
       { cle: "Horaire", valeur: `${r.debut} – ${r.fin}` },
     ],
-    [
-      `<strong>Le créneau vous intéresse toujours ?</strong> Il est à reprendre sur <a href="${ech(urlAbsolue("/reservation"))}" style="color:${ACCENT};">notre page de réservation</a>, s'il n'a pas été pris entre-temps.`,
-      "<strong>Votre banque vous a débité ?</strong> Répondez à cet e-mail en indiquant la référence ci-dessus : nous régularisons.",
-      `Une question : <a href="mailto:${ech(EMAIL)}" style="color:${ACCENT};">${ech(EMAIL)}</a>.`,
-    ],
+    apres,
     EMAIL
   );
 }

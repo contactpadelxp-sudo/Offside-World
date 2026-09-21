@@ -104,7 +104,8 @@ export class CreneauDejaPris extends Error {
  * confirmation envoyée par le back-office.
  */
 export async function expirerReservationsAbandonnees(): Promise<void> {
-  const delai = paiementConfigure() ? "45 minutes" : "48 hours";
+  const paiementEnLigne = paiementConfigure();
+  const delai = paiementEnLigne ? "45 minutes" : "48 hours";
   const { data, error } = await base().rpc("expirer_reservations_en_attente", { delai });
   if (error) {
     console.error("Expiration des réservations impossible :", error.message);
@@ -141,6 +142,16 @@ export async function expirerReservationsAbandonnees(): Promise<void> {
         jourLabel: jourLisibleCap(debut),
         debut: heure(debut),
         fin: heure(new Date(r.fin)),
+        /*
+          CE DÉTAIL DÉCIDE DE CE QU'ON REPROCHE AU CLIENT.
+
+          Sans paiement en ligne, le tunnel lui a écrit « nous vous
+          recontactons pour convenir du règlement » : il n'a jamais eu le moyen
+          de payer, et si sa demande expire c'est que personne ne l'a rappelé.
+          Lui annoncer « nous n'avons reçu aucun paiement » retournerait contre
+          lui une négligence qui n'est pas la sienne.
+        */
+        paiementEnLigne,
       });
     });
 

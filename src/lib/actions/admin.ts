@@ -494,31 +494,40 @@ export async function enregistrerDevis(id: string, devis: SaisieDevis): Promise<
 /**
  * Envoie le devis au client, puis note qu'il est parti.
  *
- * L'ORDRE COMPTE, et il est l'inverse de celui du remboursement. Ici on
- * ENREGISTRE d'abord, on envoie ensuite : si l'envoi échoue, le devis rédigé
- * est conservé et l'exploitant peut réessayer sans tout retaper. Et on n'écrit
- * l'horodatage d'envoi qu'APRÈS un envoi réussi — c'est tout l'intérêt de le
- * mesurer plutôt que de le déclarer.
+ * TROIS TEMPS, DANS CET ORDRE : on enregistre le devis rédigé, on réserve
+ * l'envoi, on envoie.
+ *
+ * 1. ENREGISTRER D'ABORD. Si la suite échoue, le devis rédigé est conservé et
+ *    l'exploitant peut réessayer sans tout retaper.
+ *
+ * 2. RÉSERVER ENSUITE, et c'est la seule façon d'empêcher un double envoi.
+ *    L'action ne lisait jamais `devis_envoye_le` : deux écrans ouverts sur la
+ *    même demande envoyaient deux PDF portant LA MÊME RÉFÉRENCE, des montants
+ *    différents et deux dates d'émission, les deux se présentant comme l'offre
+ *    en cours. Lequel engage le complexe ? La question ne doit pas se poser.
+ *
+ *    Une simple lecture suivie d'une comparaison ne suffirait pas : entre la
+ *    lecture et l'écriture il y a le PDF et le fournisseur d'e-mails, soit
+ *    plusieurs secondes, et deux clics partis dans cet intervalle passeraient
+ *    tous les deux. L'écriture est donc conditionnée, dans la même instruction,
+ *    à l'horodatage que la fiche avait sous les yeux (`vuEnvoyeLe`). La base
+ *    arbitre : le premier pose son horodatage, le second ne trouve plus rien à
+ *    mettre à jour et s'arrête avant de fabriquer quoi que ce soit.
+ *
+ *    Un « déjà envoyé, je refuse » serait faux dans l'autre sens : renvoyer un
+ *    devis corrigé après un appel du client est une opération normale. C'est
+ *    bien l'écart entre l'écran et la base qu'on refuse, pas le renvoi.
+ *
+ * 3. ENVOYER, ET DÉFAIRE LA RÉSERVATION SI RIEN N'EST PARTI. L'horodatage
+ *    précède donc l'envoi réel — on renonce ici à « mesurer plutôt que
+ *    déclarer » — mais en échange l'ancien cas « parti chez le client, état non
+ *    enregistré », celui qui faisait renvoyer un devis déjà reçu, ne peut plus
+ *    se produire.
  *
  * `envoyerEnRemontantLErreur` et non `envoyer` : ailleurs dans le projet un
  * e-mail raté est avalé pour ne jamais faire échouer une réservation. Ici c'est
  * le contraire — l'envoi EST l'action demandée, et l'exploitant doit savoir si
  * elle a échoué, sans quoi il attendrait une réponse à un devis jamais parti.
- *
- * `vuEnvoyeLe` EST UN JETON DE CONCURRENCE, PAS UN ORNEMENT.
- *
- * L'action ne lisait jamais `devis_envoye_le`. Deux onglets ouverts sur la
- * même demande — ou un onglet laissé ouvert la veille — pouvaient donc envoyer
- * deux fois : le client recevait deux PDF portant LA MÊME RÉFÉRENCE, des
- * montants différents et deux dates d'émission, les deux se présentant comme
- * l'offre en cours. Lequel engage le complexe ? La question ne doit pas se
- * poser.
- *
- * Un simple « déjà envoyé, je refuse » serait faux dans l'autre sens :
- * renvoyer un devis corrigé après un appel du client est une opération
- * normale. On compare donc CE QUE L'ÉCRAN CROYAIT à ce que la base porte. Le
- * renvoi délibéré part d'une page à jour et passe ; le renvoi involontaire
- * part d'une page périmée et est arrêté.
  */
 export async function envoyerDevis(
   id: string,
@@ -546,29 +555,6 @@ export async function envoyerDevis(
       return { ok: false, message: `Il manque ${obstacles.join(", ")}.` };
     }
 
-    const { data: etat, error: eEtatLu } = await base()
-      .from("demandes_devis")
-      .select("devis_envoye_le")
-      .eq("id", cible)
-      .maybeSingle();
-
-    if (eEtatLu) throw eEtatLu;
-    if (!etat) return { ok: false, message: "Demande introuvable." };
-
-    // Comparaison sur l'instant, pas sur la chaîne : PostgREST peut rendre le
-    // même horodatage écrit autrement (fuseau, précision des fractions).
-    const enBase = etat.devis_envoye_le ? Date.parse(etat.devis_envoye_le) : null;
-    const vu = vuEnvoyeLe ? Date.parse(vuEnvoyeLe) : null;
-    if (enBase !== vu) {
-      return {
-        ok: false,
-        message:
-          "Ce devis a déjà été envoyé depuis un autre écran. Rafraîchissez la page pour " +
-          "voir la version partie : si vous voulez vraiment en envoyer une nouvelle, " +
-          "relancez l'envoi depuis la page à jour.",
-      };
-    }
-
     const { data, error } = await base()
       .from("demandes_devis")
       .update({
@@ -587,72 +573,130 @@ export async function envoyerDevis(
     if (!data) return { ok: false, message: "Demande introuvable." };
 
     /*
+      ON RÉSERVE L'ENVOI AVANT D'ENVOYER, ET C'EST LA SEULE FAÇON DE L'EMPÊCHER
+      DEUX FOIS.
+
+      Une simple lecture de `devis_envoye_le` suivie d'une comparaison ne suffit
+      pas : entre la lecture et l'écriture finale il y a l'enregistrement des
+      lignes, la fabrication du PDF et le fournisseur d'e-mails — plusieurs
+      secondes. Deux clics partis dans cet intervalle lisent tous deux « jamais
+      envoyé », passent tous deux, et le client reçoit deux PDF portant la même
+      référence avec deux dates d'émission. Brahim travaille sur deux écrans ;
+      « j'ai tapé sur le téléphone, je n'ai rien vu bouger, j'ai recliqué au
+      comptoir » suffit.
+
+      L'écriture est donc conditionnée à l'état lu par la fiche, dans la même
+      instruction que la mise à jour (`update … where devis_envoye_le = vu`).
+      C'est la base qui arbitre : le premier des deux appels pose son
+      horodatage, le second ne trouve plus rien à mettre à jour et s'arrête
+      AVANT de fabriquer quoi que ce soit.
+
+      ON RENONCE DONC À « MESURER PLUTÔT QUE DÉCLARER ». L'horodatage précédait
+      l'envoi réel ; en échange, un envoi raté le défait juste après (voir plus
+      bas), et l'ancien cas « parti mais non enregistré » — celui qui faisait
+      renvoyer un devis déjà chez le client — ne peut plus se produire du tout.
+    */
+    const envoyeLe = new Date().toISOString();
+    const reservation = base()
+      .from("demandes_devis")
+      .update({ devis_envoye_le: envoyeLe, statut: "devis_envoye" })
+      .eq("id", cible);
+    // `is` pour `null`, `eq` sinon : en SQL `= NULL` n'est jamais vrai, et la
+    // condition se déroberait exactement sur le cas le plus fréquent — un
+    // devis jamais encore envoyé.
+    const { data: reserve, error: eReservation } = await (vuEnvoyeLe
+      ? reservation.eq("devis_envoye_le", vuEnvoyeLe)
+      : reservation.is("devis_envoye_le", null)
+    )
+      .select("id")
+      .maybeSingle();
+
+    if (eReservation) throw eReservation;
+    if (!reserve) {
+      return {
+        ok: false,
+        message:
+          "Ce devis vient d'être envoyé depuis un autre écran. Rien n'est parti en double. " +
+          "Rafraîchissez la page pour voir la version envoyée : si vous voulez vraiment en " +
+          "expédier une nouvelle, relancez l'envoi depuis la page à jour.",
+      };
+    }
+
+    /**
+     * Défait la réservation d'envoi quand rien n'est parti.
+     *
+     * `eq` sur notre propre horodatage : si quelqu'un d'autre a repris la main
+     * entre-temps, ce n'est plus à nous de remettre quoi que ce soit.
+     */
+    const relacher = async () => {
+      const { error: eRelache } = await base()
+        .from("demandes_devis")
+        .update({ devis_envoye_le: vuEnvoyeLe, statut: data.statut })
+        .eq("id", cible)
+        .eq("devis_envoye_le", envoyeLe);
+      if (eRelache) console.error("Libération du devis réservé impossible :", eRelache.message);
+      return !eRelache;
+    };
+
+    /*
       LE PDF EST GÉNÉRÉ AVANT L'ENVOI, ET SON ÉCHEC ARRÊTE TOUT. Envoyer un
       e-mail annonçant « le devis est joint en PDF » sans la pièce jointe
       serait pire que de ne rien envoyer : le client chercherait un fichier
       absent et croirait à une erreur de sa messagerie.
     */
-    const pdf = await genererDevisPdf({
-      reference: data.reference,
-      emisLe: jourLisibleCap(new Date()),
-      validiteLisible: jourLisibleCap(new Date(`${propre.validite}T12:00:00Z`)),
-      client: {
-        entreprise: data.entreprise,
-        contactNom: data.contact_nom,
-        contactEmail: data.contact_email,
-        adresse: propre.clientAdresse,
-        tva: propre.clientTva,
-      },
-      lignes: propre.lignes,
-      tvaPourcent: propre.tvaPourcent,
-      motDIntroduction: propre.message,
-    });
-
-    await envoyerEnRemontantLErreur(
-      auClientDevisPropose({
+    try {
+      const pdf = await genererDevisPdf({
         reference: data.reference,
-        entreprise: data.entreprise,
-        contactNom: data.contact_nom,
-        contactEmail: data.contact_email,
-        contactTelephone: data.contact_telephone,
-        dateSouhaitee: data.date_souhaitee ?? "",
-        periode: data.periode ?? "",
-        nbParticipants: data.nb_participants ?? 0,
-        lignes: propre.lignes,
-        motDIntroduction: propre.message,
+        emisLe: jourLisibleCap(new Date()),
         validiteLisible: jourLisibleCap(new Date(`${propre.validite}T12:00:00Z`)),
+        client: {
+          entreprise: data.entreprise,
+          contactNom: data.contact_nom,
+          contactEmail: data.contact_email,
+          adresse: propre.clientAdresse,
+          tva: propre.clientTva,
+        },
+        lignes: propre.lignes,
         tvaPourcent: propre.tvaPourcent,
-        pdf,
-      })
-    );
-
-    /*
-      Après l'envoi seulement — ET ON VÉRIFIE QUE ÇA S'ÉCRIT.
-
-      Le résultat n'était ni lu ni testé. Une écriture refusée laissait donc la
-      fiche afficher « À traiter » et `devis_envoye_le` vide, alors que le devis
-      était réellement parti chez le client. L'exploitant le renvoyait, et le
-      client recevait deux fois le même document avec deux dates d'émission.
-
-      L'e-mail, lui, est déjà parti : on ne peut plus le rattraper. On le dit
-      donc explicitement plutôt que d'annoncer un succès complet.
-    */
-    const envoyeLe = new Date().toISOString();
-    const { error: eEtat } = await base()
-      .from("demandes_devis")
-      .update({ devis_envoye_le: envoyeLe, statut: "devis_envoye" })
-      .eq("id", cible);
-
-    if (eEtat) {
-      console.error("Devis envoyé mais état non enregistré :", eEtat.message);
-      await journaliser(session, "devis.envoye", data.reference, {
-        montant_cents: totalDevisCents(propre.lignes),
-        etat_non_enregistre: true,
+        motDIntroduction: propre.message,
       });
-      rafraichir();
+
+      await envoyerEnRemontantLErreur(
+        auClientDevisPropose({
+          reference: data.reference,
+          entreprise: data.entreprise,
+          contactNom: data.contact_nom,
+          contactEmail: data.contact_email,
+          contactTelephone: data.contact_telephone,
+          dateSouhaitee: data.date_souhaitee ?? "",
+          periode: data.periode ?? "",
+          nbParticipants: data.nb_participants ?? 0,
+          lignes: propre.lignes,
+          motDIntroduction: propre.message,
+          validiteLisible: jourLisibleCap(new Date(`${propre.validite}T12:00:00Z`)),
+          tvaPourcent: propre.tvaPourcent,
+          pdf,
+        })
+      );
+    } catch (eEnvoi) {
+      /*
+        RIEN N'EST PARTI : ON REND LA MAIN. Sans ça, la réservation posée
+        juste avant ferait croire à un devis envoyé — la fiche dirait « Devis
+        envoyé », et personne n'attendrait plus rien d'un document qui n'a
+        jamais quitté le serveur.
+
+        Si même la libération échoue, on le dit : c'est le seul cas où
+        l'horodatage ment, et l'exploitant doit le savoir pour renvoyer.
+      */
+      const rendu = await relacher();
+      const detail = eEnvoi instanceof Error ? eEnvoi.message : String(eEnvoi);
+      console.error("Envoi du devis :", eEnvoi);
       return {
         ok: false,
-        message: `Le devis est bien parti à ${data.contact_email}, mais son état n'a pas pu être enregistré. Ne le renvoyez pas : notez-le et prévenez Mathis.`,
+        message: rendu
+          ? `Refusé par le fournisseur : ${detail.slice(0, 300)}`
+          : `Le devis n'est PAS parti (${detail.slice(0, 200)}) et la fiche a pu rester marquée ` +
+            "« Devis envoyé ». Rafraîchissez, vérifiez l'état, et renvoyez-le.",
       };
     }
 
@@ -781,6 +825,15 @@ export async function basculerCreneau(id: string, ouvrir: boolean): Promise<Resu
           .eq("id", cible)
           .maybeSingle();
         if (!existe) return { ok: false, message: "Créneau introuvable." };
+        /*
+          `rafraichir()` MÊME ICI, ET SURTOUT ICI. La ligne affiche « Libre »
+          par affichage optimiste ; sans revalidation, `useOptimistic` retombe
+          sur la propriété inchangée et la ligne repasse à « Libre » sous un
+          message vert de succès. On reclique, même résultat, indéfiniment.
+          C'est précisément le cas où l'écran est en retard sur la base : c'est
+          le moment de le remettre à jour, pas de s'en passer.
+        */
+        rafraichir();
         return { ok: true, message: "Ce créneau était déjà fermé." };
       }
 
@@ -1500,13 +1553,44 @@ export async function basculerJournee(jourDemande: string, ouvrir: boolean): Pro
       .in("creneau_id", ids);
 
     /*
-      SI LA LECTURE ÉCHOUE, ON REMET TOUT COMME C'ÉTAIT. Garder la journée
-      fermée sans savoir ce qu'elle portait reviendrait à retirer de la vente
-      des places peut-être vendues, en le présentant comme une réussite.
+      SI LA LECTURE ÉCHOUE, ON REMET TOUT COMME C'ÉTAIT — ET ON VÉRIFIE QUE
+      ÇA S'EST FAIT.
+
+      Garder la journée fermée sans savoir ce qu'elle portait reviendrait à
+      retirer de la vente des places peut-être vendues. Mais la réouverture ne
+      peut pas être lancée sans regarder son résultat : elle part vers la MÊME
+      base que la lecture qui vient d'échouer, donc dans la même panne. Sans
+      ce contrôle, `throw` menait à `echec()`, qui affiche « L'opération a
+      échoué. Réessayez. » — c'est-à-dire « rien n'a bougé », alors qu'un
+      samedi entier venait de sortir de la vente, sans journal et sans un mot.
+
+      C'est le seul endroit du fichier où une écriture de rattrapage ignorait
+      son erreur ; sa jumelle `basculerCreneau` la vérifie déjà.
     */
     if (erreurPrises) {
-      await base().from("creneaux").update({ ouvert: true }).in("id", ids);
-      throw erreurPrises;
+      console.error("Lecture des réservations de la journée impossible :", erreurPrises.message);
+      const { error: eRetourTotal } = await base()
+        .from("creneaux")
+        .update({ ouvert: true })
+        .in("id", ids);
+
+      if (eRetourTotal) {
+        console.error("Réouverture de la journée impossible :", eRetourTotal.message);
+        return {
+          ok: false,
+          message:
+            `Les ${ids.length} créneaux de cette journée ont été fermés, mais la vérification ` +
+            "des réservations a échoué ET ils n'ont pas pu être rouverts. La journée est " +
+            "actuellement retirée de la vente : rouvrez-la dès que possible depuis cet écran.",
+        };
+      }
+
+      return {
+        ok: false,
+        message:
+          "Impossible de vérifier quelles réservations occupent cette journée. Les créneaux " +
+          "ont été remis comme ils étaient : rien n'a changé. Réessayez.",
+      };
     }
 
     const occupes = new Map((prises ?? []).map((r) => [r.creneau_id, r.reference]));

@@ -328,7 +328,19 @@ function construire(
             ),
           }
         : null,
-      paiementEnCours: paiements.enCours.has(r.id),
+      /*
+        « en attente » EN PLUS DU DRAPEAU, ET CE N'EST PAS UNE CEINTURE DE
+        SÉCURITÉ.
+
+        La route d'abandon ferme la session chez Stripe puis passe la
+        réservation à « expiree » — mais elle ne touche pas la ligne de
+        paiement, qui reste « en_cours » jusqu'à ce que le webhook
+        `checkout.session.expired` la passe à « echoue ». Entre les deux, la
+        fiche annonçait « paiement en cours » sur une réservation dont le site
+        venait lui-même de tuer la session. Un paiement ne peut être en cours
+        que sur une réservation encore en attente.
+      */
+      paiementEnCours: r.statut === "en_attente" && paiements.enCours.has(r.id),
     });
   }
   return sortie;

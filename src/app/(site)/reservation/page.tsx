@@ -65,43 +65,47 @@ export default async function ReservationPage({
     lireCreneaux("bubble"),
   ]);
 
+  /*
+    LE BANDEAU PASSE PAR LE TUNNEL, IL NE SE MET PAS À CÔTÉ.
+
+    Rendu ici, à la racine de la page, il tombait sous l'en-tête `fixed` du
+    site — dont le bord inférieur est à 104 px — et n'était donc jamais vu.
+    Le conteneur du tunnel est le seul à porter le `pt-32` qui dégage la zone :
+    c'est lui qui doit l'afficher.
+
+    `role="status"` et non `alert` : renoncer à payer n'est pas une erreur, et
+    l'annonce ne doit pas couper ce que le lecteur d'écran est en train de lire.
+  */
+  const bandeau = paiementAnnule ? (
+    <div
+      role="status"
+      className="mb-6 rounded-xl border border-border bg-muted/50 px-4 py-3 text-sm"
+    >
+      <p className="font-medium">Paiement annulé — vous n&apos;avez pas été débité.</p>
+      <p className="mt-0.5 text-muted-foreground">
+        Votre demande n&apos;a donc pas été enregistrée. Reprenez ci-dessous : le créneau
+        vous est proposé à nouveau s&apos;il est toujours libre.
+      </p>
+    </div>
+  ) : null;
+
   return (
-    <>
-      {paiementAnnule && (
-        <div className="mx-auto w-full max-w-3xl px-4 pt-6">
-          {/*
-            `role="status"` et non `alert` : renoncer à payer n'est pas une
-            erreur, et l'annonce ne doit pas couper ce que le lecteur d'écran
-            est en train de lire.
-          */}
-          <div
-            role="status"
-            className="rounded-xl border border-border bg-muted/50 px-4 py-3 text-sm"
-          >
-            <p className="font-medium">Paiement annulé — vous n&apos;avez pas été débité.</p>
-            <p className="mt-0.5 text-muted-foreground">
-              Votre demande n&apos;a donc pas été enregistrée. Reprenez ci-dessous : le
-              créneau vous est proposé à nouveau s&apos;il est toujours libre.
-            </p>
-          </div>
-        </div>
-      )}
-      <Suspense fallback={<div className="flex items-center justify-center py-20 text-muted-foreground">Chargement…</div>}>
-        <ReservationFlow
-          donnees={{
-            formules,
-            options,
-            creneauxAnniversaire,
-            creneauxBubble,
-            demiJournees: prochainesDemiJournees(),
-            // Le tunnel doit annoncer un paiement SEULEMENT s'il va vraiment
-            // avoir lieu : promettre « on vous rappelle » puis débiter le
-            // client est une pratique trompeuse, et le bouton doit dire ce
-            // qu'il fait.
-            paiementActif: paiementConfigure(),
-          }}
-        />
-      </Suspense>
-    </>
+    <Suspense fallback={<div className="flex items-center justify-center py-20 text-muted-foreground">Chargement…</div>}>
+      <ReservationFlow
+        bandeau={bandeau}
+        donnees={{
+          formules,
+          options,
+          creneauxAnniversaire,
+          creneauxBubble,
+          demiJournees: prochainesDemiJournees(),
+          // Le tunnel doit annoncer un paiement SEULEMENT s'il va vraiment
+          // avoir lieu : promettre « on vous rappelle » puis débiter le
+          // client est une pratique trompeuse, et le bouton doit dire ce
+          // qu'il fait.
+          paiementActif: paiementConfigure(),
+        }}
+      />
+    </Suspense>
   );
 }
