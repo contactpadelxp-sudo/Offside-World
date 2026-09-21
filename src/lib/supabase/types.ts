@@ -201,6 +201,7 @@ export type Database = {
         Row: {
           accroche: string | null
           actif: boolean
+          age_max: number | null
           description: string
           duree_minutes: number
           enfants_inclus: number
@@ -216,6 +217,7 @@ export type Database = {
         Insert: {
           accroche?: string | null
           actif?: boolean
+          age_max?: number | null
           description: string
           duree_minutes: number
           enfants_inclus: number
@@ -231,6 +233,7 @@ export type Database = {
         Update: {
           accroche?: string | null
           actif?: boolean
+          age_max?: number | null
           description?: string
           duree_minutes?: number
           enfants_inclus?: number

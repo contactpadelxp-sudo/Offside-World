@@ -244,7 +244,7 @@ export function FicheReservation({ r }: { r: ReservationAdmin }) {
           <h3 className="mt-2 font-bold">{r.clientNom}</h3>
           <p className="text-sm text-muted-foreground">
             {r.type === "anniversaire"
-              ? `${r.formuleNom ?? "Formule"} — ${r.nbEnfants ?? "?"} enfants${
+              ? `${r.formuleNom ?? "Formule"} — ${r.nbEnfants ?? "?"} participants${
                   r.enfantPrenom
                     ? ` (${r.enfantPrenom}${r.enfantAge ? `, ${r.enfantAge} ans` : ""})`
                     : ""

@@ -6,6 +6,35 @@
 /** Délai minimum entre la réservation et le début de l'activité (heures). */
 export const DELAI_RESERVATION_HEURES = 1;
 
+/**
+ * Âge minimum de la personne fêtée, tous forfaits confondus.
+ *
+ * « À partir de 4 ans », répondu par Brahim le 17 septembre 2026. C'est une
+ * règle du COMPLEXE et non d'une formule : elle n'a donc pas sa place dans la
+ * table `formules`, où elle serait à tenir d'accord ligne par ligne.
+ *
+ * Le maximum, lui, EST par formule — colonne `formules.age_max`, `null` pour
+ * « pas de limite ». Les deux formules y sont sans limite aujourd'hui ; le
+ * champ existe pour que l'exploitant puisse fermer un forfait aux adultes d'un
+ * réglage, pas parce qu'on l'a décidé pour lui.
+ */
+export const AGE_MINIMUM = 4;
+
+/**
+ * Jusqu'où va la LISTE proposée dans le tunnel — pas une limite d'âge.
+ *
+ * Au-delà, dérouler des dizaines de lignes coûte plus qu'il ne sert. Quelqu'un
+ * qui fête ses 75 ans est assez rare pour qu'un appel règle le cas, et assez
+ * rare pour ne pas allonger la liste de tout le monde.
+ */
+export const AGE_MAXIMUM_LISTE = 60;
+
+/**
+ * Garde-fou de saisie côté serveur : au-delà, un nombre n'est plus un âge.
+ * La vraie limite commerciale est `formules.age_max`, vérifiée juste après.
+ */
+export const AGE_ABSURDE_AU_DELA = 120;
+
 /*
  * Anniversaires simultanés et battement entre deux groupes : ces deux règles
  * ne sont plus des constantes ici. Elles sont désormais inscrites dans la base,

@@ -280,7 +280,7 @@ export default function Confidentialite() {
           applicables. À titre général :
         </P>
         <Liste items={[
-          "Données de réservation et de relation client : 13 mois, après quoi le nom, l'e-mail, le téléphone, le prénom et l'âge de l'enfant, les allergies signalées et les remarques sont effacés automatiquement. Le montant, la date et la prestation subsistent, pour la comptabilité.",
+          "Données de réservation et de relation client : 13 mois, après quoi le nom, l'e-mail, le téléphone, le prénom et l'âge de la personne fêtée, les allergies signalées et les remarques sont effacés automatiquement. Le montant, la date et la prestation subsistent, pour la comptabilité.",
           "Documents comptables et factures : pendant la durée de conservation légalement applicable, qui peut atteindre 10 ans en Belgique.",
           "Demandes de devis : 13 mois, après quoi les coordonnées du contact et le contenu du message sont effacés automatiquement. Seuls le nom de l'entreprise, le montant et la date subsistent, pour la comptabilité.",
           "Données utilisées pour le marketing avec consentement : jusqu'au retrait du consentement ou jusqu'à ce que les données ne soient plus nécessaires à cette finalité.",

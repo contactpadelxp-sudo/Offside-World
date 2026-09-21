@@ -17,7 +17,7 @@ export async function lireTarifsAdmin(): Promise<{
   const [formules, options] = await Promise.all([
     base()
       .from("formules")
-      .select("id, nom, accroche, description, prix_base_cents, enfants_inclus, prix_enfant_sup_cents, enfants_max, duree_minutes, inclus, actif")
+      .select("id, nom, accroche, description, prix_base_cents, enfants_inclus, prix_enfant_sup_cents, enfants_max, age_max, duree_minutes, inclus, actif")
       .order("ordre"),
     base().from("options").select("id, libelle, description, prix_cents, actif").order("id"),
   ]);
@@ -35,6 +35,7 @@ export async function lireTarifsAdmin(): Promise<{
       enfantsInclus: f.enfants_inclus,
       prixEnfantSup: f.prix_enfant_sup_cents / 100,
       enfantsMax: f.enfants_max,
+      ageMax: f.age_max,
       dureeMinutes: f.duree_minutes,
       inclus: f.inclus,
       actif: f.actif,

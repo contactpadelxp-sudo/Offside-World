@@ -28,6 +28,7 @@ import {
 } from "@/lib/email/modeles";
 import { lignesDepuisJson, obstaclesEnvoi, totalDevisCents } from "@/lib/devis";
 import { heuresAvant, jourLisibleCap } from "@/lib/temps";
+import { AGE_MINIMUM } from "@/data/reglement";
 import { genererDevisPdf } from "@/lib/devis-pdf";
 import type { SaisieDevis } from "@/lib/vues";
 import {
@@ -806,6 +807,8 @@ export interface SaisieFormule {
   enfantsInclus: string | number;
   prixEnfantSup: string;
   enfantsMax: string | number;
+  /** Vide ou absent = pas de limite d'âge. */
+  ageMax?: string | number | null;
   dureeMinutes: string | number;
   inclus: string;
   actif: boolean;
@@ -821,16 +824,31 @@ export async function modifierFormule(id: string, saisie: SaisieFormule): Promis
     const accroche = texteFacultatif(saisie?.accroche, "Accroche", { max: 120, sauts: false });
     const description = texte(saisie?.description, "Description", { min: 10, max: 800, sauts: true });
     const prixBase = montantEnCents(saisie?.prixBase, "Prix de base", { max: 500_000 });
-    const prixEnfantSup = montantEnCents(saisie?.prixEnfantSup, "Prix par enfant supplémentaire", { max: 50_000 });
-    const enfantsInclus = entier(saisie?.enfantsInclus, "Enfants inclus", { min: 1, max: 100 });
-    const enfantsMax = entier(saisie?.enfantsMax, "Enfants maximum", { min: 1, max: 100 });
+    const prixEnfantSup = montantEnCents(saisie?.prixEnfantSup, "Prix par participant supplémentaire", { max: 50_000 });
+    const enfantsInclus = entier(saisie?.enfantsInclus, "Participants inclus", { min: 1, max: 100 });
+    const enfantsMax = entier(saisie?.enfantsMax, "Participants maximum", { min: 1, max: 100 });
+
+    /*
+      UN CHAMP VIDE VEUT DIRE « PAS DE LIMITE », ET NON ZÉRO.
+
+      C'est le réglage qui ouvre ou ferme un forfait aux adultes. Le distinguer
+      de zéro est tout l'enjeu : `entier("")` vaudrait 0, ce qui interdirait la
+      formule à tout le monde — l'exact contraire de ce que l'exploitant croit
+      faire en effaçant le champ.
+    */
+    const ageBrut = saisie?.ageMax;
+    const sansLimite =
+      ageBrut === null || ageBrut === undefined || String(ageBrut).trim() === "";
+    const ageMax = sansLimite
+      ? null
+      : entier(ageBrut, "Âge maximum", { min: AGE_MINIMUM, max: 120 });
     const dureeMinutes = entier(saisie?.dureeMinutes, "Durée", { min: 15, max: 600 });
     const inclus = lignes(saisie?.inclus, "Ce qui est compris");
 
     if (enfantsMax < enfantsInclus) {
       return {
         ok: false,
-        message: "Le maximum d'enfants ne peut pas être inférieur au nombre inclus dans le forfait.",
+        message: "Le maximum de participants ne peut pas être inférieur au nombre inclus dans le forfait.",
       };
     }
 
@@ -844,6 +862,7 @@ export async function modifierFormule(id: string, saisie: SaisieFormule): Promis
         enfants_inclus: enfantsInclus,
         prix_enfant_sup_cents: prixEnfantSup,
         enfants_max: enfantsMax,
+        age_max: ageMax,
         duree_minutes: dureeMinutes,
         inclus,
         actif: booleen(saisie?.actif),

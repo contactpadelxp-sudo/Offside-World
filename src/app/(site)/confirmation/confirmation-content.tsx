@@ -158,7 +158,7 @@ export function ConfirmationContent() {
                   )}
                   {recap.enfant && (
                     <div className="flex justify-between">
-                      <span className="text-muted-foreground">Enfant fêté</span>
+                      <span className="text-muted-foreground">Personne fêtée</span>
                       <span className="font-semibold">{recap.enfant}</span>
                     </div>
                   )}

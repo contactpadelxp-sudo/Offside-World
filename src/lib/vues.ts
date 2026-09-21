@@ -21,6 +21,8 @@ export interface FormuleVue {
   /** en euros */
   prixEnfantSup: number;
   enfantsMax: number;
+  /** Âge maximum de la personne fêtée, ou `null` si la formule n'en pose pas. */
+  ageMax: number | null;
   dureeMinutes: number;
   inclus: string[];
   /** chemin sous /images, ou null */
@@ -218,6 +220,8 @@ export interface FormuleAdmin {
   /** en euros */
   prixEnfantSup: number;
   enfantsMax: number;
+  /** Âge maximum de la personne fêtée, ou `null` si la formule n'en pose pas. */
+  ageMax: number | null;
   dureeMinutes: number;
   inclus: string[];
   actif: boolean;

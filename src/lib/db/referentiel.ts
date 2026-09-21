@@ -20,7 +20,7 @@ export async function lireFormules(): Promise<FormuleVue[]> {
 
   const { data, error } = await base()
     .from("formules")
-    .select("id, nom, accroche, description, prix_base_cents, enfants_inclus, prix_enfant_sup_cents, enfants_max, duree_minutes, inclus, image")
+    .select("id, nom, accroche, description, prix_base_cents, enfants_inclus, prix_enfant_sup_cents, enfants_max, age_max, duree_minutes, inclus, image")
     .eq("actif", true)
     .order("ordre");
 
@@ -38,6 +38,7 @@ export async function lireFormules(): Promise<FormuleVue[]> {
     enfantsInclus: f.enfants_inclus,
     prixEnfantSup: enEuros(f.prix_enfant_sup_cents),
     enfantsMax: f.enfants_max,
+    ageMax: f.age_max,
     dureeMinutes: f.duree_minutes,
     inclus: f.inclus,
     image: f.image,
@@ -93,13 +94,15 @@ export interface TarifFormule {
   enfantsInclus: number;
   prixEnfantSupCents: number;
   enfantsMax: number;
+  /** Âge maximum de la personne fêtée, ou `null` si la formule n'en pose pas. */
+  ageMax: number | null;
 }
 
 /** Retourne `null` si la formule n'existe pas ou n'est plus active. */
 export async function lireTarifFormule(id: string): Promise<TarifFormule | null> {
   const { data, error } = await base()
     .from("formules")
-    .select("id, nom, prix_base_cents, enfants_inclus, prix_enfant_sup_cents, enfants_max")
+    .select("id, nom, prix_base_cents, enfants_inclus, prix_enfant_sup_cents, enfants_max, age_max")
     .eq("id", id)
     .eq("actif", true)
     .maybeSingle();
@@ -115,6 +118,7 @@ export async function lireTarifFormule(id: string): Promise<TarifFormule | null>
     enfantsInclus: data.enfants_inclus,
     prixEnfantSupCents: data.prix_enfant_sup_cents,
     enfantsMax: data.enfants_max,
+    ageMax: data.age_max,
   };
 }
 

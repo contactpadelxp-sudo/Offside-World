@@ -23,6 +23,7 @@ import {
   type RecapEmail,
 } from "@/lib/email/modeles";
 import { heure, jourLisibleCap } from "@/lib/temps";
+import { AGE_ABSURDE_AU_DELA, AGE_MINIMUM } from "@/data/reglement";
 import { autoriserPartage } from "@/lib/limiteur-partage";
 import { baseConfiguree } from "@/lib/supabase/server";
 import { SaisieInvalide, booleen, email, entier, identifiants, jour, telephone, texte, texteFacultatif, uuid, vrai } from "@/lib/saisie";
@@ -156,7 +157,10 @@ export async function reserverAnniversaire(saisie: SaisieAnniversaire): Promise<
       99 reste comme garde-fou de saisie : ce n'est pas une limite d'âge mais
       la borne au-delà de laquelle un nombre n'est plus un âge.
     */
-    const enfantAge = entier(saisie?.enfantAge, "Âge", { min: 4, max: 99 });
+    const enfantAge = entier(saisie?.enfantAge, "Âge", {
+      min: AGE_MINIMUM,
+      max: AGE_ABSURDE_AU_DELA,
+    });
     const optionsIds = identifiants(saisie?.optionsIds, "Options", 10);
     const clientNom = texte(saisie?.clientNom, "Nom", { min: 2, max: 120 });
     const clientEmail = email(saisie?.clientEmail, "E-mail");
@@ -170,7 +174,29 @@ export async function reserverAnniversaire(saisie: SaisieAnniversaire): Promise<
     const formule = await lireTarifFormule(formuleId);
     if (!formule) return { ok: false, message: "Cette formule n'est plus proposée.", champ: "formule" };
 
-    const nbEnfants = entier(saisie?.nbEnfants, "Nombre d'enfants", { min: 1, max: formule.enfantsMax });
+    const nbEnfants = entier(saisie?.nbEnfants, "Nombre de participants", { min: 1, max: formule.enfantsMax });
+
+    /*
+      L'ÂGE MAXIMUM APPARTIENT À LA FORMULE, PAS AU CODE.
+
+      Il est vérifié ICI et non à la validation de saisie plus haut, parce
+      qu'il dépend de la formule choisie — qu'on vient seulement de lire. La
+      borne de saisie ne fait que refuser ce qui n'est plus un âge.
+
+      `null` veut dire « pas de limite », et c'est le cas des deux formules
+      aujourd'hui. Le champ existe pour que l'exploitant puisse fermer un
+      forfait aux adultes d'un réglage dans /admin/tarifs, sans redéploiement.
+
+      Le message nomme la limite : « Cette formule est réservée aux moins de
+      18 ans » se comprend, « âge invalide » envoie chercher.
+    */
+    if (formule.ageMax !== null && enfantAge > formule.ageMax) {
+      return {
+        ok: false,
+        message: `La formule ${formule.nom} est réservée aux ${formule.ageMax} ans et moins.`,
+        champ: "enfantAge",
+      };
+    }
 
     // 3. Le créneau est relu en base : type, ouverture, délai minimum, disponibilité.
     await expirerReservationsAbandonnees();
@@ -181,7 +207,7 @@ export async function reserverAnniversaire(saisie: SaisieAnniversaire): Promise<
     if (nbEnfants > creneau.capacite) {
       return {
         ok: false,
-        message: `Cet espace accueille ${creneau.capacite} enfants au maximum.`,
+        message: `Cet espace accueille ${creneau.capacite} participants au maximum.`,
         champ: "nbEnfants",
       };
     }

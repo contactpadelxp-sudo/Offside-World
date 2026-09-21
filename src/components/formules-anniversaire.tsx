@@ -192,9 +192,24 @@ function CarteFormule({ f }: { f: FormuleVue }) {
       <p className="mt-1 text-sm font-medium text-kick">{f.accroche}</p>
       <p className="mt-3 leading-relaxed text-muted-foreground">{f.description}</p>
 
+      {/*
+        « PARTICIPANTS » ET NON « ENFANTS ».
+
+        Le tunnel de réservation a été converti le 17 septembre 2026, quand
+        Brahim a ouvert les anniversaires aux adultes — « pas de limite vu que
+        bubble possible pour adulte ». Cette carte-ci est restée en arrière, et
+        je l'ai recopiée telle quelle en l'extrayant de la page d'accueil : un
+        groupe de trentenaires qui regarde la formule Bubble à 290 € lisait
+        encore « +10 € par enfant supplémentaire ».
+
+        Les noms en base restent `enfants_inclus` et `prix_enfant_sup_cents` :
+        renommer des colonnes pour une question de vocabulaire coûterait une
+        migration et casserait les réservations existantes, sans rien apporter.
+        C'est ce que le client LIT qui change.
+      */}
       <p className="mt-4 text-sm text-muted-foreground">
-        Jusqu&apos;à <strong className="text-foreground">{f.enfantsInclus} enfants</strong>
-        {" · "}+{euros(f.prixEnfantSup)} par enfant supplémentaire
+        Jusqu&apos;à <strong className="text-foreground">{f.enfantsInclus} participants</strong>
+        {" · "}+{euros(f.prixEnfantSup)} par participant supplémentaire
       </p>
 
       <ul className="mt-5 flex-1 space-y-2">

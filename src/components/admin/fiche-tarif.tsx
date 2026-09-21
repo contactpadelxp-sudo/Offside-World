@@ -66,6 +66,7 @@ export function FicheFormule({ f }: { f: FormuleAdmin }) {
     enfantsInclus: String(f.enfantsInclus),
     prixEnfantSup: String(f.prixEnfantSup),
     enfantsMax: String(f.enfantsMax),
+    ageMax: f.ageMax === null ? "" : String(f.ageMax),
     dureeMinutes: String(f.dureeMinutes),
     inclus: f.inclus.join("\n"),
     actif: f.actif,
@@ -79,6 +80,7 @@ export function FicheFormule({ f }: { f: FormuleAdmin }) {
     v.enfantsInclus !== String(f.enfantsInclus) ||
     v.prixEnfantSup !== String(f.prixEnfantSup) ||
     v.enfantsMax !== String(f.enfantsMax) ||
+    v.ageMax !== (f.ageMax === null ? "" : String(f.ageMax)) ||
     v.dureeMinutes !== String(f.dureeMinutes) ||
     v.inclus !== f.inclus.join("\n") ||
     v.actif !== f.actif;
@@ -157,7 +159,7 @@ export function FicheFormule({ f }: { f: FormuleAdmin }) {
             onChange={(e) => setV({ ...v, prixBase: e.target.value })} />
         </div>
         <div>
-          <label className={ETIQUETTE} htmlFor={`inclus-nb-${f.id}`}>Enfants compris dans le forfait</label>
+          <label className={ETIQUETTE} htmlFor={`inclus-nb-${f.id}`}>Participants compris dans le forfait</label>
           {/*
             `e.target.value` et non `Number(...)` : `Number("")` vaut 0, donc
             effacer le champ pour retaper y écrivait « 0 » et il fallait
@@ -168,14 +170,34 @@ export function FicheFormule({ f }: { f: FormuleAdmin }) {
             onChange={(e) => setV({ ...v, enfantsInclus: e.target.value })} />
         </div>
         <div>
-          <label className={ETIQUETTE} htmlFor={`sup-${f.id}`}>Par enfant supplémentaire (€)</label>
+          <label className={ETIQUETTE} htmlFor={`sup-${f.id}`}>Par participant supplémentaire (€)</label>
           <input id={`sup-${f.id}`} className={CHAMP} inputMode="decimal" value={v.prixEnfantSup}
             onChange={(e) => setV({ ...v, prixEnfantSup: e.target.value })} />
         </div>
         <div>
-          <label className={ETIQUETTE} htmlFor={`max-${f.id}`}>Enfants maximum</label>
+          <label className={ETIQUETTE} htmlFor={`max-${f.id}`}>Participants maximum</label>
           <input id={`max-${f.id}`} className={CHAMP} type="number" min={1} max={100} value={v.enfantsMax}
             onChange={(e) => setV({ ...v, enfantsMax: e.target.value })} />
+        </div>
+        <div>
+          {/*
+            LE CHAMP VIDE EST LE RÉGLAGE NORMAL, PAS UN OUBLI.
+
+            Brahim a ouvert les anniversaires aux adultes — « pas de limite vu
+            que bubble possible pour adulte ». Les deux formules sont donc sans
+            limite, et ce champ existe pour qu'il puisse en fermer une aux
+            adultes s'il le décide un jour, sans qu'on redéploie.
+
+            L'aide le dit en toutes lettres : effacer le champ n'écrit pas
+            zéro, ça retire la limite. C'est la confusion qui rendrait le
+            réglage dangereux — une formule à « 0 an » n'est réservable par
+            personne.
+          */}
+          <label className={ETIQUETTE} htmlFor={`age-${f.id}`}>Âge maximum de la personne fêtée</label>
+          <input id={`age-${f.id}`} className={CHAMP} type="number" min={4} max={120}
+            placeholder="pas de limite" value={v.ageMax}
+            onChange={(e) => setV({ ...v, ageMax: e.target.value })} />
+          <p className="mt-1 text-xs text-muted-foreground">Laissez vide pour ne poser aucune limite.</p>
         </div>
         <div>
           <label className={ETIQUETTE} htmlFor={`duree-${f.id}`}>Durée (minutes)</label>
@@ -214,6 +236,7 @@ export function FicheFormule({ f }: { f: FormuleAdmin }) {
                 enfantsInclus: String(f.enfantsInclus),
                 prixEnfantSup: String(f.prixEnfantSup),
                 enfantsMax: String(f.enfantsMax),
+                ageMax: f.ageMax === null ? "" : String(f.ageMax),
                 dureeMinutes: String(f.dureeMinutes),
                 inclus: f.inclus.join("\n"),
                 actif: f.actif,

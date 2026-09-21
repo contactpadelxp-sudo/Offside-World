@@ -55,6 +55,8 @@ export const FORMULES_REPLI: FormuleVue[] = [
     enfantsInclus: 10,
     prixEnfantSup: 10,
     enfantsMax: 18,
+    // Repli seulement : la vraie valeur vient de la base.
+    ageMax: null,
     dureeMinutes: 120,
     inclus: [
       "2 heures de Football Indoor",
@@ -78,6 +80,8 @@ export const FORMULES_REPLI: FormuleVue[] = [
     enfantsInclus: 10,
     prixEnfantSup: 15,
     enfantsMax: 18,
+    // Repli seulement : la vraie valeur vient de la base.
+    ageMax: null,
     dureeMinutes: 120,
     inclus: [
       "1 heure de Bubble Foot",

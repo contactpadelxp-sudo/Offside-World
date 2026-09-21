@@ -21,7 +21,7 @@ import { reserverAnniversaire } from "@/lib/actions/reservation";
 import type { CreneauVue, FormuleVue, OptionVue } from "@/lib/vues";
 import type { RefTitre } from "../reservation-flow";
 import { GATEAU_NOTE, OPTION_IMAGES } from "@/data/formules";
-import { RESUME_ANNULATION, DELAI_RESERVATION_HEURES } from "@/data/reglement";
+import { RESUME_ANNULATION, DELAI_RESERVATION_HEURES, AGE_MINIMUM, AGE_MAXIMUM_LISTE } from "@/data/reglement";
 import { AlerteCercle, Ballon, Bouclier, Calendrier, ChevronBas, Coche, FlecheDroite, FlecheGauche, Gateau, Groupe, Info } from "@/components/icons";
 import { euros } from "@/lib/tarification";
 
@@ -119,6 +119,20 @@ export function AnniversaireFlow({
     : 0;
   /** Aperçu : le montant qui fera foi est recalculé par le serveur. */
   const totalPrice = formuleTotal + (selectedFormule ? optionsTotal : 0);
+
+  /*
+    Bornée par la formule, et jamais sous le minimum : une formule réglée à
+    3 ans par erreur donnerait sinon une liste vide, donc un champ qu'on ne
+    peut pas remplir.
+  */
+  const agePlafond = Math.max(
+    AGE_MINIMUM,
+    Math.min(selectedFormule?.ageMax ?? AGE_MAXIMUM_LISTE, AGE_MAXIMUM_LISTE)
+  );
+  const agesProposes = Array.from(
+    { length: agePlafond - AGE_MINIMUM + 1 },
+    (_, i) => AGE_MINIMUM + i
+  );
 
   const stepIndex = STEPS.findIndex((s) => s.key === step);
   const emailValid = isValidEmail(parentEmail);
@@ -408,19 +422,26 @@ export function AnniversaireFlow({
                 >
                   <option value={0}>Choisir l&apos;âge</option>
                   {/*
-                    DE 4 À 60 ANS, ET PAS DE 1 À 17.
+                    LA LISTE S'ARRÊTE OÙ LA FORMULE S'ARRÊTE.
 
-                    La liste s'arrêtait à 17 ans : un anniversaire d'adulte —
-                    le Bubble Foot se joue aussi entre grands — était
-                    impossible à réserver, et le serveur le refusait
-                    également. Brahim a précisé le 17 septembre 2026 : à
-                    partir de 4 ans, sans limite haute.
+                    Elle allait de 1 à 17 ans : un anniversaire d'adulte était
+                    impossible à réserver, et le serveur le refusait aussi.
+                    Brahim a tranché le 17 septembre 2026 — à partir de 4 ans,
+                    sans limite haute.
 
-                    60 est une borne de LISTE, pas d'âge : au-delà, dérouler
-                    des dizaines de lignes coûte plus qu'il ne sert, et le
-                    serveur accepte jusqu'à 99 de toute façon.
+                    Le plafond n'est plus écrit ici. Il vient de la formule
+                    choisie (`formules.age_max`), `null` valant « pas de
+                    limite » — c'est le cas des deux formules aujourd'hui. Si
+                    l'exploitant ferme un jour Kick-Off aux adultes depuis
+                    /admin/tarifs, la liste se raccourcit d'elle-même et le
+                    serveur refuse la même chose. Un plafond recopié dans le
+                    composant aurait divergé du sien dès ce jour-là.
+
+                    `AGE_MAXIMUM_LISTE` reste la borne de LISTE, pas d'âge :
+                    au-delà, dérouler des dizaines de lignes coûte plus qu'il
+                    ne sert, et un appel règle le cas de qui fête ses 75 ans.
                   */}
-                  {Array.from({ length: 57 }, (_, i) => i + 4).map((n) => (
+                  {agesProposes.map((n) => (
                     <option key={n} value={n}>{n} ans</option>
                   ))}
                 </select>
