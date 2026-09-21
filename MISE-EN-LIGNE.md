@@ -111,6 +111,21 @@ heure, c'est le même sol. Les deux clients sont dans leur droit, aucun des deux
 systèmes ne signale quoi que ce soit, et personne ne l'apprend avant que les
 deux groupes se présentent à la porte.
 
+**CE N'EST PAS UNE HYPOTHÈSE — LE CONFLIT EXISTE DÉJÀ.** Relevé sur la page
+publique de Sport-Finder le 21 septembre 2026 : le **samedi 3 octobre**, les
+créneaux de 16h00 et 16h30 affichent « **1 libre** » quand tous les suivants
+affichent « 2 libres ». Sur deux terrains, un seul reste disponible : une
+location court donc de 16h à 17h ce jour-là.
+
+Or le site vend ce même samedi un anniversaire de **15h00 à 17h00, sur les deux
+Fun zones**. Ce sont les deux mêmes terrains. Le jour du basculement, vendre ce
+créneau sur les deux zones revient à vendre celui qui est déjà loué.
+
+Vérifié au passage, et c'est ce qui rend le correctif possible : **les heures
+d'ouverture pilotent bien les disponibilités**. Le premier créneau proposé
+tombe exactement à l'heure d'ouverture. Si le blocage s'était fait ailleurs,
+régler cet écran n'aurait rien changé.
+
 **Ce qu'il faut régler** — Sport-Finder → Horaires → Horaire d'ouverture →
 *Détailler par jour* :
 
