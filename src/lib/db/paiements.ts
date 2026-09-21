@@ -364,6 +364,40 @@ export async function echouerPaiement(sessionId: string, raison: string | null):
  * ce qu'on a déjà compté doublerait nos propres remboursements, qui déclenchent
  * eux aussi cet événement. Stripe fait autorité, on recopie.
  */
+/**
+ * La référence de la réservation qu'un paiement Stripe couvre.
+ *
+ * POURQUOI ELLE EXISTE. Les événements `charge.*` — remboursement fait à la
+ * main, contestation bancaire — ne portent que l'imputation et l'intention de
+ * paiement. Jamais la session Checkout, donc jamais ses métadonnées. L'avis de
+ * contestation annonçait ainsi un montant, un motif et une date limite sans
+ * jamais dire DE QUI il s'agissait — alors qu'y répondre demande précisément
+ * de produire le nom du client, la date de l'activité et l'e-mail qu'il a reçu.
+ *
+ * ON LIT NOTRE PROPRE BASE, PAS STRIPE. La table `paiements` porte déjà le lien
+ * entre l'intention et la réservation : un aller-retour réseau de plus, dans le
+ * traitement d'un webhook que Stripe réessaie s'il tarde, n'apprendrait rien de
+ * plus.
+ *
+ * `null` plutôt qu'une exception : ne pas retrouver la référence ne doit pas
+ * empêcher l'avis de partir. Un avis de contestation sans référence reste mille
+ * fois préférable à pas d'avis du tout — il y a une date limite au bout.
+ */
+export async function referencePourIntention(paymentIntent: string): Promise<string | null> {
+  if (!baseConfiguree()) return null;
+  const { data, error } = await base()
+    .from("paiements")
+    .select("reservations(reference)")
+    .eq("stripe_payment_intent", paymentIntent)
+    .maybeSingle();
+  if (error) {
+    console.error("Référence introuvable pour l'intention Stripe :", error.message);
+    return null;
+  }
+  const liee = data?.reservations as { reference: string } | null | undefined;
+  return liee?.reference ?? null;
+}
+
 export async function synchroniserRemboursement(
   paymentIntent: string,
   cumulRembourseCents: number

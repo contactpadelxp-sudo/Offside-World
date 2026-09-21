@@ -9,6 +9,7 @@ import {
 import {
   confirmerPaiement,
   echouerPaiement,
+  referencePourIntention,
   synchroniserRemboursement,
 } from "@/lib/db/paiements";
 import { lireRecapEmail } from "@/lib/db/backoffice";
@@ -283,12 +284,34 @@ export async function POST(req: Request) {
         console.error(
           `CONTESTATION Stripe ${litige.id} : ${litige.amount} centimes, motif « ${litige.reason} ». À traiter dans le tableau de bord Stripe avant la date limite.`
         );
+        /*
+          LA RÉFÉRENCE EST CHERCHÉE DANS `after()`, PAS AVANT.
+
+          L'avis disait le montant, le motif et la date limite — jamais de qui
+          il s'agissait. Or répondre à une contestation, c'est produire le nom
+          du client, la date de l'activité et l'e-mail de confirmation qu'il a
+          reçu : sans la référence, il fallait retrouver la réservation à
+          partir d'un montant, et deux anniversaires du même samedi au même
+          tarif sont indiscernables.
+
+          La lecture vit APRÈS la réponse à Stripe, avec l'envoi. Un webhook
+          qui tarde est réessayé ; faire attendre Stripe pour enrichir un
+          e-mail serait payer une relivraison pour une ligne de texte. Et si
+          la lecture échoue, `referencePourIntention` rend `null` et l'avis
+          part quand même — il y a une date limite au bout.
+        */
+        const intentionLitige =
+          typeof litige.payment_intent === "string" ? litige.payment_intent : null;
         after(async () => {
+          const reference = intentionLitige
+            ? await referencePourIntention(intentionLitige)
+            : null;
           await envoyerTous([
             auComplexeContestation({
               montantCents: litige.amount,
               motif: litige.reason,
               echeance: litige.evidence_details?.due_by ?? null,
+              reference,
             }),
           ]);
         });

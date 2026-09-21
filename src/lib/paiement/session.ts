@@ -64,6 +64,32 @@ export async function creerSessionPaiement(opts: {
         reservation_id: opts.reservationId,
         reference: opts.reference,
       },
+      /*
+        LA RÉFÉRENCE DOIT SUIVRE JUSQU'AU PAIEMENT, PAS S'ARRÊTER À LA SESSION.
+
+        Les métadonnées ci-dessus vivent sur la SESSION Checkout, qui a fait son
+        travail une fois le client passé. Le tableau de bord Stripe, lui, liste
+        des PAIEMENTS : montant, e-mail, et une colonne « Description » qui
+        restait vide. Impossible d'y dire à quelle réservation correspond une
+        ligne, autrement qu'en croisant un montant et une adresse.
+
+        Ce n'est pas un confort. Le site envoie lui-même l'exploitant rembourser
+        à la main dans Stripe quand l'appel automatique échoue, et une
+        contestation bancaire se traite là-bas, avec une date limite. Dans les
+        deux cas il faut retrouver LA bonne ligne, et deux anniversaires du même
+        samedi au même tarif sont indiscernables sans la référence.
+
+        La description la met en clair dans la liste ; les métadonnées la
+        rendent cherchable et la portent jusqu'aux événements `charge.*`, qui
+        ne voient que le paiement et jamais la session.
+      */
+      payment_intent_data: {
+        description: `${opts.reference} · ${opts.ligne.libelle}`,
+        metadata: {
+          reservation_id: opts.reservationId,
+          reference: opts.reference,
+        },
+      },
       // La même durée borne le drapeau « paiement en cours » du back-office :
       // voir `VIE_SESSION_STRIPE_MINUTES`.
       expires_at: Math.floor(Date.now() / 1000) + VIE_SESSION_STRIPE_MINUTES * 60,

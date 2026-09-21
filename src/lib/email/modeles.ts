@@ -789,26 +789,49 @@ export function auComplexeContestation(c: {
   motif: string;
   /** Horodatage Unix de la date limite de réponse, si Stripe l'a fourni. */
   echeance: number | null;
+  /**
+   * La réservation contestée, quand on a pu la retrouver.
+   *
+   * L'avis annonçait un montant, un motif et une date limite — sans jamais
+   * dire DE QUI il s'agissait. Pour répondre à une contestation il faut
+   * produire des preuves : le nom du client, la date de l'activité, l'e-mail
+   * de confirmation qu'il a reçu. Sans la référence, il fallait retrouver la
+   * réservation à partir d'un montant, et deux anniversaires du même samedi au
+   * même tarif sont indiscernables.
+   *
+   * `null` si le paiement n'a pas de ligne en base — auquel cas la phrase
+   * s'adapte plutôt que d'afficher un trou.
+   */
+  reference?: string | null;
 }): Message {
   const limite =
     typeof c.echeance === "number"
       ? jourLisibleCap(new Date(c.echeance * 1000))
       : null;
 
+  const lignes: Ligne[] = [
+    { cle: "Montant contesté", valeur: montantLisible(c.montantCents) },
+    { cle: "Motif indiqué", valeur: c.motif },
+    { cle: "Date limite de réponse", valeur: limite ?? "voir Stripe" },
+  ];
+  // En tête de liste : c'est par là qu'on commence à chercher.
+  if (c.reference) lignes.unshift({ cle: "Réservation", valeur: c.reference });
+
   return composer(
     adresseComplexe(),
-    `Contestation bancaire — ${montantLisible(c.montantCents)}`,
+    c.reference
+      ? `Contestation bancaire ${c.reference} — ${montantLisible(c.montantCents)}`
+      : `Contestation bancaire — ${montantLisible(c.montantCents)}`,
     "Un paiement est contesté",
     limite
       ? `À traiter avant le ${limite}, sans quoi la contestation est perdue.`
       : "À traiter rapidement : la réponse est soumise à un délai.",
-    [
-      { cle: "Montant contesté", valeur: montantLisible(c.montantCents) },
-      { cle: "Motif indiqué", valeur: c.motif },
-      { cle: "Date limite de réponse", valeur: limite ?? "voir Stripe" },
-    ],
+    lignes,
     [
       "La somme a déjà été retirée de votre solde Stripe, et des frais de dossier s'y ajoutent.",
+      c.reference
+        ? `Ouvrez la fiche ${ech(c.reference)} dans le back-office : le nom du client, la date de l'activité et l'e-mail de confirmation qu'il a reçu sont les preuves à fournir.`
+        : "Le paiement n'a pas pu être rattaché à une réservation. Cherchez-le dans Stripe par son montant et l'adresse du client.",
       "Répondez depuis votre tableau de bord Stripe, rubrique « Litiges » : ce sont les preuves fournies là-bas qui tranchent, pas ce message.",
       "Sans réponse avant la date limite, la contestation est perdue automatiquement.",
     ]
