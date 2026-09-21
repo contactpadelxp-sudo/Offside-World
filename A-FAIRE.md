@@ -112,10 +112,18 @@ les rendre le jour où il confirme. 615 créneaux restent vendables.
       Il y a donc **zéro créneau Bubble Foot en base**, et la bannière rouge du
       back-office le dit depuis qu'elle compte par activité.
 
-- [ ] **LES HEURES DES DEMI-JOURNÉES DE TEAM BUILDING.** Les JOURS sont connus
-      — lundi, mardi et jeudi matin et après-midi, vendredi matin seulement, et
-      c'est appliqué — mais pas les heures. 9h–13h et 14h–18h restent des
-      hypothèses, et elles partent sur chaque devis.
+- [x] ~~**LES HEURES DES DEMI-JOURNÉES DE TEAM BUILDING.**~~ **SANS OBJET.**
+      Les JOURS sont connus — lundi, mardi et jeudi matin et après-midi,
+      vendredi matin seulement — et c'est appliqué. Les HEURES ne sont pas
+      connues, et n'ont pas à l'être : `TEAM_BUILDING_MATIN` et
+      `TEAM_BUILDING_APRES_MIDI` valent `null`, le devis affiche donc « Matin »
+      et « Après-midi », qui sont vrais. Mathis a confirmé le 21 septembre 2026
+      que cela suffit.
+
+      Cette ligne a traîné après coup : « 9h–13h et 14h–18h partent sur chaque
+      devis » était vrai AVANT que ces constantes passent à `null`, et j'ai
+      continué à le répéter dans plusieurs messages. Les heures avaient déjà
+      disparu de l'affichage.
 
 ## Jours de fermeture — jamais posés à Brahim
 
@@ -184,6 +192,11 @@ facturation serait hors de proportion et mal placé.
       plupart le font depuis 2025 (Yuki, Exact, Odoo, Billit, WinBooks…),
       souvent en activant une option. S'il facture sous Word ou Excel, c'est
       là qu'est le sujet.
+- [x] ~~**Le taux de TVA du team building.**~~ **6 %**, communiqué le
+      21 septembre 2026 — le taux réduit belge pour l'accès aux installations
+      sportives. C'est désormais la valeur proposée d'office sur un devis
+      (`TVA_TAUX_DEFAUT`), et elle reste modifiable au cas par cas : une
+      prestation qui sortirait du simple accès peut relever d'un autre taux.
 - [ ] **Faire confirmer le détail par son comptable** : régime
       d'assujettissement, exemptions de l'article 44, clients non établis en
       Belgique. C'est du droit fiscal, pas du développement.

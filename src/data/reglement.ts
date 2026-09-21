@@ -3,6 +3,24 @@
  * Source unique : ces valeurs alimentent le funnel, les CGV et les pages légales.
  */
 
+/**
+ * Taux de TVA proposé d'office sur un devis de team building.
+ *
+ * 6 %, communiqué par le client le 21 septembre 2026. C'est le taux réduit
+ * belge applicable au droit d'accès aux installations sportives.
+ *
+ * C'EST UNE PROPOSITION, PAS UNE RÈGLE. Le champ reste modifiable sur chaque
+ * devis : une prestation qui sortirait du simple accès — restauration, matériel
+ * loué à part — peut relever d'un autre taux, et c'est le comptable qui
+ * tranche, pas ce fichier. Ce que la valeur évite, c'est de retaper le même
+ * chiffre à chaque devis et de laisser un devis partir sans taux du tout,
+ * auquel cas il s'affiche en TVAC sans ventilation.
+ *
+ * Les devis DÉJÀ enregistrés gardent le leur : la valeur ne sert que lorsque
+ * aucun taux n'a encore été choisi.
+ */
+export const TVA_TAUX_DEFAUT = 6;
+
 /** Délai minimum entre la réservation et le début de l'activité (heures). */
 export const DELAI_RESERVATION_HEURES = 1;
 

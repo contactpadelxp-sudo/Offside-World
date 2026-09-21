@@ -17,6 +17,7 @@ import {
   type LigneDevis,
 } from "@/lib/devis";
 import { montantLisible } from "@/lib/tarification";
+import { TVA_TAUX_DEFAUT } from "@/data/reglement";
 import {
   BOUTON_NEUTRE,
   BOUTON_PRINCIPAL,
@@ -82,7 +83,12 @@ export function FicheDevis({ d }: { d: DevisAdmin }) {
   const [mot, setMot] = useState(d.devis.message);
   const [validite, setValidite] = useState(d.devis.validite);
   const [envoye, setEnvoye] = useState(d.devis.envoyeLe);
-  const [tva, setTva] = useState<number | null>(d.devis.tvaPourcent);
+  /*
+    `??` et non `||` : un taux de 0 % est un choix valable — une exonération se
+    saisit ainsi — et `||` le remplacerait par 6. Seul un taux ABSENT prend la
+    valeur proposée.
+  */
+  const [tva, setTva] = useState<number | null>(d.devis.tvaPourcent ?? TVA_TAUX_DEFAUT);
   const [adresse, setAdresse] = useState(d.client.adresse);
   const [tvaClient, setTvaClient] = useState(d.client.tva);
 
