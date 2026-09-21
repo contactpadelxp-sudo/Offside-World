@@ -1,5 +1,5 @@
 import "server-only";
-import { base } from "@/lib/supabase/server";
+import { base, baseConfiguree } from "@/lib/supabase/server";
 import type { Database } from "@/lib/supabase/types";
 import { paiementConfigure } from "@/lib/paiement/stripe";
 
@@ -81,6 +81,37 @@ export async function expirerReservationsAbandonnees(): Promise<void> {
  * réservation à sa ligne de paiement. La référence, elle, est faite pour être
  * lue au téléphone — elle ne sert pas de clé étrangère.
  */
+/**
+ * Libère le créneau d'une réservation qu'on vient d'écrire et qu'on abandonne.
+ *
+ * POURQUOI ELLE EXISTE. La réservation est écrite AVANT l'appel à Stripe —
+ * c'est elle qui tient le créneau pendant que le client paie. Si la création de
+ * la session échoue, elle reste en base : le client voit un message d'erreur,
+ * recommence, et son PROPRE créneau lui est refusé comme déjà pris, pendant
+ * les quarante-cinq minutes du délai d'expiration.
+ *
+ * « expiree » plutôt qu'une suppression : la ligne sort de l'index unique
+ * partiel, donc le créneau redevient réservable immédiatement, et la trace de
+ * la tentative reste — utile le jour où un client appelle en disant qu'il a
+ * essayé de réserver et que le site a refusé.
+ *
+ * ELLE NE LÈVE JAMAIS. Elle est appelée depuis un chemin d'erreur : y échouer
+ * à son tour masquerait la cause d'origine, qui est la seule intéressante.
+ */
+export async function libererReservationAbandonnee(id: string): Promise<void> {
+  if (!baseConfiguree()) return;
+  try {
+    const { error } = await base()
+      .from("reservations")
+      .update({ statut: "expiree" })
+      .eq("id", id)
+      .eq("statut", "en_attente");
+    if (error) throw error;
+  } catch (e) {
+    console.error(`Libération de la réservation ${id} impossible :`, e);
+  }
+}
+
 export async function enregistrerReservation(
   donnees: Omit<InsertReservation, "reference">
 ): Promise<{ reference: string; id: string }> {

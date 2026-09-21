@@ -665,6 +665,46 @@ export function emailDeTest(destinataire: string, acteur: string): Message {
  * On n'y met AUCUNE donnée du client. Le back-office et Stripe portent déjà le
  * détail ; un avis d'incident n'a pas à le recopier dans une boîte mail.
  */
+/**
+ * Avis interne : de l'argent a été encaissé sur une réservation qui n'existe
+ * plus.
+ *
+ * LE CAS EST RARE ET IL FAUT DONC LE DIRE FORT. Le paiement aboutit après que
+ * la réservation a expiré — un Bancontact dénoué tard, une session payée au
+ * dernier moment — ou après une annulation depuis le back-office. Le créneau,
+ * lui, est déjà retourné à la vente et peut avoir été racheté.
+ *
+ * Personne n'était prévenu. La seule trace était une ligne de paiement
+ * « réussie » sans réservation confirmée, qu'il fallait remarquer au
+ * back-office. Le client, lui, était débité sans rien recevoir.
+ *
+ * On ne rembourse pas automatiquement : selon que le créneau a été repris ou
+ * non, l'exploitant voudra rendre l'argent OU confirmer la réservation à la
+ * main. Décider à sa place serait pire que de le prévenir.
+ */
+export function auComplexePaiementSansReservation(p: {
+  reference: string | null;
+  montantCents: number;
+  statut: string | null;
+}): Message {
+  return composer(
+    adresseComplexe(),
+    `Paiement encaissé sans réservation — ${montantLisible(p.montantCents)}`,
+    "Un client a payé un créneau qui n'était plus à lui",
+    "Le créneau était déjà libéré au moment où le paiement a abouti.",
+    [
+      { cle: "Référence", valeur: p.reference ?? "inconnue" },
+      { cle: "Montant encaissé", valeur: montantLisible(p.montantCents) },
+      { cle: "État de la réservation", valeur: p.statut ?? "inconnu" },
+    ],
+    [
+      "<strong>Rien n'a été décidé automatiquement.</strong> Deux issues selon le cas.",
+      "Si le créneau est encore libre : confirmez la réservation depuis le back-office, le client est en règle.",
+      "S'il a été repris par quelqu'un d'autre : remboursez depuis Stripe et prévenez le client — il a payé et n'a pas de place.",
+    ]
+  );
+}
+
 export function auComplexeContestation(c: {
   montantCents: number;
   motif: string;

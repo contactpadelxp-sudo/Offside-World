@@ -252,6 +252,10 @@ export function GroupesFlow({
       setEnvoi(false);
       setErreur(resultat.message);
       if (resultat.champ === "creneau") {
+        // Même raison que dans le tunnel anniversaire : la liste vient des
+        // props rendues avant la course et montrerait le créneau perdu comme
+        // encore libre.
+        router.refresh();
         setBubbleCreneau(null);
         setStep("creneau");
       }

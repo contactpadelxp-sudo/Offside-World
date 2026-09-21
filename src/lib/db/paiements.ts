@@ -58,6 +58,23 @@ export interface ResultatConfirmation {
   nouveau: boolean;
   reference: string | null;
   reservationId: string | null;
+  /**
+   * Statut réel de la réservation quand la confirmation n'a rien changé.
+   *
+   * `null` quand elle vient d'être confirmée. Sinon : « confirmee » pour une
+   * simple relivraison de Stripe, ce qui est normal — mais « expiree » ou
+   * « annulee » signifie qu'on vient d'encaisser sur une réservation qui
+   * n'existe plus, et cela demande une alerte.
+   */
+  statutReservation?: string | null;
+  /**
+   * Référence lisible de la réservation quand la confirmation n'a rien changé.
+   *
+   * Distincte de `reference`, qui n'est renseignée qu'en cas de bascule réelle
+   * et déclenche l'e-mail au client. Celle-ci ne sert qu'aux avis internes :
+   * c'est par la référence que l'exploitant retrouve une réservation.
+   */
+  referenceConnue?: string | null;
 }
 
 /**
@@ -133,21 +150,40 @@ export async function confirmerPaiement(
       .limit(1)
       .maybeSingle();
 
-    // (a) — rien à faire, et surtout pas de second e-mail au client.
-    if (dejaReussi) return { nouveau: false, reference: null, reservationId: null };
+    /*
+      (a) — LA LIGNE DE PAIEMENT EST DÉJÀ « RÉUSSIE », MAIS ON NE SORT PLUS ICI.
 
-    // (b) — l'argent est arrivé sans trace : on la crée.
-    console.error(
-      `Paiement sans ligne d'ouverture pour la réservation ${secours.reservationId} : ligne reconstruite depuis le webhook.`
-    );
-    const { error: eSecours } = await base().from("paiements").insert({
-      reservation_id: secours.reservationId,
-      stripe_payment_intent: paymentIntent ?? sessionId,
-      montant_cents: secours.montantCents,
-      methode,
-      statut: "reussi",
-    });
-    if (eSecours) throw eSecours;
+      C'était un `return`, et il rendait le rejeu de Stripe inopérant dans le
+      seul cas où il sert vraiment.
+
+      `confirmerPaiement` écrit en DEUX fois, sans transaction : la ligne de
+      paiement, puis la réservation. Si la seconde échoue — coupure du pooler,
+      délai dépassé —, le webhook répond 500 et Stripe relivre. Mais à la
+      relivraison, la première mise à jour ne trouve plus rien (le statut n'est
+      plus « en_cours »), on arrivait ici, et le `return` sortait AVANT d'avoir
+      retenté la confirmation. Argent encaissé, réservation jamais confirmée,
+      aucun e-mail, et plus aucune relivraison ne pouvait le rattraper.
+
+      On ne recrée simplement pas la ligne de paiement — elle existe — et on
+      laisse la suite retenter la confirmation. Elle est idempotente : l'update
+      est filtré sur `statut = 'en_attente'`, donc une relivraison sur une
+      réservation déjà confirmée ne touche rien et ne renvoie pas de référence,
+      ce qui empêche le second e-mail.
+    */
+    if (!dejaReussi) {
+      // (b) — l'argent est arrivé sans trace : on la crée.
+      console.error(
+        `Paiement sans ligne d'ouverture pour la réservation ${secours.reservationId} : ligne reconstruite depuis le webhook.`
+      );
+      const { error: eSecours } = await base().from("paiements").insert({
+        reservation_id: secours.reservationId,
+        stripe_payment_intent: paymentIntent ?? sessionId,
+        montant_cents: secours.montantCents,
+        methode,
+        statut: "reussi",
+      });
+      if (eSecours) throw eSecours;
+    }
   }
 
   const { data: reservation, error: e2 } = await base()
@@ -160,10 +196,51 @@ export async function confirmerPaiement(
 
   if (e2) throw e2;
 
+  /*
+    QUAND LA CONFIRMATION NE PREND PAS, IL FAUT SAVOIR POURQUOI.
+
+    L'update ci-dessus est filtré sur `statut = 'en_attente'`. Sans référence en
+    retour, deux situations se cachaient derrière le même silence :
+
+      — la réservation est DÉJÀ « confirmee » : c'est une relivraison de Stripe,
+        tout va bien, et il ne faut surtout pas renvoyer d'e-mail ;
+      — elle est « expiree » ou « annulee » : l'argent vient d'être encaissé sur
+        une réservation qui n'existe plus. Personne n'était prévenu, ni le
+        client ni l'exploitant, et la seule trace était une ligne de paiement
+        réussie sans réservation confirmée, à remarquer au back-office.
+
+    On relit donc le statut pour que l'appelant puisse alerter sur le second cas
+    seulement. Une lecture de plus, sur le chemin où quelque chose a déjà mal
+    tourné — jamais sur le chemin nominal.
+  */
+  let statutReservation: string | null = null;
+  let referenceConnue: string | null = null;
+  if (!reservation) {
+    // La RÉFÉRENCE avec le statut, dans la même lecture : c'est par elle que
+    // l'exploitant retrouve une réservation au back-office, jamais par
+    // l'identifiant technique. Un avis sans référence ne mène nulle part.
+    const { data: etat } = await base()
+      .from("reservations")
+      .select("statut, reference")
+      .eq("id", reservationId)
+      .maybeSingle();
+    statutReservation = etat?.statut ?? null;
+    referenceConnue = etat?.reference ?? null;
+  }
+
   return {
     nouveau: true,
+    /*
+      `reference` reste ce qu'elle a toujours été : renseignée SEULEMENT quand
+      la réservation vient de basculer. C'est elle qui déclenche l'e-mail au
+      client, et la remplir dans les autres cas en enverrait un à tort.
+
+      La référence lue ci-dessus voyage à part, pour l'avis interne.
+    */
     reference: reservation?.reference ?? null,
     reservationId,
+    statutReservation,
+    referenceConnue,
   };
 }
 

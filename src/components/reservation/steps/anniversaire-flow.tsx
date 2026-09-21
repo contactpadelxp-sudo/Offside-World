@@ -241,6 +241,20 @@ export function AnniversaireFlow({
       // Un créneau pris entre-temps : on renvoie l'utilisateur au choix, et
       // c'est le message d'erreur — pas le titre — qui doit prendre le focus.
       if (resultat.champ === "creneau") {
+      /*
+        LA LISTE DES CRÉNEAUX DOIT ÊTRE RELUE, PAS SEULEMENT RÉAFFICHÉE.
+
+        On renvoyait à l'étape « Créneau » sans rien rafraîchir. Or la liste
+        vient des props rendues par le serveur AVANT la course : le créneau que
+        l'autre client vient de prendre y figure encore comme libre et
+        cliquable. Le perdant pouvait donc le re-sélectionner et rééchouer, et
+        chaque tentative consomme une unité du quota — cinq échecs dus au site,
+        et le limiteur l'excluait dix minutes.
+
+        `router.refresh()` relit la page, qui est en `force-dynamic` : le
+        créneau revient avec `libre: false`, barré et désactivé.
+      */
+      router.refresh();
         retourSurErreur.current = true;
         setSelectedCreneau(null);
         setStep("creneau");

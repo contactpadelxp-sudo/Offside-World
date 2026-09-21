@@ -12,6 +12,7 @@ import {
   enregistrerDemandeDevis,
   enregistrerReservation,
   expirerReservationsAbandonnees,
+  libererReservationAbandonnee,
 } from "@/lib/db/reservations";
 import { envoyerTous } from "@/lib/email/envoi";
 import {
@@ -138,9 +139,6 @@ export interface SaisieAnniversaire {
 export async function reserverAnniversaire(saisie: SaisieAnniversaire): Promise<Resultat> {
   try {
     verifierBase();
-    if (await quotaDepasse("anniversaire")) {
-      return { ok: false, message: "Trop de tentatives. Réessayez dans quelques minutes." };
-    }
 
     // 1. Bornage de la saisie, avant toute requête.
     const creneauId = uuid(saisie?.creneauId, "Créneau");
@@ -169,6 +167,28 @@ export async function reserverAnniversaire(saisie: SaisieAnniversaire): Promise<
     const remarques = texteFacultatif(saisie?.remarques, "Remarques", { max: 1000 });
     const newsletter = booleen(saisie?.newsletter);
     vrai(saisie?.cgv, "cgv", "Les conditions générales de vente doivent être acceptées.");
+
+    /*
+      LE QUOTA SE CONSOMME APRÈS LE BORNAGE, PAS AVANT.
+
+      Il était le tout premier test, donc CHAQUE soumission comptait — y compris
+      celles que le bornage allait refuser une ligne plus loin. Un formulaire
+      mal rempli cinq fois, un e-mail invalide, un âge non choisi, et le client
+      lisait « Trop de tentatives » sans avoir rien fait de mal.
+
+      Déplacé ici, il ne compte que les soumissions BIEN FORMÉES, celles qui
+      vont réellement écrire en base. Le bornage, lui, ne touche jamais la
+      base : ne pas compter une saisie malformée ne coûte rien et ne protège
+      rien de moins — le chemin cher reste derrière la garde.
+
+      Reste le refus venu du site, un créneau pris entre-temps, qui consomme
+      encore une unité. Il est traité à l'autre bout : la liste est désormais
+      relue après un échec, donc le client ne peut plus recliquer le créneau
+      perdu et s'exclure lui-même.
+    */
+    if (await quotaDepasse("anniversaire")) {
+      return { ok: false, message: "Trop de tentatives. Réessayez dans quelques minutes." };
+    }
 
     // 2. Le référentiel décide du prix, et des bornes du nombre d'enfants.
     const formule = await lireTarifFormule(formuleId);
@@ -279,21 +299,33 @@ export async function reserverAnniversaire(saisie: SaisieAnniversaire): Promise<
       sera libéré s'il abandonne. Les e-mails partent donc du webhook, une fois
       l'argent encaissé ; c'est lui aussi qui confirme la réservation.
 
-      Si la création de la session échoue — Stripe indisponible, par exemple —
-      on ne perd pas la réservation : on retombe sur l'ancien comportement
-      plutôt que de renvoyer une erreur à un client qui a tout rempli
-      correctement.
+      SI LA CRÉATION DE LA SESSION ÉCHOUE, ON LIBÈRE LE CRÉNEAU.
+
+      La réservation est écrite AVANT cet appel : c'est elle qui tient le
+      créneau pendant que le client paie. Quand Stripe est indisponible,
+      l'exception remonte et le client lit « réessayez dans un instant » — mais
+      la réservation restait en base, si bien qu'à son nouvel essai son PROPRE
+      créneau lui était refusé comme déjà pris, pendant quarante-cinq minutes.
+
+      Le commentaire affirmait le contraire depuis l'origine : ce n'était pas un
+      choix assumé, c'était faux. On libère donc avant de relancer l'erreur.
     */
-    const paiement = await creerSessionPaiement({
-      reservationId,
-      reference,
-      clientEmail,
-      ligne: {
-        libelle: `Anniversaire — formule ${formule.nom}`,
-        description: `${jourLisibleCap(creneau.debut)}, ${heure(creneau.debut)} – ${heure(creneau.fin)} · ${nbEnfants} enfants`,
-        montantCents: totalCents,
-      },
-    });
+    let paiement;
+    try {
+      paiement = await creerSessionPaiement({
+        reservationId,
+        reference,
+        clientEmail,
+        ligne: {
+          libelle: `Anniversaire — formule ${formule.nom}`,
+          description: `${jourLisibleCap(creneau.debut)}, ${heure(creneau.debut)} – ${heure(creneau.fin)} · ${nbEnfants} enfants`,
+          montantCents: totalCents,
+        },
+      });
+    } catch (e) {
+      await libererReservationAbandonnee(reservationId);
+      throw e;
+    }
 
     /*
       `paiement` vaut `null` UNIQUEMENT quand Stripe n'est pas configuré.
@@ -307,8 +339,10 @@ export async function reserverAnniversaire(saisie: SaisieAnniversaire): Promise<
       vente pendant que le client attendait un appel.
 
       Sans le repli, l'exception remonte au `catch` de la fonction, qui rend un
-      message d'attente honnête. La réservation reste en base « en attente » et
-      tient 45 minutes : un nouvel essai aboutit sans rien ressaisir.
+      message d'attente honnête — et le `try` ci-dessus a libéré le créneau, si
+      bien que le client retrouve bien le sien en recommençant. Il doit
+      ressaisir le formulaire : le tunnel ne conserve rien, et c'est un moindre
+      mal comparé à se voir refuser sa propre date.
     */
     if (!paiement) {
       after(() =>
@@ -343,9 +377,6 @@ export interface SaisieBubble {
 export async function reserverBubble(saisie: SaisieBubble): Promise<Resultat> {
   try {
     verifierBase();
-    if (await quotaDepasse("bubble")) {
-      return { ok: false, message: "Trop de tentatives. Réessayez dans quelques minutes." };
-    }
 
     const creneauId = uuid(saisie?.creneauId, "Créneau");
     const nbPersonnes = entier(saisie?.nbPersonnes, "Nombre de personnes", {
@@ -358,6 +389,12 @@ export async function reserverBubble(saisie: SaisieBubble): Promise<Resultat> {
     const remarques = texteFacultatif(saisie?.remarques, "Remarques", { max: 1000 });
     const newsletter = booleen(saisie?.newsletter);
     vrai(saisie?.cgv, "cgv", "Les conditions générales de vente doivent être acceptées.");
+
+    // Après le bornage, comme dans `reserverAnniversaire` : seules les
+    // soumissions bien formées consomment une unité.
+    if (await quotaDepasse("bubble")) {
+      return { ok: false, message: "Trop de tentatives. Réessayez dans quelques minutes." };
+    }
 
     await expirerReservationsAbandonnees();
     const creneau = await verifierCreneau(creneauId, "bubble");
@@ -415,21 +452,33 @@ export async function reserverBubble(saisie: SaisieBubble): Promise<Resultat> {
       sera libéré s'il abandonne. Les e-mails partent donc du webhook, une fois
       l'argent encaissé ; c'est lui aussi qui confirme la réservation.
 
-      Si la création de la session échoue — Stripe indisponible, par exemple —
-      on ne perd pas la réservation : on retombe sur l'ancien comportement
-      plutôt que de renvoyer une erreur à un client qui a tout rempli
-      correctement.
+      SI LA CRÉATION DE LA SESSION ÉCHOUE, ON LIBÈRE LE CRÉNEAU.
+
+      La réservation est écrite AVANT cet appel : c'est elle qui tient le
+      créneau pendant que le client paie. Quand Stripe est indisponible,
+      l'exception remonte et le client lit « réessayez dans un instant » — mais
+      la réservation restait en base, si bien qu'à son nouvel essai son PROPRE
+      créneau lui était refusé comme déjà pris, pendant quarante-cinq minutes.
+
+      Le commentaire affirmait le contraire depuis l'origine : ce n'était pas un
+      choix assumé, c'était faux. On libère donc avant de relancer l'erreur.
     */
-    const paiement = await creerSessionPaiement({
-      reservationId,
-      reference,
-      clientEmail,
-      ligne: {
-        libelle: "Bubble Foot",
-        description: `${jourLisibleCap(creneau.debut)}, ${heure(creneau.debut)} – ${heure(creneau.fin)} · ${nbPersonnes} personnes`,
-        montantCents: totalCents,
-      },
-    });
+    let paiement;
+    try {
+      paiement = await creerSessionPaiement({
+        reservationId,
+        reference,
+        clientEmail,
+        ligne: {
+          libelle: "Bubble Foot",
+          description: `${jourLisibleCap(creneau.debut)}, ${heure(creneau.debut)} – ${heure(creneau.fin)} · ${nbPersonnes} personnes`,
+          montantCents: totalCents,
+        },
+      });
+    } catch (e) {
+      await libererReservationAbandonnee(reservationId);
+      throw e;
+    }
 
     /*
       `paiement` vaut `null` UNIQUEMENT quand Stripe n'est pas configuré.
@@ -443,8 +492,10 @@ export async function reserverBubble(saisie: SaisieBubble): Promise<Resultat> {
       vente pendant que le client attendait un appel.
 
       Sans le repli, l'exception remonte au `catch` de la fonction, qui rend un
-      message d'attente honnête. La réservation reste en base « en attente » et
-      tient 45 minutes : un nouvel essai aboutit sans rien ressaisir.
+      message d'attente honnête — et le `try` ci-dessus a libéré le créneau, si
+      bien que le client retrouve bien le sien en recommençant. Il doit
+      ressaisir le formulaire : le tunnel ne conserve rien, et c'est un moindre
+      mal comparé à se voir refuser sa propre date.
     */
     if (!paiement) {
       after(() =>
@@ -496,9 +547,6 @@ export interface SaisieDevis {
 export async function demanderDevis(saisie: SaisieDevis): Promise<Resultat> {
   try {
     verifierBase();
-    if (await quotaDepasse("devis")) {
-      return { ok: false, message: "Trop de tentatives. Réessayez dans quelques minutes." };
-    }
 
     const entreprise = texte(saisie?.entreprise, "Entreprise", { min: 2, max: 120 });
     const contactNom = texte(saisie?.contactNom, "Nom", { min: 2, max: 120 });
@@ -520,6 +568,12 @@ export async function demanderDevis(saisie: SaisieDevis): Promise<Resultat> {
     const periode = saisie?.periode;
     if (periode !== "matin" && periode !== "apres-midi") {
       return { ok: false, message: "Choisissez une demi-journée.", champ: "periode" };
+    }
+
+    // Après le bornage, comme dans `reserverAnniversaire` : seules les
+    // soumissions bien formées consomment une unité.
+    if (await quotaDepasse("devis")) {
+      return { ok: false, message: "Trop de tentatives. Réessayez dans quelques minutes." };
     }
 
     const { reference } = await enregistrerDemandeDevis({

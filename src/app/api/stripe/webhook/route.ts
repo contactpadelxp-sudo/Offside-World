@@ -17,6 +17,7 @@ import {
   auClientReservationConfirmee,
   auComplexeContestation,
   auComplexeNouvelleReservation,
+  auComplexePaiementSansReservation,
 } from "@/lib/email/modeles";
 
 /**
@@ -61,6 +62,47 @@ function secoursDepuis(
   const montant = session.amount_total;
   if (!id || typeof montant !== "number") return undefined;
   return { reservationId: id, montantCents: montant };
+}
+
+/**
+ * PAYER UN CRÉNEAU QU'ON N'A PLUS NE DOIT PAS ÊTRE SILENCIEUX.
+ *
+ * La confirmation est filtrée sur `statut = 'en_attente'`. Sans référence en
+ * retour, deux choses très différentes se cachaient derrière le même silence :
+ * une simple relivraison de Stripe sur une réservation déjà confirmée — rien à
+ * faire — ou un encaissement sur une réservation expirée ou annulée, donc un
+ * client débité pour un créneau déjà rendu à la vente.
+ *
+ * Seul le second cas alerte. C'est `statutReservation` qui les sépare : il ne
+ * vaut « confirmee » que dans le premier.
+ *
+ * L'avis part APRÈS la réponse à Stripe, comme tous les autres envois : un
+ * fournisseur d'e-mails indisponible ne doit jamais faire échouer le traitement
+ * d'un paiement.
+ */
+function alerterSiPaiementOrphelin(
+  resultat: {
+    reference: string | null;
+    referenceConnue?: string | null;
+    statutReservation?: string | null;
+  },
+  montantCents: number | null
+): void {
+  const statut = resultat.statutReservation;
+  if (!statut || statut === "confirmee") return;
+
+  console.error(
+    `Paiement abouti sur une réservation « ${statut} » : ${montantCents ?? "?"} centimes encaissés sans créneau.`
+  );
+  after(async () => {
+    await envoyerTous([
+      auComplexePaiementSansReservation({
+        reference: resultat.referenceConnue ?? resultat.reference,
+        montantCents: montantCents ?? 0,
+        statut,
+      }),
+    ]);
+  });
 }
 
 /** Réponse standard : Stripe ne lit que le code. */
@@ -142,6 +184,8 @@ export async function POST(req: Request) {
               ]);
             }
           });
+        } else {
+          alerterSiPaiementOrphelin(resultat, session.amount_total);
         }
         break;
       }
@@ -189,6 +233,8 @@ export async function POST(req: Request) {
               ]);
             }
           });
+        } else {
+          alerterSiPaiementOrphelin(resultat, session.amount_total);
         }
         break;
       }
@@ -246,6 +292,38 @@ export async function POST(req: Request) {
             }),
           ]);
         });
+        break;
+      }
+
+      /*
+        UNE CONTESTATION PERDUE EST DE L'ARGENT REPRIS, ET ÇA DOIT SE VOIR.
+
+        On écoutait l'OUVERTURE d'une contestation — un e-mail à l'exploitant,
+        avec sa date limite — mais jamais son issue. Quand la banque tranche en
+        faveur du client, Stripe retire définitivement la somme et envoie
+        `charge.dispute.closed` avec `status: "lost"`.
+
+        Sans ce cas, la ligne de paiement restait « réussie » avec un
+        remboursement à zéro : le chiffre d'affaires du back-office comptait
+        pour toujours un argent que le complexe n'a plus.
+
+        On passe par `synchroniserRemboursement`, qui COPIE le cumul plutôt que
+        de l'incrémenter : si le montant a déjà été rapatrié autrement, le
+        repasser ici ne le compte pas deux fois.
+
+        Les autres issues — `won`, `warning_closed` — ne changent rien au solde :
+        l'argent revient de lui-même, et il n'y a rien à écrire.
+      */
+      case "charge.dispute.closed": {
+        const litige = evenement.data.object;
+        const intention =
+          typeof litige.payment_intent === "string" ? litige.payment_intent : null;
+        if (litige.status === "lost" && intention) {
+          console.error(
+            `Contestation ${litige.id} PERDUE : ${litige.amount} centimes définitivement repris.`
+          );
+          await synchroniserRemboursement(intention, litige.amount);
+        }
         break;
       }
 
