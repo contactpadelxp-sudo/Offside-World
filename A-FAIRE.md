@@ -376,8 +376,10 @@ majuscules, accents, espaces et tirets. Voir `src/lib/photos.ts`.
 Questions posées, sans réponse à ce jour. Elles bloquent du travail déjà prêt
 à démarrer.
 
-- [ ] **TESTER LE SITE SUR UN VRAI IPHONE.** Mathis s'y est engagé le
-      13 septembre 2026 ; ce point est à lui rappeler tant qu'il n'est pas coché.
+- [x] **TESTER LE SITE SUR UN VRAI IPHONE.** ✅ Fait le 21 septembre 2026 :
+      le tunnel de réservation a été parcouru en entier sur téléphone et se
+      comporte correctement. Ce qui suit reste écrit pour la prochaine fois —
+      aucune mesure sous Chromium ne remplace un appareil réel.
 
       Tout l'audit mobile a été mené sous **Chromium**, piloté au pixel. Trois
       choses ne s'y voient pas, et aucune mesure ne les remplacera :

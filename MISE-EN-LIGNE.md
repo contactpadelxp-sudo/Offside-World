@@ -138,6 +138,24 @@ entrer dans l'outil.
 Sport-Finder, donc rien ne peut vérifier que ce réglage a bien été fait. Ce
 paragraphe est le seul garde-fou ; il vaut ce que vaut la personne qui le lit.
 
+### Au passage : le lien du Bubble Foot
+
+La fiche Sport-Finder du Bubble est `.../activity/228`. Elle accepte
+aujourd'hui des **demandes**, pas des paiements : Brahim ouvrira la réservation
+directe au même moment que la mise en ligne.
+
+Le site pointe pour l'instant sur la page du centre, qui reste juste dans les
+deux cas et coûte un clic de plus. **Le jour où la fiche accepte les
+paiements**, remplacer dans `src/data/bubble-team.ts` :
+
+```ts
+export const SPORTFINDER_BUBBLE_URL = SPORTFINDER_BUBBLE_FICHE;
+```
+
+L'adresse exacte est déjà écrite dans ce fichier, sous ce nom, précisément pour
+qu'il n'y ait qu'une ligne à changer. **Ouvrir la fiche avant de la brancher** :
+un lien vers une page qui n'accepte rien est pire que le détour par le centre.
+
 ---
 
 ## 1. Faire pointer le domaine sur le site

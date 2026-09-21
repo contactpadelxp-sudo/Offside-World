@@ -57,10 +57,11 @@ export const BUBBLE_EN_LIGNE = false;
  * une location, donc une autre forme d'adresse et un autre identifiant. C'est
  * exactement pourquoi on ne l'a jamais devinée.
  *
- * ELLE N'EST PAS ENCORE UTILISÉE, ET C'EST LE POINT. La fiche existe mais
- * n'est pas activée : y envoyer un client aujourd'hui, c'est l'envoyer sur une
- * page qui ne vend rien. On la garde écrite ici pour n'avoir qu'une ligne à
- * changer le jour de l'activation — pas pour s'en servir avant.
+ * ELLE N'EST PAS ENCORE BRANCHÉE, ET C'EST DÉLIBÉRÉ. La fiche accepte
+ * aujourd'hui des DEMANDES, pas des paiements : le client envoie une demande,
+ * quelqu'un y répond. Brahim ouvrira la réservation directe quand le site sera
+ * prêt, et c'est ce jour-là qu'on basculera le lien — pas avant, pour ne pas
+ * avoir à le changer deux fois. Voir `MISE-EN-LIGNE.md`.
  */
 export const SPORTFINDER_BUBBLE_FICHE =
   "https://www.sport-finder.com/fr/center/offside-foot-indoor/activity/228";
@@ -68,17 +69,18 @@ export const SPORTFINDER_BUBBLE_FICHE =
 /**
  * Où l'on envoie RÉELLEMENT le visiteur pour réserver un Bubble Foot.
  *
- * La page du complexe, faute de mieux : voir `SPORTFINDER_BUBBLE_FICHE`. Elle
- * coûte un clic de plus, mais elle existe et elle est à jour, ce que la fiche
- * du produit n'est pas encore.
+ * La page du complexe, et non la fiche du produit : voir
+ * `SPORTFINDER_BUBBLE_FICHE`. Elle coûte un clic de plus, mais elle reste juste
+ * quel que soit l'état de la fiche 228 — aujourd'hui sur demande, demain en
+ * réservation directe. Un lien qui ne ment jamais vaut mieux qu'un lien plus
+ * court qu'il faudrait surveiller.
  *
- * ⚠ AUJOURD'HUI, LE BUBBLE N'EST RÉSERVABLE NULLE PART. Il est retiré du site
- * (`BUBBLE_EN_LIGNE = false`) ET pas encore activé sur Sport-Finder. Le tunnel
- * continue pourtant d'afficher sa carte, son prix et un bouton — qui mène à
- * une page du centre où l'activité ne figure pas. C'est la situation que
- * `data/bounce-park.ts` décrit comme pire qu'une carte inerte : « elle promet
- * une réponse qu'elle n'a pas ». Elle se résout en activant la fiche 228, ce
- * qui est du ressort de Brahim.
+ * CE QUE LE CLIENT PEUT FAIRE AUJOURD'HUI. Le Bubble n'est plus vendu sur le
+ * site (`BUBBLE_EN_LIGNE = false`) ; sur Sport-Finder, il se demande sans se
+ * payer. La carte du tunnel reste donc honnête : elle annonce l'activité et son
+ * tarif, et le bouton mène là où l'on peut la demander. Ce n'est pas le cas
+ * décrit dans `data/bounce-park.ts` — « une carte qui promet une réponse
+ * qu'elle n'a pas » —, puisqu'il y a bien une réponse au bout.
  */
 export const SPORTFINDER_BUBBLE_URL = "https://www.sport-finder.com/fr/center/offside-foot-indoor";
 
