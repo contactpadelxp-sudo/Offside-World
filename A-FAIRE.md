@@ -390,11 +390,17 @@ Questions posées, sans réponse à ce jour. Elles bloquent du travail déjà pr
       (100 % au-delà de 7 jours, 50 % entre 7 jours et 48 h, rien en deçà)
       rembourse depuis ce total. Aucune modification n'a été nécessaire, et les
       CGV n'ont pas à être retouchées.
-- [ ] **OUVRIR LE COMPTE STRIPE — c'est désormais le seul point bloquant du
-      paiement.** Le code est écrit, branché et testé ; il ne manque que les
-      deux clés. La marche à suivre complète — rôle d'équipe, activation de
-      Bancontact, les SIX événements du webhook, les tests en clés `test`,
-      le passage en `live` — est dans **`MISE-EN-LIGNE.md`, section 4**.
+- [x] ~~**OUVRIR LE COMPTE STRIPE.**~~ **FAIT, ET ÉPROUVÉ.** Constaté le
+      21 septembre 2026 en interrogeant la base : un paiement **Bancontact de
+      200 €** au statut `reussi`, avec un vrai `payment_intent`, daté du
+      15 septembre. Le statut `reussi` n'est posé que par le WEBHOOK — jamais
+      par la page de retour. Les clés sont donc en place, le webhook reçoit et
+      signe, et Bancontact a été éprouvé de bout en bout.
+
+      Cette ligne est restée « à faire » six jours après coup, et c'est elle
+      qui m'a fait annoncer à Mathis que le paiement bloquait la mise en ligne
+      — alors qu'il avait déjà encaissé. Le fichier de suivi doit se relire
+      contre le système, jamais l'inverse.
 - [x] ~~« 2000+ fêtes organisées »~~ **RETIRÉ le 13 septembre 2026**, sur
       décision de Mathis. La rangée du hero est passée de trois à deux colonnes.
       Les deux chiffres restants se vérifient : les terrains existent, et le
@@ -481,8 +487,11 @@ le dépôt.
       autorisés, 0 octet de fichiers sur 1 Go. Un article pèse environ 8 ko,
       une photo réduite environ 150 ko. Le volume n'est donc jamais le sujet.
 
-- [ ] Ouvrir un compte **Stripe** avec Bancontact activé. **Le compte doit être
-      celui de l'exploitant, pas celui de Mathis** : c'est le titulaire du
+- [x] ~~Ouvrir un compte **Stripe** avec Bancontact activé.~~ **FAIT** — voir
+      plus haut, un encaissement Bancontact réussi le 15 septembre 2026. La
+      règle qui suit reste vraie et mérite d'être relue le jour d'un changement
+      de compte : **le compte doit être celui de l'exploitant, pas celui de
+      Mathis** : c'est le titulaire du
       compte Stripe qui est le vendeur au sens légal, qui déclare la TVA et qui
       reçoit les virements. Si Brahim en a déjà un, il invite Mathis comme
       membre d'équipe avec le rôle « Developer » (Settings → Team and security)
