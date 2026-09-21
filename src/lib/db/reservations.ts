@@ -1,7 +1,11 @@
 import "server-only";
+import { after } from "next/server";
 import { base, baseConfiguree } from "@/lib/supabase/server";
 import type { Database } from "@/lib/supabase/types";
 import { paiementConfigure } from "@/lib/paiement/stripe";
+import { envoyerTous } from "@/lib/email/envoi";
+import { auClientReservationExpiree } from "@/lib/email/modeles";
+import { heure, jourLisibleCap } from "@/lib/temps";
 
 /**
  * Écriture des réservations et des demandes de devis.
@@ -10,6 +14,23 @@ import { paiementConfigure } from "@/lib/paiement/stripe";
  * `src/app/reservation/actions.ts`). Aucune valeur de prix envoyée par le
  * navigateur n'atteint ce module.
  */
+
+/**
+ * Une réservation que l'expiration vient de libérer.
+ *
+ * Décrit à la main plutôt que tiré des types générés : tant que la migration
+ * 0027 n'est pas appliquée, `types.ts` annonce encore `Returns: number` pour
+ * cette fonction. Les noms suivent le `returns table (…)` de la migration, en
+ * `snake_case`, parce que c'est PostgREST qui les écrit.
+ */
+interface LigneExpiree {
+  reference: string;
+  client_nom: string;
+  client_email: string;
+  type: string;
+  debut: string;
+  fin: string;
+}
 
 type InsertReservation = Database["public"]["Tables"]["reservations"]["Insert"];
 type InsertDevis = Database["public"]["Tables"]["demandes_devis"]["Insert"];
@@ -63,11 +84,67 @@ export class CreneauDejaPris extends Error {
  * de la session. Cette marge évite d'expirer une réservation dont l'argent est
  * en train d'arriver — le pire cas possible, puisqu'on aurait encaissé sans
  * garder le créneau.
+ *
+ * ELLE PRÉVIENT LE CLIENT, MAINTENANT.
+ *
+ * L'expiration était muette. Le client, lui, avait reçu « votre créneau est
+ * retenu, nous vous recontactons rapidement » : cette phrase restait la
+ * dernière chose qu'il ait lue, et elle était devenue fausse. Il découvrait le
+ * jour dit, devant une porte, qu'il n'avait pas de réservation.
+ *
+ * UN SEUL E-MAIL PAR RÉSERVATION, GARANTI PAR SQL. La fonction retourne les
+ * lignes que CET appel a fait basculer (`update … returning` sur
+ * `statut = 'en_attente'`) : aucun appel suivant, aucun appel concurrent ne
+ * peut rendre la même. Rien à dédupliquer côté application.
+ *
+ * L'ENVOI NE RETARDE PAS L'APPELANT. Cette fonction est appelée au rendu de la
+ * page de réservation et au début du tunnel : y attendre le fournisseur
+ * d'e-mails ferait patienter un visiteur pour un message qui ne lui est pas
+ * destiné. `after()` diffère l'envoi après la réponse — même choix que pour la
+ * confirmation envoyée par le back-office.
  */
 export async function expirerReservationsAbandonnees(): Promise<void> {
   const delai = paiementConfigure() ? "45 minutes" : "48 hours";
-  const { error } = await base().rpc("expirer_reservations_en_attente", { delai });
-  if (error) console.error("Expiration des réservations impossible :", error.message);
+  const { data, error } = await base().rpc("expirer_reservations_en_attente", { delai });
+  if (error) {
+    console.error("Expiration des réservations impossible :", error.message);
+    return;
+  }
+
+  /*
+    DEUX FORMES DE RETOUR SONT ACCEPTÉES, ET CE N'EST PAS UNE PRÉCAUTION
+    DÉCORATIVE.
+
+    Le déploiement du code et l'application de la migration ne sont pas
+    atomiques : Vercel publie quand on pousse, la migration 0027 part d'ailleurs
+    et à un autre moment. Il existe donc forcément une fenêtre où ce code
+    rencontre l'ANCIENNE fonction, qui rend un entier — le nombre de lignes
+    touchées — et non les lignes elles-mêmes.
+
+    Pendant cette fenêtre, l'expiration continue de faire son travail
+    essentiel : libérer les créneaux. Seul l'e-mail manque, ce qui est
+    exactement l'état d'avant. Lire `.length` sur un entier aurait au contraire
+    fait échouer le rendu de la page de réservation.
+  */
+  const expirees: LigneExpiree[] = Array.isArray(data) ? data : [];
+  if (expirees.length === 0) return;
+
+  const messages = expirees
+    .filter((r) => Boolean(r.client_email))
+    .map((r) => {
+      const debut = new Date(r.debut);
+      return auClientReservationExpiree({
+        reference: r.reference,
+        clientNom: r.client_nom,
+        clientEmail: r.client_email,
+        activite: r.type === "anniversaire" ? "Anniversaire" : "Bubble Foot",
+        jourLabel: jourLisibleCap(debut),
+        debut: heure(debut),
+        fin: heure(new Date(r.fin)),
+      });
+    });
+
+  if (messages.length > 0) after(() => envoyerTous(messages));
 }
 
 /**
