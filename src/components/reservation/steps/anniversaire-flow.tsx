@@ -151,6 +151,50 @@ export function AnniversaireFlow({
     (_, i) => AGE_MINIMUM + i
   );
 
+  /*
+    CHANGER DE FORMULE RELÂCHE CE QUI NE TIENT PLUS DEDANS.
+
+    `setSelectedFormule` ne touchait qu'à la formule. Or les deux champs de
+    l'étape suivante sont bornés PAR ELLE : l'âge par `ageMax`, le nombre de
+    participants par `enfantsMax` — et, depuis peu, par la capacité de la plus
+    grande salle ouverte.
+
+    Quand le nouveau plafond est plus bas que la valeur déjà saisie, la valeur
+    survit alors que son `<option>` disparaît de la liste. Le navigateur rend
+    un `<select>` VIDE (`selectedIndex = -1`) qui vaut quand même 30, et
+    « Continuer » ne bloque pas puisque le contrôle de complétude teste la
+    véracité (`!childAge`), pas l'appartenance à la liste.
+
+    Le client choisit alors son créneau, saisit ses coordonnées, coche les CGV,
+    clique « Payer » — et le serveur refuse sur un champ qu'il croit avoir
+    rempli, trois étapes en arrière. Chaque tentative consomme en plus une
+    unité du quota, qui est prélevée AVANT la vérification : cinq refus de ce
+    genre et le limiteur l'exclut dix minutes pour une faute qui n'est pas la
+    sienne.
+
+    ON NE REMET PAS À ZÉRO CE QUI TIENT ENCORE. Passer d'une formule sans
+    limite à une autre sans limite ne doit rien effacer : seules les valeurs
+    réellement hors bornes sont relâchées. L'âge retombe à « non renseigné »
+    (il n'y a pas de valeur proche qui ait du sens), le nombre est simplement
+    ramené au plafond.
+
+    LATENT AUJOURD'HUI, ET C'EST TOUT. Les deux formules sont sans limite
+    d'âge et à 18 participants, les Fun zones toutes à 18 : aucun plafond ne
+    bouge. Le piège s'arme le jour où Brahim se sert du réglage d'âge qu'on
+    vient de lui donner, ou le jour où la zone 3 ou 4 ouvre avec une autre
+    capacité — deux choses qui arriveront.
+  */
+  const choisirFormule = (f: FormuleVue) => {
+    setSelectedFormule(f);
+    const plafondAge = Math.max(
+      AGE_MINIMUM,
+      Math.min(f.ageMax ?? AGE_MAXIMUM_LISTE, AGE_MAXIMUM_LISTE)
+    );
+    setChildAge((age) => (age > plafondAge ? 0 : age));
+    const plafondNombre = Math.min(f.enfantsMax, capaciteMax ?? f.enfantsMax);
+    setChildCount((n) => Math.min(n, plafondNombre));
+  };
+
   const stepIndex = STEPS.findIndex((s) => s.key === step);
   const emailValid = isValidEmail(parentEmail);
 
@@ -275,6 +319,24 @@ export function AnniversaireFlow({
         retourSurErreur.current = true;
         setSelectedCreneau(null);
         setStep("creneau");
+      } else if (resultat.champ === "enfantAge" || resultat.champ === "nbEnfants") {
+        /*
+          LE REFUS DÉSIGNAIT UN CHAMP QU'ON NE POUVAIT PLUS ATTEINDRE.
+
+          Seul « creneau » provoquait un retour d'étape. Un refus sur l'âge ou
+          sur le nombre de participants laissait donc le message sur l'écran de
+          paiement, à deux étapes du champ en cause — et le seul bouton
+          « Retour » disponible mène à l'étape créneau, pas à celle des détails.
+          Le client lit « la formule Kick-Off est réservée aux 12 ans et moins »
+          en ayant sous les yeux un récapitulatif où rien ne se corrige.
+
+          On le ramène là où la correction se fait. Pas de `router.refresh()`
+          ici, contrairement au créneau : ce refus ne vient pas d'une course
+          avec un autre client, il vient des bornes de la formule, que la page
+          porte déjà.
+        */
+        retourSurErreur.current = true;
+        setStep("details");
       }
       return;
     }
@@ -366,7 +428,7 @@ export function AnniversaireFlow({
               retenue — ni même qu'un choix avait été enregistré au clic.
             */}
             {formules.map((f) => (
-              <button key={f.id} onClick={() => setSelectedFormule(f)} aria-pressed={selectedFormule?.id === f.id} className="text-left">
+              <button key={f.id} onClick={() => choisirFormule(f)} aria-pressed={selectedFormule?.id === f.id} className="text-left">
                 <Card
                   className={`h-full border-2 transition-all duration-300 card-hover ${
                     selectedFormule?.id === f.id ? "border-field ring-2 ring-field/20" : "hover:border-field/40"
