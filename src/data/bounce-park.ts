@@ -29,3 +29,29 @@ export const BOUNCE_PARK = {
   /** Une phrase, au présent, sur ce qui est certain. */
   description: "Un parc gonflable géant en préparation dans le complexe.",
 } as const;
+
+/**
+ * Les horaires d'ouverture, donnés par Brahim le 21 septembre 2026.
+ *
+ * ILS NE S'AFFICHENT NULLE PART, ET C'EST VOLONTAIRE. Le parc n'a ni date
+ * d'ouverture, ni tarif, ni âge minimum : annoncer des heures pour une
+ * activité dont on ignore quand elle existe reviendrait à promettre une
+ * ouverture. Ils sont écrits ici parce qu'une réponse de l'exploitant ne doit
+ * pas vivre dans une boîte aux lettres — c'est ainsi qu'on finit par la
+ * redemander, ou pire, par l'inventer.
+ *
+ * ILS SE CHEVAUCHENT AVEC LES ANNIVERSAIRES, ET CE N'EST PAS UN CONFLIT. Le
+ * parc est un espace distinct des Fun zones : mercredi 12h–19h recouvre les
+ * deux créneaux d'anniversaire de l'après-midi, et les deux peuvent tourner en
+ * même temps. Le jour où le parc se réserve, c'est cette distinction qu'il
+ * faudra tenir — un créneau de Bounce Park ne doit PAS occuper une Fun zone.
+ *
+ * Reste inconnu : le prix, l'âge minimum, la date d'ouverture, la capacité.
+ */
+export const BOUNCE_PARK_HORAIRES = {
+  /** ISO : 3 = mercredi, 5 = vendredi, 6 = samedi, 7 = dimanche. */
+  3: { debut: "12:00", fin: "19:00" },
+  5: { debut: "15:00", fin: "20:00" },
+  6: { debut: "10:00", fin: "20:00" },
+  7: { debut: "10:00", fin: "19:00" },
+} as const;

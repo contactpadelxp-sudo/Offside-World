@@ -62,7 +62,21 @@ export const SPORTFINDER_BUBBLE_URL = "https://www.sport-finder.com/fr/center/of
 
 export const BUBBLE_PRIX_PAR_PERSONNE = 23; // €
 export const BUBBLE_MIN_PERSONNES = 6;
-export const BUBBLE_MAX_PERSONNES = 20;
+/**
+ * DIX-HUIT, COMME LA FUN ZONE — pas vingt.
+ *
+ * Le Bubble se joue dans les Fun zones, dont la capacité est passée de 20 à 18
+ * le 17 septembre 2026 (migration 0020, sur réponse de Brahim). Cette constante
+ * était restée à 20. Le site ne s'en apercevait pas : le tunnel plafonne à
+ * `Math.min(BUBBLE_MAX_PERSONNES, creneau.capacite)` et le serveur relit la
+ * capacité réelle, donc 18 l'emportait partout.
+ *
+ * Le chiffre comptait quand même, parce qu'il quitte le site : c'est celui
+ * qu'on reporte sur la fiche Sport-Finder, où AUCUN plafonnement ne viendra le
+ * corriger. Vingt places vendues sur un terrain qui en tient dix-huit, et deux
+ * personnes restent dehors.
+ */
+export const BUBBLE_MAX_PERSONNES = 18;
 export const BUBBLE_DUREE_MINUTES = 60;
 
 /*
