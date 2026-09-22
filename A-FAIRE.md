@@ -26,12 +26,18 @@ réglages y sont incohérents avec le site.
       L'écart n'est pas seulement gênant commercialement. Un client qui compare
       les deux pages voit deux prix pour la même prestation et peut exiger le
       moins cher : une offre au rabais publiée par le vendeur l'engage.
-- [ ] **Désactiver ou clarifier les entrées « Anniversaire de Football » et
-      « Activité de groupe de Bubble Foot ».** Ces prestations se réservent sur
-      le site : les laisser sur Sport-Finder crée deux canaux pour la même
-      chose, donc un risque de double réservation. Elles sont aujourd'hui en
-      « Faire une demande » et non en réservation instantanée, ce qui limite le
-      risque sans le supprimer.
+- [ ] **Désactiver ou clarifier l'entrée « Anniversaire de Football ».** Les
+      anniversaires se réservent sur le site : la laisser sur Sport-Finder crée
+      deux canaux pour la même chose, donc un risque de double réservation.
+      Elle est aujourd'hui en « Faire une demande » et non en réservation
+      instantanée, ce qui limite le risque sans le supprimer.
+
+      ⚠ **NE PAS toucher à « Activité de groupe de Bubble Foot ».** Cette puce
+      demandait de la retirer elle aussi, au motif que « ces prestations se
+      réservent sur le site ». C'était vrai le 4 septembre ; c'est faux depuis
+      le 21, où le Bubble a quitté le site (`BUBBLE_EN_LIGNE = false`) pour
+      Sport-Finder, qui en est devenu le seul canal de vente. L'exécuter
+      aujourd'hui retirerait la seule façon de réserver un Bubble Foot.
 - [ ] **Retirer de la location de terrain les plages réservées aux
       anniversaires.** C'est la moitié de la règle d'étanchéité — sans elle,
       configurer les créneaux côté site ne sert à rien.
@@ -53,11 +59,21 @@ même (migration 0020) :
 | | Anniversaires (2 h) |
 |---|---|
 | Mercredi | 13:30 · 16:00 |
-| Vendredi | 16:00 · 18:30 |
+| Vendredi | **16:30** *(un seul depuis la migration 0028)* |
 | Samedi | 10:00 · 12:30 · 15:00 · 17:30 |
 | Dimanche | 10:00 · 12:30 · 15:00 · 17:30 |
 
-943 créneaux générés sur six mois, jusqu'au 19 mars 2027.
+**Le vendredi a changé le 21 septembre 2026.** Il portait 16:00 et 18:30 ;
+Brahim a alors donné l'heure manquante — foot et Bubble de 20h à 1h le vendredi
+aussi — et le second créneau finissait à 20h30, trente minutes après. Deux
+créneaux de 2 h séparés de 30 min demandent 4 h 30, et il n'y en a que 3 h 30
+entre 16h (après l'école) et 19h30. Le vendredi est donc passé à un seul,
+16h30–18h30. Les anciens sont fermés en base, pas supprimés.
+
+Générés sur six mois d'avance. **Le nombre exact de créneaux n'est plus écrit
+ici** : il a été faux trois fois — après l'ouverture de la troisième Fun zone,
+après sa fermeture, après le changement du vendredi — et chaque fois quelqu'un
+l'a cru. `/admin/creneaux` le donne, à jour, pour le jour affiché.
 
 **Deux Fun zones seulement sont en vente depuis le 19 septembre 2026.** Brahim
 a écrit « il y en **aura** 3 » — au futur, en réponse à une question qui parlait
@@ -65,7 +81,7 @@ de deux espaces. La migration 0020 avait pourtant ouvert la troisième, et 314
 créneaux y étaient à vendre : le site pouvait accepter trois groupes pour deux
 salles. `espaces.actif = false` sur `espace-3` les retire de la vente sans rien
 détruire (la vue `creneaux_disponibles` filtre dessus). Un `update` suffit à
-les rendre le jour où il confirme. 615 créneaux restent vendables.
+les rendre le jour où il confirme.
 
 > **Piège de lecture, qui m'a eu.** Interroger la table sans préciser le fuseau
 > renvoie de l'UTC, et une même plage y apparaît DEUX FOIS — un créneau de
@@ -416,17 +432,36 @@ Questions posées, sans réponse à ce jour. Elles bloquent du travail déjà pr
       (100 % au-delà de 7 jours, 50 % entre 7 jours et 48 h, rien en deçà)
       rembourse depuis ce total. Aucune modification n'a été nécessaire, et les
       CGV n'ont pas à être retouchées.
-- [x] ~~**OUVRIR LE COMPTE STRIPE.**~~ **FAIT, ET ÉPROUVÉ.** Constaté le
-      21 septembre 2026 en interrogeant la base : un paiement **Bancontact de
-      200 €** au statut `reussi`, avec un vrai `payment_intent`, daté du
-      15 septembre. Le statut `reussi` n'est posé que par le WEBHOOK — jamais
-      par la page de retour. Les clés sont donc en place, le webhook reçoit et
-      signe, et Bancontact a été éprouvé de bout en bout.
+- [x] ~~**OUVRIR LE COMPTE STRIPE.**~~ **FAIT ET ÉPROUVÉ — EN MODE TEST.**
+      Le compte existe, les deux clés sont en place, le webhook reçoit et
+      signe : le statut `reussi` n'est posé que par lui, jamais par la page de
+      retour. Le tunnel complet a été parcouru le 21 septembre 2026, paiement
+      ET remboursement intégral compris.
+
+      **Aucun argent réel n'a jamais transité.** Les clés sont des `sk_test_`,
+      ce que `/admin/réglages` affiche en rouge sous « Encaissement réel ». Ce
+      n'est pas un défaut : c'est le bon réglage tant que le site n'est pas
+      public. Le passage en `sk_live_` se fait au basculement du domaine — et
+      il demande de **recréer le webhook sur le compte de production**, dont le
+      secret de signature est différent. Voir `MISE-EN-LIGNE.md` § 4f.
+
+      ⚠ **Le moyen de paiement affiché n'a pas été éprouvé.** Ce paragraphe
+      concluait « Bancontact éprouvé de bout en bout » à partir d'une ligne
+      portant `methode = "bancontact"`. Or le webhook écrivait alors
+      `session.payment_method_types[0]`, toujours « bancontact » puisque la
+      session est créée avec `["bancontact", "card"]` : la valeur ne disait pas
+      ce qui avait été employé, seulement ce qui avait été proposé. Le correctif
+      (`moyenDePaiementUtilise`) est arrivé APRÈS ce paiement-là. Ce que
+      Bancontact emprunte et que la carte ne teste pas — le dénouement
+      asynchrone, `checkout.session.async_payment_succeeded` — n'a donc jamais
+      été vérifié.
 
       Cette ligne est restée « à faire » six jours après coup, et c'est elle
       qui m'a fait annoncer à Mathis que le paiement bloquait la mise en ligne
-      — alors qu'il avait déjà encaissé. Le fichier de suivi doit se relire
-      contre le système, jamais l'inverse.
+      — alors qu'il avait déjà encaissé. Puis, corrigée trop vite, elle a fait
+      croire l'inverse : que tout était éprouvé en production. Le fichier de
+      suivi doit se relire contre le système, jamais l'inverse — et dire ce
+      qu'il n'a PAS vérifié.
 - [x] ~~« 2000+ fêtes organisées »~~ **RETIRÉ le 13 septembre 2026**, sur
       décision de Mathis. La rangée du hero est passée de trois à deux colonnes.
       Les deux chiffres restants se vérifient : les terrains existent, et le
@@ -729,9 +764,11 @@ Ce qui reste, et qui ne dépend plus du code :
 # État technique
 
 **Base de données** — projet `shybhkzgwxyajysjlrbv` (Offside World, eu-west-1),
-migrations `0001` à `0024` appliquées et vérifiées (les trois dernières :
-quota de partage, horaires Bubble configurables, purge des devis et horodatage
-du consentement). **13 tables**, RLS activé et forcé sur chacune, sans aucune
+migrations `0001` à `0028` appliquées et vérifiées. Les quatre dernières, du
+21 septembre 2026 : âge par formule (0025), l'expiration qui ne libère plus un
+créneau payé (0026), l'expiration qui retourne les lignes pour prévenir le
+client (0027), et le vendredi ramené à un seul anniversaire avant l'ouverture
+du foot (0028). **13 tables**, RLS activé et forcé sur chacune, sans aucune
 politique : rien n'est accessible par les clés publiques, tout passe par le
 serveur. Cinq tâches planifiées actives.
 

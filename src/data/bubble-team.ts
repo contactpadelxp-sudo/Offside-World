@@ -28,18 +28,33 @@
  * vendre deux fois : le site ignore les réservations de Sport-Finder, et
  * l'inverse est vrai.
  *
- * On a cherché la place restante, et elle n'existe pas. En croisant les heures
- * d'ouverture, les créneaux d'anniversaire et les plages de location, il reste
- * au Bubble : mercredi 18h–20h, vendredi 15h–16h, et une demi-heure le samedi
- * et le dimanche. Rien le week-end après 20h, qui est justement le moment où
- * il se vend — et c'est aussi l'heure où plus personne n'est sur place pour
- * sortir les bulles, puisque la porte s'ouvre toute seule.
+ * On a cherché la place restante, et elle ne suffisait pas. En croisant les
+ * heures d'ouverture, les créneaux d'anniversaire et les plages de location, il
+ * ne restait au Bubble qu'une poignée d'heures creuses en milieu de semaine —
+ * jamais le week-end après 20h, qui est justement le moment où il se vend, et
+ * qui est aussi l'heure où plus personne n'est sur place pour sortir les
+ * bulles, puisque la porte s'ouvre toute seule.
+ *
+ * (Le calcul exact de ces heures creuses a changé depuis : la migration 0028 a
+ * ramené le vendredi à un seul anniversaire, qui finit à 18h30 au lieu de
+ * 20h30. Il n'est plus reproduit ici, parce qu'une arithmétique recopiée dans
+ * un commentaire se périme au premier changement d'horaire et se fait croire
+ * ensuite. La décision, elle, ne dépend pas du chiffre.)
  *
  * La ligne de partage qui en découle n'est pas un arbitrage, c'est un constat :
  * le SITE vend ce qui se passe quand quelqu'un est là (anniversaires, et le
  * Bounce Park à venir), SPORT-FINDER vend ce qui se passe quand personne n'y
- * est (foot, Bubble). Aucun chevauchement possible, donc rien à surveiller, et
- * aucune intégration à construire.
+ * est (foot, Bubble).
+ *
+ * ⚠ CE PARTAGE NE SE SURVEILLE PAS TOUT SEUL, et ce commentaire a affirmé le
+ * contraire — « aucun chevauchement possible, donc rien à surveiller » — jusqu'à
+ * ce qu'un relevé du 21 septembre 2026 montre l'inverse sur la page publique de
+ * Sport-Finder : le samedi 3 octobre, une location courait de 16h à 17h, en
+ * plein dans un créneau d'anniversaire que le site vendait au même moment. Les
+ * deux plages ne se touchent que si QUELQU'UN les tient alignées, des deux
+ * côtés. Côté site, `data/plages-sport-finder.ts` refuse désormais d'ouvrir un
+ * créneau dans les heures du tiers ; côté Sport-Finder, rien n'est automatique
+ * et le préalable de `MISE-EN-LIGNE.md` est le seul garde-fou.
  *
  * CE FICHIER SUFFIT À REVENIR EN ARRIÈRE. Le tunnel, l'action serveur, la table
  * `horaires_bubble` et le générateur de créneaux restent en place et compilent.

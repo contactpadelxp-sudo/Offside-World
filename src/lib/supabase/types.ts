@@ -618,7 +618,15 @@ export type Database = {
       }
       expirer_reservations_en_attente: {
         Args: { delai?: string }
-        Returns: number
+        Returns: {
+          client_email: string
+          client_nom: string
+          debut: string
+          fin: string
+          id: string
+          reference: string
+          type: Database["public"]["Enums"]["type_activite"]
+        }[]
       }
       consommer_quota: {
         Args: { p_cle: string; p_fenetre: unknown; p_max: number }

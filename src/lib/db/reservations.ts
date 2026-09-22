@@ -18,19 +18,12 @@ import { heure, jourLisibleCap } from "@/lib/temps";
 /**
  * Une réservation que l'expiration vient de libérer.
  *
- * Décrit à la main plutôt que tiré des types générés : tant que la migration
- * 0027 n'est pas appliquée, `types.ts` annonce encore `Returns: number` pour
- * cette fonction. Les noms suivent le `returns table (…)` de la migration, en
+ * Tirée des types générés depuis que la migration 0027 est appliquée : elle
+ * était décrite à la main tant que `types.ts` annonçait encore `Returns: number`
+ * pour cette fonction, ce qui n'est plus le cas. Les noms restent en
  * `snake_case`, parce que c'est PostgREST qui les écrit.
  */
-interface LigneExpiree {
-  reference: string;
-  client_nom: string;
-  client_email: string;
-  type: string;
-  debut: string;
-  fin: string;
-}
+type LigneExpiree = Database["public"]["Functions"]["expirer_reservations_en_attente"]["Returns"][number];
 
 type InsertReservation = Database["public"]["Tables"]["reservations"]["Insert"];
 type InsertDevis = Database["public"]["Tables"]["demandes_devis"]["Insert"];
@@ -113,19 +106,16 @@ export async function expirerReservationsAbandonnees(): Promise<void> {
   }
 
   /*
-    DEUX FORMES DE RETOUR SONT ACCEPTÉES, ET CE N'EST PAS UNE PRÉCAUTION
-    DÉCORATIVE.
+    ON VÉRIFIE QUAND MÊME QUE C'EST UN TABLEAU.
 
-    Le déploiement du code et l'application de la migration ne sont pas
-    atomiques : Vercel publie quand on pousse, la migration 0027 part d'ailleurs
-    et à un autre moment. Il existe donc forcément une fenêtre où ce code
-    rencontre l'ANCIENNE fonction, qui rend un entier — le nombre de lignes
-    touchées — et non les lignes elles-mêmes.
-
-    Pendant cette fenêtre, l'expiration continue de faire son travail
-    essentiel : libérer les créneaux. Seul l'e-mail manque, ce qui est
-    exactement l'état d'avant. Lire `.length` sur un entier aurait au contraire
-    fait échouer le rendu de la page de réservation.
+    La migration 0027 est appliquée et les types le disent, donc ce contrôle
+    est aujourd'hui redondant. Il reste parce que le déploiement du code et
+    l'application d'une migration ne sont jamais atomiques : Vercel publie au
+    push, la migration part d'ailleurs. Le jour où quelqu'un rejoue ce dépôt
+    sur une base plus ancienne — une copie de secours, un environnement
+    reconstruit —, cette fonction rendra un entier, et lire `.length` dessus
+    ferait échouer le rendu de la page de réservation. L'expiration, elle,
+    continuerait de libérer les créneaux : seul l'e-mail manquerait.
   */
   const expirees: LigneExpiree[] = Array.isArray(data) ? data : [];
   if (expirees.length === 0) return;
