@@ -582,6 +582,62 @@ le dépôt.
 
 # À faire côté Mathis
 
+## 📅 DEMAIN — transfert des comptes, dans cet ordre
+
+Brahim a donné ses accès le 22 septembre au soir. Décidé avec Mathis : le
+**nom de domaine reste chez Wix** (l'écart de prix avec OVH est marginal et ça
+supprime une étape à risque), mais la **zone DNS part chez Vercel** — Wix ne
+garde alors que le nom loué, sans abonnement site.
+
+- [ ] **0. Retrouver le compte Vercel qui détient le projet.** Vérifié le
+      22 septembre : il n'est PAS sur `mathishannebique111-hash`, qui ne porte
+      que `padel-xp`. Le site répond pourtant sur `offside-world.vercel.app`.
+      Piste la plus probable : se connecter à Vercel **via GitHub** avec le
+      compte `contactpadelxp-sudo`, propriétaire du dépôt. Bloque tout le
+      reste.
+- [ ] **0 bis. Vérifier que Wix autorise des serveurs de noms EXTERNES.**
+      Compte de Brahim → Domaines → le domaine → Avancé → *Serveurs de noms*.
+      Une option « externes / personnalisés » = c'est bon.
+
+      ⚠️ **À faire AVANT de construire quoi que ce soit.** Si Wix ne le permet
+      pas, on retombe sur le plan d'origine — la zone reste chez Wix, on n'y
+      change que les enregistrements A et le CNAME `www` — et les étapes 3 et 4
+      ci-dessous n'ont plus lieu d'être. Non vérifiable depuis l'environnement
+      de développement : `support.wix.com` est bloqué par le proxy réseau.
+- [ ] **1. Créer la Team Vercel de Brahim**, plan **Pro** : le plan Hobby
+      interdit l'usage commercial, et un site qui encaisse en est un.
+- [ ] **2. Transférer le projet** vers cette Team (Settings → Advanced →
+      Transfer Project, code valable 24 h), puis y inviter Mathis.
+
+      Puis **relever la nouvelle adresse de production** : elle contient le nom
+      de l'équipe et commande `SITE_URL` ET l'URL du webhook Stripe.
+- [ ] **3. Ajouter le domaine au projet, DANS LA TEAM DE BRAHIM.** Vercel
+      affichera « Invalid Configuration » : c'est normal et attendu tant que
+      les serveurs de noms pointent encore sur Wix.
+- [ ] **4. Construire les 12 lignes** dans la zone DNS de Vercel, puis les
+      comparer une à une avec celles de Wix.
+
+      **Cette zone ne sert à personne tant que les serveurs de noms n'ont pas
+      changé.** Deux zones coexistent alors : celle de Wix, que le monde
+      consulte, et celle de Vercel, que personne ne consulte. Seuls les
+      serveurs de noms — réglés chez le registrar, donc chez Wix — décident
+      laquelle fait autorité. C'est ce qui permet de tout préparer à froid.
+
+      Les 12 : 3 × `A` + `CNAME www` (le site) · 5 × `MX` Google · `TXT` SPF ·
+      `TXT resend._domainkey` · `CNAME rsend` et `send` · `TXT _dmarc`.
+      Quatre concernent le site, huit la messagerie.
+- [ ] **5. Transférer le projet Supabase** vers l'organisation de Brahim.
+      Voir la procédure plus bas — il faut être membre de l'organisation cible
+      avant de pouvoir transférer.
+- [ ] **6. Recréer le compte Resend** sous Brahim, région Ireland, réajouter
+      le domaine — **la clé DKIM sera nouvelle** et devra être publiée dans la
+      zone en service. Garder l'ancien compte actif jusqu'à vérification.
+- [ ] **7. Brahim crée Stripe lui-même** (pièce d'identité, DBT Partners,
+      IBAN), puis invite Mathis en rôle *Developer*.
+
+**La bascule des serveurs de noms n'est PAS de demain.** Elle reste l'étape
+finale, avec le préalable Sport-Finder. Voir `MISE-EN-LIGNE.md`.
+
 ## ⏳ EN ATTENTE D'APPLICATION — deux migrations écrites, jamais exécutées
 
 - [ ] **Appliquer `0032_purge_du_journal_admin.sql`** — la purge à 12 mois du
