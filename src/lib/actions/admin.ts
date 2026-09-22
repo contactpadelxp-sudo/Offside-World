@@ -27,7 +27,7 @@ import {
   emailDeTest,
 } from "@/lib/email/modeles";
 import { lignesDepuisJson, obstaclesEnvoi, totalDevisCents } from "@/lib/devis";
-import { heuresAvant, jourLisibleCap } from "@/lib/temps";
+import { heure, heuresAvant, jourLisibleCap } from "@/lib/temps";
 import { AGE_MINIMUM } from "@/data/reglement";
 import { genererDevisPdf } from "@/lib/devis-pdf";
 import type { FormuleAdmin, OptionAdmin, SaisieDevis } from "@/lib/vues";
@@ -1584,40 +1584,97 @@ export async function basculerJournee(jourDemande: string, ouvrir: boolean): Pro
     const finJour = new Date(`${cible}T23:59:59.999`);
 
     if (ouvrir) {
-      const { data, error } = await base()
+      /*
+        LA JOURNÉE SE ROUVRE CRÉNEAU PAR CRÉNEAU, ET IL LE FAUT.
+
+        C'était un `update` en masse, et il échouait en bloc. Deux défauts, tous
+        deux révélés par la migration 0028.
+
+        1. IL CONTOURNAIT LE CONTRÔLE SPORT-FINDER. `basculerCreneau` refuse de
+           rouvrir un créneau qui mord sur les heures du tiers ; « rouvrir la
+           journée » ne vérifiait rien. La même réouverture, refusée une par
+           une, passait d'un clic en gros.
+
+        2. IL ÉCHOUAIT ENTIÈREMENT DÈS QU'UN SEUL CRÉNEAU GÊNAIT. Sur un
+           vendredi, les 16h00 fermés par 0028 chevauchent le nouveau 16h30 :
+           la contrainte d'exclusion refusait l'écriture, donc AUCUN créneau de
+           la journée n'était rouvert — et le message invitait à « les rouvrir
+           un par un pour voir lequel », c'est-à-dire à répéter à la main le
+           geste que le contrôle cherche à retenir.
+
+        Une journée porte au plus une douzaine de créneaux : les traiter un à un
+        coûte quelques allers-retours et rend un compte rendu exact. On rouvre
+        ce qui peut l'être, on nomme ce qui ne l'a pas été, et on ne prétend
+        jamais avoir fait plus.
+      */
+      const { data: fermes, error: eLecture } = await base()
         .from("creneaux")
-        .update({ ouvert: true })
+        .select("id, debut, fin")
         .gte("debut", debutJour.toISOString())
         .lte("debut", finJour.toISOString())
         .eq("ouvert", false)
-        .select("id");
+        .order("debut");
 
-      if (error) {
-        // Un créneau ajouté depuis peut occuper la même plage dans le même
-        // espace, et la contrainte d'exclusion refuse.
-        if (error.code === VIOLATION_EXCLUSION) {
-          return {
-            ok: false,
-            message:
-              "Réouverture impossible : un créneau ouvert chevauche déjà l'un de ceux-ci. " +
-              "Rouvrez-les un par un pour voir lequel.",
-          };
-        }
-        throw error;
+      if (eLecture) throw eLecture;
+      if (!fermes || fermes.length === 0) {
+        return { ok: false, message: "Aucun créneau fermé ce jour-là." };
       }
 
-      const touches = data?.length ?? 0;
-      if (touches === 0) return { ok: false, message: "Aucun créneau fermé ce jour-là." };
+      let rouverts = 0;
+      const refusesSportFinder = new Set<string>();
+      const refusesChevauchement = new Set<string>();
 
-      await journaliser(session, "creneaux.journee_ouverte", null, {
-        jour: cible,
-        creneaux: touches,
-      });
-      rafraichir();
-      return {
-        ok: true,
-        message: `${touches} créneau${touches > 1 ? "x" : ""} rouvert${touches > 1 ? "s" : ""}.`,
-      };
+      for (const c of fermes) {
+        const horaire = heure(new Date(c.debut));
+
+        if (conflitSportFinder(new Date(c.debut), new Date(c.fin))) {
+          refusesSportFinder.add(horaire);
+          continue;
+        }
+
+        const { error: eUn } = await base()
+          .from("creneaux")
+          .update({ ouvert: true })
+          .eq("id", c.id);
+
+        if (eUn) {
+          if (eUn.code === VIOLATION_EXCLUSION) {
+            refusesChevauchement.add(horaire);
+            continue;
+          }
+          throw eUn;
+        }
+        rouverts += 1;
+      }
+
+      if (rouverts > 0) {
+        await journaliser(session, "creneaux.journee_ouverte", null, {
+          jour: cible,
+          creneaux: rouverts,
+        });
+        rafraichir();
+      }
+
+      const phrases: string[] = [];
+      if (rouverts > 0) {
+        phrases.push(`${rouverts} créneau${rouverts > 1 ? "x" : ""} rouvert${rouverts > 1 ? "s" : ""}.`);
+      }
+      if (refusesSportFinder.size > 0) {
+        phrases.push(
+          `${[...refusesSportFinder].join(", ")} : laissé${refusesSportFinder.size > 1 ? "s" : ""} ` +
+            "fermé" + (refusesSportFinder.size > 1 ? "s" : "") +
+            " — ces heures sont vendues par Sport-Finder. Rouvrez-les depuis leur ligne si vous " +
+            "avez fermé la plage là-bas."
+        );
+      }
+      if (refusesChevauchement.size > 0) {
+        phrases.push(
+          `${[...refusesChevauchement].join(", ")} : un créneau ouvert occupe déjà cet horaire.`
+        );
+      }
+
+      // Aucun rouvert : ce n'est pas une réussite, même si rien n'a cassé.
+      return { ok: rouverts > 0, message: phrases.join(" ") };
     }
 
     /*

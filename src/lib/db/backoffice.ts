@@ -434,7 +434,7 @@ export async function lireCreneauxDuJour(jour: string): Promise<CreneauAdmin[]> 
 
   const { data, error } = await base()
     .from("creneaux")
-    .select("id, type, espace_id, debut, fin, ouvert, espaces(nom)")
+    .select("id, type, espace_id, debut, fin, ouvert, espaces(nom, actif)")
     .gte("debut", debutJour.toISOString())
     .lte("debut", finJour.toISOString())
     .order("debut");
@@ -464,6 +464,9 @@ export async function lireCreneauxDuJour(jour: string): Promise<CreneauAdmin[]> 
       debut: heure(debut),
       fin: heure(new Date(c.fin)),
       ouvert: c.ouvert,
+      // Lu ici plutôt que déduit à l'écran : c'est la même condition que celle
+      // de `creneaux_disponibles`, et elle doit venir de la même source.
+      espaceActif: c.espaces?.actif ?? true,
       reservePar: parCreneau.get(c.id) ?? null,
     };
   });

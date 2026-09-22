@@ -50,6 +50,21 @@ function LigneCreneau({ c }: { c: CreneauAdmin }) {
         <span className="rounded-md bg-white/5 px-2 py-0.5 text-xs text-muted-foreground">
           {c.type === "anniversaire" ? "Anniversaire" : "Bubble Foot"}
         </span>
+        {/*
+          UN CRÉNEAU « OUVERT » SUR UN ESPACE HORS SERVICE NE SE VEND PAS.
+
+          La Fun zone 3 est désactivée depuis le 19 septembre 2026, et la vue
+          `creneaux_disponibles` filtre sur `e.actif` : ses créneaux ne
+          partiront jamais à la vente. Cet écran, lui, les affichait « Libre »
+          comme les autres — on comptait donc des places qui n'existent pas, et
+          la seule façon de s'en apercevoir était de connaître le filtre de la
+          vue. On le dit sur la ligne.
+        */}
+        {!c.espaceActif && (
+          <span className="rounded-md bg-white/5 px-2 py-0.5 text-xs text-muted-foreground">
+            Espace hors service — ne se vend pas
+          </span>
+        )}
 
         {c.reservePar ? (
           /*

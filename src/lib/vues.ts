@@ -226,6 +226,16 @@ export interface CreneauAdmin {
   debut: string;
   fin: string;
   ouvert: boolean;
+  /**
+   * L'espace de ce créneau est-il encore en service ?
+   *
+   * Un créneau peut être « ouvert » sur un espace désactivé — c'est le cas des
+   * Fun zone 3 depuis le 19 septembre 2026. La vue `creneaux_disponibles`
+   * filtre sur `e.actif`, donc ces créneaux ne se vendront JAMAIS ; l'écran du
+   * back-office, lui, les affichait « ouverts » comme les autres. Brahim
+   * comptait donc des places qui n'existaient pas.
+   */
+  espaceActif: boolean;
   /** Référence de la réservation active, si le créneau est pris. */
   reservePar: string | null;
 }

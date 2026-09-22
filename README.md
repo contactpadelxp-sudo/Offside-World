@@ -155,10 +155,23 @@ Régénérer les types après une migration :
 npx supabase gen types typescript --project-id <ref> > src/lib/supabase/types.ts
 ```
 
-Deux tâches tournent en base via `pg_cron` (migration `0010`) :
-`anonymiser_reservations_anciennes` chaque nuit pour la minimisation RGPD, et
-`purger_sessions_admin` chaque dimanche. L'ouverture de nouveaux créneaux se
-fait depuis le back-office, onglet « Créneaux ».
+Cinq tâches tournent en base via `pg_cron`, relevées le 22 septembre 2026 :
+
+| Tâche | Quand | Pourquoi |
+|---|---|---|
+| `anonymiser_reservations_anciennes` | 3 h 30, chaque nuit | minimisation RGPD |
+| `anonymiser_devis_anciens` | 3 h 31, chaque nuit | idem, côté team building |
+| `purger_quotas` | 4 h 45, chaque nuit | fenêtres du limiteur devenues inutiles |
+| `purger_sessions_admin` | 4 h, le dimanche | sessions du back-office expirées |
+| `purger_audience_ancienne` | 4 h 15, le dimanche | mesure d'audience maison |
+
+Le README n'en annonçait que deux, celles de la migration `0010` ; trois ont
+été ajoutées depuis sans que cette ligne suive. La liste ci-dessus vient de
+`cron.job`, pas des migrations : c'est la seule source qui dise ce qui tourne
+vraiment.
+
+L'ouverture de nouveaux créneaux se fait depuis le back-office, onglet
+« Créneaux ».
 
 ```sql
 select jobname, schedule, active from cron.job;
