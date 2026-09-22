@@ -113,9 +113,38 @@ function recu(): Response {
 
 export async function POST(req: Request) {
   if (!paiementConfigure() || !webhookConfigure()) {
-    // Rien n'est configuré : on ne peut rien vérifier, donc on ne traite rien.
-    // 200 tout de même, pour ne pas faire réessayer indéfiniment un test.
-    return recu();
+    /*
+      500, ET SURTOUT PAS 200. REFUSER EN ACCUSANT RÉCEPTION N'EST PAS REFUSER.
+
+      Cette branche répondait 200 « pour ne pas faire réessayer indéfiniment un
+      test ». Or un 200 dit à Stripe : livré, compris, ne renvoie rien. Il
+      marque l'événement traité, n'effectue AUCUNE relivraison, et son tableau
+      de bord affiche du vert.
+
+      Il suffit alors que `STRIPE_SECRET_KEY` soit posée et
+      `STRIPE_WEBHOOK_SECRET` absente — un oubli, une rotation de clé, une
+      variable posée sur le mauvais environnement, un redéploiement antérieur à
+      son ajout — pour que chaque paiement produise l'enchaînement complet :
+      client débité, réservation laissée « en attente », expirée à la
+      quarante-cinquième minute, créneau rendu à la vente, aucun e-mail. Et pas
+      une trace : ni chez Stripe, ni au back-office, ni dans les journaux.
+
+      `MISE-EN-LIGNE.md` décrit cet enchaînement comme « la panne la plus
+      coûteuse possible, et la plus silencieuse ». Ce code en était la cause
+      possible au lieu d'en être le garde-fou — et il affirmait l'inverse :
+      « sans STRIPE_WEBHOOK_SECRET, le site REFUSE de traiter la notification ».
+
+      Avec un 500, Stripe relivre pendant trois jours, l'endpoint passe en
+      rouge, et poser la variable manquante rattrape rétroactivement TOUS les
+      paiements de l'intervalle. Le coût d'un test qui réessaie quelques fois
+      est sans commune mesure.
+    */
+    console.error(
+      "Webhook Stripe reçu alors que la configuration est incomplète — " +
+        `clé: ${paiementConfigure()}, secret de signature: ${webhookConfigure()}. ` +
+        "On répond 500 pour que Stripe relivre."
+    );
+    return new Response("Paiement non configuré", { status: 500 });
   }
 
   const signature = req.headers.get("stripe-signature");

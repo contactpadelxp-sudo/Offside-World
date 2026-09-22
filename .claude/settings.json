@@ -1,7 +1,17 @@
 {
   "$schema": "https://json.schemastore.org/claude-code-settings.json",
   "permissions": {
-    "defaultMode": "acceptEdits",
+    "deny": [
+      "Read(./.env*)",
+      "Read(./**/.env*)",
+      "Bash(cat .env*)",
+      "Bash(cat ./.env*)",
+      "Bash(curl *)",
+      "Bash(wget *)",
+      "Bash(rm -rf /*)",
+      "Bash(git push --force*)",
+      "Bash(git reset --hard*)"
+    ],
     "allow": [
       "Read",
       "Glob",
@@ -37,7 +47,6 @@
       "Bash(git remote*)",
 
       "Bash(python3 *)",
-      "Bash(curl *)",
       "Bash(kill *)",
 
       "Bash(ls*)",
@@ -62,7 +71,6 @@
       "Bash(mv*)",
       "Bash(touch*)",
       "Bash(for *)",
-      "Bash(export *)",
 
       "mcp__Supabase__list_tables",
       "mcp__Supabase__list_projects",
@@ -77,11 +85,6 @@
       "mcp__Vercel__list_projects",
       "mcp__Vercel__list_teams",
       "mcp__Vercel__get_project"
-    ],
-    "deny": [
-      "Bash(rm -rf /*)",
-      "Bash(git push --force*)",
-      "Bash(git reset --hard*)"
     ]
   }
 }

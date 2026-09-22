@@ -391,6 +391,18 @@ Copier le **Signing secret** affiché après création : c'est
 notifications — l'adresse est publique, et la signature est la seule chose qui
 distingue Stripe d'un inconnu qui enverrait un faux « paiement réussi ».
 
+> **Ce refus répond 500, et c'est volontaire.** Il a répondu 200 jusqu'au
+> 22 septembre 2026, ce qui était le contraire d'un refus : un 200 dit à Stripe
+> « livré, ne renvoie rien ». Une clé posée sans son secret de signature aurait
+> donc produit, sur chaque paiement, un client débité et une réservation jamais
+> confirmée — sans une trace nulle part, et avec un tableau de bord Stripe tout
+> vert. Avec un 500, Stripe relivre pendant trois jours : poser la variable
+> manquante rattrape rétroactivement tous les paiements de l'intervalle.
+>
+> Conséquence pratique : si tu testes le webhook avant d'avoir posé les deux
+> variables, l'endpoint passera en rouge chez Stripe et l'événement sera
+> réessayé. C'est le comportement voulu, pas une panne.
+
 ### d. Ce qui change dans le fonctionnement
 
 - **La réservation n'est plus confirmée par Brahim, mais par le paiement.** Il

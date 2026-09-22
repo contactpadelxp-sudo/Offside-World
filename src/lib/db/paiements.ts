@@ -169,7 +169,24 @@ export async function confirmerPaiement(
    */
   secours?: { reservationId: string; montantCents: number }
 ): Promise<ResultatConfirmation> {
-  if (!baseConfiguree()) return { nouveau: false, reference: null, reservationId: null };
+  /*
+    ON LÈVE, ON NE REND PAS UN SILENCE.
+
+    Cette ligne rendait `{ nouveau: false }`, c'est-à-dire exactement ce que
+    rend une relivraison normale de Stripe : « rien de neuf, tout va bien ». Le
+    webhook répondait donc 200 sur un paiement encaissé qu'aucune base n'avait
+    enregistré, et Stripe ne le renvoyait jamais.
+
+    Sans base, on ne peut ni confirmer, ni constater, ni alerter. La seule
+    réponse honnête est l'échec : il fait relivrer Stripe pendant trois jours,
+    ce qui laisse le temps de rétablir la connexion et rattrape le paiement.
+  */
+  if (!baseConfiguree()) {
+    throw new Error(
+      "Base non configurée : impossible de confirmer un paiement encaissé. " +
+        "On échoue pour que Stripe relivre plutôt que de perdre l'événement."
+    );
+  }
 
   const { data: paiement, error } = await base()
     .from("paiements")
