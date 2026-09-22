@@ -149,6 +149,26 @@ Les migrations sont dans `supabase/migrations/`, à appliquer dans l'ordre.
 RLS est activé et forcé sur toutes les tables **sans aucune politique** : les
 clés publiques ne peuvent rien lire ni écrire, tout passe par le serveur.
 
+**Les fonctions tournent à Dublin**, et ce n'est pas une préférence esthétique.
+
+`vercel.json` fixe `regions: ["dub1"]`. Sans ce fichier, Vercel place les
+fonctions dans sa région par défaut, aux **États-Unis**, pendant que la base
+Supabase est en Irlande (`eu-west-1`). Deux conséquences, toutes deux réelles :
+
+1. **Un transfert de données hors Europe à chaque formulaire.** Ce qu'un client
+   saisit traverse l'Atlantique avant d'être enregistré à Dublin. Sur des
+   données de mineurs et des allergies, c'est un transfert qu'il faut déclarer,
+   encadrer et justifier — alors qu'il ne servait à rien.
+2. **Un aller-retour transatlantique par requête.** Chaque page du back-office
+   fait plusieurs appels à la base ; les additionner à 80 ms se voit à l'œil nu.
+
+Dublin plutôt que Francfort ou Paris : c'est la ville où se trouve déjà la base.
+Le jour où la base déménage, cette ligne déménage avec elle.
+
+`preferredRegion` dans un fichier de route ferait la même chose mais est
+**déprécié** depuis Next 16 — voir
+`node_modules/next/dist/docs/01-app/03-api-reference/03-file-conventions/02-route-segment-config/preferredRegion.md`.
+
 Régénérer les types après une migration :
 
 ```bash

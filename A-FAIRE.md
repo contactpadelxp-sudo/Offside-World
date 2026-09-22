@@ -625,11 +625,22 @@ Vérifiés un par un, pas seulement signalés.
       disque de `lib/logo.ts` force le traçage de l'ensemble du dépôt, donc la
       copie des 7,2 Mo de `public/` dans chaque fonction serverless. Attention
       au correctif : `resolveLogoSrc()` est appelé au RENDU, pas au build.
-- [ ] **Aucune région de fonction fixée.** Pas de `vercel.json`, pas de clé
-      `regions`. Les fonctions tournent donc dans la région par défaut de
-      Vercel, aux États-Unis, pendant que la base est en Irlande (eu-west-1).
-      Chaque écran du tunnel et du back-office enchaîne plusieurs requêtes
-      Supabase séquentielles, chacune traversant l'Atlantique.
+- [x] ~~**Aucune région de fonction fixée.**~~ **FAIT le 22 septembre 2026 :**
+      `vercel.json` fixe `regions: ["dub1"]`. Dublin, et non Francfort ou
+      Paris, parce que c'est la ville où se trouve déjà la base (`eu-west-1`).
+
+      Ce n'était pas qu'une question de vitesse. Les fonctions tournant aux
+      États-Unis, **tout ce qu'un client saisissait traversait l'Atlantique**
+      avant d'être enregistré en Irlande — un transfert hors Europe de données
+      de mineurs et d'allergies, à déclarer et à encadrer, alors qu'il ne
+      servait à rien. L'audit RGPD du 22 septembre l'a relevé ; la correction
+      le supprime plutôt que de le justifier.
+
+      ⚠ **À vérifier au premier déploiement :** le plan Vercel doit autoriser
+      le choix de région. Sur le plan gratuit, une seule région est permise —
+      ce qui suffit ici — mais si le déploiement refuse `dub1`, c'est le signe
+      qu'il faut passer sur un plan payant, ce qui est de toute façon requis
+      pour un site commercial.
 - [ ] **Le projet Vercel n'est pas visible** depuis le compte joignable
       (`resell`, `cockpit-agents`, `padel-xp`, `cie`). Le site répond pourtant
       sur `offside-world.vercel.app`. Il vit donc sur un autre compte — à
