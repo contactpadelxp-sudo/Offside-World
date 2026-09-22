@@ -241,18 +241,28 @@ export default function Confidentialite() {
       <Article n={5} titre="Avec qui partageons-nous vos données ?">
         <P>Offside ne vend pas les données personnelles de ses clients.</P>
         <P>
-          Certaines données peuvent toutefois être accessibles à des prestataires lorsque cela est
-          nécessaire au fonctionnement de nos services, par exemple :
+          Les prestataires qui traitent des données pour notre compte sont les suivants. L&apos;article
+          13.1.e du RGPD impose de les nommer : une liste de catégories ne permet pas de savoir qui
+          détient réellement vos informations.
         </P>
         <Liste items={[
-          "hébergeur et prestataire du site internet ;", "système de réservation ;",
-          "prestataire de paiement ;", "prestataire informatique ;", "outil d'envoi d'e-mails ;",
-          "prestataire comptable ;",
-          "partenaires intervenant directement dans l'organisation d'une activité lorsque cela est nécessaire.",
+          "Supabase — base de données du site : réservations, demandes de devis, contenus. Données hébergées en Irlande (Union européenne).",
+          "Resend — envoi des e-mails de confirmation, d'annulation et de remboursement. Données hébergées en Irlande (Union européenne).",
+          "Vercel — hébergement du site. Les pages sont calculées sur des serveurs situés aux États-Unis (voir l'article 6).",
+          "Stripe — paiement en ligne. Stripe Payments Europe Ltd, établie en Irlande, avec un traitement pouvant impliquer sa société mère aux États-Unis. Nous ne recevons ni ne conservons aucun numéro de carte : le paiement se déroule entièrement sur les pages de Stripe.",
+          "Google (Google Workspace) — boîte aux lettres professionnelle du complexe, qui reçoit les avis de nouvelle réservation. Ces avis contiennent le nom du client et le détail de la prestation.",
+          "Notre prestataire comptable, pour les pièces justificatives exigées par la loi.",
         ]} />
         <P>
-          Ces prestataires ne peuvent traiter les données que dans le cadre de leurs missions et
-          conformément aux règles applicables.
+          Ces prestataires ne peuvent traiter les données que sur nos instructions et dans le cadre
+          de leurs missions.
+        </P>
+        <P>
+          <strong>Sport-Finder</strong>, qui commercialise la location de terrain et le Bubble Foot,
+          n&apos;est pas un prestataire du site : c&apos;est un service distinct. Lorsque vous suivez
+          un lien vers Sport-Finder, vous quittez ce site et les données que vous y saisissez sont
+          régies par la politique de confidentialité de ce service. Nous ne lui transmettons aucune
+          donnée.
         </P>
         <P>
           Les données peuvent également être communiquées lorsqu&apos;une obligation légale nous
@@ -262,15 +272,21 @@ export default function Confidentialite() {
 
       <Article n={6} titre="Transferts en dehors de l'Espace économique européen">
         <P>
-          Certains prestataires numériques peuvent traiter des données depuis des pays situés en
-          dehors de l&apos;Espace économique européen.
+          <strong>Oui, des transferts ont lieu</strong>, et il vaut mieux le dire que l&apos;écrire au
+          conditionnel. La base de données et l&apos;envoi des e-mails restent dans l&apos;Union
+          européenne, en Irlande. En revanche :
         </P>
+        <Liste items={[
+          "l'hébergement du site (Vercel) calcule les pages sur des serveurs situés aux États-Unis ; les données que vous saisissez dans un formulaire y transitent avant d'être enregistrées en Irlande ;",
+          "le paiement (Stripe) et la messagerie professionnelle (Google) reposent sur des sociétés dont la maison mère est établie aux États-Unis.",
+        ]} />
         <P>
-          Lorsqu&apos;un tel transfert a lieu, Offside veille à ce qu&apos;il repose sur un
-          mécanisme prévu par le RGPD, notamment une décision d&apos;adéquation ou des garanties
-          contractuelles appropriées lorsqu&apos;elles sont requises.
+          Ces transferts s&apos;appuient sur les mécanismes prévus au chapitre V du RGPD —
+          clauses contractuelles types de la Commission européenne, et, le cas échéant, décision
+          d&apos;adéquation applicable aux entreprises américaines certifiées. Vous pouvez nous
+          demander une copie des garanties mises en place à l&apos;adresse indiquée à
+          l&apos;article 1.
         </P>
-        <P>Les informations spécifiques dépendent des prestataires effectivement utilisés par le site.</P>
       </Article>
 
       <Article n={7} titre="Combien de temps conservons-nous les données ?">
@@ -306,6 +322,18 @@ export default function Confidentialite() {
           Lorsque le traitement repose sur votre consentement, vous pouvez retirer ce consentement à
           tout moment. Le retrait du consentement n&apos;affecte pas la légalité des traitements
           réalisés avant ce retrait.
+        </P>
+        <P>
+          <strong>Nous répondons dans un délai d&apos;un mois</strong> à compter de la réception de
+          votre demande, comme le prévoit l&apos;article 12.3 du RGPD. Si votre demande est complexe,
+          ce délai peut être prolongé de deux mois ; nous vous en informons alors dans le mois.
+        </P>
+        <P>
+          Une demande d&apos;effacement portant sur une réservation passée est honorée directement :
+          le nom, l&apos;e-mail, le téléphone, le prénom et l&apos;âge de la personne fêtée, les
+          allergies, les remarques et les notes internes sont supprimés. Le montant, la date et la
+          prestation subsistent, sans lien avec une personne : la loi nous impose de conserver les
+          pièces comptables, et l&apos;article 17.3.b du RGPD réserve expressément ce cas.
         </P>
         <P>
           Pour exercer vos droits, vous pouvez contacter{" "}

@@ -433,6 +433,86 @@ function choixRemboursement(v: unknown): ChoixRemboursement {
   return v === "integral" || v === "bareme" ? v : "aucun";
 }
 
+/**
+ * Efface les données personnelles d'UNE réservation, sur demande de la personne.
+ *
+ * POURQUOI ELLE EXISTE. La politique de confidentialité promet le droit à
+ * l'effacement (RGPD art. 17). Il n'était outillé nulle part : honorer une
+ * demande supposait d'écrire du SQL à la main sur la production. Un droit
+ * annoncé sans procédure est une promesse que le vendeur ne peut pas tenir — et
+ * le délai d'un mois de l'article 12.3 court à partir de la demande, pas à
+ * partir du moment où quelqu'un trouve comment faire.
+ *
+ * ELLE EFFACE EXACTEMENT CE QU'EFFACE LA PURGE AUTOMATIQUE, et c'est délibéré :
+ * deux listes de colonnes divergeraient au premier ajout de champ. Le jour où
+ * une colonne s'ajoute à `anonymiser_reservations_anciennes`, elle doit
+ * s'ajouter ici — d'où le commentaire croisé dans la migration 0029.
+ *
+ * CE QUI SUBSISTE, ET POURQUOI ON A LE DROIT. Le montant, la date et la
+ * prestation restent : l'article 17.3.b réserve l'effacement quand le
+ * traitement est nécessaire au respect d'une obligation légale, et la
+ * conservation des pièces comptables en est une (sept ans en Belgique). La
+ * ligne devient une écriture comptable sans personne derrière.
+ *
+ * ELLE EST IRRÉVERSIBLE, et l'écran doit le dire avant de la proposer.
+ */
+export async function effacerDonneesReservation(id: string): Promise<Resultat> {
+  const session = await garde();
+  if (!session) return REFUS_SESSION;
+
+  try {
+    const cible = uuid(id, "Réservation");
+
+    const { data, error } = await base()
+      .from("reservations")
+      .update({
+        client_nom: "anonymisé",
+        client_email: "anonymise@invalid",
+        client_telephone: "",
+        enfant_prenom: null,
+        enfant_age: null,
+        allergies: null,
+        remarques: null,
+        note_interne: null,
+        newsletter: false,
+        newsletter_le: null,
+        anonymisee_le: new Date().toISOString(),
+      })
+      .eq("id", cible)
+      // Une réservation déjà anonymisée ne se réanonymise pas : la seconde
+      // demande doit le dire, pas faire semblant d'avoir agi.
+      .is("anonymisee_le", null)
+      .select("reference")
+      .maybeSingle();
+
+    if (error) throw error;
+    if (!data) {
+      return {
+        ok: false,
+        message: "Introuvable, ou déjà effacée — les données personnelles ne sont plus là.",
+      };
+    }
+
+    /*
+      ON JOURNALISE LA RÉFÉRENCE, PAS L'IDENTITÉ. Tracer qui a exercé son droit
+      en recopiant son nom dans le journal recréerait la donnée qu'on vient
+      d'effacer. La référence suffit à prouver qu'on a agi, et à quelle date —
+      ce que l'article 12.3 demande de pouvoir montrer.
+    */
+    await journaliser(session, "reservation.effacee", data.reference, { motif: "droit a l'effacement" });
+    rafraichir();
+
+    return {
+      ok: true,
+      message:
+        `Données personnelles effacées sur ${data.reference}. Le montant et la date subsistent ` +
+        "pour la comptabilité, sans nom ni coordonnées.",
+    };
+  } catch (e) {
+    return echec(e);
+  }
+}
+
 export async function enregistrerNoteReservation(id: string, note: string): Promise<Resultat> {
   const session = await garde();
   if (!session) return REFUS_SESSION;

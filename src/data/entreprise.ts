@@ -135,7 +135,7 @@ export const EMAIL = "info@offsidefootindoor.be";
  */
 
 /** Date de la dernière mise à jour des documents légaux. */
-export const MAJ_LEGALE = "17 septembre 2026";
+export const MAJ_LEGALE = "22 septembre 2026";
 
 /** Affiche une valeur ou un marqueur explicite si elle n'est pas encore renseignée. */
 export function ouACompleter(valeur: string | null, libelle = "à compléter"): string {

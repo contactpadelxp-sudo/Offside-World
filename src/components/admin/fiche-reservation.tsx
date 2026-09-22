@@ -4,6 +4,7 @@ import { useOptimistic, useState } from "react";
 import {
   annulerReservation,
   confirmerReservation,
+  effacerDonneesReservation,
   enregistrerNoteReservation,
   rembourserReservation,
 } from "@/lib/actions/admin";
@@ -100,6 +101,8 @@ export function FicheReservation({ r }: { r: ReservationAdmin }) {
   /** Sous-choix du geste commercial, posé seulement quand deux montants sont possibles. */
   const [montantGeste, setMontantGeste] = useState<ChoixRemboursement | null>(null);
   const [noteOuverte, setNoteOuverte] = useState(false);
+  /** Le bouton d’effacement demande une confirmation : voir plus bas. */
+  const [effacerArme, setEffacerArme] = useState(false);
   const [texteNote, setTexteNote] = useState(r.noteInterne ?? "");
 
   const type = TYPES[r.type] ?? TYPES.anniversaire;
@@ -650,6 +653,56 @@ export function FicheReservation({ r }: { r: ReservationAdmin }) {
                     : "Annuler la réservation"}
               </button>
             ))}
+
+          {/*
+            LE DROIT À L'EFFACEMENT, ATTEIGNABLE.
+
+            La politique de confidentialité le promet ; il n'existait nulle part
+            ailleurs que dans du SQL écrit à la main. Le bouton n'apparaît que
+            sur une réservation passée — effacer le nom d'un client attendu
+            samedi rendrait sa réservation ingérable — et demande une
+            confirmation, parce que c'est irréversible.
+          */}
+          {r.passee && !effacerArme && (
+            <button
+              type="button"
+              disabled={enCours}
+              onClick={() => setEffacerArme(true)}
+              className={BOUTON_NEUTRE}
+            >
+              Effacer les données du client
+            </button>
+          )}
+          {r.passee && effacerArme && (
+            <div className="w-full rounded-lg border border-destructive/40 bg-destructive/5 px-3 py-2.5">
+              <p className="text-sm font-medium">Effacer définitivement les données de ce client ?</p>
+              <p className="mt-0.5 text-xs text-muted-foreground">
+                Nom, e-mail, téléphone, prénom et âge de la personne fêtée, allergies, remarques
+                et note interne. Le montant et la date restent, sans personne derrière, pour la
+                comptabilité. <strong>C&apos;est irréversible.</strong>
+              </p>
+              <div className="mt-2.5 flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  disabled={enCours}
+                  onClick={() =>
+                    lancer("effacer", async () => {
+                      const r2 = await effacerDonneesReservation(r.id);
+                      if (r2.ok) setEffacerArme(false);
+                      return r2;
+                    })
+                  }
+                  className={BOUTON_DANGER}
+                >
+                  {occupe("effacer") && <Rotative />}
+                  Oui, effacer
+                </button>
+                <button type="button" onClick={() => setEffacerArme(false)} className={BOUTON_NEUTRE}>
+                  Fermer
+                </button>
+              </div>
+            </div>
+          )}
 
           <button
             type="button"

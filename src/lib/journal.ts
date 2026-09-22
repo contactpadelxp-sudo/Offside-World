@@ -42,6 +42,14 @@ const ACTIONS: Record<
     precision: (d) => REMBOURSEMENTS[String(d.remboursement)] ?? null,
   },
   "reservation.note": { libelle: "Note interne d’une réservation", famille: "reservations" },
+  "reservation.effacee": {
+    libelle: "Données personnelles effacées",
+    famille: "reservations",
+    // C'est la trace qui prouve qu'une demande d'effacement a été honorée, et
+    // quand. L'article 12.3 du RGPD donne un mois pour répondre : il faut
+    // pouvoir montrer la date.
+    precision: (d) => (d.motif ? String(d.motif) : null),
+  },
   "paiement.rembourse": {
     libelle: "Remboursement effectué",
     famille: "reservations",
