@@ -84,7 +84,25 @@ export default function Confidentialite() {
           informations concernant les participants peuvent être traitées, notamment leur nom, leur
           tranche d&apos;âge ou les informations nécessaires à leur participation.
         </P>
-        <P>Nous évitons de collecter des données sensibles lorsqu&apos;elles ne sont pas nécessaires.</P>
+        <SousTitre>Allergies et intolérances</SousTitre>
+        <P>
+          Le formulaire de réservation d&apos;anniversaire comporte un champ facultatif permettant
+          de signaler une allergie ou une intolérance. Une telle information est une donnée
+          concernant la santé. Elle n&apos;est donc demandée qu&apos;après que vous avez coché une
+          case distincte, prévue pour cela seul : tant que cette case n&apos;est pas cochée, le
+          champ n&apos;apparaît pas et rien n&apos;est enregistré.
+        </P>
+        <P>
+          Ce consentement explicite est horodaté en même temps que la donnée, et les deux sont
+          indissociables dans notre base. Vous pouvez le retirer à tout moment en nous écrivant :
+          l&apos;information est alors effacée, sans que cela remette en cause votre réservation.
+          À défaut de retrait, elle est supprimée en même temps que le reste de votre réservation,
+          selon les délais de l&apos;article 7.
+        </P>
+        <P>
+          En dehors de ce champ, nous ne collectons pas de données sensibles et nous évitons de
+          le faire lorsqu&apos;elles ne sont pas nécessaires.
+        </P>
 
         <SousTitre>Données de paiement et de facturation</SousTitre>
         <P>Offside peut traiter :</P>
@@ -142,6 +160,20 @@ export default function Confidentialite() {
           précontractuelles demandées par le client.
         </P>
 
+        <SousTitre>Assurer la sécurité d&apos;un participant allergique</SousTitre>
+        <P>
+          Lorsqu&apos;une allergie ou une intolérance nous est signalée, nous l&apos;utilisons
+          uniquement pour adapter ce qui est servi ou proposé à la personne concernée le jour de
+          l&apos;activité. Elle n&apos;est communiquée à personne d&apos;autre que l&apos;équipe qui
+          encadre cette activité.
+        </P>
+        <P>
+          Parce qu&apos;il s&apos;agit d&apos;une donnée concernant la santé, la base juridique est
+          votre consentement explicite, recueilli au moyen d&apos;une case distincte et horodaté
+          (article 9, paragraphe 2, point a, du RGPD). Vous pouvez le retirer à tout moment ;
+          le retrait ne remet pas en cause ce qui a été fait avant.
+        </P>
+
         <SousTitre>Gérer les paiements et la comptabilité</SousTitre>
         <P>
           Nous traitons les informations nécessaires à la facturation, aux paiements, à la
@@ -172,8 +204,15 @@ export default function Confidentialite() {
 
         <SousTitre>Communication commerciale</SousTitre>
         <P>
-          Nous pouvons envoyer des informations commerciales aux personnes ayant valablement accepté
-          de les recevoir ou lorsque la législation nous permet de le faire.
+          À ce jour, Offside n&apos;envoie aucune lettre d&apos;information ni aucun message
+          publicitaire. Les seuls e-mails que vous recevez de notre part concernent votre
+          réservation : sa confirmation, son annulation, son expiration ou un devis que vous avez
+          demandé.
+        </P>
+        <P>
+          Si une lettre d&apos;information devait voir le jour, elle ne serait envoyée
+          qu&apos;aux personnes l&apos;ayant expressément demandée, et chaque envoi comporterait
+          un lien de désabonnement. Cette politique serait mise à jour au préalable.
         </P>
         <P>
           Lorsqu&apos;un traitement repose sur votre consentement, vous pouvez le retirer à tout
@@ -334,6 +373,11 @@ export default function Confidentialite() {
           allergies, les remarques et les notes internes sont supprimés. Le montant, la date et la
           prestation subsistent, sans lien avec une personne : la loi nous impose de conserver les
           pièces comptables, et l&apos;article 17.3.b du RGPD réserve expressément ce cas.
+        </P>
+        <P>
+          Le retrait de votre accord concernant une allergie est honoré <strong>à tout moment,
+          même avant l&apos;activité</strong>, et séparément : l&apos;allergie et la date de
+          l&apos;accord sont effacées ensemble, votre réservation reste inchangée.
         </P>
         <P>
           Pour exercer vos droits, vous pouvez contacter{" "}

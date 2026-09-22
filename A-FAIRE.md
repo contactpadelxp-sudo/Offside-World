@@ -246,6 +246,38 @@ facturation serait hors de proportion et mal placé.
 
 ## Décisions à trancher
 
+- [ ] **Proposer à Brahim une vraie lettre d'information — ou renoncer.**
+      Demandé par Mathis le 22 septembre 2026 : « garde en mémoire pour
+      proposer à Brahim ».
+
+      Ce qui a été fait ce jour-là : la case « Recevoir les offres par email »
+      a été **retirée des deux tunnels** (anniversaire et groupes). Elle
+      récoltait un consentement pour un service qui n'existe pas. Vérifié dans
+      les sources : aucun code ne lit jamais la colonne `newsletter`, il n'y a
+      ni liste d'abonnés au back-office, ni moyen d'écrire un message, ni
+      envoi. Personne n'a donc jamais rien reçu, et l'art. 5.1.b interdit de
+      collecter une donnée sans finalité déterminée.
+
+      **Ce qui reste en place, exprès :** la colonne `newsletter`, son
+      horodatage `newsletter_le`, et le champ correspondant des actions
+      serveur. Le jour où la fonctionnalité existe, il n'y a que la case à
+      remettre — les trois fichiers portent le commentaire qui le dit.
+
+      **Ce qu'il faudrait construire avant de la remettre**, et c'est ce qu'il
+      faut chiffrer avec Brahim : une liste d'abonnés consultable au
+      back-office, un composeur de message, un envoi groupé par Resend, et
+      surtout un **lien de désabonnement dans chaque envoi** — l'art. 7.3 du
+      RGPD exige qu'il soit aussi simple de retirer son consentement que de le
+      donner, et l'**art. XII.13 du Code de droit économique** impose à tout
+      envoi publicitaire par courrier électronique d'indiquer le droit de
+      s'opposer ET de mettre à disposition un moyen électronique de l'exercer.
+      Sans ce lien, l'envoi est illégal, pas seulement impoli.
+
+      À trancher : Brahim en veut-il vraiment une ? Les lignes déjà
+      enregistrées avec `newsletter = true` **ne peuvent pas** servir de base
+      de départ sans le lui dire : elles ont été recueillies pour un service
+      qui n'existait pas, à une époque où la politique de confidentialité
+      n'annonçait pas d'envoi. On repart d'une collecte propre.
 - [ ] **Onglet « Réglages » : retirer ce qui ne sert à rien à Brahim.**
       Décidé le 15 septembre 2026 par Mathis : à faire, mais **plus tard**, une
       fois qu'on saura ce dont Brahim se sert réellement.
@@ -749,6 +781,39 @@ c'est le signe qu'ils tiennent, pas une répétition.
 L'audit juridique du tunnel de paiement est purgé. Ce qui a été corrigé, et
 qui est vérifiable page par page :
 
+- [x] ~~**Les allergies étaient collectées sans base juridique.**~~
+      **CORRIGÉ le 22 septembre 2026** (migrations 0030 et 0031).
+
+      Une allergie alimentaire est une **donnée concernant la santé**. L'art. 9
+      du RGPD en interdit le traitement par principe ; seul le consentement
+      **explicite** lève l'interdiction (art. 9.2.a). Le champ était jusqu'ici
+      un simple `textarea` du formulaire anniversaire, couvert par la case des
+      CGV — c'est-à-dire par rien : « explicite » veut dire séparé.
+
+      Ce qui a été mis en place, la voie A (assumer le champ et l'encadrer),
+      choisie par Mathis :
+      - une **case distincte**, qui ne sert qu'à ça, à cocher avant que le
+        champ n'apparaisse — on demande l'autorisation avant la donnée ;
+      - décocher **efface** ce qui a été saisi ;
+      - le consentement est **horodaté** (`allergies_consenties_le`), parce que
+        l'art. 7.1 demande de pouvoir le démontrer ;
+      - une **contrainte de base** refuse une allergie sans son horodatage,
+        pour qu'aucun futur chemin d'écriture ne puisse les dissocier ;
+      - la purge automatique et l'effacement à la demande remettent les **deux**
+        colonnes à `null` ensemble : une fois la donnée partie, la preuve datée
+        qu'elle a existé n'a plus de finalité (art. 5.1.c).
+
+      Le contenu de l'allergie ne part **pas** par e-mail : l'avis interne
+      signale seulement qu'une allergie a été renseignée et renvoie au
+      back-office. La politique de confidentialité décrit maintenant ce champ,
+      sa base juridique et le retrait du consentement.
+- [x] ~~**La case newsletter récoltait un consentement sans finalité.**~~
+      **RETIRÉE des deux tunnels le 22 septembre 2026.** Rien ne lisait la
+      colonne : ni liste d'abonnés, ni composeur, ni envoi. Un consentement
+      collecté pour un service inexistant contrevient à l'art. 5.1.b. Voir
+      « Décisions à trancher » pour ce qu'il faudrait construire avant de la
+      remettre. La politique de confidentialité dit désormais la vérité :
+      aucun message publicitaire n'est envoyé.
 - [x] Bouton de commande sans ambiguïté (« Payer 180 € ») et montant TVAC,
       moyens de paiement et absence de rétractation annoncés AVANT le clic —
       art. VI.46 § 2 et VI.45. La sanction de l'ancienne formulation était que

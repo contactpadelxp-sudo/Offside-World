@@ -462,6 +462,7 @@ export type Database = {
       reservations: {
         Row: {
           allergies: string | null
+          allergies_consenties_le: string | null
           anonymisee_le: string | null
           cgv_acceptees_le: string
           client_email: string
@@ -488,6 +489,7 @@ export type Database = {
         }
         Insert: {
           allergies?: string | null
+          allergies_consenties_le?: string | null
           anonymisee_le?: string | null
           cgv_acceptees_le: string
           client_email: string
@@ -514,6 +516,7 @@ export type Database = {
         }
         Update: {
           allergies?: string | null
+          allergies_consenties_le?: string | null
           anonymisee_le?: string | null
           cgv_acceptees_le?: string
           client_email?: string

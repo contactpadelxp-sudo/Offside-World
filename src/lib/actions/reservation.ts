@@ -131,6 +131,15 @@ export interface SaisieAnniversaire {
   clientEmail: string;
   clientTelephone: string;
   allergies?: string;
+  /**
+   * Consentement EXPLICITE au traitement des allergies (RGPD art. 9.2.a).
+   *
+   * Une case distincte de celle des CGV, et c'est tout l'enjeu : un
+   * consentement noyé dans l'acceptation de conditions générales n'est pas
+   * explicite. Sans elle, les allergies ne sont pas enregistrées — voir
+   * l'action.
+   */
+  allergiesConsenties?: boolean;
   remarques?: string;
   newsletter?: boolean;
   cgv: boolean;
@@ -163,10 +172,34 @@ export async function reserverAnniversaire(saisie: SaisieAnniversaire): Promise<
     const clientNom = texte(saisie?.clientNom, "Nom", { min: 2, max: 120 });
     const clientEmail = email(saisie?.clientEmail, "E-mail");
     const clientTelephone = telephone(saisie?.clientTelephone, "Téléphone");
-    const allergies = texteFacultatif(saisie?.allergies, "Allergies", { max: 500 });
     const remarques = texteFacultatif(saisie?.remarques, "Remarques", { max: 1000 });
     const newsletter = booleen(saisie?.newsletter);
     vrai(saisie?.cgv, "cgv", "Les conditions générales de vente doivent être acceptées.");
+
+    /*
+      UNE ALLERGIE EST UNE DONNÉE DE SANTÉ, ET ELLE NE S'ENREGISTRE PAS SANS
+      CONSENTEMENT EXPLICITE.
+
+      L'article 9 interdit par principe de traiter des données de santé ; seule
+      une exception lève l'interdiction, et la seule qui vaille ici est le
+      consentement explicite (art. 9.2.a). Explicite veut dire séparé : une
+      case à part, qui nomme la donnée et son usage, jamais incluse dans
+      l'acceptation des conditions générales.
+
+      ON NE REFUSE PAS LA RÉSERVATION, ON N'ENREGISTRE PAS L'ALLERGIE. Refuser
+      punirait le client d'un choix qui lui appartient, sur un formulaire qu'il
+      vient de remplir en entier. Le champ est facultatif : ne pas consentir
+      est une réponse valable, et elle doit coûter le champ, pas la fête.
+
+      L'horodatage démontre le consentement, comme l'exige l'article 7.1 : une
+      date se produit en cas de contestation, un booléen s'affirme seulement.
+      La base porte la même règle en contrainte (migration 0030) — aucun autre
+      chemin d'écriture ne peut la contourner.
+    */
+    const consentementSante = booleen(saisie?.allergiesConsenties);
+    const allergies = consentementSante
+      ? texteFacultatif(saisie?.allergies, "Allergies", { max: 500 })
+      : null;
 
     /*
       LE QUOTA SE CONSOMME APRÈS LE BORNAGE, PAS AVANT.
@@ -267,6 +300,9 @@ export async function reserverAnniversaire(saisie: SaisieAnniversaire): Promise<
       newsletter_le: newsletter ? new Date().toISOString() : null,
       cgv_acceptees_le: new Date().toISOString(),
       allergies,
+      // Toujours écrits ensemble : la contrainte `allergies_consenties` de la
+      // migration 0030 refuse l'un sans l'autre.
+      allergies_consenties_le: allergies ? new Date().toISOString() : null,
       remarques,
     });
 

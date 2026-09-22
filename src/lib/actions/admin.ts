@@ -446,7 +446,9 @@ function choixRemboursement(v: unknown): ChoixRemboursement {
  * ELLE EFFACE EXACTEMENT CE QU'EFFACE LA PURGE AUTOMATIQUE, et c'est délibéré :
  * deux listes de colonnes divergeraient au premier ajout de champ. Le jour où
  * une colonne s'ajoute à `anonymiser_reservations_anciennes`, elle doit
- * s'ajouter ici — d'où le commentaire croisé dans la migration 0029.
+ * s'ajouter ici — d'où le commentaire croisé porté par la fonction elle-même
+ * (migration 0031). C'est exactement ce qui vient d'arriver avec
+ * `allergies_consenties_le`.
  *
  * CE QUI SUBSISTE, ET POURQUOI ON A LE DROIT. Le montant, la date et la
  * prestation restent : l'article 17.3.b réserve l'effacement quand le
@@ -472,6 +474,9 @@ export async function effacerDonneesReservation(id: string): Promise<Resultat> {
         enfant_prenom: null,
         enfant_age: null,
         allergies: null,
+        // La donnée de santé et la preuve datée du consentement qui
+        // l'autorisait s'effacent ensemble — cf. migration 0031.
+        allergies_consenties_le: null,
         remarques: null,
         note_interne: null,
         newsletter: false,
@@ -507,6 +512,65 @@ export async function effacerDonneesReservation(id: string): Promise<Resultat> {
       message:
         `Données personnelles effacées sur ${data.reference}. Le montant et la date subsistent ` +
         "pour la comptabilité, sans nom ni coordonnées.",
+    };
+  } catch (e) {
+    return echec(e);
+  }
+}
+
+/**
+ * RETIRER LE CONSENTEMENT AUX ALLERGIES, SANS TOUCHER AU RESTE.
+ *
+ * L'article 7.3 du RGPD exige qu'il soit AUSSI SIMPLE de retirer un
+ * consentement que de le donner. Le donner coûte une case à cocher ; le
+ * retirer ne peut pas coûter l'effacement de toute la réservation.
+ *
+ * C'est pourtant ce qui se serait passé sans cette action : le seul outil
+ * existant, `effacerDonneesReservation`, efface tout et n'est proposé que sur
+ * une réservation passée, annulée ou expirée. Un client qui téléphone la
+ * veille de la fête pour dire « finalement, n'inscrivez pas l'allergie » se
+ * serait heurté à un back-office incapable de le faire — et la politique de
+ * confidentialité promet l'inverse.
+ *
+ * ELLE EFFACE LES DEUX COLONNES ENSEMBLE. L'horodatage ne se conserve que
+ * pour démontrer le traitement qu'il autorise (art. 7.1) ; ce traitement
+ * n'existant plus, le garder n'a plus de finalité (art. 5.1.c). La contrainte
+ * de la migration 0030 n'accepterait d'ailleurs pas l'inverse.
+ *
+ * LE JOURNAL NE RECOPIE PAS L'ALLERGIE. Tracer le retrait en écrivant la
+ * donnée retirée dans le journal la recréerait ailleurs — même raisonnement
+ * que pour le droit à l'effacement juste au-dessus.
+ */
+export async function retirerConsentementAllergies(id: string): Promise<Resultat> {
+  const session = await garde();
+  if (!session) return REFUS_SESSION;
+
+  try {
+    const cible = uuid(id, "Réservation");
+
+    const { data, error } = await base()
+      .from("reservations")
+      .update({ allergies: null, allergies_consenties_le: null })
+      .eq("id", cible)
+      // Sans allergie enregistrée, il n'y a pas de consentement à retirer : le
+      // dire vaut mieux qu'annoncer une action qui n'a rien fait.
+      .not("allergies", "is", null)
+      .select("reference")
+      .maybeSingle();
+
+    if (error) throw error;
+    if (!data) {
+      return { ok: false, message: "Aucune allergie enregistrée sur cette réservation." };
+    }
+
+    await journaliser(session, "reservation.allergies_retirees", data.reference, {
+      motif: "retrait du consentement",
+    });
+    rafraichir();
+
+    return {
+      ok: true,
+      message: `Allergie effacée sur ${data.reference}, avec la trace du consentement.`,
     };
   } catch (e) {
     return echec(e);

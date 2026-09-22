@@ -7,6 +7,7 @@ import {
   effacerDonneesReservation,
   enregistrerNoteReservation,
   rembourserReservation,
+  retirerConsentementAllergies,
 } from "@/lib/actions/admin";
 import type { ChoixRemboursement, ReservationAdmin, StatutReservation } from "@/lib/vues";
 import { euros, montantLisible } from "@/lib/tarification";
@@ -103,6 +104,8 @@ export function FicheReservation({ r }: { r: ReservationAdmin }) {
   const [noteOuverte, setNoteOuverte] = useState(false);
   /** Le bouton d’effacement demande une confirmation : voir plus bas. */
   const [effacerArme, setEffacerArme] = useState(false);
+  /** Idem pour le retrait du consentement aux allergies : une allergie effacée par mégarde ne se retrouve pas. */
+  const [retraitArme, setRetraitArme] = useState(false);
   const [texteNote, setTexteNote] = useState(r.noteInterne ?? "");
 
   const type = TYPES[r.type] ?? TYPES.anniversaire;
@@ -359,20 +362,78 @@ export function FicheReservation({ r }: { r: ReservationAdmin }) {
           les deux au même niveau finit par n'en signaler aucune.
         */}
         {r.allergies && (
-          <p className="mt-2 flex items-start gap-1.5 text-sm font-medium text-kick">
-            <AlerteTriangle className="mt-0.5 size-4 shrink-0" />
-            <span>
-              {/*
-                L'ÉTIQUETTE ÉTAIT RÉSERVÉE AUX LECTEURS D'ÉCRAN.
-                La ligne affichait un triangle puis le texte brut, quand la
-                ligne « Remarques : » juste en dessous, moins critique, portait
-                la sienne en clair. Le seul champ qui peut envoyer un enfant à
-                l'hôpital était le seul à ne pas être nommé.
-              */}
-              <span className="font-semibold">Allergies : </span>
-              {r.allergies}
-            </span>
-          </p>
+          <div className="mt-2">
+            <p className="flex items-start gap-1.5 text-sm font-medium text-kick">
+              <AlerteTriangle className="mt-0.5 size-4 shrink-0" />
+              <span>
+                {/*
+                  L'ÉTIQUETTE ÉTAIT RÉSERVÉE AUX LECTEURS D'ÉCRAN.
+                  La ligne affichait un triangle puis le texte brut, quand la
+                  ligne « Remarques : » juste en dessous, moins critique, portait
+                  la sienne en clair. Le seul champ qui peut envoyer un enfant à
+                  l'hôpital était le seul à ne pas être nommé.
+                */}
+                <span className="font-semibold">Allergies : </span>
+                {r.allergies}
+              </span>
+            </p>
+
+            {/*
+              RETIRER SON CONSENTEMENT DOIT ÊTRE AUSSI SIMPLE QUE DE LE DONNER.
+
+              C'est l'article 7.3 du RGPD, et c'est ce que promet la politique
+              de confidentialité. Le donner coûte une case à cocher ; le
+              retirer ne peut pas coûter l'effacement de toute la réservation,
+              seul outil qui existait — et qui n'apparaît de toute façon que
+              sur une réservation passée, annulée ou expirée.
+
+              La commande est ici, sous l'allergie qu'elle efface, et non dans
+              la barre d'actions du bas : c'est ce texte-là qui disparaît, et
+              c'est en le regardant qu'on décide.
+            */}
+            {!retraitArme ? (
+              <button
+                type="button"
+                disabled={enCours}
+                onClick={() => setRetraitArme(true)}
+                className="mt-1 pl-[22px] text-xs text-muted-foreground underline underline-offset-2 transition-colors hover:text-foreground disabled:opacity-50"
+              >
+                Le client retire son accord — effacer l&apos;allergie
+              </button>
+            ) : (
+              <div className="mt-1.5 ml-[22px] rounded-lg border border-border bg-muted/40 px-3 py-2.5">
+                <p className="text-xs text-muted-foreground">
+                  L&apos;allergie et la date de l&apos;accord seront effacées. La réservation,
+                  elle, ne bouge pas. <strong>C&apos;est irréversible</strong> — il faudra la
+                  redemander au client.
+                </p>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    disabled={enCours}
+                    onClick={() =>
+                      lancer("retrait-allergies", async () => {
+                        const r2 = await retirerConsentementAllergies(r.id);
+                        if (r2.ok) setRetraitArme(false);
+                        return r2;
+                      })
+                    }
+                    className={BOUTON_DANGER}
+                  >
+                    {occupe("retrait-allergies") && <Rotative />}
+                    Oui, effacer
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setRetraitArme(false)}
+                    className={BOUTON_NEUTRE}
+                  >
+                    Annuler
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
         )}
 
         {r.remarques && (

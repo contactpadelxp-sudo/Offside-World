@@ -50,6 +50,14 @@ const ACTIONS: Record<
     // pouvoir montrer la date.
     precision: (d) => (d.motif ? String(d.motif) : null),
   },
+  "reservation.allergies_retirees": {
+    libelle: "Allergie effacée à la demande du client",
+    famille: "reservations",
+    // Le retrait d'un consentement se prouve comme le consentement lui-même
+    // (art. 7.1 et 7.3). Le libellé ne recopie jamais l'allergie : la tracer
+    // dans le journal la recréerait là où on vient de l'effacer.
+    precision: (d) => (d.motif ? String(d.motif) : null),
+  },
   "paiement.rembourse": {
     libelle: "Remboursement effectué",
     famille: "reservations",

@@ -77,7 +77,15 @@ export function AnniversaireFlow({
   const [phone, setPhone] = useState("");
   const [phoneValid, setPhoneValid] = useState(false);
   const [acceptCGV, setAcceptCGV] = useState(false);
-  const [acceptNewsletter, setAcceptNewsletter] = useState(false);
+  /*
+    Conservé alors que la case est retirée : l'action serveur attend toujours
+    le champ, et la valeur `false` est celle qu'elle recevrait de toute façon.
+    Le jour où la newsletter existe, il n'y a que la case à remettre.
+  */
+  const [acceptNewsletter] = useState(false);
+  /** Consentement explicite au traitement d'une donnée de santé — art. 9.2.a. */
+  const [consentAllergies, setConsentAllergies] = useState(false);
+  const [allergies, setAllergies] = useState("");
   const [envoi, setEnvoi] = useState(false);
   const [erreur, setErreur] = useState<string | null>(null);
 
@@ -293,6 +301,8 @@ export function AnniversaireFlow({
       clientEmail: parentEmail,
       clientTelephone: phone,
       newsletter: acceptNewsletter,
+      allergies,
+      allergiesConsenties: consentAllergies,
       cgv: acceptCGV,
     });
 
@@ -944,11 +954,75 @@ export function AnniversaireFlow({
                     J&apos;accepte les <a href="/cgv" target="_blank" rel="noopener noreferrer" className="underline text-field py-1">Conditions Générales de Vente</a> et la <a href="/confidentialite" target="_blank" rel="noopener noreferrer" className="underline text-field py-1">Politique de confidentialité</a>. <span className="text-destructive">*</span>
                   </Label>
                 </div>
-                <div className="flex items-start gap-3">
-                  <Checkbox id="acceptNewsletter" checked={acceptNewsletter} onCheckedChange={(v) => setAcceptNewsletter(v === true)} />
-                  <Label htmlFor="acceptNewsletter" className="block text-sm leading-relaxed text-muted-foreground">
-                    Je souhaite recevoir les offres et actualités d&apos;Offside Foot Indoor par email (facultatif).
-                  </Label>
+                {/*
+                  LA CASE NEWSLETTER A ÉTÉ RETIRÉE LE 22 SEPTEMBRE 2026.
+
+                  Elle récoltait un consentement pour un service qui n'existe
+                  pas : aucun code ne lit jamais la colonne `newsletter`, il
+                  n'y a ni liste d'abonnés au back-office, ni moyen d'écrire,
+                  ni envoi. Collecter un consentement sans finalité est
+                  contraire à l'article 5.1.b, et personne n'a jamais rien reçu.
+
+                  Elle reviendra le jour où la newsletter existe vraiment —
+                  avec son lien de désabonnement, qu'exige l'article 7.3. La
+                  colonne, l'horodatage et le champ de l'action serveur restent
+                  en place : il n'y aura que cette case à remettre.
+                */}
+
+                {/*
+                  UNE DONNÉE DE SANTÉ DEMANDE SA PROPRE CASE.
+
+                  L'article 9 interdit par principe de traiter une donnée de
+                  santé — une allergie alimentaire en est une. Seul le
+                  consentement EXPLICITE lève l'interdiction (art. 9.2.a), et
+                  « explicite » veut dire séparé : le glisser dans la case des
+                  CGV n'en ferait pas un consentement valable.
+
+                  Le champ n'apparaît qu'une fois la case cochée. L'ordre
+                  compte : on demande l'autorisation AVANT de demander la
+                  donnée, jamais l'inverse. Et décocher efface ce qui a été
+                  saisi, sans quoi un texte resterait en mémoire après un
+                  consentement retiré.
+                */}
+                <div className="rounded-xl border border-border bg-muted/30 p-3">
+                  <div className="flex items-start gap-3">
+                    <Checkbox
+                      id="consentAllergies"
+                      checked={consentAllergies}
+                      onCheckedChange={(v) => {
+                        const coche = v === true;
+                        setConsentAllergies(coche);
+                        if (!coche) setAllergies("");
+                      }}
+                    />
+                    <Label htmlFor="consentAllergies" className="block text-sm leading-relaxed">
+                      <span className="font-medium text-foreground">
+                        Une allergie ou une intolérance à signaler ?
+                      </span>{" "}
+                      <span className="text-muted-foreground">
+                        Cochez pour nous la transmettre. C&apos;est une donnée de santé :
+                        nous ne la conservons qu&apos;avec votre accord, uniquement pour la
+                        sécurité de la personne concernée, et elle est effacée en même temps
+                        que le reste de votre réservation. Facultatif.
+                      </span>
+                    </Label>
+                  </div>
+                  {consentAllergies && (
+                    <div className="mt-3 pl-8">
+                      <Label htmlFor="allergies" className="mb-1 block text-xs text-muted-foreground">
+                        Allergies ou intolérances
+                      </Label>
+                      <textarea
+                        id="allergies"
+                        value={allergies}
+                        onChange={(e) => setAllergies(e.target.value)}
+                        maxLength={500}
+                        rows={2}
+                        placeholder="Par exemple : arachides, lactose…"
+                        className="w-full rounded-xl border border-border bg-input/30 px-3 py-2 text-sm outline-none transition-colors focus-visible:ring-2 focus-visible:ring-field/60"
+                      />
+                    </div>
+                  )}
                 </div>
               </div>
 

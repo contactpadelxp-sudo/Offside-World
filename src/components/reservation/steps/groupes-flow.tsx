@@ -99,7 +99,12 @@ export function GroupesFlow({
   const [phoneValid, setPhoneValid] = useState(false);
   const [message, setMessage] = useState("");
   const [acceptCGV, setAcceptCGV] = useState(false);
-  const [acceptNewsletter, setAcceptNewsletter] = useState(false);
+  /*
+    Conservé alors que la case est retirée : l'action serveur attend toujours
+    le champ, et la valeur `false` est celle qu'elle recevrait de toute façon.
+    Le jour où la newsletter existe, il n'y a que la case à remettre.
+  */
+  const [acceptNewsletter] = useState(false);
   const [envoi, setEnvoi] = useState(false);
   const [erreur, setErreur] = useState<string | null>(null);
 
@@ -824,10 +829,20 @@ export function GroupesFlow({
                     J&apos;accepte les <a href="/cgv" target="_blank" rel="noopener noreferrer" className="underline text-field py-1">CGV</a> et la <a href="/confidentialite" target="_blank" rel="noopener noreferrer" className="underline text-field py-1">Politique de confidentialité</a>. <span className="text-destructive">*</span>
                   </Label>
                 </div>
-                <div className="flex items-start gap-3">
-                  <Checkbox id="nl" checked={acceptNewsletter} onCheckedChange={(v) => setAcceptNewsletter(v === true)} />
-                  <Label htmlFor="nl" className="block text-sm leading-relaxed text-muted-foreground">Recevoir les offres par email (facultatif).</Label>
-                </div>
+                {/*
+                  LA CASE NEWSLETTER A ÉTÉ RETIRÉE LE 22 SEPTEMBRE 2026.
+
+                  Elle récoltait un consentement pour un service qui n'existe
+                  pas : aucun code ne lit jamais la colonne `newsletter`, il
+                  n'y a ni liste d'abonnés au back-office, ni moyen d'écrire,
+                  ni envoi. Collecter un consentement sans finalité est
+                  contraire à l'article 5.1.b, et personne n'a jamais rien reçu.
+
+                  Elle reviendra le jour où la newsletter existe vraiment —
+                  avec son lien de désabonnement, qu'exige l'article 7.3. La
+                  colonne, l'horodatage et le champ de l'action serveur restent
+                  en place : il n'y aura que cette case à remettre.
+                */}
               </div>
 
               {/* Un refus d'envoi muet donne l'impression que le bouton n'a rien fait. */}
