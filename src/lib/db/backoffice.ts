@@ -546,7 +546,10 @@ export async function lireRecapEmail(id: string): Promise<RecapEmail | null> {
         : "Bubble Foot",
     detail:
       data.type === "anniversaire"
-        ? `${data.nb_enfants ?? "?"} enfants${
+        // « participants » : ce détail part dans l'e-mail de confirmation, qui
+        // est le support durable du contrat. Il disait « 10 enfants » à qui
+        // réserve son propre anniversaire. La colonne, elle, reste `nb_enfants`.
+        ? `${data.nb_enfants ?? "?"} participants${
             data.enfant_prenom
               ? ` — ${data.enfant_prenom}${data.enfant_age ? `, ${data.enfant_age} ans` : ""}`
               : ""

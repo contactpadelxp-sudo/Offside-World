@@ -446,7 +446,15 @@ export function AnniversaireFlow({
                       {euros(f.prixBase)}
                     </p>
                     <p className="text-xs text-muted-foreground">
-                      Jusqu&apos;à {f.enfantsInclus} enfants • +{euros(f.prixEnfantSup)} par enfant supplémentaire
+                      {/*
+                        « PARTICIPANTS », comme partout ailleurs depuis le
+                        17 septembre 2026. Cette carte avait échappé au
+                        renommage : c'est le PREMIER écran du tunnel, donc le
+                        premier endroit où quelqu'un qui réserve son propre
+                        anniversaire à 35 ans lisait « enfants ». La suite du
+                        parcours, elle, disait déjà « participants ».
+                      */}
+                      Jusqu&apos;à {f.enfantsInclus} participants • +{euros(f.prixEnfantSup)} par participant supplémentaire
                     </p>
                     <ul className="mt-3 space-y-1">
                       {f.inclus.map((inc) => (

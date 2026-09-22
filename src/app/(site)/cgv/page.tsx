@@ -344,8 +344,8 @@ export default function CGV() {
           intolérances des participants.
         </P>
         <P>
-          Le nombre de participants compris dans la formule ainsi que le prix des enfants
-          supplémentaires sont indiqués dans l&apos;offre choisie.
+          Le nombre de participants compris dans la formule ainsi que le prix des
+          participants supplémentaires sont indiqués dans l&apos;offre choisie.
         </P>
       </Article>
 
