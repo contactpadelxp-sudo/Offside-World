@@ -494,6 +494,39 @@ Articles rédigés par Brahim lui-même depuis le back-office. Suppose donc un
 éditeur utilisable sans compétence technique, et pas un fichier Markdown dans
 le dépôt.
 
+- [ ] **Écrire deux articles pour le référencement.** Demandé par Mathis le
+      22 septembre 2026. Le blog compte **zéro article** alors que la page
+      `/blog` existe et figure dans la navigation : un visiteur qui clique le
+      jour de l'ouverture tombe sur une page vide.
+
+      **Ce que le référencement gagne vraiment ici.** Le titre et la
+      description de chaque article alimentent les métadonnées de sa page
+      (`generateMetadata` dans `blog/[slug]/page.tsx` : `title` prend le titre,
+      `description` prend le chapô) et le `sitemap.xml`. Deux pages de plus
+      qui parlent de Gembloux, c'est deux entrées supplémentaires sur des
+      recherches locales — et le site n'en a aujourd'hui que sur l'accueil et
+      la page de réservation.
+
+      **Les sujets à privilégier**, dans l'ordre de ce que les gens tapent :
+      une page qui répond à « anniversaire enfant Gembloux » — comment ça se
+      passe, ce qui est compris, combien de temps, à partir de quel âge — et
+      une autre sur le Bubble Foot, qui est l'activité la moins connue et donc
+      la plus cherchée par curiosité. Éviter les listes creuses du type
+      « 10 idées d'anniversaire » : elles ne se classent pas et ne ressemblent
+      pas au reste du site.
+
+      ⚠ **La règle du projet s'applique mot pour mot : rien d'inventé.** Pas de
+      nombre de fêtes organisées, pas d'avis, pas de superlatif invérifiable —
+      c'est exactement ce qui a fait retirer « 2000+ fêtes organisées », le
+      faux « 4.8/5 » et le témoignage signé « Sophie D. ». Tout ce qu'un
+      article affirme doit être vérifiable : les formules et leurs prix sont en
+      base, les horaires aussi, l'adresse et la capacité sont connues. Le
+      reste se demande à Brahim avant d'être écrit.
+
+      Champs à remplir pour chaque article : `titre`, `slug`, `chapo` (c'est
+      lui qui devient la description dans les moteurs, donc il compte autant
+      que le titre), `corps`, `image`, et la date de publication.
+
 # À faire côté Mathis
 
 - [x] **Définir `ADMIN_USER` et `ADMIN_PASSWORD`** dans Vercel (type
