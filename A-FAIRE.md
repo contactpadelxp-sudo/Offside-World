@@ -582,6 +582,33 @@ le dépôt.
 
 # À faire côté Mathis
 
+## ⏳ EN ATTENTE D'APPLICATION — deux migrations écrites, jamais exécutées
+
+- [ ] **Appliquer `0032_purge_du_journal_admin.sql`** — la purge à 12 mois du
+      journal d'administration, avec sa tâche `pg_cron`.
+- [ ] **Appliquer `0033_deux_articles_referencement.sql`** — les deux articles
+      du blog, publiés.
+
+      Écrites et poussées le 22 septembre 2026, mais **la base n'a rien reçu** :
+      les autorisations Supabase ont cessé d'être honorées après une
+      reconnexion des serveurs MCP au milieu de la séance. Mathis les applique
+      lui-même — éditeur SQL du tableau de bord Supabase, ou réautorisation de
+      l'outil.
+
+      ⚠️ **Tant qu'elles ne sont pas passées, deux choses sont FAUSSES si on
+      s'y fie :** le journal d'administration se conserve toujours sans limite
+      (l'art. 5.1.e n'est donc pas respecté sur cette table), et `/blog` est
+      toujours une page vide. Le dépôt, lui, dit le contraire — c'est
+      exactement pourquoi cette entrée existe.
+
+      **Vérification après application :**
+      ```sql
+      select jobname, schedule, active from cron.job order by jobname;
+      select slug, titre, publie from articles order by publie_le;
+      ```
+      La première doit montrer `purger-journal-admin` à `15 4 * * 0` et
+      `active`. La seconde, deux lignes publiées.
+
 - [x] **Définir `ADMIN_USER` et `ADMIN_PASSWORD`** dans Vercel (type
       « Sensitive » pour le mot de passe). Sans ces deux variables, `/admin`
       répond 404 : c'est voulu, mais le back-office reste alors inaccessible à
