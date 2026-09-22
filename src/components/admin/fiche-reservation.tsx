@@ -184,6 +184,12 @@ export function FicheReservation({ r }: { r: ReservationAdmin }) {
   const sansArgent = active && reste <= 0;
 
   /*
+    Passée, ou plus active. Voir le bloc « droit à l'effacement » plus bas :
+    tant qu'un contrat court, les coordonnées servent à l'exécuter.
+  */
+  const peutEffacer = r.passee || statut === "annulee" || statut === "expiree";
+
+  /*
     TANT QUE LE CLIENT PAIE, ON NE TOUCHE PAS À SA RÉSERVATION.
 
     « Confirmer » ferait basculer le statut hors de « en_attente » ; le webhook
@@ -658,12 +664,30 @@ export function FicheReservation({ r }: { r: ReservationAdmin }) {
             LE DROIT À L'EFFACEMENT, ATTEIGNABLE.
 
             La politique de confidentialité le promet ; il n'existait nulle part
-            ailleurs que dans du SQL écrit à la main. Le bouton n'apparaît que
-            sur une réservation passée — effacer le nom d'un client attendu
-            samedi rendrait sa réservation ingérable — et demande une
-            confirmation, parce que c'est irréversible.
+            ailleurs que dans du SQL écrit à la main.
+
+            QUAND IL EST POSSIBLE. Sur une réservation PASSÉE, ou ANNULÉE ou
+            EXPIRÉE même à venir : dans les deux cas il n'y a plus de contrat à
+            exécuter, et l'article 17.1.a s'applique — les données ne sont plus
+            nécessaires à la finalité pour laquelle elles ont été collectées.
+
+            QUAND IL NE L'EST PAS, et pourquoi ce n'est pas un refus du droit.
+            Sur une réservation À VENIR et toujours active, les coordonnées
+            servent encore à exécuter le contrat : sans elles, le client se
+            présenterait à une réservation sans nom, et le complexe ne pourrait
+            plus le joindre si le créneau change. L'article 17.3.b réserve
+            précisément ce cas. La marche à suivre est d'annuler d'abord, ce qui
+            met fin au contrat — et le bouton apparaît alors.
+
+            Le premier état le disait en NE MONTRANT RIEN, ce qui laissait
+            croire à un oubli. Il l'écrit maintenant.
           */}
-          {r.passee && !effacerArme && (
+          {!peutEffacer && !r.passee && (
+            <span className="text-xs text-muted-foreground">
+              Effacement possible une fois la réservation passée ou annulée.
+            </span>
+          )}
+          {peutEffacer && !effacerArme && (
             <button
               type="button"
               disabled={enCours}
@@ -673,7 +697,7 @@ export function FicheReservation({ r }: { r: ReservationAdmin }) {
               Effacer les données du client
             </button>
           )}
-          {r.passee && effacerArme && (
+          {peutEffacer && effacerArme && (
             <div className="w-full rounded-lg border border-destructive/40 bg-destructive/5 px-3 py-2.5">
               <p className="text-sm font-medium">Effacer définitivement les données de ce client ?</p>
               <p className="mt-0.5 text-xs text-muted-foreground">
