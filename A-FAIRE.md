@@ -344,10 +344,10 @@ facturation serait hors de proportion et mal placé.
 
       C'est le pire endroit où se tromper : un parent peut laisser ses enfants
       en croyant qu'on les surveille.
-- [ ] **« Parking gratuit » — à confirmer.** Affirmation factuelle sur le
-      complexe, jamais vérifiée avec Brahim. Laissée en place faute de raison
-      d'en douter, mais elle n'est pas sourcée. Si le parking est payant ou
-      partagé, la phrase doit partir.
+- [x] ~~**« Parking gratuit » — à confirmer.**~~ **CONFIRMÉ PAR BRAHIM le
+      22 septembre 2026** (« oui parking gratuit c'est bon »). L'affirmation
+      est désormais sourcée et peut rester sur le site — et être reprise dans
+      les articles du blog, ce qui est fait.
 
 ## Images déjà fournies mais jamais affichées
 
@@ -526,7 +526,28 @@ Articles rédigés par Brahim lui-même depuis le back-office. Suppose donc un
 éditeur utilisable sans compétence technique, et pas un fichier Markdown dans
 le dépôt.
 
-- [ ] **Écrire deux articles pour le référencement.** Demandé par Mathis le
+- [x] ~~**Écrire deux articles pour le référencement.**~~ **ÉCRITS le
+      22 septembre 2026** — migration `0033_deux_articles_referencement.sql`,
+      à appliquer.
+
+      Les deux : `anniversaire-enfant-gembloux` (le sujet principal) et
+      `bubble-foot-anniversaire-gembloux`. Le second n'est **pas** un article
+      sur le Bubble seul : `BUBBLE_EN_LIGNE` est à `false` depuis le
+      21 septembre et la fiche Sport-Finder n'accepte que des demandes sans
+      être activée — un article qui enverrait y réserver mènerait à une
+      impasse. Il est donc centré sur la formule anniversaire Bubble, qui est
+      bien vendue ici, et renvoie les groupes d'adultes vers l'adresse e-mail.
+
+      **Aucun prix ni horaire dans les corps**, délibérément : ils vivent en
+      base et Brahim les change du back-office. Un chiffre recopié dans un
+      article deviendrait faux en silence — exactement ce qu'on a passé des
+      semaines à retirer du site. Les articles renvoient vers la page de
+      réservation, qui dit toujours la vérité du jour.
+
+      Ils mettent aussi au travail deux des images orphelines
+      (`anniv2.webp`, et `anniv1.jpg` qui ne servait qu'à la formule).
+- [x] ~~**Écrire deux articles pour le référencement.**~~ *(consigne d'origine,
+      conservée pour le contexte.)* Demandé par Mathis le
       22 septembre 2026. Le blog compte **zéro article** alors que la page
       `/blog` existe et figure dans la navigation : un visiteur qui clique le
       jour de l'ouverture tombe sur une page vide.
@@ -746,27 +767,32 @@ c'est le signe qu'ils tiennent, pas une répétition.
 - [ ] **La réservation est écrite AVANT l'appel à Stripe.** Si Stripe échoue,
       elle reste en base : le client est refusé sur son propre créneau pendant
       45 minutes, avec un message lui faisant croire qu'un autre l'a pris.
-- [ ] **`cancel_url` renvoie sur un tunnel vide.** Le bouton « Retour » de
-      Stripe ramène sur `/reservation?paiement=annule`, paramètre que rien
-      n'interprète : saisies perdues, et son propre créneau lui est refusé.
-- [ ] **Le back-office propose « Confirmer » et « Annuler » pendant qu'un
-      client paie.** Les paiements « en_cours » sont invisibles de la fiche,
-      qui affiche « non payé ». Confirmer fige un créneau jamais payé ;
-      annuler laisse l'argent tomber après coup, sans remboursement ni e-mail.
+- [x] ~~**`cancel_url` renvoie sur un tunnel vide.**~~ **CORRIGÉ.**
+      `src/app/api/stripe/annule/route.ts` fait expirer la session Stripe puis
+      libère la réservation, dans cet ordre. Le créneau n'est plus retenu
+      45 minutes contre le client qui vient de renoncer.
+- [x] ~~**Le back-office propose « Confirmer » et « Annuler » pendant qu'un
+      client paie.**~~ **CORRIGÉ.** `paiementVivantSur` garde les deux actions
+      (`admin.ts`), la fiche affiche « paiement en cours » et gèle les
+      commandes tant qu'un paiement court.
 - [ ] **Le perdant d'une course est renvoyé vers une liste périmée**, réessaie,
       échoue, et le limiteur de débit finit par l'exclure — alors que les échecs
       venaient du site.
-- [ ] **Le limiteur compte les saisies invalides et se ferme sur panne de
-      base.** Il est consommé avant toute validation.
-- [ ] **Fermer un créneau ou une journée est un « lire puis écrire » non
-      atomique.** Une réservation glissée entre les deux est payée sur un
-      créneau fermé.
-- [ ] **Un remboursement fait à la main dans Stripe ne libère pas le créneau et
-      ne prévient pas le client** — alors que le code envoie lui-même
-      l'exploitant rembourser là-bas quand l'appel automatique échoue.
-- [ ] **Une contestation bancaire ne laisse aucune trace en base.** Le créneau
-      reste bloqué, le chiffre d'affaires compte de l'argent déjà repris, et
-      l'alerte tient à un seul e-mail.
+- [x] ~~**Le limiteur compte les saisies invalides.**~~ **CORRIGÉ.**
+      `quotaDepasse` est désormais appelé APRÈS le bornage de la saisie, dans
+      les trois tunnels : une adresse mal tapée ne consomme plus le quota de
+      celui qui la corrige.
+- [x] ~~**Fermer un créneau ou une journée est un « lire puis écrire » non
+      atomique.**~~ **CORRIGÉ.** `basculerCreneau` ferme D'ABORD et regarde
+      ensuite : dès la fermeture écrite, plus aucune réservation ne peut
+      s'engager, et celle qui venait de s'engager est retrouvée par la lecture
+      qui suit — on rouvre alors et on refuse.
+- [x] ~~**Un remboursement fait à la main dans Stripe ne libère pas le créneau
+      et ne prévient pas le client.**~~ **CORRIGÉ.** Le webhook traite
+      `charge.refunded`.
+- [x] ~~**Une contestation bancaire ne laisse aucune trace en base.**~~
+      **CORRIGÉ.** Le webhook traite `charge.dispute.created` et
+      `charge.dispute.closed`. Sept événements Stripe sont désormais couverts.
 - [ ] **La page de retour annonce « paiement accepté » avant que Bancontact ne
       se dénoue**, et un refus asynchrone n'est jamais démenti.
 - [ ] **La clé d'idempotence Stripe ne protège rien** : elle est dérivée de
@@ -807,6 +833,24 @@ qui est vérifiable page par page :
       signale seulement qu'une allergie a été renseignée et renvoie au
       back-office. La politique de confidentialité décrit maintenant ce champ,
       sa base juridique et le retrait du consentement.
+- [x] ~~**Le journal d'administration n'avait aucune durée de conservation.**~~
+      **FIXÉE À 12 MOIS par Mathis le 22 septembre 2026** — migration
+      `0032_purge_du_journal_admin.sql`, à appliquer.
+
+      Toutes les autres tables avaient leur purge : réservations et devis à
+      13 mois, audience à 13 mois, quotas à 1 jour, sessions d'administration
+      à 30 jours. Le journal, lui, gardait sans limite l'adresse IP de
+      l'exploitant, l'horodatage de chacun de ses gestes et la référence des
+      réservations touchées. « Pour toujours » n'est pas une durée au sens de
+      l'art. 5.1.e.
+
+      **Douze mois, et pas treize** : le journal reste ainsi INFÉRIEUR aux
+      13 mois des réservations, pour qu'il ne survive jamais aux données qu'il
+      trace — sinon il deviendrait la dernière copie d'une information qu'on a
+      promis d'effacer. **Suppression et non anonymisation** : une trace vidée
+      de son acteur ne prouve plus rien, elle ne fait que du volume. Tâche
+      `pg_cron` le dimanche à 4h15 UTC, décalée d'un quart d'heure de la purge
+      des sessions pour que l'échec de l'une reste lisible.
 - [x] ~~**La case newsletter récoltait un consentement sans finalité.**~~
       **RETIRÉE des deux tunnels le 22 septembre 2026.** Rien ne lisait la
       colonne : ni liste d'abonnés, ni composeur, ni envoi. Un consentement
