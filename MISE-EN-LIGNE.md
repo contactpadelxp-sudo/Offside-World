@@ -61,6 +61,82 @@ par rien. Cinq minutes dans sa console d'administration.
 
 ---
 
+## 🔴 Le domaine part chez Vercel — relevé complet de la zone, 23 septembre 2026
+
+**Brahim a lancé le transfert du nom de domaine de Wix vers Vercel**, le
+23 septembre au soir : « j'ai pas envie de gérer Wix en plus juste pour le nom
+de domaine ». La décision lui appartient, et elle se défend — un fournisseur
+de moins. Mais elle déplace **aussi la zone DNS**, donc la messagerie.
+
+**Vérifié dans la minute, rien n'est cassé :** les serveurs de noms répondent
+toujours `ns10.wixdns.net` / `ns11.wixdns.net`, et les cinq MX de Google sont
+intacts. Un transfert de registrar demande un code d'autorisation obtenu chez
+Wix et prend plusieurs jours : il ne se produit rien ce soir.
+
+**LE JOUR OÙ IL ABOUTIT, LES SERVEURS DE NOMS PASSENT À VERCEL.** Tout ce qui
+n'aura pas été recréé côté Vercel d'ici là cesse d'exister — à commencer par
+les huit enregistrements de la messagerie. D'où ce relevé, pris sur la zone
+vivante, qui est la seule copie de référence.
+
+### La zone au complet, telle qu'elle répond le 23 septembre 2026
+
+| Type | Nom | Valeur | Rôle |
+|---|---|---|---|
+| `A` | `@` | `185.230.63.107` | site Wix |
+| `A` | `@` | `185.230.63.171` | site Wix |
+| `A` | `@` | `185.230.63.186` | site Wix |
+| `CNAME` | `www` | `cdn1.wixdns.net` | site Wix |
+| `MX` 10 | `@` | `aspmx.l.google.com` | **messagerie** |
+| `MX` 20 | `@` | `alt1.aspmx.l.google.com` | **messagerie** |
+| `MX` 30 | `@` | `alt2.aspmx.l.google.com` | **messagerie** |
+| `MX` 40 | `@` | `alt3.aspmx.l.google.com` | **messagerie** |
+| `MX` 50 | `@` | `alt4.aspmx.l.google.com` | **messagerie** |
+| `TXT` | `@` | `v=spf1 include:_spf.google.com ~all` | **messagerie** |
+| `TXT` | `@` | `google-site-verification=j-GN41iJzYxntYR4pCo_yQifikI8Iyy8ipVzyhrCR30` | propriété Google |
+| `TXT` | `_dmarc` | `v=DMARC1; p=none; rua=mailto:info@offsidefootindoor.be; fo=1` | **messagerie** |
+| `TXT` | `resend._domainkey` | `p=MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDb57lOY0KyCMN+FaE4KQ790uN0wi8ybjCNAB+Qmh7/JO8vMz4gWpV/qjvtJRs0286l4kVKIMT86Vc+DzZgAscRtlpbpv4+bcPqtieUznrEbM6tFgY15xX0q0beozWhEAW4j7gp1q/5w2azKOJ8Sg8ed02jSOtuKBUAoy8MPgK+zwIDAQAB` | **DKIM Resend** |
+| `CNAME` | `rsend` | `rsend-euw1.forge.rmta.net` | **envoi Resend** |
+| `CNAME` | `send` | `send.forge.rmta.net` | **envoi Resend** |
+
+**Quatre lignes servent le site. Onze servent le courrier.** C'est tout le
+sujet : le transfert est motivé par le site, et ce qu'il met en danger est le
+courrier.
+
+> Le `www` n'a **pas** d'enregistrement `A` propre : `34.149.87.45` est
+> simplement ce que résout `cdn1.wixdns.net`. Ne pas le recopier tel quel.
+>
+> Le DKIM Resend est à **recopier caractère pour caractère**. Une clé tronquée
+> reste un TXT valide : elle s'affiche, elle a l'air correcte, et elle échoue à
+> chaque signature. C'est le piège déjà décrit plus haut.
+
+### La marche à suivre, dans cet ordre
+
+1. **Ne pas attendre.** Dès que le domaine apparaît dans Vercel, créer les
+   **15 enregistrements ci-dessus** dans sa zone DNS — y compris, et surtout,
+   les cinq MX. `vercel dns import <domaine> <fichier de zone>` accepte un
+   fichier de zone si l'on préfère éviter la saisie à la main.
+2. **Ne remplacer les quatre lignes du site qu'au moment du basculement** —
+   l'IP d'apex et la cible `www` données par Vercel pour le projet. Avant ça,
+   on recopie **les valeurs de Wix**, pour que la zone Vercel soit une copie
+   fidèle et non un mélange.
+3. **Vérifier avant que les serveurs de noms ne changent**, en interrogeant
+   directement les serveurs de Vercel :
+   `dig MX offsidefootindoor.be @ns1.vercel-dns.com`
+   Les cinq MX doivent répondre. **Tant qu'ils ne répondent pas depuis Vercel,
+   le transfert ne doit pas aboutir.**
+4. Une fois les serveurs de noms passés, refaire les trois contrôles de la
+   section précédente : les enregistrements vus depuis trois résolveurs, la
+   clé DKIM **décodée** et non seulement constatée présente, les cinq MX et
+   l'unicité du SPF racine.
+
+> **Le relevé ci-dessus a été pris avec `node:dns` depuis l'environnement de
+> développement.** `dig` n'y est pas installé et `dns.google` est bloqué par le
+> proxy réseau ; la commande qui a servi est conservée dans l'historique de la
+> séance du 23 septembre. Pour la rejouer :
+> `node -e "require('dns').promises.resolveMx('offsidefootindoor.be').then(console.log)"`
+
+---
+
 ## ⚠ Le piège : ne pas déplacer les serveurs de noms
 
 Vercel proposera de **transférer les serveurs de noms** vers lui. C'est la voie
