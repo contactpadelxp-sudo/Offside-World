@@ -835,44 +835,32 @@ de paiement qu'ils n'utilisent pas.
 
 « Et si on pouvait se pencher sur l'automatisation ça serait aussi top. »
 
-**Ce n'est pas une demande de confort, et ce n'est pas non plus un petit
-chantier.** Elle rouvre la décision du 21 septembre.
+**CE QU'ON SAIT** : il a envoyé une photo d'un écran intitulé « Configuration
+QRCode », avec une clé, des catégories, des filtres et une règle d'expression.
+C'est tout. Une photo d'écran prise de travers ne dit ni de quel système il
+s'agit, ni qui l'administre, ni ce qu'il sait faire.
 
-**CE QUE MONTRE SA CAPTURE.** Un écran « Configuration QRCode » avec une clé
-Dinec, des catégories, des filtres et une règle d'expression — servi depuis
-`…/partner_v2/133/355/access-control/dinec/107/13/configure`. Donc : le
-contrôle d'accès est un **Dinec**, et il est piloté **depuis le back-office
-partenaire de Sport-Finder**, pas depuis un outil à part.
+**CE QU'ON NE SAIT PAS, ET QU'IL NE FAUT PAS DEVINER.** Une première version de
+cette entrée affirmait que le contrôle d'accès était piloté depuis le
+back-office partenaire de Sport-Finder, et en tirait que l'automatisation
+permettrait de remettre le Bubble Foot en vente sur le site. Les deux étaient
+des LECTURES d'une image, pas des constats. Retiré.
 
-**POURQUOI ÇA COMPTE PLUS QUE ÇA N'EN A L'AIR.** C'est précisément ce qui a
-fait sortir le Bubble Foot du site (`BUBBLE_EN_LIGNE = false`, 21 septembre) :
-le Bubble se joue le soir, aux heures où plus personne n'est sur place, et la
-porte s'ouvre seule. Un créneau vendu par le site n'ouvre aucune porte ; un
-créneau vendu par Sport-Finder, si. La ligne de partage retenue — « le SITE
-vend ce qui se passe quand quelqu'un est là, SPORT-FINDER ce qui se passe quand
-personne n'y est » — découle entièrement de cette limite.
+**LES QUESTIONS À POSER À BRAHIM**, avant toute estimation :
 
-**Automatiser l'ouverture depuis le site lèverait cette limite**, et le Bubble
-pourrait revenir. C'est la vraie valeur de la demande, au-delà du confort.
+- [ ] **De quel système s'agit-il, et qui l'administre ?** Un fournisseur, un
+      contrat, un interlocuteur.
+- [ ] **Qu'est-ce qui déclenche l'ouverture aujourd'hui ?** Un QR envoyé au
+      client, un code, autre chose — et par quel canal.
+- [ ] **Qu'attend-il exactement d'« automatiser » ?** Que le site émette
+      lui-même l'accès, ou simplement qu'il n'ait plus à le faire à la main.
+      Les deux n'ont ni le même coût ni les mêmes prérequis.
+- [ ] **Ce système expose-t-il une interface programmable ?** C'est ce qui
+      décide si le sujet est faisable, pas une préférence.
 
-**CE QU'IL FAUT SAVOIR AVANT DE POUVOIR CHIFFRER QUOI QUE CE SOIT**, et qu'on
-ignore aujourd'hui :
-
-- [ ] **Dinec expose-t-il une API ?** Émettre un QR code valable sur une plage
-      horaire donnée, depuis un serveur tiers — c'est tout ce dont le site
-      aurait besoin. Si oui, le site peut le faire seul.
-- [ ] **Sinon, Sport-Finder expose-t-il une API partenaire ?** Puisque c'est
-      lui qui pilote le Dinec, créer la réservation chez lui reviendrait au
-      même. C'est aussi ce qui réglerait, au passage, le problème de double
-      vente entre les deux canaux.
-- [ ] **Qui est le fournisseur du Dinec et qui a le contrat ?** Une clé
-      d'intégration se demande à quelqu'un.
-
-⚠️ **À NE PAS ENTREPRENDRE AVANT LA MISE EN LIGNE.** Le site est prêt, les
-paiements fonctionnent, il ne reste que le domaine. Ouvrir ce chantier
-maintenant retarderait une mise en ligne qui n'attend plus que quelques jours —
-et il demande des réponses qui ne dépendent ni de Mathis ni de Brahim, mais de
-deux fournisseurs.
+**À NE PAS ENTREPRENDRE AVANT LA MISE EN LIGNE.** Le site est prêt, les
+paiements fonctionnent, il ne reste que le domaine. Ce chantier demande des
+réponses qui ne dépendent ni de Mathis ni de Brahim.
 
 ## Le Bounce Park arrive sur le site
 
