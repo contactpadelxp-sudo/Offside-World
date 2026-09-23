@@ -472,6 +472,23 @@ Stripe → Developers → Webhooks → **Add endpoint**.
   | `charge.dispute.created` | **une contestation bancaire.** Stripe retire aussitôt la somme du solde, ajoute des frais, et laisse quelques jours pour fournir des preuves ; passé ce délai, la contestation est perdue par défaut. C'est le seul événement du système qui ait une date limite, et sans lui personne n'est prévenu |
   | `charge.dispute.closed` | **le verdict de cette contestation.** S'il est « perdu », l'argent est définitivement repris : `synchroniserRemboursement` le rapatrie en base, sans quoi le chiffre d'affaires du back-office compterait indéfiniment une somme qui n'est plus là. Ajouté avec le traitement des litiges, et oublié dans ce tableau jusqu'au 23 septembre 2026 |
 
+> **L'endpoint et le code ne parlent pas la même version d'API, et c'est sans
+> conséquence — vérifié le 23 septembre 2026.** L'endpoint créé sur le compte
+> de Brahim est en `2023-10-16` (la version par défaut du compte), le code
+> pointe `2026-08-26.dahlia` (`lib/paiement/stripe.ts`). Stripe livre les
+> événements dans la version de L'ENDPOINT.
+>
+> Tous les champs lus dans les payloads sont stables depuis des années :
+> `payment_status`, `payment_intent`, `id`, `amount_total`, les métadonnées,
+> et côté litiges `payment_intent`, `amount`, `status`. Le moyen de paiement
+> réellement utilisé, lui, n'est PAS lu dans l'événement — `moyenDePaiementUtilise`
+> rappelle l'API, donc dans la version du code.
+>
+> ⚠️ **Ne pas « aligner » la version de l'endpoint par souci de propreté.** Rien
+> ne l'exige, et changer la version de livraison d'un webhook qui fonctionne
+> est un moyen connu de casser le parsing d'un champ. En revanche, si un jour
+> on lit un champ RÉCENT dans un payload, c'est ici qu'il faudra revenir.
+
 Copier le **Signing secret** affiché après création : c'est
 `STRIPE_WEBHOOK_SECRET`. Sans lui, le site **refuse** de traiter les
 notifications — l'adresse est publique, et la signature est la seule chose qui
