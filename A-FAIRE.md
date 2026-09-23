@@ -589,7 +589,11 @@ Brahim a donné ses accès le 22 septembre au soir. Décidé avec Mathis : le
 supprime une étape à risque), mais la **zone DNS part chez Vercel** — Wix ne
 garde alors que le nom loué, sans abonnement site.
 
-- [ ] **0. Retrouver le compte Vercel qui détient le projet.** Vérifié le
+- [x] ~~**0. Retrouver le compte Vercel qui détient le projet.**~~ **TROUVÉ :
+      `contactpadelxp-sudo's projects`**, le 23 septembre 2026 — le compte lié
+      au dépôt GitHub. Le projet en est sorti par transfert le jour même.
+      Ancienne consigne conservée ci-dessous pour mémoire.
+- [x] ~~**0 (consigne d'origine).** Vérifié le
       22 septembre : il n'est PAS sur `mathishannebique111-hash`, qui ne porte
       que `padel-xp`. Le site répond pourtant sur `offside-world.vercel.app`.
       Piste la plus probable : se connecter à Vercel **via GitHub** avec le
@@ -763,7 +767,12 @@ de paiement qu'ils n'utilisent pas.
       messagerie de Brahim), est dans **`MISE-EN-LIGNE.md`**.
 - [ ] **Renseigner `SITE_URL`** dès que le domaine définitif remplacera
       l'adresse Vercel — les liens des e-mails et le sitemap en dépendent.
-- [ ] **À LA FIN — passer Supabase au plan Pro (25 $/mois).** Ordre fixé par
+- [x] ~~**À LA FIN — passer Supabase au plan Pro (25 $/mois).**~~ **FAIT le
+      23 septembre 2026** : le projet a été transféré dans l'organisation Pro
+      de Brahim, et la taille de calcul est passée de Nano à Micro (gratuite
+      sur ce plan). Le projet ne peut donc plus être mis en pause pour
+      inactivité, et les sauvegardes sont téléchargeables. Raisonnement
+      d'origine conservé : Ordre fixé par
       Mathis le 13 septembre 2026 : à faire au moment de la mise en ligne, pas
       avant — inutile de payer un abonnement tant que le site n'a pas de public.
       Ce
@@ -843,7 +852,10 @@ Vérifiés un par un, pas seulement signalés.
       ce qui suffit ici — mais si le déploiement refuse `dub1`, c'est le signe
       qu'il faut passer sur un plan payant, ce qui est de toute façon requis
       pour un site commercial.
-- [ ] **Le projet Vercel n'est pas visible** depuis le compte joignable
+- [x] ~~**Le projet Vercel n'est pas visible** depuis le compte joignable~~
+      **RÉSOLU le 23 septembre 2026** : il était sur `contactpadelxp-sudo's
+      projects`, invisible depuis le compte outillé ici. Transféré depuis vers
+      la team de Brahim. Ancien texte :
       (`resell`, `cockpit-agents`, `padel-xp`, `cie`). Le site répond pourtant
       sur `offside-world.vercel.app`. Il vit donc sur un autre compte — à
       identifier avant de toucher à `SITE_URL`, aux clés Stripe ou à l'URL du
@@ -909,10 +921,16 @@ c'est le signe qu'ils tiennent, pas une répétition.
 
 ## Restent à traiter, par cause racine
 
-- [ ] **`confirmerPaiement` fait deux écritures non transactionnelles.** Si la
-      seconde échoue, la relivraison de Stripe ne rattrape RIEN : la branche
-      « déjà réussi » court-circuite la confirmation. Argent encaissé,
-      réservation jamais confirmée, aucun e-mail. Trouvé par trois agents.
+- [x] ~~**`confirmerPaiement` fait deux écritures non transactionnelles.**~~
+      **LE DÉFAUT EST RÉPARÉ** — vérifié dans les sources le 23 septembre 2026.
+
+      Les deux écritures ne sont toujours pas transactionnelles, mais ce n'était
+      pas là qu'était le mal : c'était le `return` de la branche « déjà
+      réussi », qui sortait AVANT de retenter la confirmation et rendait donc le
+      rejeu de Stripe inopérant dans le seul cas où il sert. Il a été retiré.
+      La suite est idempotente — l'update est filtré sur `statut = 'en_attente'`,
+      donc une relivraison sur une réservation déjà confirmée ne touche rien et
+      n'envoie pas de second e-mail.
 - [ ] **La réservation est écrite AVANT l'appel à Stripe.** Si Stripe échoue,
       elle reste en base : le client est refusé sur son propre créneau pendant
       45 minutes, avec un message lui faisant croire qu'un autre l'a pris.
