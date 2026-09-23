@@ -613,13 +613,25 @@ garde alors que le nom loué, sans abonnement site.
       L'abonnement *site* reste résiliable après la mise en ligne ; avant de
       l'annuler, demander à l'assistance Wix par écrit ce qu'il advient de la
       zone DNS — c'est la seule panne vraiment grave de l'opération.
-- [ ] **1. Créer la Team Vercel de Brahim**, plan **Pro** : le plan Hobby
-      interdit l'usage commercial, et un site qui encaisse en est un.
-- [ ] **2. Transférer le projet** vers cette Team (Settings → Advanced →
-      Transfer Project, code valable 24 h), puis y inviter Mathis.
+- [x] ~~**1. Créer la Team Vercel de Brahim**, plan Pro.~~ **FAIT** — compte
+      `admin-83482198`, plan Pro confirmé.
+- [x] ~~**2. Transférer le projet** vers cette Team.~~ **FAIT le 23 septembre
+      2026, et vérifié :**
+      - les 9 variables d'environnement ont suivi. `ADMIN_SESSION_SECRET` et
+        `SITE_URL` n'y figurent pas, et **c'est sans conséquence** : la
+        première se dérive de `ADMIN_PASSWORD` (`admin/jeton.ts`), la seconde
+        se replie sur `offside-world.vercel.app` (`lib/site.ts`) ;
+      - la connexion Git tient : `contactpadelxp-sudo/Offside-World` ;
+      - aucune protection de déploiement, le site reste public ;
+      - **l'adresse de production n'a pas changé** (`offside-world.vercel.app`),
+        donc `SITE_URL` et l'URL du webhook Stripe restent valables jusqu'au
+        basculement du domaine.
 
-      Puis **relever la nouvelle adresse de production** : elle contient le nom
-      de l'équipe et commande `SITE_URL` ET l'URL du webhook Stripe.
+      ⚠️ **Le champ « Transfer Project To » ne liste que les équipes dont on est
+      membre**, et l'API Vercel exposée ici ne permet pas d'initier un
+      transfert vers une équipe externe. Il a donc fallu inviter Mathis
+      (+$20/mois au prorata), transférer, puis le retirer. À savoir si
+      l'opération se refait un jour.
 - [ ] **3. Ajouter le domaine au projet, DANS LA TEAM DE BRAHIM.** Vercel
       affichera « Invalid Configuration » : c'est normal et attendu tant que
       le DNS de Wix pointe encore sur l'ancien site. Ce qu'on veut de cette
@@ -631,14 +643,25 @@ garde alors que le nom loué, sans abonnement site.
 - [x] ~~**4. Construire les 12 lignes chez Vercel.**~~ **SANS OBJET** — la
       zone reste chez Wix (point 0 bis). Il n'y a jamais que deux
       enregistrements à changer, et le jour J.
-- [ ] **5. Transférer le projet Supabase** vers l'organisation de Brahim.
-      Voir la procédure plus bas — il faut être membre de l'organisation cible
-      avant de pouvoir transférer.
-- [ ] **6. Recréer le compte Resend** sous Brahim, région Ireland, réajouter
-      le domaine — **la clé DKIM sera nouvelle** et devra être publiée dans la
-      zone en service. Garder l'ancien compte actif jusqu'à vérification.
-- [ ] **7. Brahim crée Stripe lui-même** (pièce d'identité, DBT Partners,
-      IBAN), puis invite Mathis en rôle *Developer*.
+- [x] ~~**5. Transférer le projet Supabase.**~~ **FAIT le 23 septembre 2026.**
+      Organisation `kdaoacqbgootkosdsmvo` (« Offside »), plan Pro.
+      **Vérifié ligne à ligne, aucune perte** — 1003 créneaux, 5 réservations,
+      4 paiements, 2 formules, 5 options, 2 devis, 2 articles, 24 lignes de
+      journal, identiques avant et après. Même identifiant de projet, même
+      URL, mêmes clés, même région : **aucune variable Vercel à retoucher.**
+- [x] ~~**6. Recréer le compte Resend sous Brahim.**~~ **SANS OBJET : il est
+      déjà à son nom.** Confirmé par Mathis le 23 septembre 2026. Rien à
+      refaire, et surtout aucun DKIM à republier.
+
+      ⚠️ La ligne « Ouvrir un compte Resend » plus bas, classée sous « À faire
+      côté Mathis », laissait croire le contraire. Elle est corrigée.
+- [x] ~~**7. Brahim crée Stripe.**~~ **SANS OBJET : le compte existe déjà et
+      il est à lui.** Confirmé par Mathis le 23 septembre 2026 — c'est celui
+      qui a encaissé le Bancontact du 15 septembre.
+
+      ⚠️ **Ce qui reste, en revanche, c'est le passage en LIVE** : voir la
+      section dédiée. Un compte Stripe qui fonctionne en test n'encaisse pas
+      un centime réel.
 
 **La bascule des serveurs de noms n'est PAS de demain.** Elle reste l'étape
 finale, avec le préalable Sport-Finder. Voir `MISE-EN-LIGNE.md`.
@@ -668,7 +691,9 @@ finale, avec le préalable Sport-Finder. Voir `MISE-EN-LIGNE.md`.
 - [x] ~~Passer le dépôt GitHub en privé.~~ **Décidé le 13 septembre 2026 : on
       le laisse public.** Voir la note en « Décisions en attente de Mathis ».
 - [x] ~~**Ouvrir un compte Resend**, y vérifier le domaine, renseigner les
-      variables.~~ **Fait le 12 septembre 2026.** Domaine `offsidefootindoor.be`
+      variables.~~ **Fait le 12 septembre 2026.** ⚠️ **Le compte est celui de
+      BRAHIM**, confirmé le 23 septembre 2026 — cette ligne, classée sous « À
+      faire côté Mathis », laissait croire l'inverse. Rien à transférer.** Domaine `offsidefootindoor.be`
       vérifié chez Resend (région Ireland, eu-west-1 — les données restent dans
       l'UE), DKIM et DMARC publiés, les 5 MX de Google et le SPF racine
       vérifiés intacts après l'opération. Expéditeur :
