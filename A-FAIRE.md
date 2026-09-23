@@ -666,6 +666,51 @@ garde alors que le nom loué, sans abonnement site.
 **La bascule des serveurs de noms n'est PAS de demain.** Elle reste l'étape
 finale, avec le préalable Sport-Finder. Voir `MISE-EN-LIGNE.md`.
 
+## ✅ Le paiement fonctionne EN LIVE — vérifié le 23 septembre 2026
+
+Clés `sk_live_` et `whsec_` posées sur le compte Stripe de Brahim, webhook
+`captivating-brilliance` vers `offside-world.vercel.app/api/stripe/webhook`,
+**les sept événements** écoutés, endpoint actif.
+
+**Le test a été fait avec de l'argent réel**, à 1 € : le prix de Kick-Off a été
+abaissé le temps de la manœuvre depuis `/admin/tarifs`, plutôt que de créer une
+formule de test qui aurait traîné en base, ou une migration qui aurait traîné
+dans l'historique du projet. Le journal d'administration porte la trace des
+deux modifications, dans les deux sens.
+
+Relevé en base, dans l'ordre où ça s'est produit :
+
+| Heure (UTC) | Ce qui s'est passé |
+|---|---|
+| 20:12:27 | prix de Kick-Off abaissé à 1 € |
+| 20:13:36 | réservation `OW-VSGU5LSX` créée |
+| 20:13:38 | paiement enregistré — 1 €, **carte**, intention Stripe présente |
+| 20:15:44 | annulation, remboursement intégral |
+| 20:15:45 | **100 centimes rendus sur 100** |
+| 20:16:29 | prix de Kick-Off **remis à 180 €** |
+
+**Les deux e-mails sont arrivés** — confirmation et annulation — donc
+`EMAIL_EXPEDITEUR` n'est pas resté sur l'adresse de démonstration
+`onboarding@resend.dev`. C'était le seul maillon qui échoue en silence, et il
+est levé.
+
+**`methode` vaut `card`, et c'est une preuve en soi** : le code lit le moyen
+RÉELLEMENT utilisé sur l'imputation, et non le premier de la liste proposée —
+qui est toujours `bancontact` ici. Le paiement du 15 septembre, antérieur au
+correctif, porte encore `methode = null`.
+
+**Ce que le test ne prouve pas**, et il faut le dire : Mathis paie depuis la
+France, donc le dénouement ASYNCHRONE de Bancontact n'a pas été rejoué en live.
+Ce n'est pas inquiétant — la signature est propre à l'ENDPOINT et non à
+l'événement, donc si `checkout.session.completed` passe, les `async_payment_*`
+passent aussi — et cette branche a été éprouvée en test le 21 septembre. Mais
+ça reste une inférence, pas une observation.
+
+⚠️ **À vérifier chez Brahim** : que **Bancontact soit activé en mode LIVE**
+(Settings → Payment methods). C'est un réglage distinct du mode test. S'il ne
+l'est pas, les clients belges ne verront que la carte — c'est-à-dire le moyen
+de paiement qu'ils n'utilisent pas.
+
 ## ✅ Les deux migrations en attente sont appliquées — 23 septembre 2026
 
 - [x] ~~`0032_purge_du_journal_admin.sql`~~ **APPLIQUÉE et vérifiée.**
