@@ -173,8 +173,26 @@ Le geste existe désormais : un bouton « Fermer les N créneaux du jour » sur 
 page Créneaux, qui épargne les créneaux réservés et nomme la réservation qui
 bloque. Avant lui, fermer un vendredi férié demandait six clics.
 
-- [ ] **Quels jours le complexe est-il fermé ?** Jours fériés, congés annuels,
-      fermeture technique. Au minimum : 25 décembre, 1er janvier, 26 décembre.
+- [x] ~~**Les congés annuels.**~~ **AUCUN** — Brahim, le 23 septembre 2026 :
+      « pas de congés ». Il n'y a donc pas de période à fermer dans l'année.
+- [ ] **LES JOURS FÉRIÉS RESTENT OUVERTS, ET LA QUESTION RESTE POSÉE.**
+      « Pas de congés » répond sur les congés annuels, pas sur Noël ni le Jour
+      de l'an. Or ce sont deux choses différentes : ne pas prendre de vacances
+      n'est pas ouvrir le 25 décembre.
+
+      ⚠️ **Ces dates sont dans la fenêtre de six mois, donc achetables dès le
+      basculement du domaine.** Relevé du 19 septembre : 25 décembre **6
+      créneaux**, 26 décembre **12**, 1er janvier **6**. Un client peut
+      réserver un anniversaire le jour de Noël.
+
+      **On ne les ferme pas d'office**, et c'est la même règle que pour les
+      horaires de Bubble Foot ou la Fun zone 3 : savoir si le complexe ouvre le
+      25 décembre est une décision d'exploitation, pas une déduction. Il n'y a
+      aucun élément, seulement une habitude belge.
+
+      Le geste, lui, est prêt : le bouton « Fermer les N créneaux du jour » sur
+      la page Créneaux épargne les créneaux réservés et nomme la réservation
+      qui bloque.
 
 ## Informations d'entreprise
 
