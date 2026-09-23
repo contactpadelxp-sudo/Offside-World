@@ -41,6 +41,17 @@ réglages y sont incohérents avec le site.
 - [ ] **Retirer de la location de terrain les plages réservées aux
       anniversaires.** C'est la moitié de la règle d'étanchéité — sans elle,
       configurer les créneaux côté site ne sert à rien.
+
+      **Brahim s'en charge, et il le fera EN DIRECT avec Mathis** (23 septembre
+      2026 : « Sportfinder ça me prend 5' en live », « on peut caler quand tu
+      veux »). C'est la bonne façon de le faire, et pas seulement par confort :
+      `MISE-EN-LIGNE.md` exige que ce geste précède le basculement du domaine
+      ou l'accompagne, **jamais qu'il le suive**. Le faire ensemble le jour J
+      supprime la fenêtre pendant laquelle les deux canaux vendraient le même
+      terrain.
+
+      À caler au moment où le domaine sera prêt, pas avant : les deux gestes
+      n'ont de sens qu'ensemble.
 - [ ] **Confirmer que la page publique est bien en ligne.** Mathis ne trouvait
       pas le complexe dans la recherche : vérifier dans « Page publique →
       Général » que la page est publiée et que les activités sont renseignées.
@@ -175,24 +186,18 @@ bloque. Avant lui, fermer un vendredi férié demandait six clics.
 
 - [x] ~~**Les congés annuels.**~~ **AUCUN** — Brahim, le 23 septembre 2026 :
       « pas de congés ». Il n'y a donc pas de période à fermer dans l'année.
-- [ ] **LES JOURS FÉRIÉS RESTENT OUVERTS, ET LA QUESTION RESTE POSÉE.**
-      « Pas de congés » répond sur les congés annuels, pas sur Noël ni le Jour
-      de l'an. Or ce sont deux choses différentes : ne pas prendre de vacances
-      n'est pas ouvrir le 25 décembre.
+- [x] ~~**LES JOURS FÉRIÉS.**~~ **LE COMPLEXE EST OUVERT** — Brahim, le
+      23 septembre 2026, interrogé sur le 25 et le 26 décembre et le
+      1er janvier : « Oui ouvert ».
 
-      ⚠️ **Ces dates sont dans la fenêtre de six mois, donc achetables dès le
-      basculement du domaine.** Relevé du 19 septembre : 25 décembre **6
-      créneaux**, 26 décembre **12**, 1er janvier **6**. Un client peut
-      réserver un anniversaire le jour de Noël.
+      **Donc rien à fermer, et surtout rien à fermer d'office.** La question a
+      été posée précisément — avec les dates et le nombre de créneaux concernés,
+      6, 12 et 6 — plutôt qu'en parlant des « jours fériés » en général. C'est
+      ce qui permet de tenir la réponse pour ferme.
 
-      **On ne les ferme pas d'office**, et c'est la même règle que pour les
-      horaires de Bubble Foot ou la Fun zone 3 : savoir si le complexe ouvre le
-      25 décembre est une décision d'exploitation, pas une déduction. Il n'y a
-      aucun élément, seulement une habitude belge.
-
-      Le geste, lui, est prêt : le bouton « Fermer les N créneaux du jour » sur
-      la page Créneaux épargne les créneaux réservés et nomme la réservation
-      qui bloque.
+      Le relevé du 19 septembre reste donc l'état voulu : ces journées se
+      vendent. Le bouton « Fermer les N créneaux du jour » reste disponible au
+      back-office le jour où Brahim changerait d'avis.
 
 ## Informations d'entreprise
 
