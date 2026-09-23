@@ -109,7 +109,7 @@ export function ConfirmationContent() {
                 Ce qu'on sait avec certitude vient de l'URL — devis ou non, payé ou
                 non. Le titre s'y tient ; le détail, lui, attend d'avoir été relu.
               */}
-              {surDevis ? "Demande envoyée !" : paye ? "C’est réservé !" : "Demande bien reçue !"}
+              {surDevis ? "Demande envoyée !" : paye ? "Merci, c’est enregistré !" : "Demande bien reçue !"}
             </h1>
             {/*
               TROIS SITUATIONS, TROIS MESSAGES. Cette page annonçait
@@ -124,12 +124,27 @@ export function ConfirmationContent() {
               relu ou non, alors que les deux formulations disaient la même
               chose : le client voyait la phrase changer sous ses yeux sans
               rien apprendre de plus.
+
+              ON N’ANNONCE PLUS « VOTRE PAIEMENT EST ACCEPTÉ ». C’était affirmer,
+              sur la seule foi d’un paramètre d’URL, une chose que cette page ne
+              peut pas savoir. Stripe renvoie ici dès que le client a terminé son
+              parcours bancaire — et pour BANCONTACT, le moyen de paiement le plus
+              utilisé en Belgique, le dénouement peut venir APRÈS. Le webhook
+              traite d’ailleurs `checkout.session.async_payment_failed`
+              précisément pour ce cas-là.
+
+              Un refus tardif n’est pas ignoré pour autant : la réservation expire
+              et le client reçoit `auClientReservationExpiree`, qui lui dit
+              qu’aucun paiement n’a été reçu et lui ouvre une porte si sa banque
+              l’a tout de même débité. Mais entre les deux, il aurait lu
+              « c’est réservé ». D’où une formulation vraie dans les deux cas, qui
+              ne retire rien au parcours nominal.
             */}
             <p className="mt-3 text-muted-foreground text-lg">
               {surDevis
                 ? "Merci ! Nous revenons vers vous avec un devis sous 48 heures ouvrables."
                 : paye
-                  ? "Votre paiement est accepté et votre créneau est réservé. Vous recevez la confirmation par e-mail."
+                  ? "Votre créneau est retenu. Vous recevez la confirmation par e-mail dès que votre banque a validé le paiement — c’est immédiat dans la plupart des cas."
                   : "Merci ! Nous vous recontactons très vite pour confirmer votre créneau et convenir du règlement."}
             </p>
           </FadeIn>

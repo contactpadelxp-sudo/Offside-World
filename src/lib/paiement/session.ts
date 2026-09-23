@@ -112,8 +112,25 @@ export async function creerSessionPaiement(opts: {
       cancel_url: `${URL_SITE}/api/stripe/annule?r=${encodeURIComponent(opts.reservationId)}`,
     },
     {
-      // Deux clics sur « Payer » ne doivent pas créer deux sessions, donc deux
-      // paiements possibles pour une seule réservation.
+      /*
+        CETTE CLÉ NE DÉDUPLIQUE PAS CE QUE SON ANCIEN COMMENTAIRE PROMETTAIT.
+
+        Il disait : « deux clics sur Payer ne doivent pas créer deux sessions ».
+        C'est faux. Chaque passage dans le tunnel crée une RÉSERVATION NEUVE,
+        donc un `reservationId` neuf, donc une clé neuve : deux tentatives
+        successives produisent bien deux sessions. Ce qui empêche réellement le
+        double clic est ailleurs — le bouton d'envoi est désactivé pendant la
+        requête, dans les deux tunnels.
+
+        Ce qu'elle protège vraiment, et qui n'est pas rien : un REJEU du MÊME
+        appel pour la MÊME réservation — une relance réseau, un rejeu de l'action
+        serveur. Stripe rend alors la session déjà créée au lieu d'en ouvrir une
+        seconde sur une réservation qui n'en attend qu'une.
+
+        On la garde donc, avec la portée exacte qui est la sienne. Un commentaire
+        qui promet une garantie inexistante est pire que pas de commentaire : il
+        fait renoncer à la mettre en place.
+      */
       idempotencyKey: `reservation-${opts.reservationId}`,
     }
   );

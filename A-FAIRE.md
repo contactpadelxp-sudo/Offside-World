@@ -931,9 +931,12 @@ c'est le signe qu'ils tiennent, pas une répétition.
       La suite est idempotente — l'update est filtré sur `statut = 'en_attente'`,
       donc une relivraison sur une réservation déjà confirmée ne touche rien et
       n'envoie pas de second e-mail.
-- [ ] **La réservation est écrite AVANT l'appel à Stripe.** Si Stripe échoue,
-      elle reste en base : le client est refusé sur son propre créneau pendant
-      45 minutes, avec un message lui faisant croire qu'un autre l'a pris.
+- [x] ~~**La réservation est écrite AVANT l'appel à Stripe.**~~ **CORRIGÉ** —
+      vérifié dans les sources le 23 septembre 2026. Elle l'est toujours, et
+      c'est voulu : c'est elle qui tient le créneau pendant que le client paie.
+      Mais l'appel est désormais entouré d'un `try`/`catch` qui appelle
+      `libererReservationAbandonnee` avant de relancer l'erreur, dans les DEUX
+      tunnels. Le client retrouve donc son créneau en recommençant.
 - [x] ~~**`cancel_url` renvoie sur un tunnel vide.**~~ **CORRIGÉ.**
       `src/app/api/stripe/annule/route.ts` fait expirer la session Stripe puis
       libère la réservation, dans cet ordre. Le créneau n'est plus retenu
@@ -942,9 +945,10 @@ c'est le signe qu'ils tiennent, pas une répétition.
       client paie.**~~ **CORRIGÉ.** `paiementVivantSur` garde les deux actions
       (`admin.ts`), la fiche affiche « paiement en cours » et gèle les
       commandes tant qu'un paiement court.
-- [ ] **Le perdant d'une course est renvoyé vers une liste périmée**, réessaie,
-      échoue, et le limiteur de débit finit par l'exclure — alors que les échecs
-      venaient du site.
+- [x] ~~**Le perdant d'une course est renvoyé vers une liste périmée.**~~
+      **CORRIGÉ** — vérifié le 23 septembre 2026. `router.refresh()` est appelé
+      avant le retour à l'étape « Créneau », dans les deux tunnels : la page
+      étant en `force-dynamic`, le créneau repris revient barré et désactivé.
 - [x] ~~**Le limiteur compte les saisies invalides.**~~ **CORRIGÉ.**
       `quotaDepasse` est désormais appelé APRÈS le bornage de la saisie, dans
       les trois tunnels : une adresse mal tapée ne consomme plus le quota de
@@ -960,11 +964,39 @@ c'est le signe qu'ils tiennent, pas une répétition.
 - [x] ~~**Une contestation bancaire ne laisse aucune trace en base.**~~
       **CORRIGÉ.** Le webhook traite `charge.dispute.created` et
       `charge.dispute.closed`. Sept événements Stripe sont désormais couverts.
-- [ ] **La page de retour annonce « paiement accepté » avant que Bancontact ne
-      se dénoue**, et un refus asynchrone n'est jamais démenti.
-- [ ] **La clé d'idempotence Stripe ne protège rien** : elle est dérivée de
-      l'identifiant de réservation, neuf à chaque tentative. Sans conséquence
-      aujourd'hui, mais le commentaire affirme l'inverse.
+- [x] ~~**La page de retour annonce « paiement accepté » avant que Bancontact
+      ne se dénoue.**~~ **CORRIGÉ le 23 septembre 2026 — mais le constat était
+      surévalué, et c'est la vérification qui l'a montré.**
+
+      Vrai : la page affirmait « votre paiement est accepté et votre créneau est
+      réservé » sur la seule foi du paramètre `?paiement=ok`, que Stripe pose
+      dès la fin du parcours bancaire — donc avant le dénouement, pour
+      Bancontact.
+
+      Faux : « un refus asynchrone n'est jamais démenti ». Il l'est. La
+      réservation expire et `expirerReservationsAbandonnees` envoie
+      `auClientReservationExpiree`, qui annonce qu'aucun paiement n'a été reçu
+      et ouvre une porte si la banque a tout de même débité. Le client est donc
+      prévenu — tardivement, pas jamais.
+
+      Le correctif se réduit donc au TEXTE, et ne touche aucune logique :
+      « Votre créneau est retenu. Vous recevez la confirmation par e-mail dès
+      que votre banque a validé le paiement — c'est immédiat dans la plupart des
+      cas. » Titre passé de « C'est réservé ! » à « Merci, c'est enregistré ! »,
+      vrai dans les deux cas.
+- [x] ~~**La clé d'idempotence Stripe ne protège rien.**~~ **LE COMMENTAIRE
+      EST CORRIGÉ le 23 septembre 2026** ; la clé, elle, reste — avec la portée
+      exacte qui est la sienne.
+
+      Le constat était juste : la clé ne protège PAS du double clic, puisque
+      chaque passage crée une réservation neuve donc une clé neuve. Ce qui
+      protège du double clic est le bouton désactivé pendant l'envoi.
+
+      Mais elle n'est pas inutile pour autant : elle protège du REJEU du même
+      appel pour la MÊME réservation — relance réseau, rejeu de l'action
+      serveur. Le commentaire dit désormais cela, et rien de plus. Un
+      commentaire qui promet une garantie inexistante fait renoncer à la mettre
+      en place : c'était là le vrai défaut.
 
 - [ ] **Relancer l'audit sur les deux dimensions manquantes** — contraintes de
       base et back-office — et faire tourner la contradiction sur l'ensemble.
