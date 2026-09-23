@@ -445,6 +445,13 @@ Stripe → Developers → Webhooks → **Add endpoint**.
   webhook, en même temps que `SITE_URL`. Les deux vont ensemble : `SITE_URL`
   décide où le client est renvoyé après avoir payé.
 
+  ✅ **On MODIFIE l'endpoint existant, on n'en crée pas un second.** « Update
+  details » change l'URL en gardant le même secret de signature : il n'y a donc
+  rien à retoucher dans Vercel. Supprimer puis recréer l'endpoint produirait au
+  contraire un `whsec_` neuf, et le site refuserait toutes les notifications
+  jusqu'à ce que quelqu'un s'en aperçoive — c'est-à-dire, ici encore, au
+  premier client débité sans réservation.
+
 - **Événements à écouter** — **les SEPT**, pas moins :
 
   > Ce tableau a d'abord annoncé quatre événements pour six lignes, puis six
