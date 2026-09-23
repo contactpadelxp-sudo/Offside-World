@@ -54,12 +54,13 @@ comment on function purger_journal_admin is
   'journal ne survive jamais aux données qu''il trace. Suppression et non '
   'anonymisation : une trace sans son acteur ne prouve plus rien.';
 
--- Le dimanche à 4h15 UTC, soit un quart d'heure avant la purge des sessions
--- d'administration. Décalées plutôt que simultanées : deux tâches qui
+-- Le dimanche à 4h30 UTC. Décalée plutôt que simultanée : deux tâches qui
 -- démarrent à la même seconde rendent illisible le diagnostic quand l'une des
--- deux échoue.
+-- deux échoue. 4h15 avait d'abord été choisi contre la purge des sessions
+-- (4h00) — sans voir que `purger-audience` l'occupait déjà. Le créneau libre
+-- suivant est 4h30, et `purger-quotas` ne vient qu'à 4h45.
 select cron.schedule(
   'purger-journal-admin',
-  '15 4 * * 0',
+  '30 4 * * 0',
   $$ select purger_journal_admin() $$
 );

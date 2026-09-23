@@ -595,15 +595,24 @@ garde alors que le nom loué, sans abonnement site.
       Piste la plus probable : se connecter à Vercel **via GitHub** avec le
       compte `contactpadelxp-sudo`, propriétaire du dépôt. Bloque tout le
       reste.
-- [ ] **0 bis. Vérifier que Wix autorise des serveurs de noms EXTERNES.**
-      Compte de Brahim → Domaines → le domaine → Avancé → *Serveurs de noms*.
-      Une option « externes / personnalisés » = c'est bon.
+- [x] ~~**0 bis. Vérifier que Wix autorise des serveurs de noms EXTERNES.**~~
+      **VÉRIFIÉ le 23 septembre 2026 : NON.** Le menu du domaine ne propose
+      que « Gérer les enregistrements DNS », « Transférer en dehors de Wix »,
+      « Transférer vers un autre compte Wix » et la gestion des MX. **Aucune
+      entrée « Serveurs de noms ».** Wix laisse éditer les enregistrements
+      DANS sa zone, pas déléguer la zone ailleurs.
 
-      ⚠️ **À faire AVANT de construire quoi que ce soit.** Si Wix ne le permet
-      pas, on retombe sur le plan d'origine — la zone reste chez Wix, on n'y
-      change que les enregistrements A et le CNAME `www` — et les étapes 3 et 4
-      ci-dessous n'ont plus lieu d'être. Non vérifiable depuis l'environnement
-      de développement : `support.wix.com` est bloqué par le proxy réseau.
+      **Conséquence : LA ZONE DNS RESTE CHEZ WIX**, et c'est une simplification.
+      Les étapes 3 et 4 ci-dessous tombent : rien à reconstruire. Au jour J, on
+      change seulement les 3 `A` et le `CNAME www`, par « Gérer les
+      enregistrements DNS » — c'est le plan d'origine de `MISE-EN-LIGNE.md`,
+      et le moins risqué. La messagerie de Brahim n'est jamais dans le
+      périmètre.
+
+      Wix garde donc deux rôles, pas un : le nom loué **et** la zone DNS.
+      L'abonnement *site* reste résiliable après la mise en ligne ; avant de
+      l'annuler, demander à l'assistance Wix par écrit ce qu'il advient de la
+      zone DNS — c'est la seule panne vraiment grave de l'opération.
 - [ ] **1. Créer la Team Vercel de Brahim**, plan **Pro** : le plan Hobby
       interdit l'usage commercial, et un site qui encaisse en est un.
 - [ ] **2. Transférer le projet** vers cette Team (Settings → Advanced →
@@ -613,19 +622,15 @@ garde alors que le nom loué, sans abonnement site.
       de l'équipe et commande `SITE_URL` ET l'URL du webhook Stripe.
 - [ ] **3. Ajouter le domaine au projet, DANS LA TEAM DE BRAHIM.** Vercel
       affichera « Invalid Configuration » : c'est normal et attendu tant que
-      les serveurs de noms pointent encore sur Wix.
-- [ ] **4. Construire les 12 lignes** dans la zone DNS de Vercel, puis les
-      comparer une à une avec celles de Wix.
+      le DNS de Wix pointe encore sur l'ancien site. Ce qu'on veut de cette
+      étape, ce sont les **valeurs exactes** que Vercel demande — l'adresse IP
+      de l'apex et la cible du `CNAME www` — à recopier chez Wix le jour J.
 
-      **Cette zone ne sert à personne tant que les serveurs de noms n'ont pas
-      changé.** Deux zones coexistent alors : celle de Wix, que le monde
-      consulte, et celle de Vercel, que personne ne consulte. Seuls les
-      serveurs de noms — réglés chez le registrar, donc chez Wix — décident
-      laquelle fait autorité. C'est ce qui permet de tout préparer à froid.
-
-      Les 12 : 3 × `A` + `CNAME www` (le site) · 5 × `MX` Google · `TXT` SPF ·
-      `TXT resend._domainkey` · `CNAME rsend` et `send` · `TXT _dmarc`.
-      Quatre concernent le site, huit la messagerie.
+      ⚠️ Vercel proposera de **transférer les serveurs de noms**. On refuse :
+      voir le point 0 bis, et le piège documenté dans `MISE-EN-LIGNE.md`.
+- [x] ~~**4. Construire les 12 lignes chez Vercel.**~~ **SANS OBJET** — la
+      zone reste chez Wix (point 0 bis). Il n'y a jamais que deux
+      enregistrements à changer, et le jour J.
 - [ ] **5. Transférer le projet Supabase** vers l'organisation de Brahim.
       Voir la procédure plus bas — il faut être membre de l'organisation cible
       avant de pouvoir transférer.
@@ -638,32 +643,23 @@ garde alors que le nom loué, sans abonnement site.
 **La bascule des serveurs de noms n'est PAS de demain.** Elle reste l'étape
 finale, avec le préalable Sport-Finder. Voir `MISE-EN-LIGNE.md`.
 
-## ⏳ EN ATTENTE D'APPLICATION — deux migrations écrites, jamais exécutées
+## ✅ Les deux migrations en attente sont appliquées — 23 septembre 2026
 
-- [ ] **Appliquer `0032_purge_du_journal_admin.sql`** — la purge à 12 mois du
-      journal d'administration, avec sa tâche `pg_cron`.
-- [ ] **Appliquer `0033_deux_articles_referencement.sql`** — les deux articles
-      du blog, publiés.
+- [x] ~~`0032_purge_du_journal_admin.sql`~~ **APPLIQUÉE et vérifiée.**
+      `purger-journal-admin` est planifiée et `active`.
 
-      Écrites et poussées le 22 septembre 2026, mais **la base n'a rien reçu** :
-      les autorisations Supabase ont cessé d'être honorées après une
-      reconnexion des serveurs MCP au milieu de la séance. Mathis les applique
-      lui-même — éditeur SQL du tableau de bord Supabase, ou réautorisation de
-      l'outil.
+      ⚠️ **L'heure diffère du fichier** : `30 4 * * 0` et non `15 4 * * 0`.
+      Le commentaire de la migration justifiait le décalage par la purge des
+      sessions (4h00) — mais 4h15 était déjà occupé par `purger-audience`.
+      Corrigé en base à 4h30. Le raisonnement tenait, le créneau choisi non.
+- [x] ~~`0033_deux_articles_referencement.sql`~~ **APPLIQUÉE et vérifiée.**
+      Les deux articles sont publiés, `/blog` n'est plus vide.
 
-      ⚠️ **Tant qu'elles ne sont pas passées, deux choses sont FAUSSES si on
-      s'y fie :** le journal d'administration se conserve toujours sans limite
-      (l'art. 5.1.e n'est donc pas respecté sur cette table), et `/blog` est
-      toujours une page vide. Le dépôt, lui, dit le contraire — c'est
-      exactement pourquoi cette entrée existe.
-
-      **Vérification après application :**
-      ```sql
-      select jobname, schedule, active from cron.job order by jobname;
-      select slug, titre, publie from articles order by publie_le;
-      ```
-      La première doit montrer `purger-journal-admin` à `15 4 * * 0` et
-      `active`. La seconde, deux lignes publiées.
+      Tâches planifiées en base au 23 septembre, dans l'ordre où elles
+      tournent : `anonymiser-reservations` 3h30 · `anonymiser-devis` 3h31 ·
+      `purger-sessions-admin` dim. 4h00 · `purger-audience` dim. 4h15 ·
+      `purger-journal-admin` dim. 4h30 · `purger-quotas` 4h45. Toutes en UTC,
+      toutes actives.
 
 - [x] **Définir `ADMIN_USER` et `ADMIN_PASSWORD`** dans Vercel (type
       « Sensitive » pour le mot de passe). Sans ces deux variables, `/admin`
