@@ -445,13 +445,15 @@ Stripe → Developers → Webhooks → **Add endpoint**.
   webhook, en même temps que `SITE_URL`. Les deux vont ensemble : `SITE_URL`
   décide où le client est renvoyé après avoir payé.
 
-- **Événements à écouter** — **les six**, pas moins :
+- **Événements à écouter** — **les SEPT**, pas moins :
 
-  > Ce tableau en a toujours compté six, et la phrase au-dessus en annonçait
-  > quatre. Qui s'arrête à quatre perd exactement les deux derniers —
-  > `charge.refunded` et `charge.dispute.created` —, c'est-à-dire l'argent
-  > rendu qui ne revient jamais dans la base, et la contestation bancaire que
-  > personne ne voit passer alors qu'elle a une date limite.
+  > Ce tableau a d'abord annoncé quatre événements pour six lignes, puis six
+  > pour sept : `charge.dispute.closed` a été ajouté au code avec le
+  > traitement des litiges sans être reporté ici. Le compte est vérifié dans
+  > les sources le 23 septembre 2026 — `src/app/api/stripe/webhook/route.ts`
+  > traite bien SEPT `case`. Qui s'arrête en chemin perd toujours les
+  > derniers, c'est-à-dire l'argent rendu ou repris qui ne revient jamais dans
+  > la base.
 
   | Événement | Pourquoi il est indispensable |
   |---|---|
@@ -461,6 +463,7 @@ Stripe → Developers → Webhooks → **Add endpoint**.
   | `checkout.session.async_payment_failed` | le paiement différé a été refusé |
   | `charge.refunded` | **un remboursement fait à la main dans Stripe.** Sans lui, le montant déjà rendu n'est jamais rapatrié : le solde restant à rembourser reste surévalué, et le chiffre d'affaires du back-office trop haut. Le cas se produit forcément — le site envoie lui-même l'exploitant rembourser dans Stripe quand l'appel automatique échoue |
   | `charge.dispute.created` | **une contestation bancaire.** Stripe retire aussitôt la somme du solde, ajoute des frais, et laisse quelques jours pour fournir des preuves ; passé ce délai, la contestation est perdue par défaut. C'est le seul événement du système qui ait une date limite, et sans lui personne n'est prévenu |
+  | `charge.dispute.closed` | **le verdict de cette contestation.** S'il est « perdu », l'argent est définitivement repris : `synchroniserRemboursement` le rapatrie en base, sans quoi le chiffre d'affaires du back-office compterait indéfiniment une somme qui n'est plus là. Ajouté avec le traitement des litiges, et oublié dans ce tableau jusqu'au 23 septembre 2026 |
 
 Copier le **Signing secret** affiché après création : c'est
 `STRIPE_WEBHOOK_SECRET`. Sans lui, le site **refuse** de traiter les
