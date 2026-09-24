@@ -249,6 +249,12 @@ export interface DevisEmail {
   periode: string;
   nbParticipants: number;
   message?: string | null;
+  /**
+   * Le créneau tenu tombe dans les heures où Sport-Finder loue les mêmes
+   * terrains — les après-midis. L'avis au complexe le dit : accepter suppose
+   * de fermer la plage là-bas. Absent pour le client, que ça ne regarde pas.
+   */
+  heurteSportFinder?: boolean;
 }
 
 function lignesReservation(r: RecapEmail): Ligne[] {
@@ -556,12 +562,19 @@ export function auClientDevisRecu(d: DevisEmail): Message {
     [
       { cle: "Référence", valeur: d.reference },
       { cle: "Entreprise", valeur: d.entreprise },
-      { cle: "Date souhaitée", valeur: d.dateSouhaitee },
-      { cle: "Demi-journée", valeur: d.periode },
+      { cle: "Date", valeur: d.dateSouhaitee },
+      { cle: "Créneau", valeur: d.periode },
       { cle: "Participants", valeur: String(d.nbParticipants) },
     ],
     [
-      "<strong>Cette demande ne bloque pas encore de créneau.</strong> La date sera arrêtée avec vous au moment du devis.",
+      /*
+        CETTE PHRASE DISAIT L'INVERSE JUSQU'AU 24 SEPTEMBRE 2026 : « Cette
+        demande ne bloque pas encore de créneau. » C'était vrai tant que le team
+        building n'avait pas de créneaux. Depuis la migration 0036, la demande
+        tient sa place dès l'envoi — le dire, c'est aussi ce qui évite à
+        l'entreprise de réserver ailleurs « au cas où ».
+      */
+      "<strong>Ce créneau vous est réservé</strong> le temps d'établir votre devis. Seul le prix reste à convenir.",
     ],
     EMAIL
   );
@@ -693,11 +706,15 @@ export function auComplexeNouveauDevis(d: DevisEmail): Message {
       { cle: "Référence", valeur: d.reference },
       { cle: "Entreprise", valeur: d.entreprise },
       { cle: "Date souhaitée", valeur: d.dateSouhaitee },
-      { cle: "Demi-journée", valeur: d.periode },
+      { cle: "Créneau", valeur: d.periode },
       { cle: "Participants", valeur: String(d.nbParticipants) },
     ],
     [
       d.message ? `Message : ${ech(d.message)}` : "",
+      "<strong>Le créneau est bloqué</strong> pour cette entreprise jusqu'à ce que vous refusiez la demande.",
+      d.heurteSportFinder
+        ? "<strong>Cet horaire est aussi vendu sur Sport-Finder.</strong> Si vous acceptez, fermez la plage là-bas."
+        : "",
       `<a href="${urlAbsolue("/admin/devis")}" style="color:${ACCENT};font-weight:600;">Ouvrir le back-office</a>.`,
     ].filter(Boolean),
     d.contactEmail

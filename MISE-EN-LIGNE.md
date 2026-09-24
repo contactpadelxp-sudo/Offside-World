@@ -235,6 +235,16 @@ créneaux d'anniversaire, cela donne trois chevauchements :
 > | Vendredi | 16h00–18h00 |
 > | Samedi | 10h00–12h00 · 12h30–14h30 · 15h00–17h00 |
 > | Dimanche | 10h00–12h00 · 12h30–14h30 · 15h00–17h00 |
+>
+> **Le team building, lui, ne se ferme PAS d'avance sur Sport-Finder.** Depuis
+> le 24 septembre 2026 il a de vrais créneaux (migration 0036) : 09h00–13h00
+> et 14h00–18h00 les lundi, mardi et jeudi, le matin seul le vendredi. Les
+> MATINS ne touchent rien. Les APRÈS-MIDIS tombent dans la location de terrain
+> de Sport-Finder (14h00–01h00 ces jours-là). Les retirer d'avance priverait
+> Brahim de ses locations pour des demandes rares : la règle est donc **au cas
+> par cas — quand il accepte un après-midi de team building, il ferme cette
+> plage-là sur Sport-Finder.** La fiche du devis et l'e-mail d'avis le lui
+> rappellent.
 
 Un terrain loué samedi à 17h et un anniversaire vendu sur le site à la même
 heure, c'est le même sol. Les deux clients sont dans leur droit, aucun des deux

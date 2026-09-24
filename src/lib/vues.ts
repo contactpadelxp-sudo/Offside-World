@@ -55,13 +55,30 @@ export interface CreneauVue {
 
 // ── Back-office ──────────────────────────────────────────────────────────────
 
+/**
+ * Les activités que porte un créneau — la même liste que l'énumération
+ * `type_activite` en base.
+ *
+ * Écrite ici une fois plutôt que recopiée en `"anniversaire" | "bubble"` sur
+ * chaque vue : c'est ainsi que l'ajout du team building, le 24 septembre 2026,
+ * a été signalé par le compilateur à chaque endroit qui l'ignorait, au lieu
+ * de passer inaperçu là où la liste avait été écrite à la main.
+ */
+export type TypeActivite = "anniversaire" | "bubble" | "team_building";
+
 export type StatutReservation = "en_attente" | "confirmee" | "annulee" | "expiree";
 export type StatutDevis = "nouvelle" | "traitee" | "devis_envoye" | "acceptee" | "refusee";
 
 export interface ReservationAdmin {
   id: string;
   reference: string;
-  type: "anniversaire" | "bubble";
+  /**
+   * `team_building` n'arrive jamais ici en pratique — le team building passe
+   * par une demande de devis, pas par une réservation. Le type l'admet parce
+   * que la colonne en base l'admet, et qu'une ligne saisie à la main doit
+   * s'afficher, pas faire tomber la liste.
+   */
+  type: TypeActivite;
   statut: StatutReservation;
   /** en euros */
   total: number;
@@ -165,6 +182,24 @@ export interface DevisAdmin {
   client: { adresse: string; tva: string };
   /** Les valeurs brutes de la demande, pour pré-remplir un devis vierge. */
   brut: { dateSouhaitee: string | null; periode: string | null; nbParticipants: number | null };
+  /**
+   * Les créneaux que la demande tient — ou a tenus.
+   *
+   * `actif: false` quand la demande a été refusée : la ligne reste pour qu'on
+   * sache ce que l'entreprise avait choisi, mais la place est rendue à la
+   * vente. Vide pour les demandes antérieures au 24 septembre 2026, qui ne
+   * tenaient rien.
+   */
+  creneaux: {
+    libelle: string;
+    actif: boolean;
+    /**
+     * Le créneau tombe dans les heures où Sport-Finder loue les mêmes terrains.
+     * C'est le cas des après-midis de team building : accepter la demande
+     * suppose de fermer cette plage sur Sport-Finder, et la fiche doit le dire.
+     */
+    heurteSportFinder: boolean;
+  }[];
 }
 
 /**
@@ -219,7 +254,7 @@ export interface EntreeJournal {
 
 export interface CreneauAdmin {
   id: string;
-  type: "anniversaire" | "bubble";
+  type: TypeActivite;
   espaceNom: string;
   jour: string;
   jourLabel: string;
@@ -238,6 +273,14 @@ export interface CreneauAdmin {
   espaceActif: boolean;
   /** Référence de la réservation active, si le créneau est pris. */
   reservePar: string | null;
+  /**
+   * La demande de team building qui tient ce créneau, s'il y en a une.
+   *
+   * Même rôle que `reservePar` : elle interdit de fermer le créneau, et elle
+   * doit se lire sur la ligne — sinon on voit « Libre » sur une place qu'une
+   * entreprise attend.
+   */
+  tenuParDevis: { id: string; reference: string } | null;
 }
 
 export type FiltreReservations = "a-venir" | "a-confirmer" | "passees" | "annulees";

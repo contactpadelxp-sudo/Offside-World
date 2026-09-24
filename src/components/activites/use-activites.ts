@@ -146,7 +146,7 @@ export function useActivites(formules: FormuleVue[]): ActiviteVue[] {
       id: "groupes",
       icone: Groupe,
       titre: "Bubble Foot & Team Building",
-      description: `Bubble Foot à ${euros(BUBBLE_PRIX_PAR_PERSONNE)}/personne, ou privatisation à la demi-journée.`,
+      description: `Bubble Foot à ${euros(BUBBLE_PRIX_PAR_PERSONNE)}/personne, ou privatisation à la demi-journée ou à la journée.`,
       href: hrefActivite("groupes"),
       img: photoBubble,
       // Les bulles sont à ~54 % de la hauteur de la photo.

@@ -20,8 +20,8 @@ export default async function PageDevis({
             <Document className="size-6 text-field" /> Demandes de devis
           </h1>
           <p className="text-sm text-muted-foreground">
-            Team building. Une demande n&apos;occupe aucun créneau tant qu&apos;elle n&apos;est pas
-            transformée en réservation.
+            Team building. Chaque demande tient son créneau dès l&apos;envoi ; la refuser le
+            rend à la vente.
           </p>
         </div>
         <LienOnglet

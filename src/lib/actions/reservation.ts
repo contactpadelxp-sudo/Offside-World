@@ -10,6 +10,9 @@ import {
 import {
   CreneauDejaPris,
   enregistrerDemandeDevis,
+  candidatsTeamBuilding,
+  tenirCreneauxDevis,
+  supprimerDemandeDevis,
   enregistrerReservation,
   expirerReservationsAbandonnees,
   libererReservationAbandonnee,
@@ -35,6 +38,14 @@ import {
   TEAM_BUILDING_MIN_PARTICIPANTS,
 } from "@/data/bubble-team";
 import { totalAnniversaireCents, totalBubbleCents } from "@/lib/tarification";
+import { PERIODES, type PeriodeTeamBuilding } from "@/lib/demi-journees";
+import { conflitSurHeureLocale, jourISODeLaDate } from "@/data/plages-sport-finder";
+
+/** « 14:00 » → 840. */
+function enMinutes(hhmm: string): number {
+  const [h, m] = hhmm.split(":").map(Number);
+  return h * 60 + m;
+}
 import { creerSessionPaiement } from "@/lib/paiement/session";
 
 /**
@@ -558,7 +569,8 @@ export interface SaisieDevis {
   contactEmail: string;
   contactTelephone: string;
   dateSouhaitee: string;
-  periode: "matin" | "apres-midi";
+  /** Depuis le 24 septembre 2026, la journée entière en plus des demi-journées. */
+  periode: PeriodeTeamBuilding;
   nbParticipants: number;
   /**
    * Coordonnées de FACTURATION, facultatives.
@@ -602,8 +614,8 @@ export async function demanderDevis(saisie: SaisieDevis): Promise<Resultat> {
     const newsletterDevis = booleen(saisie?.newsletter);
 
     const periode = saisie?.periode;
-    if (periode !== "matin" && periode !== "apres-midi") {
-      return { ok: false, message: "Choisissez une demi-journée.", champ: "periode" };
+    if (periode !== "matin" && periode !== "apres-midi" && periode !== "journee") {
+      return { ok: false, message: "Choisissez un créneau.", champ: "periode" };
     }
 
     // Après le bornage, comme dans `reserverAnniversaire` : seules les
@@ -612,7 +624,19 @@ export async function demanderDevis(saisie: SaisieDevis): Promise<Resultat> {
       return { ok: false, message: "Trop de tentatives. Réessayez dans quelques minutes." };
     }
 
-    const { reference } = await enregistrerDemandeDevis({
+    /*
+      LE CRÉNEAU EST CHERCHÉ AVANT D'ÉCRIRE, ET TENU APRÈS.
+
+      Depuis la migration 0036, une demande de team building TIENT son créneau.
+      On regarde d'abord ce qui est libre pour ce jour et cette période : s'il
+      n'y a rien, inutile d'écrire une demande qu'il faudrait aussitôt retirer.
+      Le navigateur ne dit que « lundi matin » ; c'est ici qu'une Fun zone est
+      attribuée — l'entreprise n'a aucune raison d'en préférer une.
+    */
+    const candidats = await candidatsTeamBuilding(dateSouhaitee, periode);
+    if (candidats.length === 0) throw new CreneauDejaPris();
+
+    const { id: demandeId, reference } = await enregistrerDemandeDevis({
       entreprise,
       contact_nom: contactNom,
       contact_email: contactEmail,
@@ -628,6 +652,20 @@ export async function demanderDevis(saisie: SaisieDevis): Promise<Resultat> {
       cgv_acceptees_le: new Date().toISOString(),
     });
 
+    /*
+      SI PLUS RIEN N'EST LIBRE AU MOMENT D'ÉCRIRE, LA DEMANDE EST RETIRÉE.
+
+      Une autre entreprise peut avoir pris la dernière Fun zone entre la
+      lecture et l'écriture. La demande n'a encore envoyé aucun e-mail : on la
+      supprime, et le client est renvoyé au choix du créneau avec une liste
+      relue — le même chemin que le perdant d'une course sur un anniversaire.
+    */
+    const tenus = await tenirCreneauxDevis(demandeId, candidats);
+    if (!tenus) {
+      await supprimerDemandeDevis(demandeId);
+      throw new CreneauDejaPris();
+    }
+
     const demande: DevisEmail = {
       reference,
       entreprise,
@@ -635,9 +673,17 @@ export async function demanderDevis(saisie: SaisieDevis): Promise<Resultat> {
       contactEmail,
       contactTelephone,
       dateSouhaitee: jourLisibleCap(new Date(`${dateSouhaitee}T12:00:00Z`)),
-      periode: periode === "matin" ? "Matin" : "Après-midi",
+      periode: `${PERIODES[periode].label} · ${PERIODES[periode].debut} – ${PERIODES[periode].fin}`,
       nbParticipants,
       message,
+      // Calculé par la même règle que celle qui garde les créneaux au
+      // back-office, en heure de Bruxelles : pas d'heure recopiée ici.
+      heurteSportFinder:
+        conflitSurHeureLocale(
+          jourISODeLaDate(dateSouhaitee),
+          enMinutes(PERIODES[periode].debut),
+          enMinutes(PERIODES[periode].fin) - enMinutes(PERIODES[periode].debut)
+        ) !== null,
     };
     after(() => envoyerTous([auClientDevisRecu(demande), auComplexeNouveauDevis(demande)]));
 

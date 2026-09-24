@@ -163,7 +163,7 @@ export default function ActivitesStack({ children }: { children?: React.ReactNod
       href: hrefActivite("groupes"),
       icon: Groupe,
       title: "Bubble Foot & Team Building",
-      desc: "Le foot dans des bulles géantes entre amis, ou la privatisation du complexe à la demi-journée pour votre équipe.",
+      desc: "Le foot dans des bulles géantes entre amis, ou la privatisation du complexe à la demi-journée ou à la journée pour votre équipe.",
       itemClassName: "bg-gradient-to-br from-kick to-kick-dark text-[#0a0a0b]",
       badgeClass: "bg-black/15 text-[#0a0a0b]",
       ctaClass: "text-[#0a0a0b]",

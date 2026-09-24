@@ -39,11 +39,21 @@ import {
   AlerteCercle, Ballon, Batiment, Bouclier, Coche, Document, FlecheDroite, FlecheGauche, Groupe, Horloge, Info, LienExterne, Visuel,
 } from "@/components/icons";
 
-/** « Matin », ou « Matin · 09:00 – 13:00 » quand les heures sont connues. */
+/** « Matin · 09:00 – 13:00 » — les heures sont connues depuis le 24 septembre 2026. */
 function horaireDemiJournee(dj: DemiJourneeVue | null): string {
   if (!dj) return "";
-  return dj.debut && dj.fin ? `${dj.periodeLabel} · ${dj.debut} – ${dj.fin}` : dj.periodeLabel;
+  return `${dj.periodeLabel} · ${dj.debut} – ${dj.fin}`;
 }
+
+/**
+ * Combien de jours de team building le tunnel montre d'un coup.
+ *
+ * La base en ouvre six mois — une centaine de jours, trois choix par jour. Les
+ * afficher tous d'emblée noierait la question que se pose une entreprise :
+ * « qu'est-ce qui est libre dans les prochaines semaines ? ». On en montre
+ * donc un paquet, et un bouton ajoute le suivant.
+ */
+const JOURS_PAR_PAGE = 12;
 
 type Offre = "bubble" | "team-building";
 type Step = "offre" | "creneau" | "recap";
@@ -75,6 +85,7 @@ export function GroupesFlow({
   const [bubbleCreneau, setBubbleCreneau] = useState<CreneauVue | null>(null);
   const [nbPersonnes, setNbPersonnes] = useState(BUBBLE_MIN_PERSONNES);
   const [demiJournee, setDemiJournee] = useState<DemiJourneeVue | null>(null);
+  const [joursAffiches, setJoursAffiches] = useState(JOURS_PAR_PAGE);
   const [nbParticipants, setNbParticipants] = useState(TEAM_BUILDING_MIN_PARTICIPANTS);
 
   const [nom, setNom] = useState("");
@@ -262,6 +273,9 @@ export function GroupesFlow({
         // encore libre.
         router.refresh();
         setBubbleCreneau(null);
+        // Même chose pour le team building : la demi-journée vient d'être
+        // demandée par une autre entreprise, elle reviendra « complet ».
+        setDemiJournee(null);
         setStep("creneau");
       }
       return;
@@ -272,7 +286,11 @@ export function GroupesFlow({
       ref: resultat.reference,
       type: isBubble ? "bubble" : "team-building",
       total: resultat.total,
-      formule: isBubble ? "Bubble Foot" : "Team Building — demi-journée",
+      formule: isBubble
+        ? "Bubble Foot"
+        : demiJournee?.periode === "journee"
+          ? "Team Building — journée entière"
+          : "Team Building — demi-journée",
       date: isBubble ? bubbleCreneau?.jourLabel : demiJournee?.jourLabel,
       horaire: isBubble
         ? `${bubbleCreneau?.debut} – ${bubbleCreneau?.fin}`
@@ -326,13 +344,13 @@ export function GroupesFlow({
       lien: null,
       icon: Batiment,
       title: "Team Building",
-      description: "Privatisation du complexe pour votre équipe, à la demi-journée.",
+      description: "Privatisation du complexe pour votre équipe, à la demi-journée ou à la journée.",
       img: photoEntree,
       // Cadre paysage sur une photo portrait : on remonte pour garder
       // l'enseigne entière au-dessus des ballons.
       imgPosition: "object-[center_20%]",
       tag: "Sur devis",
-      detail: "Demi-journée • organisation sur mesure",
+      detail: "Demi-journée ou journée • organisation sur mesure",
       accentText: "text-kick",
       accentBadge: "bg-kick/15 text-kick",
       iconBg: "bg-kick/15 text-kick",
@@ -591,50 +609,87 @@ export function GroupesFlow({
         </FadeIn>
       )}
 
-      {/* ÉTAPE 2 — demi-journée team building */}
+      {/* ÉTAPE 2 — demi-journée ou journée de team building */}
       {step === "creneau" && !isBubble && (
         <FadeIn className="mt-6">
-          <h2 ref={titreRef} tabIndex={-1} className="text-xl font-bold font-[family-name:var(--font-heading)]">Choisissez votre demi-journée</h2>
+          <h2 ref={titreRef} tabIndex={-1} className="text-xl font-bold font-[family-name:var(--font-heading)]">Choisissez votre créneau</h2>
+          {/*
+            CE TEXTE A CHANGÉ DE SENS LE 24 SEPTEMBRE 2026.
+
+            Il disait « indiquez votre préférence : nous revenons vers vous avec
+            un devis et la confirmation de la disponibilité » — c'était vrai tant
+            que rien n'était tenu. Désormais la demande BLOQUE le créneau dès son
+            envoi (migration 0036) : le dire, c'est ce qui rassure une entreprise
+            qui compare plusieurs lieux. Ce qui reste à confirmer, c'est le prix.
+          */}
           <p className="mt-1 text-sm text-muted-foreground">
-            Le team building se réserve à la demi-journée. Indiquez votre préférence : nous revenons
-            vers vous avec un devis et la confirmation de la disponibilité.
+            Matin, après-midi ou journée entière. Le créneau choisi vous est réservé dès
+            l&apos;envoi de votre demande ; nous revenons vers vous avec un devis.
           </p>
-          <ul className="mt-4 divide-y divide-border overflow-hidden rounded-2xl border border-border bg-card">
-            {journees.map((j) => (
-              <li key={j.jour} className="flex flex-wrap items-center gap-x-4 gap-y-2 px-4 py-3">
-                <span className="w-full font-medium sm:w-48">{j.jourLabel}</span>
-                <div className="flex flex-wrap gap-2">
-                  {j.demiJournees.map((dj) => {
-                    const choisi = demiJournee?.id === dj.id;
-                    return (
-                      <button
-                        key={dj.id}
-                        type="button"
-                        onClick={() => setDemiJournee(dj)}
-                        aria-pressed={choisi}
-                        className={`inline-flex items-center gap-1.5 rounded-xl border-2 px-3 py-2 text-sm font-medium transition-all duration-200 active:scale-[0.97] ${
-                          choisi
-                            ? "border-kick bg-kick/10 text-kick"
-                            : "border-muted text-muted-foreground hover:border-kick/40 hover:text-foreground"
-                        }`}
-                      >
-                        <Horloge className="size-3.5" />
-                        {/*
-                          L'heure ne s'écrit que si elle est connue. Voir
-                          `bubble-team.ts` : elle vaut `null` tant que Brahim
-                          n'a pas donné les plages réelles, et « Matin » seul
-                          est vrai là où « Matin · 09:00 – 13:00 » ne l'était
-                          pas.
-                        */}
-                        {dj.periodeLabel}
-                        {dj.debut && dj.fin && ` · ${dj.debut} – ${dj.fin}`}
-                      </button>
-                    );
-                  })}
-                </div>
-              </li>
-            ))}
-          </ul>
+
+          {journees.length === 0 ? (
+            /*
+              AUCUN CRÉNEAU : ON LE DIT, ON NE MONTRE PAS UNE LISTE VIDE.
+
+              Une liste vide ressemble à un chargement qui n'aboutit pas. Ce cas
+              arrive si tout a été fermé au back-office, ou si la base n'a pas
+              répondu — dans les deux cas, la seule chose utile est un moyen de
+              joindre le complexe.
+            */
+            <p className="mt-4 rounded-2xl border border-border bg-card px-4 py-6 text-sm text-muted-foreground">
+              Aucun créneau n&apos;est ouvert pour le moment. Écrivez-nous à{" "}
+              <a href="mailto:info@offsidefootindoor.be" className="underline text-kick">
+                info@offsidefootindoor.be
+              </a>{" "}
+              et nous trouvons une date ensemble.
+            </p>
+          ) : (
+            <>
+              <ul className="mt-4 divide-y divide-border overflow-hidden rounded-2xl border border-border bg-card">
+                {journees.slice(0, joursAffiches).map((j) => (
+                  <li key={j.jour} className="flex flex-wrap items-center gap-x-4 gap-y-2 px-4 py-3">
+                    <span className="w-full font-medium sm:w-48">{j.jourLabel}</span>
+                    <div className="flex flex-wrap gap-2">
+                      {j.demiJournees.map((dj) => {
+                        const choisi = demiJournee?.id === dj.id;
+                        return (
+                          <button
+                            key={dj.id}
+                            type="button"
+                            // Même règle que les créneaux d'anniversaire : ce qui est
+                            // pris se voit, barré, et ne se choisit pas.
+                            disabled={!dj.libre}
+                            onClick={() => setDemiJournee(dj)}
+                            aria-pressed={choisi}
+                            className={`inline-flex items-center gap-1.5 rounded-xl border-2 px-3 py-2 text-sm font-medium transition-all duration-200 ${
+                              !dj.libre
+                                ? "border-destructive/30 bg-destructive/10 text-destructive/70 cursor-not-allowed line-through"
+                                : choisi
+                                  ? "border-kick bg-kick/10 text-kick active:scale-[0.97]"
+                                  : "border-muted text-muted-foreground hover:border-kick/40 hover:text-foreground active:scale-[0.97]"
+                            }`}
+                          >
+                            <Horloge className="size-3.5" />
+                            {dj.periodeLabel} · {dj.debut} – {dj.fin}
+                            {!dj.libre && <span className="ml-1 text-xs no-underline">(complet)</span>}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </li>
+                ))}
+              </ul>
+              {joursAffiches < journees.length && (
+                <button
+                  type="button"
+                  onClick={() => setJoursAffiches((n) => n + JOURS_PAR_PAGE)}
+                  className="mt-3 text-sm font-medium text-kick underline underline-offset-2 hover:text-kick/80"
+                >
+                  Voir les dates suivantes
+                </button>
+              )}
+            </>
+          )}
 
           <div className="mt-6 max-w-xs">
             <ChampNombre
@@ -704,7 +759,7 @@ export function GroupesFlow({
                 {!demiJournee && (
                   <>
                     <AlerteCercle className="mt-0.5 size-4 shrink-0 text-kick" />
-                    <span>Choisissez d&apos;abord une demi-journée ci-dessus.</span>
+                    <span>Choisissez d&apos;abord un créneau ci-dessus.</span>
                   </>
                 )}
               </p>

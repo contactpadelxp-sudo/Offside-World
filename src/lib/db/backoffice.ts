@@ -5,6 +5,7 @@ import { lireOptions } from "@/lib/db/referentiel";
 import { VIE_SESSION_STRIPE_MINUTES } from "@/lib/db/paiements";
 import { partRemboursee } from "@/data/reglement";
 import { BUBBLE_EN_LIGNE } from "@/data/bubble-team";
+import { conflitSportFinder } from "@/data/plages-sport-finder";
 import { lignesDepuisJson } from "@/lib/devis";
 import { decrireAction, lienJournal } from "@/lib/journal";
 import type { Database } from "@/lib/supabase/types";
@@ -378,6 +379,8 @@ export async function lireDevis(inclureTraites = false): Promise<DevisAdmin[]> {
   if (error) throw error;
   if (!data) return [];
 
+  const tenus = await creneauxTenusParDemande(data.map((d) => d.id));
+
   return data.map((d) => ({
     id: d.id,
     reference: d.reference,
@@ -386,7 +389,14 @@ export async function lireDevis(inclureTraites = false): Promise<DevisAdmin[]> {
     contactEmail: d.contact_email,
     contactTelephone: d.contact_telephone,
     dateSouhaitee: d.date_souhaitee ? jourLisibleCap(new Date(`${d.date_souhaitee}T12:00:00Z`)) : null,
-    periode: d.periode === "matin" ? "Matin" : d.periode === "apres-midi" ? "Après-midi" : null,
+    periode:
+      d.periode === "matin"
+        ? "Matin"
+        : d.periode === "apres-midi"
+          ? "Après-midi"
+          : d.periode === "journee"
+            ? "Journée entière"
+            : null,
     nbParticipants: d.nb_participants,
     message: d.message,
     noteInterne: d.note_interne,
@@ -405,10 +415,73 @@ export async function lireDevis(inclureTraites = false): Promise<DevisAdmin[]> {
       dateSouhaitee: d.date_souhaitee
         ? jourLisibleCap(new Date(`${d.date_souhaitee}T12:00:00Z`))
         : null,
-      periode: d.periode === "matin" ? "le matin" : d.periode === "apres-midi" ? "l'après-midi" : null,
+      periode:
+        d.periode === "matin"
+          ? "le matin"
+          : d.periode === "apres-midi"
+            ? "l'après-midi"
+            : d.periode === "journee"
+              ? "la journée entière"
+              : null,
       nbParticipants: d.nb_participants,
     },
+    creneaux: tenus.get(d.id) ?? [],
   }));
+}
+
+/**
+ * Les créneaux que chaque demande tient, ou a tenus, en clair.
+ *
+ * « Fun zone 1 · 09:00 – 13:00 » plutôt qu'un identifiant : c'est ce que
+ * Brahim doit savoir pour préparer le terrain, et pour fermer la plage sur
+ * Sport-Finder quand c'est un après-midi.
+ *
+ * UNE LECTURE POUR TOUTES LES DEMANDES, pas une par demande : la liste en
+ * affiche jusqu'à cent.
+ */
+async function creneauxTenusParDemande(
+  ids: string[]
+): Promise<Map<string, DevisAdmin["creneaux"]>> {
+  const parDemande = new Map<string, DevisAdmin["creneaux"]>();
+  if (ids.length === 0) return parDemande;
+
+  const { data, error } = await base()
+    .from("devis_creneaux")
+    .select("demande_id, actif, creneaux(debut, fin, espaces(nom))")
+    .in("demande_id", ids);
+
+  /*
+    UNE PANNE ICI NE DOIT PAS FAIRE TOMBER LA LISTE DES DEVIS.
+
+    Les créneaux tenus sont une précision, pas l'essentiel de l'écran. On le
+    journalise et on rend la liste sans eux, plutôt que de priver Brahim de
+    toutes ses demandes pour une information secondaire.
+  */
+  if (error) {
+    console.error("Créneaux tenus par les devis illisibles :", error.message);
+    return parDemande;
+  }
+
+  for (const l of data ?? []) {
+    const c = l.creneaux;
+    if (!c) continue;
+    const debut = new Date(c.debut);
+    const fin = new Date(c.fin);
+    const libelle =
+      `${jourLisibleCap(debut)} · ${c.espaces?.nom ?? "Fun zone"} · ` +
+      `${heure(debut)} – ${heure(fin)}`;
+    const liste = parDemande.get(l.demande_id) ?? [];
+    liste.push({
+      libelle,
+      actif: l.actif,
+      // La même règle que celle qui garde la création des créneaux : pas une
+      // heure écrite en dur ici, qui divergerait au premier changement.
+      heurteSportFinder: conflitSportFinder(debut, fin) !== null,
+    });
+    parDemande.set(l.demande_id, liste);
+  }
+  for (const liste of parDemande.values()) liste.sort((x, y) => x.libelle.localeCompare(y.libelle));
+  return parDemande;
 }
 
 export async function compterDevisANouveau(): Promise<number> {
@@ -453,6 +526,30 @@ export async function lireCreneauxDuJour(jour: string): Promise<CreneauAdmin[]> 
 
   const parCreneau = new Map((prises ?? []).map((r) => [r.creneau_id, r.reference]));
 
+  /*
+    UN CRÉNEAU DE TEAM BUILDING PEUT ÊTRE PRIS SANS RÉSERVATION.
+
+    Il l'est par une demande de devis (migration 0036). Sans cette lecture, la
+    ligne afficherait « Libre » sur une place qu'une entreprise attend — et le
+    bouton « Fermer » semblerait disponible.
+  */
+  const { data: tenues } = await base()
+    .from("devis_creneaux")
+    .select("creneau_id, demandes_devis(id, reference)")
+    .eq("actif", true)
+    .in(
+      "creneau_id",
+      data.map((c) => c.id)
+    );
+  const tenuPar = new Map(
+    (tenues ?? [])
+      .filter((t) => t.demandes_devis)
+      .map((t) => [
+        t.creneau_id,
+        { id: t.demandes_devis!.id, reference: t.demandes_devis!.reference },
+      ])
+  );
+
   return data.map((c) => {
     const debut = new Date(c.debut);
     return {
@@ -468,6 +565,7 @@ export async function lireCreneauxDuJour(jour: string): Promise<CreneauAdmin[]> 
       // de `creneaux_disponibles`, et elle doit venir de la même source.
       espaceActif: c.espaces?.actif ?? true,
       reservePar: parCreneau.get(c.id) ?? null,
+      tenuParDevis: tenuPar.get(c.id) ?? null,
     };
   });
 }
@@ -640,6 +738,9 @@ export type HorizonActivite = {
 const LIBELLES_ACTIVITE: Record<TypeActivite, string> = {
   anniversaire: "Anniversaires",
   bubble: "Bubble Foot",
+  // Vendu sur le site depuis le 24 septembre 2026, sous forme de demande qui
+  // tient un créneau : l'alerte doit donc le surveiller comme le reste.
+  team_building: "Team building",
 };
 
 const VENDUES_EN_LIGNE: TypeActivite[] = (

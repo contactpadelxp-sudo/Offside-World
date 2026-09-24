@@ -1,3 +1,5 @@
+import type { TypeActivite } from "@/lib/vues";
+
 /**
  * Les trois activités réservables, et le chemin qui mène à chacune.
  *
@@ -34,3 +36,19 @@ export function estActivite(v: string | null | undefined): v is ActiviteId {
 export function hrefActivite(id: ActiviteId): string {
   return `/reservation?activite=${encodeURIComponent(id)}`;
 }
+
+/**
+ * Le nom lisible de chaque activité qui porte des créneaux.
+ *
+ * Il était écrit à trois endroits — la ligne d'un créneau au back-office, la
+ * fiche d'une réservation, l'alerte d'horizon — dont un sous la forme
+ * `type === "anniversaire" ? "Anniversaire" : "Bubble Foot"`. Ajouter le team
+ * building y aurait affiché « Bubble Foot » sur chaque demi-journée. Un
+ * `Record` complet sur le type de la base oblige au contraire à nommer toute
+ * nouvelle activité : le compilateur refuse de construire sans.
+ */
+export const LIBELLE_ACTIVITE: Record<TypeActivite, string> = {
+  anniversaire: "Anniversaire",
+  bubble: "Bubble Foot",
+  team_building: "Team building",
+};

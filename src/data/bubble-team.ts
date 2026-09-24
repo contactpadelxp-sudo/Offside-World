@@ -3,7 +3,8 @@
  *
  * Bubble Foot : tarif à la personne, à l'heure. Ses créneaux vivent en base
  * (table `creneaux`, type « bubble ») ; seul le tarif reste ici.
- * Team Building : privatisation à la demi-journée, sur devis, donc sans créneau.
+ * Team Building : privatisation à la demi-journée ou à la journée, sur devis.
+ * Depuis le 24 septembre 2026, la demande tient un vrai créneau en base.
  */
 
 // ── Bubble Foot ──────────────────────────────────────────────────────────────
@@ -132,41 +133,30 @@ export const TEAM_BUILDING_MIN_PARTICIPANTS = 6;
 export const TEAM_BUILDING_MAX_PARTICIPANTS = 60;
 
 /*
-  LES JOURS SONT CONNUS, LES HEURES NE LE SONT TOUJOURS PAS.
+  LES JOURS ET LES HEURES SONT CONNUS.
 
-  Brahim a répondu le 17 septembre 2026 : lundi, mardi et jeudi matin ET
+  Les jours depuis le 17 septembre 2026 : lundi, mardi et jeudi matin ET
   après-midi ; vendredi matin seulement. Pas de team building le mercredi, ni
   le week-end — ces journées sont prises par les anniversaires.
 
-  Il n'a en revanche pas donné les HEURES des demi-journées. Celles ci-dessous
-  restent donc provisoires, et c'est écrit ici plutôt que supposé résolu : un
-  devis part avec elles.
+  Les heures depuis le 24 septembre 2026 : 09h00-13h00 et 14h00-18h00.
+
+  CES CONSTANTES NE DÉCIDENT PLUS DE CE QUI SE VEND. Depuis la migration 0036,
+  les demi-journées sont de vrais créneaux en base, générés par
+  `generer_creneaux_team_building` : c'est la base qui dit ce qui est ouvert,
+  fermé ou déjà demandé. Ces valeurs servent à NOMMER — la journée entière
+  s'affiche « 09:00 – 18:00 » — et doivent rester alignées sur la fonction SQL.
+  Changer une heure demande donc de changer les deux.
 */
 export const TEAM_BUILDING_JOURS = [1, 2, 4, 5] as const; // ISO : lun, mar, jeu, ven
 
 /** Le vendredi, seule la matinée est proposée. */
 export const TEAM_BUILDING_JOURS_APRES_MIDI = [1, 2, 4] as const;
 
-/*
-  LES HEURES SONT `null` TANT QU'ON NE LES CONNAÎT PAS, ET CE N'EST PAS UN OUBLI.
+type Plage = { debut: string; fin: string };
 
-  Elles valaient « 09:00 – 13:00 » et « 14:00 – 18:00 » — des horaires que
-  personne n'a confirmés. Le client les voyait en choisissant sa demi-journée,
-  puis dans son récapitulatif : une précision inventée, sur l'écran même où il
-  demande un devis.
-
-  `null` fait disparaître l'heure de l'affichage sans rien casser : il reste
-  « Matin » et « Après-midi », qui sont vrais. Le jour où Brahim répond, il
-  suffit de remplir ces deux constantes — les heures réapparaissent partout,
-  sans toucher à une ligne d'interface.
-
-  Écrire une heure fausse coûte plus qu'en écrire aucune : une entreprise qui
-  accepte un devis s'engage sur l'horaire qu'elle y a lu.
-*/
-type Plage = { debut: string; fin: string } | null;
-
-export const TEAM_BUILDING_MATIN: Plage = null;
-export const TEAM_BUILDING_APRES_MIDI: Plage = null;
+export const TEAM_BUILDING_MATIN: Plage = { debut: "09:00", fin: "13:00" };
+export const TEAM_BUILDING_APRES_MIDI: Plage = { debut: "14:00", fin: "18:00" };
 
 export const TEAM_BUILDING_INCLUS = [
   "Terrain privatisé pour votre groupe",

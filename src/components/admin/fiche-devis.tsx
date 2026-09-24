@@ -26,7 +26,7 @@ import {
   Rotative,
   useAction,
 } from "@/components/admin/retour";
-import { Coche, Croix, Document, Enveloppe, Groupe, Telephone } from "@/components/icons";
+import { AlerteTriangle, Coche, Croix, Document, Enveloppe, Groupe, Telephone } from "@/components/icons";
 
 /**
  * Une demande de team building, et le devis qu'on lui répond.
@@ -154,7 +154,9 @@ export function FicheDevis({ d }: { d: DevisAdmin }) {
 
   return (
     <article
-      className={`rounded-2xl border border-border bg-card p-5 transition-opacity duration-200 ${
+      // Ancre visée par la ligne d'un créneau tenu, au back-office Créneaux.
+      id={`devis-${d.id}`}
+      className={`scroll-mt-24 rounded-2xl border border-border bg-card p-5 transition-opacity duration-200 ${
         enCours ? "opacity-70" : ""
       }`}
     >
@@ -232,6 +234,44 @@ export function FicheDevis({ d }: { d: DevisAdmin }) {
           )}
         </div>
       </div>
+
+      {/*
+        LE CRÉNEAU QUE LA DEMANDE TIENT — OU A TENU.
+
+        Depuis la migration 0036, une demande réserve sa Fun zone dès l'envoi.
+        Brahim doit voir laquelle : c'est le terrain à préparer, et c'est ce
+        qu'une autre entreprise ne peut plus demander. Barré quand la demande a
+        été refusée : la place est rendue à la vente, mais on garde la trace de
+        ce qui avait été choisi.
+
+        L'AVERTISSEMENT SPORT-FINDER est posé ici et pas ailleurs, parce que
+        c'est ici que se prend la décision. Un après-midi de team building tombe
+        dans les heures où Sport-Finder loue les mêmes terrains : accepter la
+        demande sans fermer la plage là-bas, c'est vendre le terrain deux fois.
+      */}
+      {d.creneaux.length > 0 && (
+        <div className="mt-3 space-y-1.5">
+          {d.creneaux.map((c) => (
+            <p key={c.libelle} className="text-sm">
+              {c.actif ? (
+                <span className="font-medium text-field">Réservé pour cette demande · </span>
+              ) : (
+                <span className="text-muted-foreground">Rendu à la vente · </span>
+              )}
+              <span className={c.actif ? "" : "text-muted-foreground line-through"}>{c.libelle}</span>
+            </p>
+          ))}
+          {d.creneaux.some((c) => c.actif && c.heurteSportFinder) && (
+            <p className="flex items-start gap-1.5 rounded-lg border border-kick/40 bg-kick/5 px-3 py-2 text-xs text-kick">
+              <AlerteTriangle className="mt-0.5 size-3.5 shrink-0" />
+              <span>
+                Cet horaire est aussi vendu sur Sport-Finder. Si vous acceptez cette demande,
+                fermez la plage correspondante sur Sport-Finder.
+              </span>
+            </p>
+          )}
+        </div>
+      )}
 
       <div className="mt-4 rounded-xl bg-muted/60 p-3">
         <div className="flex flex-wrap gap-x-5 gap-y-1.5 text-sm">

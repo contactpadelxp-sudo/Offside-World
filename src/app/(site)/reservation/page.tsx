@@ -5,7 +5,7 @@ import { metadonneesPage } from "@/lib/site";
 import { lireCreneaux } from "@/lib/db/creneaux";
 import { lireFormules, lireOptions } from "@/lib/db/referentiel";
 import { expirerReservationsAbandonnees } from "@/lib/db/reservations";
-import { prochainesDemiJournees } from "@/lib/demi-journees";
+import { demiJourneesDepuisCreneaux } from "@/lib/demi-journees";
 import { baseConfiguree } from "@/lib/supabase/server";
 import { paiementConfigure } from "@/lib/paiement/stripe";
 import { NOM_COMMERCIAL } from "@/data/entreprise";
@@ -58,12 +58,16 @@ export default async function ReservationPage({
   // d'afficher les disponibilités, pour ne pas montrer « complet » à tort.
   if (baseConfiguree()) await expirerReservationsAbandonnees();
 
-  const [formules, options, creneauxAnniversaire, creneauxBubble] = await Promise.all([
-    lireFormules(),
-    lireOptions(),
-    lireCreneaux("anniversaire"),
-    lireCreneaux("bubble"),
-  ]);
+  const [formules, options, creneauxAnniversaire, creneauxBubble, creneauxTeamBuilding] =
+    await Promise.all([
+      lireFormules(),
+      lireOptions(),
+      lireCreneaux("anniversaire"),
+      lireCreneaux("bubble"),
+      // Le team building a ses vrais créneaux depuis la migration 0036 : ce
+      // qui s'affiche libre est ce que la base acceptera de tenir.
+      lireCreneaux("team_building"),
+    ]);
 
   /*
     LE BANDEAU PASSE PAR LE TUNNEL, IL NE SE MET PAS À CÔTÉ.
@@ -98,7 +102,7 @@ export default async function ReservationPage({
           options,
           creneauxAnniversaire,
           creneauxBubble,
-          demiJournees: prochainesDemiJournees(),
+          demiJournees: demiJourneesDepuisCreneaux(creneauxTeamBuilding),
           // Le tunnel doit annoncer un paiement SEULEMENT s'il va vraiment
           // avoir lieu : promettre « on vous rappelle » puis débiter le
           // client est une pratique trompeuse, et le bouton doit dire ce

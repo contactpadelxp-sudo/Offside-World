@@ -11,7 +11,8 @@ import {
   supprimerCreneau,
 } from "@/lib/actions/admin";
 import type { ResultatCreneau } from "@/lib/actions/admin";
-import type { CreneauAdmin } from "@/lib/vues";
+import type { CreneauAdmin, TypeActivite } from "@/lib/vues";
+import { LIBELLE_ACTIVITE } from "@/data/activites";
 import {
   BOUTON_NEUTRE,
   BOUTON_PRINCIPAL,
@@ -48,7 +49,13 @@ function LigneCreneau({ c }: { c: CreneauAdmin }) {
         </span>
         <span className="text-sm text-muted-foreground">{c.espaceNom}</span>
         <span className="rounded-md bg-white/5 px-2 py-0.5 text-xs text-muted-foreground">
-          {c.type === "anniversaire" ? "Anniversaire" : "Bubble Foot"}
+          {/*
+            Le libellé venait d'un ternaire à deux branches : tout ce qui
+            n'était pas un anniversaire s'affichait « Bubble Foot ». Le team
+            building y serait passé sous ce nom. `LIBELLE_ACTIVITE` est un
+            `Record` complet : une activité sans nom ne compile pas.
+          */}
+          {LIBELLE_ACTIVITE[c.type]}
         </span>
         {/*
           UN CRÉNEAU « OUVERT » SUR UN ESPACE HORS SERVICE NE SE VEND PAS.
@@ -66,7 +73,21 @@ function LigneCreneau({ c }: { c: CreneauAdmin }) {
           </span>
         )}
 
-        {c.reservePar ? (
+        {c.tenuParDevis ? (
+          /*
+            UN CRÉNEAU DE TEAM BUILDING EST PRIS PAR UNE DEMANDE, PAS UNE
+            RÉSERVATION. Même rôle que `reservePar`, mais il mène à la demande
+            de devis — c'est là qu'on la traite, et c'est en la refusant qu'on
+            libère le créneau. `toutes=1` : une demande acceptée tient encore son
+            créneau, mais n'apparaît que dans la liste complète.
+          */
+          <Link
+            href={`/admin/devis?toutes=1#devis-${c.tenuParDevis.id}`}
+            className="rounded-md bg-kick/10 px-2 py-0.5 text-xs font-medium text-kick underline underline-offset-2 hover:bg-kick/20"
+          >
+            Demandé · {c.tenuParDevis.reference}
+          </Link>
+        ) : c.reservePar ? (
           /*
             `reservePar` EST LA RÉFÉRENCE : autant y aller.
 
@@ -89,7 +110,11 @@ function LigneCreneau({ c }: { c: CreneauAdmin }) {
         )}
 
         <span className="ml-auto">
-          {c.reservePar ? (
+          {c.tenuParDevis ? (
+            <span className="text-xs text-muted-foreground">
+              Refusez la demande pour libérer
+            </span>
+          ) : c.reservePar ? (
             <span className="text-xs text-muted-foreground">
               Annulez la réservation pour libérer
             </span>
@@ -329,7 +354,7 @@ export function FermerJournee({
 const CHAMP_CRENEAU =
   "h-10 rounded-xl border border-border bg-input/30 px-3 text-sm text-foreground outline-none transition-colors focus-visible:ring-2 focus-visible:ring-field/60";
 
-type TypeCreneau = "anniversaire" | "bubble";
+type TypeCreneau = TypeActivite;
 
 /**
  * Durée proposée d'office selon l'activité.
@@ -350,6 +375,8 @@ type TypeCreneau = "anniversaire" | "bubble";
 const DUREE_PAR_DEFAUT: Record<TypeCreneau, number> = {
   anniversaire: 120,
   bubble: BUBBLE_DUREE_MINUTES,
+  // Une demi-journée : 09h00-13h00 ou 14h00-18h00.
+  team_building: 240,
 };
 
 export function AjouterCreneau({
@@ -441,6 +468,7 @@ export function AjouterCreneau({
             <option value={120}>2 h</option>
             <option value={150}>2 h 30</option>
             <option value={180}>3 h</option>
+            <option value={240}>4 h</option>
           </select>
         </div>
 
@@ -487,6 +515,7 @@ export function AjouterCreneau({
             className={CHAMP_CRENEAU}
           >
             <option value="anniversaire">Anniversaire</option>
+            <option value="team_building">Team building</option>
             <option value="bubble">Bubble Foot</option>
           </select>
         </div>

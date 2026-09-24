@@ -33,6 +33,7 @@ import {
   Document,
   Enveloppe,
   Gateau,
+  Groupe,
   Telephone,
   type IconType,
 } from "@/components/icons";
@@ -50,6 +51,10 @@ import {
 const TYPES: Record<string, { label: string; classe: string; icone: IconType }> = {
   anniversaire: { label: "Anniversaire", classe: "bg-kick/10 text-kick", icone: Gateau },
   bubble: { label: "Bubble Foot", classe: "bg-field/10 text-field", icone: Ballon },
+  // Ne devrait jamais s'afficher : le team building passe par un devis, pas
+  // par une réservation. Nommé quand même, pour qu'une ligne saisie à la main
+  // ne se fasse pas passer pour un anniversaire (le repli de `TYPES[r.type]`).
+  team_building: { label: "Team building", classe: "bg-kick/10 text-kick", icone: Groupe },
 };
 
 const STATUTS: Record<StatutReservation, { label: string; classe: string }> = {

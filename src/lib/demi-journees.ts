@@ -1,95 +1,120 @@
-import { jourISO, jourLisibleCap } from "@/lib/temps";
-import {
-  TEAM_BUILDING_APRES_MIDI,
-  TEAM_BUILDING_JOURS,
-  TEAM_BUILDING_JOURS_APRES_MIDI,
-  TEAM_BUILDING_MATIN,
-} from "@/data/bubble-team";
+import { TEAM_BUILDING_APRES_MIDI, TEAM_BUILDING_MATIN } from "@/data/bubble-team";
+import type { CreneauVue } from "@/lib/vues";
 
 /**
- * Demi-journées proposées pour le team building.
+ * Ce que le tunnel propose pour le team building : matin, après-midi, journée.
  *
- * Le team building se vend sur devis : ce n'est pas une réservation ferme et
- * cela n'occupe donc aucun créneau en base (voir le commentaire de la table
- * `demandes_devis`). Ces demi-journées ne sont pas des disponibilités — ce
- * sont des préférences que l'entreprise indique et que le complexe confirme.
+ * CE NE SONT PLUS DES PRÉFÉRENCES, CE SONT DES DISPONIBILITÉS.
  *
- * C'est aussi pourquoi aucune n'est affichée « complet » : rien ne pourrait
- * l'établir, et l'afficher quand même serait inventer une information.
+ * Jusqu'au 24 septembre 2026, ce module fabriquait des demi-journées à partir
+ * d'un calendrier — « les dix prochains lundis, mardis, jeudis et vendredis ».
+ * Rien ne les rattachait à la base : deux entreprises pouvaient demander le
+ * même lundi matin, et aucune n'était jamais affichée « complet », faute de
+ * pouvoir l'établir.
+ *
+ * Depuis la migration 0036, le team building a de vrais créneaux, générés en
+ * base et tenus par les demandes de devis. Ce module ne fait plus que les
+ * REGROUPER en ce que l'entreprise choisit réellement :
+ *
+ *   - le MATIN est libre s'il reste au moins un créneau de 09h00 libre ce
+ *     jour-là, dans n'importe quelle Fun zone ;
+ *   - l'APRÈS-MIDI, de même pour 14h00 ;
+ *   - la JOURNÉE ENTIÈRE existe quand le jour a les deux, et elle est libre
+ *     quand les deux le sont.
+ *
+ * Le choix de la Fun zone n'est pas demandé à l'entreprise : elle n'a aucune
+ * raison de préférer l'une ou l'autre. C'est le serveur qui en attribue une au
+ * moment d'enregistrer — et qui, pour une journée entière, garde le même
+ * terrain matin et après-midi quand il le peut. Voir `demanderDevis`.
+ *
+ * Un jour dont Brahim a fermé tous les créneaux n'apparaît simplement pas :
+ * la vue `creneaux_disponibles` ne montre que les créneaux ouverts.
  */
+
+export type PeriodeTeamBuilding = "matin" | "apres-midi" | "journee";
 
 export interface DemiJourneeVue {
+  /** « 2026-10-05-matin » — unique dans la liste. */
   id: string;
-  /** « 2026-09-14 » */
+  /** « 2026-10-05 » */
   jour: string;
-  /** « lundi 14 septembre » */
+  /** « Lundi 5 octobre » */
   jourLabel: string;
-  periode: "matin" | "apres-midi";
-  periodeLabel: "Matin" | "Après-midi";
-  /** `null` tant que les heures réelles ne sont pas connues. Voir `bubble-team.ts`. */
-  debut: string | null;
-  fin: string | null;
+  periode: PeriodeTeamBuilding;
+  periodeLabel: "Matin" | "Après-midi" | "Journée entière";
+  /** « 09:00 » */
+  debut: string;
+  /** « 13:00 » */
+  fin: string;
+  /** Faux quand toutes les Fun zones sont déjà demandées ou réservées. */
+  libre: boolean;
 }
 
+/** Les libellés et les heures de chaque période, au même endroit. */
+export const PERIODES: Record<
+  PeriodeTeamBuilding,
+  { label: DemiJourneeVue["periodeLabel"]; debut: string; fin: string }
+> = {
+  matin: { label: "Matin", debut: TEAM_BUILDING_MATIN.debut, fin: TEAM_BUILDING_MATIN.fin },
+  "apres-midi": {
+    label: "Après-midi",
+    debut: TEAM_BUILDING_APRES_MIDI.debut,
+    fin: TEAM_BUILDING_APRES_MIDI.fin,
+  },
+  journee: {
+    label: "Journée entière",
+    debut: TEAM_BUILDING_MATIN.debut,
+    fin: TEAM_BUILDING_APRES_MIDI.fin,
+  },
+};
+
 /**
- * Les prochaines demi-journées où un team building est possible.
+ * Regroupe les créneaux de team building en demi-journées et journées.
  *
- * LES JOURS SONT CEUX DU COMPLEXE, PLUS « TOUS LES JOURS OUVRABLES ».
- *
- * On proposait lundi à vendredi, matin et après-midi — une hypothèse posée
- * faute de mieux. Brahim a donné les vrais jours le 17 septembre 2026 : lundi,
- * mardi et jeudi en entier ; vendredi le matin seulement. Ni le mercredi ni le
- * week-end, qui sont pris par les anniversaires.
- *
- * Proposer une demi-journée impossible n'est pas neutre : l'entreprise choisit
- * une date, reçoit un devis, et découvre ensuite qu'il faut tout redécaler.
- *
- * `nbJours` compte des JOURS RETENUS, pas des jours de calendrier ; la boucle
- * est bornée pour ne pas tourner indéfiniment si la liste des jours venait à se
- * vider.
+ * L'ordre d'entrée est conservé : `lireCreneaux` les rend triés par début, les
+ * jours sortent donc dans l'ordre du calendrier, et dans chaque jour le matin
+ * précède l'après-midi, puis la journée entière.
  */
-export function prochainesDemiJournees(nbJours = 10, depuis = new Date()): DemiJourneeVue[] {
-  const sortie: DemiJourneeVue[] = [];
-  const curseur = new Date(depuis);
-  let jourRetenus = 0;
-  let gardeFou = 0;
+export function demiJourneesDepuisCreneaux(creneaux: CreneauVue[]): DemiJourneeVue[] {
+  const parJour = new Map<string, { label: string; matin: CreneauVue[]; apresMidi: CreneauVue[] }>();
 
-  while (jourRetenus < nbJours && gardeFou++ < 400) {
-    curseur.setDate(curseur.getDate() + 1);
-    // `getDay()` : 0 = dimanche. La norme ISO employée côté SQL met lundi à 1
-    // et dimanche à 7 — on convertit pour que les deux parlent la même langue.
-    const iso = curseur.getDay() === 0 ? 7 : curseur.getDay();
-    if (!TEAM_BUILDING_JOURS.includes(iso as (typeof TEAM_BUILDING_JOURS)[number])) continue;
-    jourRetenus++;
-
-    const jour = jourISO(curseur);
-    const label = jourLisibleCap(curseur);
-    const apresMidiPossible = TEAM_BUILDING_JOURS_APRES_MIDI.includes(
-      iso as (typeof TEAM_BUILDING_JOURS_APRES_MIDI)[number]
-    );
-    sortie.push({
-      id: `${jour}-matin`,
-      jour,
-      jourLabel: label,
-      periode: "matin",
-      periodeLabel: "Matin",
-      debut: TEAM_BUILDING_MATIN?.debut ?? null,
-      fin: TEAM_BUILDING_MATIN?.fin ?? null,
-    });
-
-    // Le vendredi s'arrête à midi : on ne propose pas l'après-midi ce jour-là.
-    if (apresMidiPossible) {
-      sortie.push({
-        id: `${jour}-apres-midi`,
-        jour,
-        jourLabel: label,
-        periode: "apres-midi",
-        periodeLabel: "Après-midi",
-        debut: TEAM_BUILDING_APRES_MIDI?.debut ?? null,
-        fin: TEAM_BUILDING_APRES_MIDI?.fin ?? null,
-      });
+  for (const c of creneaux) {
+    let jour = parJour.get(c.jour);
+    if (!jour) {
+      jour = { label: c.jourLabel, matin: [], apresMidi: [] };
+      parJour.set(c.jour, jour);
     }
+    // On range par HEURE DE DÉBUT, pas par position dans la journée : un
+    // créneau ajouté à la main à une autre heure ne se fait pas passer pour
+    // un matin ou un après-midi qu'il n'est pas.
+    if (c.debut === PERIODES.matin.debut) jour.matin.push(c);
+    else if (c.debut === PERIODES["apres-midi"].debut) jour.apresMidi.push(c);
   }
 
+  const sortie: DemiJourneeVue[] = [];
+  for (const [jour, { label, matin, apresMidi }] of parJour) {
+    const matinLibre = matin.some((c) => c.libre);
+    const apresMidiLibre = apresMidi.some((c) => c.libre);
+
+    const ajouter = (periode: PeriodeTeamBuilding, libre: boolean) =>
+      sortie.push({
+        id: `${jour}-${periode}`,
+        jour,
+        jourLabel: label,
+        periode,
+        periodeLabel: PERIODES[periode].label,
+        debut: PERIODES[periode].debut,
+        fin: PERIODES[periode].fin,
+        libre,
+      });
+
+    if (matin.length > 0) ajouter("matin", matinLibre);
+    if (apresMidi.length > 0) ajouter("apres-midi", apresMidiLibre);
+    // La journée n'existe que si le jour porte les deux moitiés : le vendredi,
+    // qui n'a que le matin, n'en propose donc pas.
+    if (matin.length > 0 && apresMidi.length > 0) {
+      ajouter("journee", matinLibre && apresMidiLibre);
+    }
+  }
   return sortie;
 }

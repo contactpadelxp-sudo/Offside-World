@@ -352,7 +352,7 @@ export function Accueil({ formules }: { formules: FormuleVue[] }) {
               <p className="mt-5 text-muted-foreground leading-relaxed text-lg">
                 Venez vivre un team building sportif qui soude vos équipes :
                 tournoi de foot indoor, Bubble Foot entre collègues, terrain rien que pour vous.
-                On organise tout de A à Z. Privatisation <strong>à la demi-journée</strong>, devis sur mesure.
+                On organise tout de A à Z. Privatisation <strong>à la demi-journée ou à la journée</strong>, devis sur mesure.
               </p>
               <div className="mt-8 grid grid-cols-2 gap-4">
                 {[
@@ -363,7 +363,7 @@ export function Accueil({ formules }: { formules: FormuleVue[] }) {
                     icon: Groupe,
                     label: `${TEAM_BUILDING_MIN_PARTICIPANTS} à ${TEAM_BUILDING_MAX_PARTICIPANTS} personnes`,
                   },
-                  { icon: Horloge, label: "À la demi-journée" },
+                  { icon: Horloge, label: "Demi-journée ou journée" },
                   { icon: Batiment, label: "Terrain privatisé" },
                   { icon: Document, label: "Devis sur mesure" },
                 ].map((item) => (

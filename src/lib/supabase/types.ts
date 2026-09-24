@@ -176,6 +176,49 @@ export type Database = {
         }
         Relationships: []
       }
+      devis_creneaux: {
+        Row: {
+          actif: boolean
+          created_at: string
+          creneau_id: string
+          demande_id: string
+        }
+        Insert: {
+          actif?: boolean
+          created_at?: string
+          creneau_id: string
+          demande_id: string
+        }
+        Update: {
+          actif?: boolean
+          created_at?: string
+          creneau_id?: string
+          demande_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "devis_creneaux_creneau_id_fkey"
+            columns: ["creneau_id"]
+            isOneToOne: false
+            referencedRelation: "creneaux"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "devis_creneaux_creneau_id_fkey"
+            columns: ["creneau_id"]
+            isOneToOne: false
+            referencedRelation: "creneaux_disponibles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "devis_creneaux_demande_id_fkey"
+            columns: ["demande_id"]
+            isOneToOne: false
+            referencedRelation: "demandes_devis"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       espaces: {
         Row: {
           actif: boolean
@@ -670,6 +713,14 @@ export type Database = {
           sans_horaire: boolean
         }[]
       }
+      generer_creneaux_team_building: {
+        Args: { au: string; du: string }
+        Returns: {
+          crees: number
+          deja_presents: number
+          refuses: number
+        }[]
+      }
       purger_sessions_admin: {
         Args: { garde?: string }
         Returns: number
@@ -690,7 +741,7 @@ export type Database = {
         | "rembourse"
         | "partiellement_rembourse"
       statut_reservation: "en_attente" | "confirmee" | "annulee" | "expiree"
-      type_activite: "anniversaire" | "bubble"
+      type_activite: "anniversaire" | "bubble" | "team_building"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -817,7 +868,7 @@ export const Constants = {
         "partiellement_rembourse",
       ],
       statut_reservation: ["en_attente", "confirmee", "annulee", "expiree"],
-      type_activite: ["anniversaire", "bubble"],
+      type_activite: ["anniversaire", "bubble", "team_building"],
     },
   },
 } as const

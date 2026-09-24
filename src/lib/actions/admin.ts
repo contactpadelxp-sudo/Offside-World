@@ -30,7 +30,7 @@ import { lignesDepuisJson, obstaclesEnvoi, totalDevisCents } from "@/lib/devis";
 import { heure, heuresAvant, jourLisibleCap } from "@/lib/temps";
 import { AGE_MINIMUM } from "@/data/reglement";
 import { genererDevisPdf } from "@/lib/devis-pdf";
-import type { FormuleAdmin, OptionAdmin, SaisieDevis } from "@/lib/vues";
+import type { FormuleAdmin, OptionAdmin, SaisieDevis, TypeActivite } from "@/lib/vues";
 import {
   montantARembourser,
   paiementRemboursable,
@@ -939,6 +939,52 @@ export async function enregistrerNoteDevis(id: string, note: string): Promise<Re
 /** Contrainte d'exclusion PostgreSQL : deux créneaux ouverts se chevauchent. */
 const VIOLATION_EXCLUSION = "23P01";
 
+/**
+ * Qui occupe ces créneaux : une réservation, ou une demande de team building.
+ *
+ * DEUX SOURCES, UNE SEULE QUESTION. Les anniversaires sont occupés par une
+ * réservation ; le team building, depuis la migration 0036, par une demande
+ * de devis qui tient son créneau. Fermer, fermer la journée, supprimer : les
+ * trois gestes doivent refuser dans les deux cas. Écrire la vérification deux
+ * fois, c'était l'oublier une fois — et fermer sous une entreprise la place
+ * qu'on vient de lui confirmer par e-mail.
+ *
+ * Rend, pour chaque créneau occupé, la référence qui l'occupe (`OW-…` ou
+ * `TB-…`), ou `null` si l'une des deux lectures a échoué : l'appelant doit
+ * alors ne rien retirer de la vente, faute de savoir.
+ */
+async function occupantsDe(ids: string[]): Promise<Map<string, string> | null> {
+  if (ids.length === 0) return new Map();
+
+  const [reservations, tenues] = await Promise.all([
+    base()
+      .from("reservations")
+      .select("creneau_id, reference")
+      .in("statut", ["en_attente", "confirmee"])
+      .in("creneau_id", ids),
+    base()
+      .from("devis_creneaux")
+      .select("creneau_id, demandes_devis(reference)")
+      .eq("actif", true)
+      .in("creneau_id", ids),
+  ]);
+
+  if (reservations.error || tenues.error) {
+    console.error(
+      "Lecture des occupants impossible :",
+      reservations.error?.message ?? tenues.error?.message
+    );
+    return null;
+  }
+
+  const occupes = new Map<string, string>();
+  for (const r of reservations.data ?? []) occupes.set(r.creneau_id, r.reference);
+  for (const t of tenues.data ?? []) {
+    occupes.set(t.creneau_id, t.demandes_devis?.reference ?? "une demande de devis");
+  }
+  return occupes;
+}
+
 export async function basculerCreneau(
   id: string,
   ouvrir: boolean,
@@ -1004,12 +1050,10 @@ export async function basculerCreneau(
         return { ok: true, message: "Ce créneau était déjà fermé." };
       }
 
-      const { data: prise, error: ePrise } = await base()
-        .from("reservations")
-        .select("reference")
-        .eq("creneau_id", cible)
-        .in("statut", ["en_attente", "confirmee"])
-        .maybeSingle();
+      // Réservation OU demande de team building : voir `occupantsDe`.
+      const occupants = await occupantsDe([cible]);
+      const ePrise = occupants === null;
+      const prise = occupants?.get(cible) ?? null;
 
       if (ePrise || prise) {
         // Une place vendue ne se retire pas de la vente. On remet le créneau
@@ -1030,7 +1074,6 @@ export async function basculerCreneau(
           };
         }
         if (ePrise) {
-          console.error("Lecture des réservations du créneau impossible :", ePrise.message);
           return {
             ok: false,
             message:
@@ -1039,7 +1082,9 @@ export async function basculerCreneau(
         }
         return {
           ok: false,
-          message: `Impossible : la réservation ${prise!.reference} occupe ce créneau. Annulez-la d'abord.`,
+          message: prise!.startsWith("TB-")
+            ? `Impossible : la demande de devis ${prise} tient ce créneau. Refusez-la d'abord pour le libérer.`
+            : `Impossible : la réservation ${prise} occupe ce créneau. Annulez-la d'abord.`,
         };
       }
 
@@ -1143,13 +1188,16 @@ export async function genererCreneaux(du: string, au: string): Promise<Resultat>
     const fin = jour(au, "Date de fin", { maxJours: 400 });
     if (fin < debut) return { ok: false, message: "La date de fin précède la date de début." };
 
-    const [anniversaire, bubble] = await Promise.all([
+    const [anniversaire, bubble, teamBuilding] = await Promise.all([
       base().rpc("generer_creneaux_anniversaire", { du: debut, au: fin }),
       base().rpc("generer_creneaux_bubble", { du: debut, au: fin }),
+      // Depuis la migration 0036 : les demi-journées de team building.
+      base().rpc("generer_creneaux_team_building", { du: debut, au: fin }),
     ]);
 
     if (anniversaire.error) throw anniversaire.error;
     if (bubble.error) throw bubble.error;
+    if (teamBuilding.error) throw teamBuilding.error;
 
     // Les deux fonctions renvoient une ligne unique : créés, déjà présents,
     // refusés pour chevauchement. Voir la migration 0014.
@@ -1172,8 +1220,9 @@ export async function genererCreneaux(du: string, au: string): Promise<Resultat>
     };
     const a = compte(anniversaire.data);
     const b = compte(bubble.data);
-    const crees = a.crees + b.crees;
-    const refuses = a.refuses + b.refuses;
+    const t = compte(teamBuilding.data);
+    const crees = a.crees + b.crees + t.crees;
+    const refuses = a.refuses + b.refuses + t.refuses;
 
     await journaliser(session, "creneaux.generes", null, {
       du: debut,
@@ -1558,7 +1607,7 @@ export async function creerCreneau(saisie: {
   heure: string;
   dureeMinutes: number;
   espaceId: string;
-  type: "anniversaire" | "bubble";
+  type: TypeActivite;
   /**
    * L'exploitant a lu le refus et maintient son geste.
    *
@@ -1582,7 +1631,7 @@ export async function creerCreneau(saisie: {
     const duree = entier(saisie?.dureeMinutes, "Durée", { min: 15, max: 600 });
     const espaceId = texte(saisie?.espaceId, "Espace", { min: 1, max: 40 });
     const type = saisie?.type;
-    if (type !== "anniversaire" && type !== "bubble") {
+    if (type !== "anniversaire" && type !== "bubble" && type !== "team_building") {
       return { ok: false, message: "Choisissez le type d'activité." };
     }
 
@@ -1682,6 +1731,28 @@ export async function supprimerCreneau(id: string): Promise<Resultat> {
       return {
         ok: false,
         message: `Impossible : la réservation ${liee.reference} porte ce créneau. Fermez-le plutôt que de le supprimer.`,
+      };
+    }
+
+    /*
+      UNE DEMANDE DE TEAM BUILDING GARDE AUSSI SON CRÉNEAU — MÊME REFUSÉE.
+
+      Le lien est en `on delete restrict`, comme pour une réservation : le
+      créneau qu'une entreprise avait choisi reste la trace de sa demande. Sans
+      cette lecture, la suppression échouait sur l'erreur brute de la base, et
+      l'écran annonçait « L'opération a échoué » sans dire pourquoi.
+    */
+    const { data: demandee } = await base()
+      .from("devis_creneaux")
+      .select("demandes_devis(reference)")
+      .eq("creneau_id", cible)
+      .limit(1)
+      .maybeSingle();
+
+    if (demandee) {
+      return {
+        ok: false,
+        message: `Impossible : la demande de devis ${demandee.demandes_devis?.reference ?? ""} a visé ce créneau. Fermez-le plutôt que de le supprimer.`,
       };
     }
 
@@ -1862,11 +1933,9 @@ export async function basculerJournee(jourDemande: string, ouvrir: boolean): Pro
 
     const ids = fermes.map((c) => c.id);
 
-    const { data: prises, error: erreurPrises } = await base()
-      .from("reservations")
-      .select("creneau_id, reference")
-      .in("statut", ["en_attente", "confirmee"])
-      .in("creneau_id", ids);
+    // Réservations ET demandes de team building : voir `occupantsDe`.
+    const lus = await occupantsDe(ids);
+    const erreurPrises = lus === null;
 
     /*
       SI LA LECTURE ÉCHOUE, ON REMET TOUT COMME C'ÉTAIT — ET ON VÉRIFIE QUE
@@ -1884,7 +1953,6 @@ export async function basculerJournee(jourDemande: string, ouvrir: boolean): Pro
       son erreur ; sa jumelle `basculerCreneau` la vérifie déjà.
     */
     if (erreurPrises) {
-      console.error("Lecture des réservations de la journée impossible :", erreurPrises.message);
       const { error: eRetourTotal } = await base()
         .from("creneaux")
         .update({ ouvert: true })
@@ -1909,7 +1977,7 @@ export async function basculerJournee(jourDemande: string, ouvrir: boolean): Pro
       };
     }
 
-    const occupes = new Map((prises ?? []).map((r) => [r.creneau_id, r.reference]));
+    const occupes = lus ?? new Map<string, string>();
 
     if (occupes.size > 0) {
       const { error: eRetour } = await base()
@@ -1943,13 +2011,47 @@ export async function basculerJournee(jourDemande: string, ouvrir: boolean): Pro
       const refs = [...new Set(occupes.values())].join(", ");
       phrases.push(
         `${occupes.size} créneau${occupes.size > 1 ? "x" : ""} laissé${occupes.size > 1 ? "s" : ""} ouvert${occupes.size > 1 ? "s" : ""} : ` +
-          `${occupes.size > 1 ? "les réservations" : "la réservation"} ${refs} ${occupes.size > 1 ? "les occupent" : "l'occupe"}.`
+          `${refs} ${occupes.size > 1 ? "les occupent" : "l'occupe"}.`
       );
     }
     return { ok: true, message: phrases.join(" ") };
   } catch (e) {
     return echec(e);
   }
+}
+
+/**
+ * Reprend les créneaux d'une demande qui sort de l'état « refusée ».
+ *
+ * La libération, elle, est faite par la base (déclencheur de la migration
+ * 0036) : elle ne peut pas être oubliée. La REPRISE ne peut pas l'être au même
+ * endroit — si une autre entreprise a pris le créneau entre-temps, elle échoue,
+ * et dans un déclencheur cet échec empêcherait de rouvrir la demande.
+ *
+ * L'instruction est unique, donc atomique : pour une journée entière, les deux
+ * moitiés reviennent ensemble ou aucune. Une journée à moitié reprise ferait
+ * croire à Brahim qu'il peut la confirmer.
+ *
+ * Rend une phrase à ajouter au message, ou `null` s'il n'y a rien à dire.
+ */
+async function reprendreCreneauxDevis(demandeId: string): Promise<string | null> {
+  const { data, error } = await base()
+    .from("devis_creneaux")
+    .update({ actif: true })
+    .eq("demande_id", demandeId)
+    .eq("actif", false)
+    .select("creneau_id");
+
+  if (error) {
+    if (error.code === "23505") {
+      return (
+        "Attention : le créneau qu'elle tenait a été pris entre-temps par une autre " +
+        "demande. Il n'est plus réservé à cette entreprise — proposez-lui une autre date."
+      );
+    }
+    throw error;
+  }
+  return data && data.length > 0 ? "Son créneau lui est de nouveau réservé." : null;
 }
 
 /**
@@ -1989,9 +2091,29 @@ export async function changerStatutDevis(
     if (error) throw error;
     if (!data) return { ok: false, message: "Demande introuvable." };
 
+    /*
+      CE QUE LE CHANGEMENT D'ÉTAT FAIT AU CRÉNEAU, DIT DANS LE MESSAGE.
+
+      Refuser rend le créneau à la vente — c'est la base qui le fait, par
+      déclencheur. Sortir du refus tente de le reprendre. Dans les deux cas,
+      Brahim doit le lire : c'est une place que d'autres peuvent maintenant
+      demander, ou qu'une entreprise croit encore avoir.
+    */
+    const phrases = ["État mis à jour."];
+    if (statut === "refusee") {
+      const { count } = await base()
+        .from("devis_creneaux")
+        .select("creneau_id", { count: "exact", head: true })
+        .eq("demande_id", cible);
+      if (count && count > 0) phrases.push("Son créneau est rendu à la vente.");
+    } else {
+      const reprise = await reprendreCreneauxDevis(cible);
+      if (reprise) phrases.push(reprise);
+    }
+
     await journaliser(session, "devis.statut", data.reference, { statut });
     rafraichir();
-    return { ok: true, message: "État mis à jour." };
+    return { ok: true, message: phrases.join(" ") };
   } catch (e) {
     return echec(e);
   }
@@ -2045,9 +2167,12 @@ export async function rouvrirDemandeDevis(id: string): Promise<Resultat> {
     if (error) throw error;
     if (!data) return { ok: false, message: "Cette demande n'est pas close." };
 
+    // Une demande refusée avait rendu son créneau : on tente de le reprendre.
+    const reprise = await reprendreCreneauxDevis(cible);
+
     await journaliser(session, "devis.statut", data.reference, { statut });
     rafraichir();
-    return { ok: true, message: "Demande rouverte." };
+    return { ok: true, message: reprise ? `Demande rouverte. ${reprise}` : "Demande rouverte." };
   } catch (e) {
     return echec(e);
   }

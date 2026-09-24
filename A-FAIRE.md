@@ -877,37 +877,57 @@ des LECTURES d'une image, pas des constats. Retiré.
 paiements fonctionnent, il ne reste que le domaine. Ce chantier demande des
 réponses qui ne dépendent ni de Mathis ni de Brahim.
 
-## Team building : créneaux, blocage des terrains, journée entière — demandé le 24 septembre 2026
+## Team building : de vrais créneaux, tenus par la demande — FAIT le 24 septembre 2026
 
-Mathis : « dans le back-office faut aussi pouvoir gérer les créneaux du team
-building, pouvoir bloquer les terrains, et que les gens sur le site aient la
-possibilité de réserver une journée entière matin et aprem ».
+Mathis : « quand quelqu'un fait une demande de devis il choisit son créneau et
+ça le bloque, mais Brahim doit aussi pouvoir bloquer lui-même dans le
+back-office ; les créneaux de team building doivent avoir le même
+fonctionnement que les créneaux anniversaires. » Et la journée entière.
 
-**Ce qui existe aujourd'hui** (`data/bubble-team.ts`) : le team building est
-une **demande de devis**, sans créneau. Le client choisit une demi-journée
-parmi les jours donnés par Brahim le 17 septembre — lundi, mardi, jeudi matin
-et après-midi, vendredi matin seulement — et Brahim répond. Rien n'est bloqué
-nulle part : ni au back-office, ni sur les terrains.
+**Heures données le même jour : 09h00–13h00 et 14h00–18h00.** Jours inchangés :
+lundi, mardi, jeudi matin et après-midi ; vendredi matin seulement.
 
-**Ce qui est demandé est un changement de nature**, pas une option de plus :
-passer d'une demande qu'on traite à la main à des créneaux qui occupent des
-terrains. Trois choses en découlent, et aucune ne se devine :
+**Ce qui a été construit** (migrations 0035 et 0036, appliquées) :
 
-- [ ] **Les HEURES des demi-journées deviennent indispensables.** Elles valent
-      `null` aujourd'hui, et c'était suffisant tant qu'on ne faisait qu'un
-      devis (« Matin », « Après-midi »). Un créneau qui bloque un terrain a un
-      début et une fin : il faut les heures exactes.
-- [ ] **Le conflit avec Sport-Finder.** Les jours de team building sont les
-      jours SANS anniversaire, où Sport-Finder loue les terrains de 14h à 1h.
-      Un après-midi de team building tombe donc en plein dedans : c'est le même
-      problème de double vente que celui réglé pour les anniversaires, et il
-      faudra la même étanchéité — côté Sport-Finder, par Brahim.
-- [ ] **La journée entière** n'existe pas le vendredi (matin seulement). Et
-      « réserver » veut-il dire payer en ligne, ou toujours un devis ? Le prix
-      d'un team building varie aujourd'hui selon le groupe.
+- [x] Le type d'activité `team_building`, et **360 créneaux** générés sur six
+      mois — un par Fun zone active, comme les anniversaires. Les 453
+      créneaux d'anniversaire n'ont pas bougé.
+- [x] Une demande **tient** son créneau dès l'envoi (table `devis_creneaux`).
+      La journée entière en tient deux, d'une seule écriture : les deux ou
+      aucun. Le serveur attribue la Fun zone ; pour une journée, il garde le
+      même terrain matin et après-midi quand il le peut.
+- [x] **La base tranche les courses** : index unique partiel — deux
+      entreprises qui envoient au même instant ne passent pas toutes les deux.
+- [x] **Refuser la demande rend le créneau à la vente**, par déclencheur : ça
+      ne dépend d'aucun chemin de code. Rouvrir la demande tente de le
+      reprendre, et le DIT s'il a été pris entre-temps.
+- [x] Le back-office traite ces créneaux comme les anniversaires : fermer,
+      rouvrir, fermer la journée, ajouter à la main (durée 4 h ajoutée).
+      Un créneau tenu affiche « Demandé · TB-… » et renvoie à la demande ;
+      il ne se ferme pas tant qu'elle vit.
+- [x] Le tunnel montre les vrais créneaux, **complets barrés**, par paquets de
+      douze jours.
+- [x] **Vérifié en base dans une transaction annulée** : tenue, doublon
+      refusé, libération au refus, trace conservée, reprise par une autre
+      demande, réactivation refusée. Rien n'est resté en base.
 
-**Pas avant la mise en ligne.** Le site ouvre avec le team building en devis,
-comme aujourd'hui — ce qui fonctionne.
+**Trois textes disaient l'inverse de ce qui se passe désormais**, corrigés :
+l'e-mail à l'entreprise (« Cette demande ne bloque pas encore de créneau »),
+le sous-titre de la page Devis (« n'occupe aucun créneau »), et le tunnel
+(« la confirmation de la disponibilité »).
+
+⚠️ **CE QUI RESTE À LA CHARGE DE BRAHIM — le conflit avec Sport-Finder.**
+Les jours de team building, Sport-Finder loue les mêmes terrains **à partir de
+14h00**. Les après-midis tombent donc dedans. Ils sont proposés quand même —
+c'est l'offre de Brahim, et une demande de devis n'est pas une vente : il la
+relit. Mais **quand il accepte un après-midi, il doit fermer la plage sur
+Sport-Finder**. La fiche du devis et l'avis e-mail le lui rappellent,
+calculés par la même règle que le reste du site.
+
+**Hypothèse retenue, à confirmer avec lui :** un créneau par Fun zone, donc
+deux entreprises peuvent prendre le même lundi matin, une par terrain. Pour
+une grande société qui veut les deux terrains, Brahim ferme le second à la
+main.
 
 ## Le Bounce Park arrive sur le site
 
