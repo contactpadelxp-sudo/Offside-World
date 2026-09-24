@@ -245,10 +245,13 @@ export function FicheDevis({ d }: { d: DevisAdmin }) {
         ce qui avait été choisi.
 
         L'AVERTISSEMENT SPORT-FINDER est posé ici et pas ailleurs, parce que
-        c'est ici que se prend la décision. Un après-midi de team building tombe
-        dans les heures où Sport-Finder loue les mêmes terrains. Il faut fermer
-        la plage là-bas DÈS RÉCEPTION, pas à l'acceptation : sans ça, Sport-Finder
-        continue de la louer pendant les 48 h que prend le devis.
+        c'est ici que se prend la décision. Si un créneau tenu tombe dans les
+        heures où Sport-Finder loue les mêmes terrains, il faut fermer la plage
+        là-bas DÈS RÉCEPTION, pas à l'acceptation : sans ça, Sport-Finder
+        continue de la louer pendant les 48 h que prend le devis. Aucun créneau
+        généré n'y tombe depuis le 24 septembre 2026 (le foot ouvre à 18h,
+        quand l'après-midi finit) ; l'avertissement reste pour le jour où les
+        horaires de Sport-Finder bougeront.
       */}
       {d.creneaux.length > 0 && (
         <div className="mt-3 space-y-1.5">

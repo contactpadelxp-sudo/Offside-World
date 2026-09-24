@@ -433,8 +433,9 @@ export async function lireDevis(inclureTraites = false): Promise<DevisAdmin[]> {
  * Les créneaux que chaque demande tient, ou a tenus, en clair.
  *
  * « Fun zone 1 · 09:00 – 13:00 » plutôt qu'un identifiant : c'est ce que
- * Brahim doit savoir pour préparer le terrain, et pour fermer la plage sur
- * Sport-Finder quand c'est un après-midi.
+ * Brahim doit savoir pour préparer le terrain — et pour fermer la plage sur
+ * Sport-Finder si un créneau ajouté à la main y déborde. Les créneaux générés
+ * n'y débordent plus depuis le 24 septembre 2026 (`plages-sport-finder.ts`).
  *
  * UNE LECTURE POUR TOUTES LES DEMANDES, pas une par demande : la liste en
  * affiche jusqu'à cent.

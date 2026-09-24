@@ -251,7 +251,9 @@ export interface DevisEmail {
   message?: string | null;
   /**
    * Le créneau tenu tombe dans les heures où Sport-Finder loue les mêmes
-   * terrains — les après-midis. Le site le retient, mais Sport-Finder peut
+   * terrains. Plus aucun ne le fait depuis le 24 septembre 2026 — le foot
+   * ouvre à 18h, quand l'après-midi finit — mais la règle reste en place pour
+   * le jour où les horaires bougeront. Le site le retient, mais Sport-Finder peut
    * l'avoir déjà loué ou le louer d'ici la réponse : on ne peut donc pas le
    * dire « réservé » au client, seulement « retenu », et le complexe doit
    * fermer la plage là-bas dès réception.
@@ -577,11 +579,13 @@ export function auClientDevisRecu(d: DevisEmail): Message {
         l'entreprise de réserver ailleurs « au cas où ».
       */
       /*
-        « RÉSERVÉ » SEULEMENT QUAND C'EST VRAI. Un après-midi tombe dans les
-        heures où Sport-Finder loue les mêmes terrains : le site le retient,
+        « RÉSERVÉ » SEULEMENT QUAND C'EST VRAI. Un créneau qui tombe dans les
+        heures où Sport-Finder loue les mêmes terrains, le site le retient,
         mais ne peut pas garantir qu'il n'y est pas déjà loué. Relevé par la
         relecture du 24 septembre 2026 — la phrase promettait une place que
-        le complexe n'avait pas encore vérifiée.
+        le complexe n'avait pas encore vérifiée. (Les après-midis étaient
+        concernés ce soir-là ; ils ne le sont plus depuis que le foot ouvre à
+        18h, voir `plages-sport-finder.ts`.)
       */
       d.heurteSportFinder
         ? "<strong>Ce créneau est retenu pour vous.</strong> Notre devis vous confirmera la disponibilité du terrain et le prix."

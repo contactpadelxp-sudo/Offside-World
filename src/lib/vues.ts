@@ -194,9 +194,10 @@ export interface DevisAdmin {
     libelle: string;
     actif: boolean;
     /**
-     * Le créneau tombe dans les heures où Sport-Finder loue les mêmes terrains.
-     * C'est le cas des après-midis de team building : accepter la demande
-     * suppose de fermer cette plage sur Sport-Finder, et la fiche doit le dire.
+     * Le créneau tombe dans les heures où Sport-Finder loue les mêmes terrains :
+     * accepter la demande suppose de fermer cette plage sur Sport-Finder, et la
+     * fiche doit le dire. Aucun créneau généré n'y tombe depuis le 24 septembre
+     * 2026 ; le champ reste pour le jour où les horaires de Sport-Finder bougeront.
      */
     heurteSportFinder: boolean;
   }[];

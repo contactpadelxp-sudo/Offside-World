@@ -34,69 +34,81 @@ describe("jourISODeLaDate", () => {
 });
 
 describe("conflitSurHeureLocale — les créneaux réellement générés sont tous sûrs", () => {
-  const CRENEAUX_DU_SITE: [number, string, number][] = [
-    [3, "13:30", 120],
-    [3, "16:00", 120],
-    [5, "16:30", 120],
-    [6, "10:00", 120],
-    [6, "12:30", 120],
-    [6, "15:00", 120],
-    [6, "17:30", 120],
-    [7, "10:00", 120],
-    [7, "12:30", 120],
-    [7, "15:00", 120],
-    [7, "17:30", 120],
+  /** Ceux des générateurs SQL depuis la migration 0036 : jour ISO, début, durée. */
+  const CRENEAUX_DU_SITE: [string, number, string, number][] = [
+    // Anniversaires (0034).
+    ["anniversaire", 3, "13:30", 120],
+    ["anniversaire", 3, "16:00", 120],
+    ["anniversaire", 5, "16:00", 120],
+    ["anniversaire", 6, "10:00", 120],
+    ["anniversaire", 6, "12:30", 120],
+    ["anniversaire", 6, "15:00", 120],
+    ["anniversaire", 7, "10:00", 120],
+    ["anniversaire", 7, "12:30", 120],
+    ["anniversaire", 7, "15:00", 120],
+    // Team building (0036).
+    ["team building", 1, "09:00", 240],
+    ["team building", 1, "14:00", 240],
+    ["team building", 2, "09:00", 240],
+    ["team building", 2, "14:00", 240],
+    ["team building", 4, "09:00", 240],
+    ["team building", 4, "14:00", 240],
+    ["team building", 5, "09:00", 240],
   ];
 
   it.each(CRENEAUX_DU_SITE)(
-    "jour %i à %s ne heurte aucune plage Sport-Finder",
-    (jour, heure, duree) => {
+    "%s du jour %i à %s ne heurte aucune plage Sport-Finder",
+    (_type, jour, heure, duree) => {
       const [h, m] = heure.split(":");
       expect(conflitSurHeureLocale(jour, Number(h) * 60 + Number(m), duree)).toBeNull();
     }
   );
 
-  it("le dernier créneau du week-end touche l'ouverture du foot sans la mordre", () => {
-    // Samedi 17h30-19h30, foot à partir de 20h00 : une succession, pas un
-    // chevauchement. C'est la marge de 30 minutes voulue entre deux groupes.
-    expect(conflitSurHeureLocale(6, 17 * 60 + 30, 120)).toBeNull();
-    // Même chose bord à bord : un créneau qui finirait pile à 20h00 passe.
-    expect(conflitSurHeureLocale(6, 18 * 60, 120)).toBeNull();
+  it("l'après-midi de team building finit pile à l'ouverture du foot, sans la mordre", () => {
+    // Lundi 14h-18h, foot à partir de 18h00 : une succession. Tant que ce
+    // fichier portait la cible du 21 septembre (foot dès 14h), chaque
+    // après-midi était signalé à tort à Brahim.
+    expect(conflitSurHeureLocale(1, 14 * 60, 240)).toBeNull();
     // Une minute de plus, et il mord.
-    expect(conflitSurHeureLocale(6, 18 * 60, 121)).not.toBeNull();
+    expect(conflitSurHeureLocale(1, 14 * 60, 241)).not.toBeNull();
+  });
+
+  it("le dernier anniversaire du week-end touche l'ouverture du foot sans la mordre", () => {
+    // Samedi 15h-17h, foot à partir de 17h00.
+    expect(conflitSurHeureLocale(6, 15 * 60, 120)).toBeNull();
+    expect(conflitSurHeureLocale(6, 15 * 60, 121)).not.toBeNull();
   });
 });
 
 describe("conflitSurHeureLocale — ce qui doit être refusé", () => {
-  it("refuse le samedi 21h, le cas qui a motivé ce garde-fou", () => {
-    const c = conflitSurHeureLocale(6, 21 * 60, 120);
+  it("refuse le samedi 17h30, le créneau retiré par la migration 0034", () => {
+    // Le foot ouvre à 17h le week-end : l'ancien dernier anniversaire,
+    // 17h30-19h30, tombe désormais en pleine location.
+    const c = conflitSurHeureLocale(6, 17 * 60 + 30, 120);
     expect(c).not.toBeNull();
     expect(c?.libelle).toContain("Bubble");
   });
 
-  it("refuse le vendredi 18h30-20h30, que la migration 0028 a fermé", () => {
-    // Ces 78 créneaux existent encore en base, simplement fermés. Les rouvrir
-    // d'un clic recréait exactement le conflit que 0028 avait supprimé.
-    expect(conflitSurHeureLocale(5, 18 * 60 + 30, 120)).not.toBeNull();
+  it("refuse le vendredi 16h30-18h30, l'ancien créneau que 0034 a fermé", () => {
+    // Il mord d'une demi-heure sur l'ouverture de 18h.
+    expect(conflitSurHeureLocale(5, 16 * 60 + 30, 120)).not.toBeNull();
   });
 
-  it("refuse un lundi après-midi, alors qu'aucun anniversaire n'y est généré", () => {
-    // Le générateur ignore le lundi ; la création à la main, elle, ne l'ignorait
-    // pas. Or le foot tourne dès 14h ces jours-là.
-    expect(conflitSurHeureLocale(1, 15 * 60, 120)).not.toBeNull();
-    // Avant 14h, le lundi est libre.
-    expect(conflitSurHeureLocale(1, 11 * 60, 120)).toBeNull();
+  it("refuse un lundi soir, alors qu'aucun créneau n'y est généré", () => {
+    // Le générateur ignore le lundi soir ; la création à la main, elle, ne
+    // l'ignore pas. Or le foot tourne dès 18h tous les jours de semaine.
+    expect(conflitSurHeureLocale(1, 19 * 60, 120)).not.toBeNull();
   });
 
   it("nomme la plage dans une heure lisible, pas en arithmétique", () => {
-    // La fermeture est écrite « 25:00 » pour que la comparaison reste possible
-    // sans changer de jour ; l'exploitant, lui, doit lire « 01:00 ».
-    expect(conflitSurHeureLocale(6, 21 * 60, 60)?.plage).toBe("20:00 – 01:00");
+    // La fermeture est écrite « 24:00 » pour que la comparaison reste possible
+    // sans changer de jour ; l'exploitant, lui, doit lire « 00:00 ».
+    expect(conflitSurHeureLocale(6, 21 * 60, 60)?.plage).toBe("17:00 – 00:00");
   });
 
   it("attrape un créneau qui commence avant la plage et déborde dedans", () => {
-    // Mercredi 19h-21h : il commence en zone libre et finit en pleine location.
-    expect(conflitSurHeureLocale(3, 19 * 60, 120)).not.toBeNull();
+    // Mercredi 17h-19h : il commence en zone libre et finit en pleine location.
+    expect(conflitSurHeureLocale(3, 17 * 60, 120)).not.toBeNull();
   });
 });
 
@@ -106,16 +118,17 @@ describe("conflitSportFinder — depuis un instant, à l'heure de Bruxelles", ()
     new Date(`${iso}:00.000${decalageHeures >= 0 ? "+" : "-"}${String(Math.abs(decalageHeures)).padStart(2, "0")}:00`);
 
   it("lit l'heure de Bruxelles et non celle du serveur", () => {
-    // Samedi 3 octobre 2026, 21h00 heure de Bruxelles (UTC+2 en été).
-    const debut = aBruxelles("2026-10-03T21:00", 2);
+    // Samedi 3 octobre 2026, 17h00 heure de Bruxelles (UTC+2 en été). Lu en
+    // UTC, ce créneau serait à 15h et passerait.
+    const debut = aBruxelles("2026-10-03T17:00", 2);
     const fin = new Date(debut.getTime() + 120 * 60000);
     expect(conflitSportFinder(debut, fin)).not.toBeNull();
   });
 
   it("reste juste après le retour à l'heure d'hiver", () => {
-    // Samedi 7 novembre 2026, 21h00 heure de Bruxelles (UTC+1 en hiver). Lu en
-    // UTC, ce créneau serait à 20h — le décalage change, la réponse non.
-    const debut = aBruxelles("2026-11-07T21:00", 1);
+    // Samedi 7 novembre 2026, 16h-18h heure de Bruxelles (UTC+1 en hiver). Lu
+    // en UTC, ce créneau serait à 15h et finirait pile à 17h, sans mordre.
+    const debut = aBruxelles("2026-11-07T16:00", 1);
     const fin = new Date(debut.getTime() + 120 * 60000);
     expect(conflitSportFinder(debut, fin)).not.toBeNull();
   });
@@ -123,6 +136,14 @@ describe("conflitSportFinder — depuis un instant, à l'heure de Bruxelles", ()
   it("laisse passer un samedi après-midi en hiver", () => {
     const debut = aBruxelles("2026-11-07T15:00", 1);
     const fin = new Date(debut.getTime() + 120 * 60000);
+    expect(conflitSportFinder(debut, fin)).toBeNull();
+  });
+
+  it("laisse passer un après-midi de team building en hiver", () => {
+    // Lundi 9 novembre 2026, 14h-18h heure de Bruxelles : lu en UTC, il
+    // finirait à 17h ; lu à Bruxelles, il finit pile à l'ouverture.
+    const debut = aBruxelles("2026-11-09T14:00", 1);
+    const fin = new Date(debut.getTime() + 240 * 60000);
     expect(conflitSportFinder(debut, fin)).toBeNull();
   });
 

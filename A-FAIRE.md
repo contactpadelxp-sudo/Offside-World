@@ -921,13 +921,14 @@ l'e-mail à l'entreprise (« Cette demande ne bloque pas encore de créneau »),
 le sous-titre de la page Devis (« n'occupe aucun créneau »), et le tunnel
 (« la confirmation de la disponibilité »).
 
-⚠️ **CE QUI RESTE À LA CHARGE DE BRAHIM — le conflit avec Sport-Finder.**
-Les jours de team building, Sport-Finder loue les mêmes terrains **à partir de
-14h00**. Les après-midis tombent donc dedans. Ils sont proposés quand même —
-c'est l'offre de Brahim, et une demande de devis n'est pas une vente : il la
-relit. Mais **quand il accepte un après-midi, il doit fermer la plage sur
-Sport-Finder**. La fiche du devis et l'avis e-mail le lui rappellent,
-calculés par la même règle que le reste du site.
+✅ **Plus de conflit avec Sport-Finder — relevé le 24 septembre 2026.** Ce
+paragraphe disait que Sport-Finder louait les terrains dès 14h00 les jours de
+team building, et que Brahim devait fermer la plage à chaque après-midi
+demandé. C'était la cible du 21 septembre, jamais configurée : Sport-Finder
+ouvre en réalité à **18h00 en semaine et 17h00 le week-end**. L'après-midi
+finit à 18h00 — bord à bord, sans chevauchement. `plages-sport-finder.ts`
+suit désormais ces heures ; l'avertissement de la fiche et de l'e-mail ne
+s'affiche donc plus, et le client lit « réservé » et non plus « retenu ».
 
 **Relecture adversariale le soir même : 13 défauts réels, tous corrigés.**
 Les deux qui changent le fonctionnement :

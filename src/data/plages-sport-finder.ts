@@ -50,27 +50,43 @@ export interface PlageReservee {
 }
 
 /**
- * Les horaires donnés par Brahim, par mail, le 21 septembre 2026.
+ * Les horaires RÉELLEMENT configurés chez Sport-Finder, relevés le 24 septembre
+ * 2026, jour de la mise en ligne, sur la fiche « Location de terrain Offside » :
+ * lundi–vendredi 18h00 → 00h00, samedi–dimanche 17h00 → 00h00.
  *
- * Ses deux groupes tombent exactement sur la séparation des activités :
- * 14 h–01 h les jours SANS anniversaire, 20 h–01 h les jours AVEC. Ce n'est pas
- * une coïncidence, c'est lui qui a fait l'arbitrage — le site n'a rien à
- * décider ici, seulement à ne pas le contredire.
+ * Le Bubble Foot suit les heures du foot (Brahim, 20 septembre 2026) : c'est
+ * pourquoi chaque plage le nomme aussi.
  *
- * ⚠ CE NE SONT PAS LES HORAIRES ACTUELLEMENT CONFIGURÉS chez Sport-Finder, qui
- * porte encore 18 h–00 h en semaine et 16 h–00 h le week-end. Brahim les
- * changera au moment de la mise en ligne. On encode la cible et non l'état
- * courant, parce que le site n'est pas public : personne ne peut réserver avant
- * ce basculement, et c'est après lui que ces bornes doivent être justes.
+ * ELLES REMPLACENT UNE CIBLE QUI N'A JAMAIS ÉTÉ APPLIQUÉE. Ce fichier portait
+ * les horaires envoyés par Brahim le 21 septembre — 14 h–01 h les lundi, mardi
+ * et jeudi, 20 h–01 h les autres jours —, encodés d'avance en attendant qu'il
+ * les configure. Il a finalement réglé Sport-Finder autrement, le jour même où
+ * le dernier anniversaire du week-end était retiré (migration 0034). Le code
+ * gardait la cible, et se trompait dans les deux sens :
+ *
+ *   - TROP STRICT les lundi, mardi et jeudi. Chaque après-midi de team
+ *     building (14h–18h) était signalé comme « aussi vendu sur Sport-Finder »,
+ *     et Brahim était prié de fermer une plage qui n'existe pas.
+ *   - TROP LÂCHE les autres jours. Un créneau ouvert à la main un samedi de
+ *     17h à 19h passait sans un mot, alors que le foot y est en vente.
+ *
+ * TOUT CE QUE LE SITE VEND S'ARRÊTE PILE À L'OUVERTURE DU FOOT : anniversaires
+ * à 18h le mercredi et le vendredi, à 17h le samedi et le dimanche ; team
+ * building à 13h ou 18h. Bord à bord, sans chevauchement — voir la convention
+ * des intervalles plus bas.
+ *
+ * La fermeture est écrite « 24:00 », et non « 25:00 » comme avant : c'est
+ * minuit que Sport-Finder affiche, et ce fichier suit ce qui est vendu, pas
+ * l'heure où la porte se ferme.
  */
 export const PLAGES_SPORT_FINDER: readonly PlageReservee[] = [
-  { jour: 1, debut: "14:00", fin: "25:00", libelle: "location de terrain" },
-  { jour: 2, debut: "14:00", fin: "25:00", libelle: "location de terrain" },
-  { jour: 3, debut: "20:00", fin: "25:00", libelle: "location de terrain et Bubble Foot" },
-  { jour: 4, debut: "14:00", fin: "25:00", libelle: "location de terrain" },
-  { jour: 5, debut: "20:00", fin: "25:00", libelle: "location de terrain et Bubble Foot" },
-  { jour: 6, debut: "20:00", fin: "25:00", libelle: "location de terrain et Bubble Foot" },
-  { jour: 7, debut: "20:00", fin: "25:00", libelle: "location de terrain et Bubble Foot" },
+  { jour: 1, debut: "18:00", fin: "24:00", libelle: "location de terrain et Bubble Foot" },
+  { jour: 2, debut: "18:00", fin: "24:00", libelle: "location de terrain et Bubble Foot" },
+  { jour: 3, debut: "18:00", fin: "24:00", libelle: "location de terrain et Bubble Foot" },
+  { jour: 4, debut: "18:00", fin: "24:00", libelle: "location de terrain et Bubble Foot" },
+  { jour: 5, debut: "18:00", fin: "24:00", libelle: "location de terrain et Bubble Foot" },
+  { jour: 6, debut: "17:00", fin: "24:00", libelle: "location de terrain et Bubble Foot" },
+  { jour: 7, debut: "17:00", fin: "24:00", libelle: "location de terrain et Bubble Foot" },
 ];
 
 /** « 20:30 » → 1230. Accepte les heures au-delà de 24 (voir `PlageReservee.fin`). */
@@ -80,7 +96,7 @@ function enMinutes(hhmm: string): number {
 }
 
 export interface ConflitSportFinder {
-  /** La plage heurtée, telle qu'on l'écrit à l'exploitant : « 20:00 – 01:00 ». */
+  /** La plage heurtée, telle qu'on l'écrit à l'exploitant : « 17:00 – 00:00 ». */
   plage: string;
   libelle: string;
 }
@@ -94,14 +110,15 @@ export interface ConflitSportFinder {
  *
  * UN CRÉNEAU QUI FRANCHIT MINUIT EST TRAITÉ SUR SON JOUR DE DÉBUT. C'est le
  * bon repère : un anniversaire de 23 h à 1 h appartient à la soirée où il
- * commence, et c'est cette soirée-là qui est vendue ailleurs. Les plages vont
- * d'ailleurs jusqu'à « 25:00 » précisément pour que la comparaison reste
- * possible sans changer de jour.
+ * commence, et c'est cette soirée-là qui est vendue ailleurs. Une plage peut
+ * d'ailleurs finir au-delà de « 24:00 » précisément pour que la comparaison
+ * reste possible sans changer de jour.
  *
  * ON COMPARE DES INTERVALLES OUVERTS À DROITE. Un créneau qui finit exactement
- * à l'heure d'ouverture du foot ne mord pas dessus : mercredi 16 h–18 h contre
- * une ouverture à 20 h, et plus encore 18 h–20 h contre 20 h, sont des
- * successions, pas des chevauchements. C'est la même convention que la
+ * à l'heure d'ouverture du foot ne mord pas dessus : l'anniversaire du
+ * mercredi, 16 h–18 h, contre une ouverture à 18 h, est une succession, pas un
+ * chevauchement. Tout ce que le site vend repose sur cette règle depuis le
+ * 24 septembre 2026. C'est la même convention que la
  * contrainte d'exclusion de la base, qui compare des `tstzrange` bornés à
  * droite exclus.
  */
