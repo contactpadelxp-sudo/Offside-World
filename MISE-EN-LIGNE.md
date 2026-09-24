@@ -1,5 +1,30 @@
 # Mise en ligne — `offsidefootindoor.be`
 
+> ## ✅ EN LIGNE DEPUIS LE 24 SEPTEMBRE 2026 AU SOIR
+>
+> Fait en appel avec Brahim, dans l'ordre prévu :
+>
+> 1. Brahim a fermé ses plages d'anniversaire sur Sport-Finder, AVANT le DNS.
+> 2. Zone DNS chez Wix : les trois `A` remplacés par un seul, `216.150.1.1` ;
+>    `CNAME www` → `4d67d799f1307be8.vercel-dns-017.com` ;
+>    `CNAME fr` (l'ancien site Wix en français, avec les anciens prix) →
+>    même cible, redirigé en 308 vers le domaine dans Vercel.
+> 3. `SITE_URL` = `https://offsidefootindoor.be`, redéployé.
+> 4. Webhook Stripe : destination MODIFIÉE (pas recréée) vers
+>    `https://offsidefootindoor.be/api/stripe/webhook` — le secret reste le même.
+>
+> **Vérifié depuis l'extérieur après bascule :** une seule `A`, `www` et `fr`
+> vers Vercel, et **les cinq MX de Google, le SPF, le DKIM Resend, les CNAME
+> d'envoi et le DMARC intacts** — la messagerie de Brahim n'a pas été touchée.
+>
+> Le domaine RESTE enregistré chez Wix, avec sa zone DNS : Wix ne permet pas
+> de déléguer les serveurs de noms. Seul l'abonnement SITE pourra être résilié —
+> après avoir demandé par écrit à l'assistance Wix ce qu'il advient de la zone.
+>
+> Le reste de ce document décrit la préparation ; il reste utile pour tout
+> changement ultérieur de la zone.
+
+
 Deux opérations distinctes, à ne pas confondre :
 
 - **faire pointer le domaine sur le nouveau site** (enregistrements A et CNAME) ;
