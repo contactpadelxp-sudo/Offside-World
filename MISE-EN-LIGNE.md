@@ -61,6 +61,48 @@ par rien. Cinq minutes dans sa console d'administration.
 
 ---
 
+## 🎯 LES VALEURS DU BASCULEMENT — relevées dans Vercel le 24 septembre 2026
+
+Le domaine a été ajouté au projet dans la team de Brahim. Vercel affiche
+« Invalid Configuration » pour les deux : **c'est normal et attendu** tant que
+la zone de Wix pointe encore sur l'ancien site.
+
+**CE QU'IL FAUT SAISIR CHEZ WIX** (Domaines → `offsidefootindoor.be` →
+Gérer les enregistrements DNS) :
+
+| Type | Nom | Valeur à mettre | Ce que ça remplace |
+|---|---|---|---|
+| `A` | `@` | **`216.150.1.1`** | les **3** A de Wix : `185.230.63.107`, `.171`, `.186` |
+| `CNAME` | `www` | **`4d67d799f1307be8.vercel-dns-017.com`** | `cdn1.wixdns.net` |
+
+⚠️ **Les trois A de Wix partent, un seul A arrive.** Ne pas en laisser un
+derrière : le domaine répondrait alternativement sur l'ancien et le nouveau
+site, au hasard du tirage.
+
+⚠️ **Le point final** de la valeur CNAME telle que Vercel l'affiche
+(`…-017.com.`) est la notation DNS absolue. Si Wix refuse la saisie, l'entrer
+**sans** le point final.
+
+⚠️ **ON NE TOUCHE À RIEN D'AUTRE.** Les 5 MX, le SPF, le DKIM Resend, le DMARC
+et les deux CNAME `rsend`/`send` restent exactement en place — ce sont eux qui
+portent la messagerie de Brahim et les e-mails de réservation.
+
+**LE RETOUR EN ARRIÈRE**, si quoi que ce soit tourne mal : remettre les trois
+`A` sur `185.230.63.107`, `185.230.63.171`, `185.230.63.186` et le `CNAME www`
+sur `cdn1.wixdns.net`. Cinq minutes, et le site Wix revient.
+
+**LA CONFIGURATION CHOISIE**, et pourquoi :
+
+- l'adresse **sans `www` est la principale**, connectée à Production. C'est
+  celle de l'e-mail de Brahim, celle écrite partout dans le projet, et celle
+  qui ira dans `SITE_URL` et dans l'URL du webhook Stripe — les trois
+  concordent ;
+- `www` **redirige en 308** vers elle. Permanent et non temporaire (307) :
+  un 307 laisserait les deux adresses vivre dans l'index des moteurs, et le
+  référencement se diviserait entre elles.
+
+---
+
 ## 🔴 Le domaine part chez Vercel — relevé complet de la zone, 23 septembre 2026
 
 **Brahim a lancé le transfert du nom de domaine de Wix vers Vercel**, le
