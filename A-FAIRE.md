@@ -38,8 +38,9 @@ réglages y sont incohérents avec le site.
       le 21, où le Bubble a quitté le site (`BUBBLE_EN_LIGNE = false`) pour
       Sport-Finder, qui en est devenu le seul canal de vente. L'exécuter
       aujourd'hui retirerait la seule façon de réserver un Bubble Foot.
-- [ ] **Retirer de la location de terrain les plages réservées aux
-      anniversaires.** C'est la moitié de la règle d'étanchéité — sans elle,
+- [x] ~~**Retirer de la location de terrain les plages réservées aux
+      anniversaires.**~~ **FAIT par Brahim le 24 septembre 2026**, pendant
+      l'appel de mise en ligne, avant la bascule du domaine. C'est la moitié de la règle d'étanchéité — sans elle,
       configurer les créneaux côté site ne sert à rien.
 
       **Brahim s'en charge, et il le fera EN DIRECT avec Mathis** (23 septembre
@@ -794,7 +795,10 @@ de paiement qu'ils n'utilisent pas.
       échouer une réservation. `/admin/reglages` l'affiche en rouge, et le test
       qui tranche est celui envoyé vers une adresse qui n'est PAS celle du
       compte Resend.
-- [ ] **EN TOUT DERNIER — basculer le domaine et activer les e-mails.**
+- [x] ~~**EN TOUT DERNIER — basculer le domaine et activer les e-mails.**~~
+      **FAIT le 24 septembre 2026** — sans toucher aux serveurs de noms : deux
+      lignes changées dans la zone Wix, la messagerie intacte. Relevé complet
+      en tête de `MISE-EN-LIGNE.md`. Historique :
       Ordre fixé par Mathis le 13 septembre 2026 : c'est la toute dernière
       étape, après le paiement. Tant que le domaine sert le site Wix de Brahim,
       rien ne presse, et déplacer les serveurs de noms trop tôt couperait sa
@@ -803,8 +807,9 @@ de paiement qu'ils n'utilisent pas.
       d'e-mails automatiques. La marche à suivre complète, avec l'état DNS
       relevé et le piège à éviter (déplacer les serveurs de noms couperait la
       messagerie de Brahim), est dans **`MISE-EN-LIGNE.md`**.
-- [ ] **Renseigner `SITE_URL`** dès que le domaine définitif remplacera
-      l'adresse Vercel — les liens des e-mails et le sitemap en dépendent.
+- [x] ~~**Renseigner `SITE_URL`**~~ **FAIT le 24 septembre 2026**
+      (`https://offsidefootindoor.be`, redéployé) — les liens des e-mails et
+      le sitemap en dépendent.
 - [x] ~~**À LA FIN — passer Supabase au plan Pro (25 $/mois).**~~ **FAIT le
       23 septembre 2026** : le projet a été transféré dans l'organisation Pro
       de Brahim, et la taille de calcul est passée de Nano à Micro (gratuite
@@ -946,11 +951,16 @@ invisible au client après une course perdue, et « réservé » promis sur des
 après-midis que Sport-Finder loue encore (désormais « retenu », et Brahim est
 invité à fermer la plage Sport-Finder DÈS RÉCEPTION).
 
-- [ ] **`fr.offsidefootindoor.be`** servait l'ancien site Wix (anciens prix).
-      Redirigé en 308 vers le domaine dans Vercel le 24 septembre ; reste à
-      changer sa ligne CNAME chez Wix vers la valeur donnée par Vercel. Absent
-      du relevé de zone du 23 septembre — à y ajouter avant tout transfert du
-      domaine.
+- [x] ~~**`fr.offsidefootindoor.be`** servait l'ancien site Wix (anciens
+      prix).~~ **FAIT le 24 septembre 2026** : ligne CNAME changée chez Wix
+      (celle qui pointait vers `cdn3.wixdns.net`), redirection 308 vers le
+      domaine dans Vercel, « Valid Configuration ». ⚠️ Absent du relevé de
+      zone du 23 septembre — à y ajouter avant tout transfert du domaine.
+- [ ] **Au premier vrai paiement** : vérifier en base que le webhook, passé
+      sur `offsidefootindoor.be`, a bien confirmé la réservation.
+- [ ] **Ne rien résilier chez Wix** sans avoir demandé à leur support ce que
+      devient la zone DNS : le domaine y est encore enregistré, et la
+      messagerie Google de Brahim dépend de cette zone.
 
 ## Le Bounce Park arrive sur le site
 
