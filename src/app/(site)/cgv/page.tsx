@@ -66,7 +66,9 @@ export default function CGV() {
             {" "}exploitant sous le nom commercial <strong>{NOM_COMMERCIAL}</strong>
           </li>
           <li><strong>Adresse d&apos;exploitation :</strong> {ADRESSE_LIGNE}</li>
-          <li><strong>Siège social :</strong> {ouACompleter(SIEGE_SOCIAL, "à compléter si différent")}</li>
+          {SIEGE_SOCIAL && (
+            <li><strong>Siège social :</strong> {SIEGE_SOCIAL}</li>
+          )}
           <li><strong>N° d&apos;entreprise (BCE) :</strong> {ouACompleter(BCE)}</li>
           <li><strong>N° de TVA :</strong> BE {ouACompleter(TVA)}</li>
           <li><strong>E-mail :</strong> <a href={`mailto:${EMAIL}`} className="underline text-primary">{EMAIL}</a></li>

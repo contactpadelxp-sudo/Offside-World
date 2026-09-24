@@ -35,7 +35,22 @@ export default function MentionsLegales() {
           <li>
             <strong>Adresse d&apos;exploitation :</strong> {ADRESSE.rue}, {ADRESSE.codePostal} {ADRESSE.ville}, {ADRESSE.pays}
           </li>
-          <li><strong>Siège social :</strong> {ouACompleter(SIEGE_SOCIAL, "à compléter si différent")}</li>
+          {/*
+            LA LIGNE DISPARAÎT QUAND LE SIÈGE N'EST PAS RENSEIGNÉ, au lieu
+            d'afficher « [à compléter si différent] ».
+
+            `SIEGE_SOCIAL` vaut `null` parce que le siège est IDENTIQUE à
+            l'adresse d'exploitation, affichée juste au-dessus — ce n'est pas un
+            oubli, c'est l'information. L'afficher quand même en annonçant qu'il
+            reste à compléter donnait à une page légale l'air d'un brouillon, le
+            jour même où elle devient publique.
+
+            Rien n'est perdu côté obligation : l'art. III.74 du Code de droit
+            économique exige une adresse géographique, et elle est donnée.
+          */}
+          {SIEGE_SOCIAL && (
+            <li><strong>Siège social :</strong> {SIEGE_SOCIAL}</li>
+          )}
           <li><strong>N° d&apos;entreprise (BCE) :</strong> {ouACompleter(BCE)}</li>
           <li><strong>N° de TVA :</strong> BE {ouACompleter(TVA)}</li>
           <li><strong>E-mail :</strong> <a href={`mailto:${EMAIL}`} className="underline text-primary">{EMAIL}</a></li>
