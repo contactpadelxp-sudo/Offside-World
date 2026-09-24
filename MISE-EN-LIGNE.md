@@ -224,6 +224,18 @@ créneaux d'anniversaire, cela donne trois chevauchements :
 | Samedi | 10h00 → 19h30 | 16h00 | **3 h 30** |
 | Dimanche | 10h00 → 19h30 | 16h00 | **3 h 30** |
 
+> **Mis à jour le 24 septembre 2026 (migration 0034)** : vendredi 16h00–18h00,
+> samedi et dimanche 10h00–17h00 (le 17h30 a disparu). Le vendredi ne touche
+> plus Sport-Finder ; le week-end chevauche encore d'une heure son ouverture de
+> 16h00 — d'où les plages que Brahim ferme de son côté :
+>
+> | Jour | Plages à retirer de la location de terrain |
+> |---|---|
+> | Mercredi | 13h30–15h30 · 16h00–18h00 |
+> | Vendredi | 16h00–18h00 |
+> | Samedi | 10h00–12h00 · 12h30–14h30 · 15h00–17h00 |
+> | Dimanche | 10h00–12h00 · 12h30–14h30 · 15h00–17h00 |
+
 Un terrain loué samedi à 17h et un anniversaire vendu sur le site à la même
 heure, c'est le même sol. Les deux clients sont dans leur droit, aucun des deux
 systèmes ne signale quoi que ce soit, et personne ne l'apprend avant que les

@@ -70,9 +70,24 @@ même (migration 0020) :
 | | Anniversaires (2 h) |
 |---|---|
 | Mercredi | 13:30 · 16:00 |
-| Vendredi | **16:30** *(un seul depuis la migration 0028)* |
-| Samedi | 10:00 · 12:30 · 15:00 · 17:30 |
-| Dimanche | 10:00 · 12:30 · 15:00 · 17:30 |
+| Vendredi | **16:00** *(un seul — 16:30 jusqu'au 24 septembre)* |
+| Samedi | 10:00 · 12:30 · 15:00 *(le 17:30 retiré le 24 septembre)* |
+| Dimanche | 10:00 · 12:30 · 15:00 *(le 17:30 retiré le 24 septembre)* |
+
+**Le 24 septembre 2026, jour de la mise en ligne** (migration 0034) : le
+vendredi passe à 16h00–18h00, et le dernier créneau du samedi et du dimanche
+disparaît. Décision de Brahim et Mathis.
+
+Les créneaux retirés sont **supprimés**, pas fermés comme en 0028 : un samedi
+17h30 fermé ne chevauche rien et ne mord pas sur Sport-Finder, donc « Rouvrir
+la journée » l'aurait remis en vente au premier clic. Un seul a été fermé au
+lieu d'être supprimé — le vendredi 2 octobre 16h30, qui porte le test annulé
+`OW-GXTCUD8X` et ne peut pas perdre sa trace de paiement.
+
+⚠️ **Défaut trouvé et corrigé au passage :** la génération des créneaux
+recréait, en doublon et OUVERTS, ceux que Brahim ferme à la main pour ses
+anniversaires pris par téléphone. Voir la migration 0034 — vérifié ensuite :
+ses 11 fermetures sont intactes, zéro doublon.
 
 **Le vendredi a changé le 21 septembre 2026.** Il portait 16:00 et 18:30 ;
 Brahim a alors donné l'heure manquante — foot et Bubble de 20h à 1h le vendredi
@@ -862,6 +877,38 @@ des LECTURES d'une image, pas des constats. Retiré.
 paiements fonctionnent, il ne reste que le domaine. Ce chantier demande des
 réponses qui ne dépendent ni de Mathis ni de Brahim.
 
+## Team building : créneaux, blocage des terrains, journée entière — demandé le 24 septembre 2026
+
+Mathis : « dans le back-office faut aussi pouvoir gérer les créneaux du team
+building, pouvoir bloquer les terrains, et que les gens sur le site aient la
+possibilité de réserver une journée entière matin et aprem ».
+
+**Ce qui existe aujourd'hui** (`data/bubble-team.ts`) : le team building est
+une **demande de devis**, sans créneau. Le client choisit une demi-journée
+parmi les jours donnés par Brahim le 17 septembre — lundi, mardi, jeudi matin
+et après-midi, vendredi matin seulement — et Brahim répond. Rien n'est bloqué
+nulle part : ni au back-office, ni sur les terrains.
+
+**Ce qui est demandé est un changement de nature**, pas une option de plus :
+passer d'une demande qu'on traite à la main à des créneaux qui occupent des
+terrains. Trois choses en découlent, et aucune ne se devine :
+
+- [ ] **Les HEURES des demi-journées deviennent indispensables.** Elles valent
+      `null` aujourd'hui, et c'était suffisant tant qu'on ne faisait qu'un
+      devis (« Matin », « Après-midi »). Un créneau qui bloque un terrain a un
+      début et une fin : il faut les heures exactes.
+- [ ] **Le conflit avec Sport-Finder.** Les jours de team building sont les
+      jours SANS anniversaire, où Sport-Finder loue les terrains de 14h à 1h.
+      Un après-midi de team building tombe donc en plein dedans : c'est le même
+      problème de double vente que celui réglé pour les anniversaires, et il
+      faudra la même étanchéité — côté Sport-Finder, par Brahim.
+- [ ] **La journée entière** n'existe pas le vendredi (matin seulement). Et
+      « réserver » veut-il dire payer en ligne, ou toujours un devis ? Le prix
+      d'un team building varie aujourd'hui selon le groupe.
+
+**Pas avant la mise en ligne.** Le site ouvre avec le team building en devis,
+comme aujourd'hui — ce qui fonctionne.
+
 ## Le Bounce Park arrive sur le site
 
 Décidé avec Brahim le 21 septembre 2026 : le site vend les anniversaires ET le
@@ -874,9 +921,21 @@ ses horaires tombent dans les heures habitées : mercredi 12h–19h, vendredi
 créneaux, ni tarif, ni tunnel. Aujourd'hui c'est une carte « Bientôt » qui ne
 mène nulle part, volontairement.
 
-- [ ] **Obtenir le prix, l'âge minimum et la date d'ouverture.** Sans eux on ne
-      peut rien annoncer : c'est la règle qui a déjà fait retirer « dès 6 ans »
-      et « encadrement adapté » de l'accueil.
+- [x] ~~**La date d'ouverture.**~~ **LE 1ER DÉCEMBRE 2026**, communiquée le
+      24 septembre 2026.
+- [ ] **Remplacer la carte « Bientôt » par une vraie présentation** — demandé
+      par Mathis le 24 septembre 2026, à faire APRÈS la mise en ligne :
+      **illustrer** ce qu'est le Bounce Park (des images, pas seulement un
+      titre) et annoncer **l'ouverture le 1er décembre 2026**. Aujourd'hui la
+      carte ne dit rien et ne mène nulle part.
+
+      ⚠️ Ce que la présentation peut dire, et ce qu'elle ne peut pas encore :
+      la date est connue ; le prix et l'âge minimum, eux, ne le sont toujours
+      pas. On ne les invente pas — c'est la règle qui a fait retirer « dès 6
+      ans » et « encadrement adapté » de l'accueil. Une photo `bounce park.jpg`
+      existe déjà dans `public/images/`.
+- [ ] **Obtenir le prix et l'âge minimum.** Nécessaires pour vendre, pas pour
+      annoncer.
 - [ ] **Le construire.** Le parcours le plus proche est celui du Bubble Foot,
       qui reste en place et compile : créneaux d'une heure, par espace, bande
       de dates. L'essentiel du travail est de créer l'espace, la valeur

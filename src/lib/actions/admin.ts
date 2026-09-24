@@ -1125,6 +1125,14 @@ export async function basculerCreneau(
 /**
  * Prolonge l'horizon de réservation. Les fonctions de génération sont
  * idempotentes : rappeler sur une période déjà ouverte n'ajoute rien.
+ *
+ * CE N'ÉTAIT VRAI QUE POUR LES CRÉNEAUX OUVERTS, jusqu'à la migration 0034.
+ * `creneaux` n'a pas de contrainte d'unicité, seulement une exclusion limitée
+ * aux créneaux OUVERTS : sur un horaire fermé à la main, la génération ne
+ * voyait aucun conflit et recréait un créneau ouvert à côté. Les anniversaires
+ * pris par téléphone, que Brahim ferme ici même, revenaient ainsi en vente au
+ * premier clic sur ce bouton. Depuis 0034, un créneau existant au même
+ * horaire — ouvert OU fermé — compte comme déjà présent, et rien n'est créé.
  */
 export async function genererCreneaux(du: string, au: string): Promise<Resultat> {
   const session = await garde();
