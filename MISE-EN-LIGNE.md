@@ -128,7 +128,25 @@ sur `cdn1.wixdns.net`. Cinq minutes, et le site Wix revient.
 
 ---
 
-## 🔴 Le domaine part chez Vercel — relevé complet de la zone, 23 septembre 2026
+## Relevé complet de la zone, 23 septembre 2026
+
+> ⛔ **LE DOMAINE NE PEUT PAS PARTIR CHEZ VERCEL — vérifié le 24 septembre
+> 2026.** L'API Vercel répond `tld_not_supported` : « The TLD .be is not
+> currently supported ». Vercel a retiré l'enregistrement des `.be` le
+> 25 février 2025 (changelog « Changes to supported TLD registrations »).
+> Aucun transfert n'a donc abouti ni ne pouvait aboutir : les serveurs de noms
+> étaient toujours ceux de Wix au moment de la mise en ligne.
+>
+> **Si Brahim veut quitter Wix un jour**, le domaine doit partir chez un autre
+> bureau d'enregistrement qui prend les `.be` (OVH, par exemple — à vérifier
+> au moment de le faire). Ce transfert emporte la zone DNS : il faut y
+> recréer d'abord TOUTES les lignes ci-dessous, **plus** le `CNAME fr` et les
+> valeurs de la mise en ligne (voir l'encadré en tête), qui ne figuraient pas
+> dans ce relevé. Le relevé et la marche à suivre qui suivent restent valables
+> pour cette opération-là ; il suffit de lire « le nouveau bureau
+> d'enregistrement » là où il est écrit « Vercel ».
+>
+> Ce qui suit est conservé tel qu'écrit le 23 septembre.
 
 **Brahim a lancé le transfert du nom de domaine de Wix vers Vercel**, le
 23 septembre au soir : « j'ai pas envie de gérer Wix en plus juste pour le nom

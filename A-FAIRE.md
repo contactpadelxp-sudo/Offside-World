@@ -962,6 +962,12 @@ invité à fermer la plage Sport-Finder DÈS RÉCEPTION).
 - [ ] **Ne rien résilier chez Wix** sans avoir demandé à leur support ce que
       devient la zone DNS : le domaine y est encore enregistré, et la
       messagerie Google de Brahim dépend de cette zone.
+- [ ] *(Plus tard, pas urgent.)* **Quitter Wix pour de bon**, si Brahim y
+      tient. ⛔ **PAS VERS VERCEL : Vercel n'enregistre plus les `.be`**
+      depuis février 2025 (vérifié par son API le 24 septembre 2026). Il
+      faudrait un autre bureau d'enregistrement — OVH par exemple, à
+      vérifier — et recréer toute la zone là-bas AVANT le transfert, messagerie
+      comprise. Marche à suivre et relevé : `MISE-EN-LIGNE.md`.
 
 ## Le Bounce Park arrive sur le site
 
