@@ -623,9 +623,28 @@ export function GroupesFlow({
             qui compare plusieurs lieux. Ce qui reste à confirmer, c'est le prix.
           */}
           <p className="mt-1 text-sm text-muted-foreground">
-            Matin, après-midi ou journée entière. Le créneau choisi vous est réservé dès
-            l&apos;envoi de votre demande ; nous revenons vers vous avec un devis.
+            Matin, après-midi ou journée entière, le complexe rien que pour vous. Le créneau
+            choisi est retenu dès l&apos;envoi de votre demande ; notre devis vous confirme la
+            disponibilité et le prix.
           </p>
+
+          {/*
+            LE MESSAGE DU RETOUR ÉTAIT INVISIBLE ICI.
+
+            Un créneau pris entre-temps renvoie à cette étape avec le choix
+            effacé — mais l'étape n'affichait jamais `erreur`, contrairement à
+            celle du Bubble. Le client voyait son choix disparaître sans
+            raison, en choisissait un autre, et lisait ensuite au
+            récapitulatif « ce créneau vient d'être réservé » à propos du
+            NOUVEAU créneau, libre. Relevé par la relecture du 24 septembre
+            2026. Le message s'affiche maintenant ici, et s'efface dès qu'un
+            autre créneau est choisi.
+          */}
+          {erreur && (
+            <p role="alert" className="mt-4 rounded-xl border border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive flex items-start gap-2">
+              <AlerteCercle className="size-4 shrink-0 mt-0.5" /> {erreur}
+            </p>
+          )}
 
           {journees.length === 0 ? (
             /*
@@ -659,7 +678,10 @@ export function GroupesFlow({
                             // Même règle que les créneaux d'anniversaire : ce qui est
                             // pris se voit, barré, et ne se choisit pas.
                             disabled={!dj.libre}
-                            onClick={() => setDemiJournee(dj)}
+                            onClick={() => {
+                              setDemiJournee(dj);
+                              setErreur(null);
+                            }}
                             aria-pressed={choisi}
                             className={`inline-flex items-center gap-1.5 rounded-xl border-2 px-3 py-2 text-sm font-medium transition-all duration-200 ${
                               !dj.libre

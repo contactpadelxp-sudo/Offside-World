@@ -862,11 +862,30 @@ export async function envoyerDevis(
       };
     }
 
+    /*
+      ENVOYER UN DEVIS REND LA DEMANDE VIVANTE — SES CRÉNEAUX DOIVENT SUIVRE.
+
+      Le bouton d'envoi est proposé quel que soit l'état : on peut renvoyer un
+      prix à une demande refusée quand le client rappelle. Le statut passe
+      alors à « devis_envoye », mais ses créneaux, rendus à la vente par le
+      refus, restaient libres — une autre entreprise pouvait prendre la date
+      que ce devis venait de chiffrer. Relevé par la relecture du 24 septembre
+      2026 : c'était le troisième chemin de sortie du refus, et le seul qui
+      oubliait la reprise. Sans effet si les créneaux sont déjà tenus.
+    */
+    const reprise = await reprendreCreneauxDevis(cible);
+
     await journaliser(session, "devis.envoye", data.reference, {
       montant_cents: totalDevisCents(propre.lignes),
     });
     rafraichir();
-    return { ok: true, message: `Devis envoyé à ${data.contact_email}.`, envoyeLe };
+    return {
+      ok: true,
+      message: reprise
+        ? `Devis envoyé à ${data.contact_email}. ${reprise}`
+        : `Devis envoyé à ${data.contact_email}.`,
+      envoyeLe,
+    };
   } catch (e) {
     if (e instanceof SaisieInvalide) return { ok: false, message: e.message };
     const detail = e instanceof Error ? e.message : String(e);
@@ -1079,6 +1098,23 @@ export async function basculerCreneau(
             message:
               "Impossible de vérifier si ce créneau est réservé. Rien n'a été modifié : réessayez.",
           };
+        }
+        /*
+          Même relecture que pour une journée entière : si la demande qui
+          occupait le créneau vient de se retirer, on referme — c'est ce que
+          Brahim a demandé.
+        */
+        const encore = await occupantsDe([cible]);
+        if (encore && !encore.has(cible)) {
+          const { error: eRefermeture } = await base()
+            .from("creneaux")
+            .update({ ouvert: false })
+            .eq("id", cible);
+          if (!eRefermeture) {
+            await journaliser(session, "creneau.ferme", cible);
+            rafraichir();
+            return { ok: true, message: "Créneau fermé." };
+          }
         }
         return {
           ok: false,
@@ -1744,15 +1780,22 @@ export async function supprimerCreneau(id: string): Promise<Resultat> {
     */
     const { data: demandee } = await base()
       .from("devis_creneaux")
-      .select("demandes_devis(reference)")
+      .select("actif, demandes_devis(reference)")
       .eq("creneau_id", cible)
+      .order("actif", { ascending: false })
       .limit(1)
       .maybeSingle();
 
     if (demandee) {
+      const ref = demandee.demandes_devis?.reference ?? "";
       return {
         ok: false,
-        message: `Impossible : la demande de devis ${demandee.demandes_devis?.reference ?? ""} a visé ce créneau. Fermez-le plutôt que de le supprimer.`,
+        // Une demande VIVANTE ne se contourne pas en fermant : c'est la
+        // refuser qui libère. Une demande refusée, elle, garde seulement la
+        // trace — fermer suffit alors à retirer la place de la vente.
+        message: demandee.actif
+          ? `Impossible : la demande de devis ${ref} tient ce créneau. Refusez-la d'abord pour le libérer.`
+          : `Impossible : la demande de devis ${ref} a visé ce créneau. Fermez-le plutôt que de le supprimer.`,
       };
     }
 
@@ -1997,6 +2040,30 @@ export async function basculerJournee(jourDemande: string, ouvrir: boolean): Pro
       }
     }
 
+    /*
+      ON RELIT CE QU'ON VIENT DE ROUVRIR.
+
+      Une demande de team building peut se retirer au même instant : elle
+      tenait le créneau quand on a lu les occupants, puis a constaté la
+      fermeture, relâché sa tenue et s'est supprimée. On venait alors de
+      rouvrir, au nom d'une demande qui n'existe plus, une place que Brahim
+      voulait fermer — un jour férié rouvert à moitié. Relevé par la relecture
+      du 24 septembre 2026. Ce qui n'est plus occupé est refermé.
+    */
+    if (occupes.size > 0) {
+      const encore = await occupantsDe([...occupes.keys()]);
+      if (encore) {
+        const plusOccupes = [...occupes.keys()].filter((id) => !encore.has(id));
+        if (plusOccupes.length > 0) {
+          const { error: eRefermeture } = await base()
+            .from("creneaux")
+            .update({ ouvert: false })
+            .in("id", plusOccupes);
+          if (!eRefermeture) for (const id of plusOccupes) occupes.delete(id);
+        }
+      }
+    }
+
     const touches = ids.length - occupes.size;
     await journaliser(session, "creneaux.journee_fermee", null, {
       jour: cible,
@@ -2021,37 +2088,79 @@ export async function basculerJournee(jourDemande: string, ouvrir: boolean): Pro
 }
 
 /**
- * Reprend les créneaux d'une demande qui sort de l'état « refusée ».
+ * Reprend les créneaux d'une demande redevenue vivante.
  *
  * La libération, elle, est faite par la base (déclencheur de la migration
  * 0036) : elle ne peut pas être oubliée. La REPRISE ne peut pas l'être au même
  * endroit — si une autre entreprise a pris le créneau entre-temps, elle échoue,
  * et dans un déclencheur cet échec empêcherait de rouvrir la demande.
  *
- * L'instruction est unique, donc atomique : pour une journée entière, les deux
- * moitiés reviennent ensemble ou aucune. Une journée à moitié reprise ferait
- * croire à Brahim qu'il peut la confirmer.
+ * L'instruction est unique, donc atomique : tous les terrains reviennent
+ * ensemble ou aucun. Une privatisation à moitié reprise ferait croire à Brahim
+ * qu'il peut la confirmer.
+ *
+ * PUIS ON VÉRIFIE QUE LES CRÉNEAUX SONT ENCORE OUVERTS. L'index unique ne
+ * voit que les autres DEMANDES ; il ne sait rien d'un créneau que Brahim a
+ * fermé entre-temps pour une location prise par téléphone. Sans ce contrôle,
+ * la reprise réussissait et annonçait « son créneau lui est de nouveau
+ * réservé » sur un terrain vendu ailleurs. Relevé par la relecture du
+ * 24 septembre 2026. Si l'un manque, on relâche tout et on le dit.
+ *
+ * ELLE NE LÈVE JAMAIS. Elle est appelée APRÈS que le nouveau statut est
+ * écrit : une exception ferait annoncer « l'opération a échoué » alors que la
+ * demande a bien changé d'état, sans journal. Une panne devient donc une
+ * phrase d'avertissement, et l'appelant journalise comme d'habitude.
  *
  * Rend une phrase à ajouter au message, ou `null` s'il n'y a rien à dire.
  */
 async function reprendreCreneauxDevis(demandeId: string): Promise<string | null> {
-  const { data, error } = await base()
-    .from("devis_creneaux")
-    .update({ actif: true })
-    .eq("demande_id", demandeId)
-    .eq("actif", false)
-    .select("creneau_id");
+  const AVERTISSEMENT_PANNE =
+    "Attention : ses créneaux n'ont pas pu être repris (erreur de la base). " +
+    "Rouvrez la demande à nouveau dans un instant.";
+  try {
+    const { data, error } = await base()
+      .from("devis_creneaux")
+      .update({ actif: true })
+      .eq("demande_id", demandeId)
+      .eq("actif", false)
+      .select("creneau_id");
 
-  if (error) {
-    if (error.code === "23505") {
-      return (
-        "Attention : le créneau qu'elle tenait a été pris entre-temps par une autre " +
-        "demande. Il n'est plus réservé à cette entreprise — proposez-lui une autre date."
-      );
+    if (error) {
+      if (error.code === "23505") {
+        return (
+          "Attention : son créneau a été demandé entre-temps par une autre entreprise. " +
+          "Il ne lui est plus réservé — proposez-lui une autre date."
+        );
+      }
+      console.error("Reprise des créneaux impossible :", error.message);
+      return AVERTISSEMENT_PANNE;
     }
-    throw error;
+    if (!data || data.length === 0) return null;
+
+    const ids = data.map((l) => l.creneau_id);
+    const { data: ouverts, error: eRelu } = await base()
+      .from("creneaux_disponibles")
+      .select("id")
+      .in("id", ids);
+
+    if (!eRelu && (ouverts ?? []).length === ids.length) {
+      return "Son créneau lui est de nouveau réservé.";
+    }
+
+    const { error: eRelache } = await base()
+      .from("devis_creneaux")
+      .update({ actif: false })
+      .eq("demande_id", demandeId);
+    if (eRelache) console.error("Relâche après reprise impossible :", eRelache.message);
+
+    return eRelu
+      ? AVERTISSEMENT_PANNE
+      : "Attention : son créneau a été fermé entre-temps. Il ne lui est plus réservé — " +
+          "proposez-lui une autre date, ou rouvrez le créneau au back-office.";
+  } catch (e) {
+    console.error("Reprise des créneaux impossible :", e);
+    return AVERTISSEMENT_PANNE;
   }
-  return data && data.length > 0 ? "Son créneau lui est de nouveau réservé." : null;
 }
 
 /**

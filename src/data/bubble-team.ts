@@ -159,7 +159,9 @@ export const TEAM_BUILDING_MATIN: Plage = { debut: "09:00", fin: "13:00" };
 export const TEAM_BUILDING_APRES_MIDI: Plage = { debut: "14:00", fin: "18:00" };
 
 export const TEAM_BUILDING_INCLUS = [
-  "Terrain privatisé pour votre groupe",
+  // Tous les terrains : une demande tient la période entière (voir
+  // `candidatsTeamBuilding`), le complexe est donc bien à vous seuls.
+  "Complexe privatisé pour votre groupe",
   "Bubble Foot et matériel compris",
   "Organisation et arbitrage du tournoi",
   "Chasubles et ballons",

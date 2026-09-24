@@ -48,6 +48,7 @@ function reference(prefixe: string, longueur = 8): string {
 /** Codes PostgreSQL renvoyés par PostgREST dans `error.code`. */
 const VIOLATION_UNICITE = "23505";
 const VIOLATION_EXCLUSION = "23P01";
+const VIOLATION_CLE_ETRANGERE = "23503";
 
 /** Le créneau vient d'être pris par quelqu'un d'autre. */
 export class CreneauDejaPris extends Error {
@@ -239,119 +240,134 @@ export async function enregistrerDemandeDevis(
 // ── Team building : les créneaux qu'une demande tient ────────────────────────
 
 /**
- * Les combinaisons de créneaux qui peuvent servir une demande, de la
- * meilleure à la moins bonne.
+ * Les créneaux qu'une demande doit tenir : TOUS les terrains de la période.
  *
- * Chaque combinaison est une liste d'identifiants : un créneau pour une
- * demi-journée, deux pour une journée entière. On en rend PLUSIEURS parce que
- * la lecture n'est qu'une photographie : entre elle et l'écriture, une autre
- * entreprise peut prendre la première. `tenirCreneauxDevis` essaie alors la
- * suivante, au lieu de refuser une demande qu'une autre Fun zone aurait pu
- * servir.
+ * LE TEAM BUILDING PRIVATISE LE COMPLEXE — c'est ce que le site annonce, pour
+ * des groupes allant jusqu'à 60 personnes. La première version de cette
+ * fonction attribuait UNE Fun zone de 18 places, et laissait l'autre à une
+ * seconde entreprise : deux sociétés se seraient retrouvées ensemble dans un
+ * complexe « privatisé », et une équipe de 45 sur un terrain prévu pour 18.
+ * Relevé par la relecture du 24 septembre 2026.
  *
- * POUR UNE JOURNÉE ENTIÈRE, LE MÊME TERRAIN D'ABORD. Un groupe qui passe la
- * journée préfère ne pas changer de terrain à midi. Les paires sur un même
- * espace passent donc devant ; les paires croisées restent possibles, parce
- * qu'une journée servie sur deux terrains vaut mieux qu'une journée refusée.
+ * Une demi-journée n'est donc servie que si CHAQUE espace actif a son
+ * créneau ouvert et libre à cette heure. Un terrain fermé par Brahim — une
+ * location prise par téléphone, un entretien — rend la période indisponible :
+ * le complexe n'y est plus privatisable. Pour accueillir deux entreprises sur
+ * la même demi-journée, Brahim rouvre un terrain à la main.
+ *
+ * Rend la liste des créneaux à tenir, ou une liste vide si la période n'est
+ * pas entièrement libre. Une seule combinaison : il n'y a plus de terrain à
+ * choisir, donc plus d'alternative à essayer.
  *
  * LA JOURNÉE EST LUE LARGE PUIS FILTRÉE EN HEURE DE BRUXELLES. Borner la
  * requête avec `new Date("…T00:00:00")` la ferait lire dans le fuseau du
- * serveur — UTC sur Vercel —, décalé d'une ou deux heures. On lit donc trois
- * jours autour de midi, et c'est `jourISO`, qui connaît Bruxelles, qui trie.
+ * serveur — UTC sur Vercel. On lit trois jours autour de midi, et c'est
+ * `jourISO`, qui connaît Bruxelles, qui trie.
  */
 export async function candidatsTeamBuilding(
   jour: string,
   periode: PeriodeTeamBuilding
-): Promise<string[][]> {
+): Promise<string[]> {
   const midi = new Date(`${jour}T12:00:00Z`);
   const plancher = premierInstantReservable();
   const de = new Date(Math.max(midi.getTime() - 36 * 3_600_000, plancher.getTime()));
   const a = new Date(midi.getTime() + 36 * 3_600_000);
 
-  const { data, error } = await base()
-    .from("creneaux_disponibles")
-    .select("id, espace_id, debut")
-    .eq("type", "team_building")
-    .eq("libre", true)
-    .gte("debut", de.toISOString())
-    .lt("debut", a.toISOString())
-    .order("espace_id");
+  const [creneaux, espaces] = await Promise.all([
+    base()
+      .from("creneaux_disponibles")
+      .select("id, espace_id, debut")
+      .eq("type", "team_building")
+      .eq("libre", true)
+      .gte("debut", de.toISOString())
+      .lt("debut", a.toISOString()),
+    compterEspacesActifs(),
+  ]);
 
   // Une panne n'est pas une indisponibilité : voir `verifierCreneau`.
-  if (error) throw error;
+  if (creneaux.error) throw creneaux.error;
+  if (espaces === 0) return [];
 
-  const duJour = (data ?? []).filter(
+  const duJour = (creneaux.data ?? []).filter(
     (c): c is { id: string; espace_id: string; debut: string } =>
       Boolean(c.id && c.espace_id && c.debut) && jourISO(new Date(c.debut as string)) === jour
   );
-  const aHeure = (h: string) => duJour.filter((c) => heure(new Date(c.debut)) === h);
-  const matin = aHeure(PERIODES.matin.debut);
-  const apresMidi = aHeure(PERIODES["apres-midi"].debut);
 
-  if (periode === "matin") return matin.map((c) => [c.id]);
-  if (periode === "apres-midi") return apresMidi.map((c) => [c.id]);
+  /** Les créneaux d'une heure donnée, s'il y en a un libre par terrain actif. */
+  const complets = (h: string): string[] | null => {
+    const libres = duJour.filter((c) => heure(new Date(c.debut)) === h);
+    const terrains = new Set(libres.map((c) => c.espace_id));
+    return terrains.size >= espaces ? libres.map((c) => c.id) : null;
+  };
 
-  const memeTerrain: string[][] = [];
-  const croisees: string[][] = [];
-  for (const m of matin) {
-    for (const am of apresMidi) {
-      (m.espace_id === am.espace_id ? memeTerrain : croisees).push([m.id, am.id]);
-    }
-  }
-  return [...memeTerrain, ...croisees];
+  const matin = complets(PERIODES.matin.debut);
+  const apresMidi = complets(PERIODES["apres-midi"].debut);
+
+  if (periode === "matin") return matin ?? [];
+  if (periode === "apres-midi") return apresMidi ?? [];
+  return matin && apresMidi ? [...matin, ...apresMidi] : [];
 }
 
 /**
- * Fait tenir à une demande la première combinaison encore libre.
+ * Nombre de terrains en service — ce qu'une privatisation doit tenir.
  *
- * L'INSERTION EST UNE SEULE INSTRUCTION, DONC ATOMIQUE. Pour une journée
- * entière, les deux lignes partent ensemble : si l'après-midi vient d'être
- * pris, le matin n'est pas tenu non plus. Une journée à moitié tenue serait
- * pire qu'un refus — l'entreprise croirait avoir sa journée.
+ * Lu en base plutôt qu'écrit en dur : la Fun zone 3 ouvrira un jour, et la
+ * privatisation devra alors la couvrir aussi, sans qu'on y pense.
+ */
+export async function compterEspacesActifs(): Promise<number> {
+  const { count, error } = await base()
+    .from("espaces")
+    .select("id", { count: "exact", head: true })
+    .eq("actif", true);
+  if (error) throw error;
+  return count ?? 0;
+}
+
+/**
+ * Fait tenir à une demande tous ses créneaux, ou aucun.
+ *
+ * L'INSERTION EST UNE SEULE INSTRUCTION, DONC ATOMIQUE. Deux terrains pour une
+ * demi-journée, quatre pour une journée : ils partent ensemble. Si un seul
+ * vient d'être pris, aucun n'est tenu. Une privatisation à moitié tenue serait
+ * pire qu'un refus — l'entreprise croirait avoir le complexe.
  *
  * C'EST LA BASE QUI TRANCHE. L'index unique partiel
  * `devis_creneaux_un_seul_actif_par_creneau` refuse qu'un créneau soit tenu
- * deux fois : deux entreprises qui envoient au même instant ne peuvent pas
- * passer toutes les deux. Un refus (23505) fait essayer la combinaison
- * suivante ; toute autre erreur remonte.
+ * deux fois (23505). La clé étrangère refuse un créneau que Brahim vient de
+ * SUPPRIMER (23503). Les deux veulent dire la même chose pour l'entreprise —
+ * la place n'est plus disponible — et rendent `false`. Toute autre erreur
+ * remonte.
  *
- * PUIS ON RELIT, parce que l'index ne voit pas tout. Il ne sait rien de
- * l'ouverture du créneau : Brahim peut le FERMER entre la lecture des
- * candidats et cette écriture. On vérifie donc que chaque créneau tenu est
- * encore dans `creneaux_disponibles` ; sinon on relâche et on passe au suivant.
- *
- * Rend les identifiants tenus, ou `null` si aucune combinaison n'a pu l'être.
+ * PUIS ON RELIT, parce que l'index ne voit pas tout : il ne sait rien de
+ * l'ouverture du créneau, et Brahim peut le FERMER entre la lecture et cette
+ * écriture. Si l'un manque dans `creneaux_disponibles`, on relâche tout.
  */
-export async function tenirCreneauxDevis(
-  demandeId: string,
-  candidats: string[][]
-): Promise<string[] | null> {
-  for (const ids of candidats) {
-    const { error } = await base()
-      .from("devis_creneaux")
-      .insert(ids.map((creneau_id) => ({ demande_id: demandeId, creneau_id })));
+export async function tenirCreneauxDevis(demandeId: string, ids: string[]): Promise<boolean> {
+  if (ids.length === 0) return false;
 
-    if (error) {
-      if (error.code === VIOLATION_UNICITE) continue;
-      throw error;
-    }
+  const { error } = await base()
+    .from("devis_creneaux")
+    .insert(ids.map((creneau_id) => ({ demande_id: demandeId, creneau_id })));
 
-    const { data: encoreOuverts, error: eRelu } = await base()
-      .from("creneaux_disponibles")
-      .select("id")
-      .in("id", ids);
-    if (eRelu) throw eRelu;
-
-    if ((encoreOuverts ?? []).length === ids.length) return ids;
-
-    const { error: eRelache } = await base()
-      .from("devis_creneaux")
-      .delete()
-      .eq("demande_id", demandeId)
-      .in("creneau_id", ids);
-    if (eRelache) throw eRelache;
+  if (error) {
+    if (error.code === VIOLATION_UNICITE || error.code === VIOLATION_CLE_ETRANGERE) return false;
+    throw error;
   }
-  return null;
+
+  const { data: encoreOuverts, error: eRelu } = await base()
+    .from("creneaux_disponibles")
+    .select("id")
+    .in("id", ids);
+  if (eRelu) throw eRelu;
+
+  if ((encoreOuverts ?? []).length === ids.length) return true;
+
+  const { error: eRelache } = await base()
+    .from("devis_creneaux")
+    .delete()
+    .eq("demande_id", demandeId);
+  if (eRelache) throw eRelache;
+  return false;
 }
 
 /**
@@ -362,6 +378,11 @@ export async function tenirCreneauxDevis(
  * l'entreprise n'a pas obtenue — et qu'on lui dit à l'écran de rechoisir.
  */
 export async function supprimerDemandeDevis(id: string): Promise<void> {
+  // La suppression emporte ses éventuelles lignes `devis_creneaux` (cascade).
   const { error } = await base().from("demandes_devis").delete().eq("id", id);
-  if (error) console.error("Demande de devis orpheline non supprimée :", error.message);
+  if (error) {
+    // Deux échecs d'affilée : on ne peut plus rien réparer d'ici. Le message
+    // nomme la demande pour que Brahim la retrouve et la refuse à la main.
+    console.error(`Demande de devis ${id} orpheline, non supprimée :`, error.message);
+  }
 }

@@ -251,8 +251,10 @@ export interface DevisEmail {
   message?: string | null;
   /**
    * Le créneau tenu tombe dans les heures où Sport-Finder loue les mêmes
-   * terrains — les après-midis. L'avis au complexe le dit : accepter suppose
-   * de fermer la plage là-bas. Absent pour le client, que ça ne regarde pas.
+   * terrains — les après-midis. Le site le retient, mais Sport-Finder peut
+   * l'avoir déjà loué ou le louer d'ici la réponse : on ne peut donc pas le
+   * dire « réservé » au client, seulement « retenu », et le complexe doit
+   * fermer la plage là-bas dès réception.
    */
   heurteSportFinder?: boolean;
 }
@@ -574,7 +576,16 @@ export function auClientDevisRecu(d: DevisEmail): Message {
         tient sa place dès l'envoi — le dire, c'est aussi ce qui évite à
         l'entreprise de réserver ailleurs « au cas où ».
       */
-      "<strong>Ce créneau vous est réservé</strong> le temps d'établir votre devis. Seul le prix reste à convenir.",
+      /*
+        « RÉSERVÉ » SEULEMENT QUAND C'EST VRAI. Un après-midi tombe dans les
+        heures où Sport-Finder loue les mêmes terrains : le site le retient,
+        mais ne peut pas garantir qu'il n'y est pas déjà loué. Relevé par la
+        relecture du 24 septembre 2026 — la phrase promettait une place que
+        le complexe n'avait pas encore vérifiée.
+      */
+      d.heurteSportFinder
+        ? "<strong>Ce créneau est retenu pour vous.</strong> Notre devis vous confirmera la disponibilité du terrain et le prix."
+        : "<strong>Ce créneau vous est réservé</strong> le temps d'établir votre devis. Seul le prix reste à convenir.",
     ],
     EMAIL
   );
@@ -711,9 +722,10 @@ export function auComplexeNouveauDevis(d: DevisEmail): Message {
     ],
     [
       d.message ? `Message : ${ech(d.message)}` : "",
-      "<strong>Le créneau est bloqué</strong> pour cette entreprise jusqu'à ce que vous refusiez la demande.",
+      "<strong>Les terrains sont bloqués sur le site</strong> pour cette entreprise jusqu'à ce que vous refusiez la demande.",
       d.heurteSportFinder
-        ? "<strong>Cet horaire est aussi vendu sur Sport-Finder.</strong> Si vous acceptez, fermez la plage là-bas."
+        ? "<strong>Cet horaire est aussi vendu sur Sport-Finder.</strong> Fermez cette plage là-bas DÈS MAINTENANT — " +
+          "ou, si elle y est déjà louée, refusez la demande."
         : "",
       `<a href="${urlAbsolue("/admin/devis")}" style="color:${ACCENT};font-weight:600;">Ouvrir le back-office</a>.`,
     ].filter(Boolean),

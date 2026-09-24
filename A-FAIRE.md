@@ -924,10 +924,33 @@ relit. Mais **quand il accepte un après-midi, il doit fermer la plage sur
 Sport-Finder**. La fiche du devis et l'avis e-mail le lui rappellent,
 calculés par la même règle que le reste du site.
 
-**Hypothèse retenue, à confirmer avec lui :** un créneau par Fun zone, donc
-deux entreprises peuvent prendre le même lundi matin, une par terrain. Pour
-une grande société qui veut les deux terrains, Brahim ferme le second à la
-main.
+**Relecture adversariale le soir même : 13 défauts réels, tous corrigés.**
+Les deux qui changent le fonctionnement :
+
+- **Une demande privatise le COMPLEXE, pas une Fun zone.** La première version
+  réservait un seul terrain de 18 places, alors que le site annonce une
+  « privatisation du complexe » pour des groupes jusqu'à 60. Désormais une
+  demande tient tous les terrains actifs de la période, d'une seule écriture ;
+  un terrain fermé par Brahim rend la période « complète ». Pour accueillir
+  deux entreprises le même matin, il rouvre un terrain à la main.
+- **Les tenues expirent** (migration 0037) : une demande restée « nouvelle »
+  sept jours relâche ses créneaux — sinon un script pouvait bloquer six mois
+  de team building. S'y ajoute un quota de 3 demandes par jour et par
+  appelant.
+
+Les autres : demande orpheline sur erreur de la base, renvoi de devis sur
+une demande refusée sans reprise des créneaux, reprise d'un créneau que
+Brahim avait fermé, course entre « fermer la journée » et une demande qui se
+retire, compteur et croix « supprimer » de la page Créneaux, message d'erreur
+invisible au client après une course perdue, et « réservé » promis sur des
+après-midis que Sport-Finder loue encore (désormais « retenu », et Brahim est
+invité à fermer la plage Sport-Finder DÈS RÉCEPTION).
+
+- [ ] **`fr.offsidefootindoor.be`** servait l'ancien site Wix (anciens prix).
+      Redirigé en 308 vers le domaine dans Vercel le 24 septembre ; reste à
+      changer sa ligne CNAME chez Wix vers la valeur donnée par Vercel. Absent
+      du relevé de zone du 23 septembre — à y ajouter avant tout transfert du
+      domaine.
 
 ## Le Bounce Park arrive sur le site
 

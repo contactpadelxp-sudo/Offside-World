@@ -713,6 +713,10 @@ export type Database = {
           sans_horaire: boolean
         }[]
       }
+      expirer_tenues_devis: {
+        Args: { delai?: string }
+        Returns: number
+      }
       generer_creneaux_team_building: {
         Args: { au: string; du: string }
         Returns: {

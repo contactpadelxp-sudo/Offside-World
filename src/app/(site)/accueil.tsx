@@ -364,7 +364,7 @@ export function Accueil({ formules }: { formules: FormuleVue[] }) {
                     label: `${TEAM_BUILDING_MIN_PARTICIPANTS} à ${TEAM_BUILDING_MAX_PARTICIPANTS} personnes`,
                   },
                   { icon: Horloge, label: "Demi-journée ou journée" },
-                  { icon: Batiment, label: "Terrain privatisé" },
+                  { icon: Batiment, label: "Complexe privatisé" },
                   { icon: Document, label: "Devis sur mesure" },
                 ].map((item) => (
                   <div key={item.label} className="flex items-center gap-3 p-3 rounded-xl bg-white/[0.04] border border-white/10">

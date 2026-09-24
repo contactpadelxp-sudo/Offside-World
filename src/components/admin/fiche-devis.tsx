@@ -246,8 +246,9 @@ export function FicheDevis({ d }: { d: DevisAdmin }) {
 
         L'AVERTISSEMENT SPORT-FINDER est posé ici et pas ailleurs, parce que
         c'est ici que se prend la décision. Un après-midi de team building tombe
-        dans les heures où Sport-Finder loue les mêmes terrains : accepter la
-        demande sans fermer la plage là-bas, c'est vendre le terrain deux fois.
+        dans les heures où Sport-Finder loue les mêmes terrains. Il faut fermer
+        la plage là-bas DÈS RÉCEPTION, pas à l'acceptation : sans ça, Sport-Finder
+        continue de la louer pendant les 48 h que prend le devis.
       */}
       {d.creneaux.length > 0 && (
         <div className="mt-3 space-y-1.5">
@@ -265,8 +266,8 @@ export function FicheDevis({ d }: { d: DevisAdmin }) {
             <p className="flex items-start gap-1.5 rounded-lg border border-kick/40 bg-kick/5 px-3 py-2 text-xs text-kick">
               <AlerteTriangle className="mt-0.5 size-3.5 shrink-0" />
               <span>
-                Cet horaire est aussi vendu sur Sport-Finder. Si vous acceptez cette demande,
-                fermez la plage correspondante sur Sport-Finder.
+                Cet horaire est aussi vendu sur Sport-Finder. Fermez cette plage là-bas dès
+                maintenant — ou, si elle y est déjà louée, refusez la demande.
               </span>
             </p>
           )}

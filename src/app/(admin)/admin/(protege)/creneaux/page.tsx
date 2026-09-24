@@ -60,9 +60,20 @@ export default async function PageCreneaux({
   const [creneaux, espaces] = await Promise.all([lireCreneauxDuJour(jour), lireEspaces()]);
   const semaine = Array.from({ length: 7 }, (_, i) => decaler(jour, i - 3));
 
+  /*
+    UN CRÉNEAU DEMANDÉ N'EST PAS LIBRE.
+
+    Depuis la migration 0036, un créneau de team building est occupé par une
+    demande de devis, sans réservation. Le compteur ne regardait que
+    `reservePar` : il annonçait « 4 libres » là où il y en avait 3 et 1
+    demandé, et proposait « Fermer les 4 créneaux du jour » quand le serveur
+    n'en fermerait que 3.
+  */
+  const occupe = (c: (typeof creneaux)[number]) => Boolean(c.reservePar || c.tenuParDevis);
   const reserves = creneaux.filter((c) => c.reservePar).length;
-  const fermes = creneaux.filter((c) => !c.ouvert && !c.reservePar).length;
-  const libres = creneaux.length - reserves - fermes;
+  const demandes = creneaux.filter((c) => c.tenuParDevis).length;
+  const fermes = creneaux.filter((c) => !c.ouvert && !occupe(c)).length;
+  const libres = creneaux.length - reserves - demandes - fermes;
 
   return (
     <div>
@@ -120,6 +131,7 @@ export default async function PageCreneaux({
             <span className="ml-2 font-normal normal-case tracking-normal">
               {libres} libre{libres > 1 ? "s" : ""}
               {reserves > 0 && ` · ${reserves} réservé${reserves > 1 ? "s" : ""}`}
+              {demandes > 0 && ` · ${demandes} demandé${demandes > 1 ? "s" : ""} (devis)`}
               {fermes > 0 && ` · ${fermes} fermé${fermes > 1 ? "s" : ""}`}
             </span>
           )}

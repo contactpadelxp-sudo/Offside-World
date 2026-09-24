@@ -111,6 +111,11 @@ async function quotaDepasse(action: string): Promise<boolean> {
   return !(await autoriserPartage(`${action}:${await appelant()}`, 5, 10 * 60_000));
 }
 
+/** 3 demandes de team building par 24 heures et par appelant. Voir `demanderDevis`. */
+async function quotaDevisDuJourDepasse(): Promise<boolean> {
+  return !(await autoriserPartage(`devis-jour:${await appelant()}`, 3, 24 * 3_600_000));
+}
+
 /** Traduit une exception en réponse affichable, sans jamais divulguer l'interne. */
 function enEchec(e: unknown): Resultat {
   if (e instanceof SaisieInvalide) return { ok: false, message: e.message, champ: e.champ };
@@ -630,11 +635,28 @@ export async function demanderDevis(saisie: SaisieDevis): Promise<Resultat> {
       Depuis la migration 0036, une demande de team building TIENT son créneau.
       On regarde d'abord ce qui est libre pour ce jour et cette période : s'il
       n'y a rien, inutile d'écrire une demande qu'il faudrait aussitôt retirer.
-      Le navigateur ne dit que « lundi matin » ; c'est ici qu'une Fun zone est
-      attribuée — l'entreprise n'a aucune raison d'en préférer une.
+      Le navigateur ne dit que « lundi matin » ; ce sont TOUS les terrains de
+      la période qui sont tenus, puisque le team building privatise le
+      complexe. Voir `candidatsTeamBuilding`.
+
+      UN SECOND QUOTA, PAR JOUR. Une demande tient une demi-journée entière du
+      complexe, sans paiement ni confirmation préalable : c'est une place
+      qu'un appel forgé peut retirer de la vente. Cinq par dix minutes, le
+      quota commun, laisserait bloquer des semaines de team building en une
+      soirée depuis une seule adresse. Trois demandes par jour et par
+      appelant ne gênent aucune entreprise réelle.
     */
-    const candidats = await candidatsTeamBuilding(dateSouhaitee, periode);
-    if (candidats.length === 0) throw new CreneauDejaPris();
+    if (await quotaDevisDuJourDepasse()) {
+      return {
+        ok: false,
+        message:
+          "Vous avez déjà envoyé plusieurs demandes aujourd'hui. Écrivez-nous à " +
+          "info@offsidefootindoor.be si vous avez besoin d'autres dates.",
+      };
+    }
+
+    const creneauxATenir = await candidatsTeamBuilding(dateSouhaitee, periode);
+    if (creneauxATenir.length === 0) throw new CreneauDejaPris();
 
     const { id: demandeId, reference } = await enregistrerDemandeDevis({
       entreprise,
@@ -653,14 +675,25 @@ export async function demanderDevis(saisie: SaisieDevis): Promise<Resultat> {
     });
 
     /*
-      SI PLUS RIEN N'EST LIBRE AU MOMENT D'ÉCRIRE, LA DEMANDE EST RETIRÉE.
+      SI LES CRÉNEAUX NE PEUVENT PAS ÊTRE TENUS, LA DEMANDE EST RETIRÉE.
 
-      Une autre entreprise peut avoir pris la dernière Fun zone entre la
-      lecture et l'écriture. La demande n'a encore envoyé aucun e-mail : on la
-      supprime, et le client est renvoyé au choix du créneau avec une liste
-      relue — le même chemin que le perdant d'une course sur un anniversaire.
+      Deux cas, un seul remède. Une autre entreprise a pris la période entre la
+      lecture et l'écriture, ou Brahim l'a fermée : `tenirCreneauxDevis` rend
+      `false`. Ou la base a mal répondu en cours de route : elle LÈVE. Dans les
+      deux cas la demande n'a envoyé aucun e-mail, et la laisser en base
+      ferait apparaître au back-office une demande — parfois avec des créneaux
+      tenus — pour une place que l'entreprise croit ne pas avoir obtenue.
+      Relevé par la relecture du 24 septembre 2026 : seul le premier cas était
+      traité, et une panne passagère laissait un complexe bloqué sans que
+      personne le sache. La suppression emporte les tenues (cascade).
     */
-    const tenus = await tenirCreneauxDevis(demandeId, candidats);
+    let tenus: boolean;
+    try {
+      tenus = await tenirCreneauxDevis(demandeId, creneauxATenir);
+    } catch (e) {
+      await supprimerDemandeDevis(demandeId);
+      throw e;
+    }
     if (!tenus) {
       await supprimerDemandeDevis(demandeId);
       throw new CreneauDejaPris();

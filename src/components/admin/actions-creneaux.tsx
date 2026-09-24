@@ -164,11 +164,11 @@ function LigneCreneau({ c }: { c: CreneauAdmin }) {
             le sien. Il n'existait aucun moyen de le faire, donc aucun moyen de
             saisir son vrai planning.
 
-            Le bouton n'apparaît pas sur un créneau réservé : le serveur le
-            refuserait de toute façon, et proposer une action impossible est
-            une promesse en l'air.
+            Le bouton n'apparaît pas sur un créneau réservé ni sur un créneau
+            demandé par un devis : le serveur le refuserait de toute façon, et
+            proposer une action impossible est une promesse en l'air.
           */}
-          {!c.reservePar && (
+          {!c.reservePar && !c.tenuParDevis && (
             <button
               type="button"
               disabled={enCours}

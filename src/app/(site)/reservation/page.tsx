@@ -4,7 +4,7 @@ import { ReservationFlow } from "@/components/reservation/reservation-flow";
 import { metadonneesPage } from "@/lib/site";
 import { lireCreneaux } from "@/lib/db/creneaux";
 import { lireFormules, lireOptions } from "@/lib/db/referentiel";
-import { expirerReservationsAbandonnees } from "@/lib/db/reservations";
+import { compterEspacesActifs, expirerReservationsAbandonnees } from "@/lib/db/reservations";
 import { demiJourneesDepuisCreneaux } from "@/lib/demi-journees";
 import { baseConfiguree } from "@/lib/supabase/server";
 import { paiementConfigure } from "@/lib/paiement/stripe";
@@ -58,7 +58,7 @@ export default async function ReservationPage({
   // d'afficher les disponibilités, pour ne pas montrer « complet » à tort.
   if (baseConfiguree()) await expirerReservationsAbandonnees();
 
-  const [formules, options, creneauxAnniversaire, creneauxBubble, creneauxTeamBuilding] =
+  const [formules, options, creneauxAnniversaire, creneauxBubble, creneauxTeamBuilding, nbTerrains] =
     await Promise.all([
       lireFormules(),
       lireOptions(),
@@ -67,6 +67,19 @@ export default async function ReservationPage({
       // Le team building a ses vrais créneaux depuis la migration 0036 : ce
       // qui s'affiche libre est ce que la base acceptera de tenir.
       lireCreneaux("team_building"),
+      /*
+        Le team building privatise le complexe : une période n'est libre que
+        si tous les terrains le sont. En cas de panne, ZÉRO — tout s'affiche
+        complet. C'est le bon côté pour se tromper : un « complet » à tort
+        coûte un e-mail, un « libre » à tort promet une place que le serveur
+        refusera au moment d'envoyer.
+      */
+      baseConfiguree()
+        ? compterEspacesActifs().catch((e) => {
+            console.error("Terrains en service illisibles :", e);
+            return 0;
+          })
+        : Promise.resolve(0),
     ]);
 
   /*
@@ -102,7 +115,7 @@ export default async function ReservationPage({
           options,
           creneauxAnniversaire,
           creneauxBubble,
-          demiJournees: demiJourneesDepuisCreneaux(creneauxTeamBuilding),
+          demiJournees: demiJourneesDepuisCreneaux(creneauxTeamBuilding, nbTerrains),
           // Le tunnel doit annoncer un paiement SEULEMENT s'il va vraiment
           // avoir lieu : promettre « on vous rappelle » puis débiter le
           // client est une pratique trompeuse, et le bouton doit dire ce
