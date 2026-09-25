@@ -983,7 +983,11 @@ mène nulle part, volontairement.
 
 - [x] ~~**La date d'ouverture.**~~ **LE 1ER DÉCEMBRE 2026**, communiquée le
       24 septembre 2026.
-- [ ] **Remplacer la carte « Bientôt » par une vraie présentation** — demandé
+- [x] **FAIT le 25 septembre 2026 : la carte mène à `/bounce-park`** —
+      présentation, visuel 3D, date d'ouverture, horaires prévus, et « tarifs
+      et âge minimum annoncés avant l'ouverture ». Un seul visuel existe à ce
+      jour (`bounce park.jpg`) ; d'autres images pourront s'y ajouter. Demande d'origine :
+      **Remplacer la carte « Bientôt » par une vraie présentation** — demandé
       par Mathis le 24 septembre 2026, à faire APRÈS la mise en ligne :
       **illustrer** ce qu'est le Bounce Park (des images, pas seulement un
       titre) et annoncer **l'ouverture le 1er décembre 2026**. Aujourd'hui la

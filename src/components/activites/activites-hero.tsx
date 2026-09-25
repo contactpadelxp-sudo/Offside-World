@@ -167,16 +167,17 @@ export function ActivitesHero({ activites }: { activites: ActiviteVue[] }) {
         ))}
 
         {/*
-          LE TEASER N'EST PAS UN LIEN, sur mobile comme ailleurs. Un <div> ne
-          rentre pas dans l'ordre de tabulation et n'est pas annoncé comme
-          cliquable : un lecteur d'écran dira « Bounce Park, bientôt » et
-          s'arrêtera là. C'est exactement ce qu'on veut d'une annonce — il n'y a
-          rien au bout, ni page, ni créneau, ni tarif.
+          LE TEASER MÈNE À SA PAGE depuis le 25 septembre 2026 : `/bounce-park`
+          explique le parc et annonce son ouverture. Ce n'était pas un lien tant
+          qu'il n'y avait rien au bout.
 
-          Le trait discontinu, l'absence de flèche et la pastille « Bientôt »
-          disent la même chose trois fois, parce qu'un seul signal se rate.
+          Le trait discontinu et la pastille « Bientôt » restent : ils disent
+          que ceci s'annonce et ne se réserve pas encore.
         */}
-        <div className="relative block aspect-[16/9] overflow-hidden rounded-2xl border border-dashed border-white/25">
+        <Link
+          href="/bounce-park"
+          className="relative block aspect-[16/9] overflow-hidden rounded-2xl border border-dashed border-white/25"
+        >
           {planParc ? (
             <Photo src={planParc} alt="" sizes="50vw" className="object-cover object-center opacity-70" />
           ) : (
@@ -195,10 +196,13 @@ export function ActivitesHero({ activites }: { activites: ActiviteVue[] }) {
             {BOUNCE_PARK.tag}
           </span>
 
-          <span className="absolute inset-x-2 bottom-2 block text-[13px] font-semibold leading-tight text-white/90 line-clamp-2">
-            {BOUNCE_PARK.titre}
+          <span className="absolute inset-x-2 bottom-2 flex items-end gap-1">
+            <span className="min-w-0 flex-1 text-[13px] font-semibold leading-tight text-white/90 line-clamp-2">
+              {BOUNCE_PARK.titre}
+            </span>
+            <FlecheDroite className="mb-px size-3.5 shrink-0 text-white/80" />
           </span>
-        </div>
+        </Link>
       </div>
 
       {/* ── À partir de 640 px : quatre cartes ── */}
@@ -301,18 +305,19 @@ export function ActivitesHero({ activites }: { activites: ActiviteVue[] }) {
         ))}
 
         {/*
-          LA CARTE DU BOUNCE PARK — UN <div>, PAS UN <a>.
+          LA CARTE DU BOUNCE PARK — UN LIEN DEPUIS LE 25 SEPTEMBRE 2026.
 
-          Il n'y a rien au bout : ni page, ni créneau, ni tarif. Un lien mort
-          est pire qu'une carte inerte, parce qu'il promet une réponse qu'il
-          n'a pas — et le visiteur qui clique pour rien ne reclique pas sur les
-          trois autres.
+          Elle était un <div> tant qu'il n'y avait rien au bout : un lien mort
+          est pire qu'une carte inerte. `/bounce-park` présente désormais le
+          parc et sa date d'ouverture.
 
-          Le trait discontinu et l'absence de flèche disent la même chose que la
-          pastille « Bientôt » : ceci s'annonce, ne se réserve pas. Trois signaux
-          qui vont dans le même sens, parce qu'un seul se rate.
+          Le trait discontinu et la pastille « Bientôt » restent : ceci
+          s'annonce, ne se réserve pas encore.
         */}
-        <div className="block h-full overflow-hidden rounded-2xl border-2 border-dashed border-white/20 bg-card/60 backdrop-blur-sm">
+        <Link
+          href="/bounce-park"
+          className="group block h-full overflow-hidden rounded-2xl border-2 border-dashed border-white/20 bg-card/60 backdrop-blur-sm transition-colors duration-500 hover:border-white/40"
+        >
           <div className="relative aspect-[3/2] overflow-hidden">
             {planParc ? (
               <Photo
@@ -345,8 +350,9 @@ export function ActivitesHero({ activites }: { activites: ActiviteVue[] }) {
             <span className="min-w-0 flex-1 text-[13px] font-bold leading-tight text-foreground/85 lg:text-[15px]">
               {BOUNCE_PARK.titre}
             </span>
+            <FlecheDroite className="hidden size-4 shrink-0 text-foreground/60 transition-transform duration-300 group-hover:translate-x-0.5 lg:block" />
           </div>
-        </div>
+        </Link>
       </div>
     </div>
   );

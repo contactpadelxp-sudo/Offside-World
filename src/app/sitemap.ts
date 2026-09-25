@@ -7,6 +7,7 @@ import { lireArticlesPublies } from "@/lib/db/blog";
 const routes = [
   "",
   "/reservation",
+  "/bounce-park",
   "/blog",
   "/mentions-legales",
   "/confidentialite",
