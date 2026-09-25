@@ -23,11 +23,17 @@ import { metadonneesPage } from "@/lib/site";
  *
  * LE SEUL VISUEL EST UN RENDU 3D, pas une photo : la légende le dit, pour que
  * personne ne s'étonne le jour J d'un détail qui aurait bougé.
+ *
+ * LES TEXTES SONT ÉCRITS ICI. Mathis a transmis ceux d'Owaza comme idées —
+ * public visé, trampoline et parcours d'obstacles, « plutôt que les écrans » —
+ * en demandant de tout reformuler : c'est un concurrent. Aucune phrase n'en
+ * est reprise. Les « toboggans » de leur texte n'y figurent pas : rien ne
+ * permet de dire, sur notre visuel, que ce parc-ci en a.
  */
 
 export const metadata: Metadata = metadonneesPage({
   titre: `Bounce Park — parc gonflable à Gembloux, ouverture le ${BOUNCE_PARK.ouverture} | ${NOM_COMMERCIAL}`,
-  description: `Un parc gonflable géant arrive au complexe ${NOM_COMMERCIAL} de Gembloux : parcours d'obstacles, filets, tunnels et zones de saut, à l'intérieur. Ouverture le ${BOUNCE_PARK.ouverture}.`,
+  description: `Un immense terrain de jeu gonflable arrive au complexe ${NOM_COMMERCIAL} de Gembloux : grimper, ramper, sauter, en famille, entre amis ou entre collègues. Ouverture le ${BOUNCE_PARK.ouverture}.`,
   chemin: "/bounce-park",
 });
 
@@ -37,6 +43,9 @@ const JOURS: Record<number, string> = {
   6: "Samedi",
   7: "Dimanche",
 };
+
+/** Pour qui : le public donné par Mathis le 25 septembre 2026. */
+const POUR_QUI = ["Enfants", "Bandes de copains", "Équipes", "Familles"] as const;
 
 /** « 12:00 » → « 12h », « 12:30 » → « 12h30 ». */
 function heure(hhmm: string): string {
@@ -52,15 +61,15 @@ function heure(hhmm: string): string {
 const AU_PROGRAMME = [
   {
     titre: "Grimper",
-    texte: "Des murs et des filets à escalader pour passer d'une zone à l'autre.",
+    texte: "Des filets et des murs gonflables à escalader pour passer d'une zone à l'autre.",
   },
   {
-    titre: "Se faufiler",
-    texte: "Des tunnels, des rouleaux et des obstacles à contourner, à enjamber ou à esquiver.",
+    titre: "Ramper",
+    texte: "Des tunnels, des rouleaux et des obstacles à franchir par-dessus, par-dessous ou en se faufilant.",
   },
   {
     titre: "Sauter",
-    texte: "Un grand plateau central pour rebondir, se défier et reprendre son souffle.",
+    texte: "Un grand plateau central pour rebondir, se lancer des défis et reprendre son souffle.",
   },
 ] as const;
 
@@ -79,10 +88,24 @@ export default function PageBouncePark() {
         {BOUNCE_PARK.titre}
       </h1>
       <p className="mt-4 max-w-2xl text-lg text-muted-foreground">
-        Un parc gonflable géant s&apos;installe au complexe : un parcours d&apos;obstacles
-        d&apos;un seul tenant, où l&apos;on grimpe, se faufile et saute d&apos;un bout à
-        l&apos;autre. À l&apos;intérieur, donc quel que soit le temps.
+        Un immense terrain de jeu gonflable s&apos;installe au complexe. Le rebond
+        d&apos;un trampoline, le défi d&apos;un parcours d&apos;obstacles : on grimpe, on
+        rampe, on saute… et on recommence.
       </p>
+      <p className="mt-3 max-w-2xl text-muted-foreground">
+        Ici, on range les écrans et on se dépense pour de vrai — à l&apos;intérieur,
+        qu&apos;il pleuve ou qu&apos;il vente.
+      </p>
+      <ul className="mt-5 flex flex-wrap gap-2" aria-label="Pour qui">
+        {POUR_QUI.map((p) => (
+          <li
+            key={p}
+            className="rounded-full border border-border bg-card px-3 py-1 text-xs font-medium text-foreground/85"
+          >
+            {p}
+          </li>
+        ))}
+      </ul>
 
       {/* ── Le visuel ── */}
       {visuel && (
@@ -95,7 +118,7 @@ export default function PageBouncePark() {
           <div className="relative aspect-[10/7] overflow-hidden rounded-3xl border border-border bg-[#e6e6e6]">
             <Photo
               src={visuel}
-              alt="Vue 3D du futur Bounce Park : un grand parcours gonflable vert, blanc et noir, avec filets, tunnels, obstacles et un plateau central."
+              alt="Vue 3D du futur Bounce Park : un immense parcours gonflable vert, blanc et noir, avec filets, tunnels, obstacles et un plateau central."
               sizes="(max-width: 1024px) 100vw, 992px"
               preload
               className="object-contain"
