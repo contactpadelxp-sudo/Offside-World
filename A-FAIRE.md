@@ -969,6 +969,16 @@ invité à fermer la plage Sport-Finder DÈS RÉCEPTION).
       vérifier — et recréer toute la zone là-bas AVANT le transfert, messagerie
       comprise. Marche à suivre et relevé : `MISE-EN-LIGNE.md`.
 
+      **25 septembre 2026 — Wix demande à Brahim de renouveler.** Option la
+      plus simple, proposée avant tout transfert : chez Wix, l'abonnement du
+      site (Premium) et le domaine sont **deux abonnements séparés** (aide
+      Wix, « Canceling Your Site Plan and Domain »). Renouveler le domaine
+      seul, arrêter le Premium. **Seul point que Wix n'écrit pas** : que les
+      enregistrements DNS (A, CNAME, MX) continuent de fonctionner sans le
+      Premium — à faire confirmer par écrit à l'assistance Wix AVANT de
+      résilier. En attente : ce que Wix demande exactement de renouveler, et
+      pour quelle date.
+
 ## Le Bounce Park arrive sur le site
 
 Décidé avec Brahim le 21 septembre 2026 : le site vend les anniversaires ET le
