@@ -966,8 +966,8 @@ invité à fermer la plage Sport-Finder DÈS RÉCEPTION).
       paiements en mode test que « Encaissé » comptait —, et les visites
       antérieures au 24 septembre 20h00. Restent la vraie réservation et une
       tentative expirée d'une autre personne (`OW-3D5S2ABP`). Les deux
-      demandes de devis d'essai du 12 septembre sont encore là : elles
-      n'entrent dans aucune statistique.
+      demandes de devis d'essai du 12 septembre ont suivi le même jour
+      (migration 0039).
 - [ ] **Ne rien résilier chez Wix** sans avoir demandé à leur support ce que
       devient la zone DNS : le domaine y est encore enregistré, et la
       messagerie Google de Brahim dépend de cette zone.
