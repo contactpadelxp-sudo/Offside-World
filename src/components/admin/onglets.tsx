@@ -86,7 +86,9 @@ export function OngletsFiltres({
       {filtres.map((f) => (
         <LienOnglet
           key={f.valeur}
-          href={f.valeur === "a-venir" ? "/admin" : `/admin?filtre=${f.valeur}`}
+          // Toujours avec `filtre` : `/admin` tout court ouvre l'agenda depuis
+          // le 27 septembre 2026, et « À venir » doit rester dans la liste.
+          href={`/admin?filtre=${f.valeur}`}
           actif={!desactives && f.valeur === actif}
           desactive={desactives}
           className={desactives ? "pointer-events-none" : ""}

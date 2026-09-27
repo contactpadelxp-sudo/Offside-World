@@ -42,7 +42,8 @@ export function Recherche({
         router.push(`/admin?q=${encodeURIComponent(q.trim())}`);
         return;
       }
-      router.push(filtre && filtre !== "a-venir" ? `/admin?filtre=${filtre}` : "/admin");
+      // Sans filtre, on vient de l'agenda et on y retourne.
+      router.push(filtre ? `/admin?filtre=${filtre}` : "/admin");
     });
   };
 

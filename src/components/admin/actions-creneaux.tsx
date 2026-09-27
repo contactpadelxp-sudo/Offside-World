@@ -235,7 +235,14 @@ export function ListeCreneaux({ creneaux }: { creneaux: CreneauAdmin[] }) {
  * réécrire l'adresse à la main. Le champ est un `type="date"` natif : sur
  * téléphone il ouvre le sélecteur du système, qu'on sait déjà manipuler.
  */
-export function AllerAuJour({ jour }: { jour: string }) {
+export function AllerAuJour({
+  jour,
+  base = "/admin/creneaux",
+}: {
+  jour: string;
+  /** La page à rouvrir sur le jour choisi : le planning ou l'agenda. */
+  base?: string;
+}) {
   const router = useRouter();
   const [enCours, demarrer] = useTransition();
 
@@ -248,7 +255,7 @@ export function AllerAuJour({ jour }: { jour: string }) {
         disabled={enCours}
         onChange={(e) => {
           const v = e.target.value;
-          if (v) demarrer(() => router.push(`/admin/creneaux?jour=${v}`));
+          if (v) demarrer(() => router.push(`${base}?jour=${v}`));
         }}
         className="h-9 rounded-lg border border-border bg-input/30 px-2 text-sm text-foreground outline-none transition-colors focus-visible:ring-2 focus-visible:ring-field/60"
       />

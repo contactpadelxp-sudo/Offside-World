@@ -185,6 +185,45 @@ export async function lireReservations(
   return construire(data, options, await lirePaiements(data, maintenant), maintenant);
 }
 
+/**
+ * Les réservations actives (en attente ou confirmées) d'une série de jours,
+ * pour l'agenda.
+ *
+ * LES BORNES SONT PRISES LARGES, PUIS LE JOUR EST RELU EN HEURE DE BRUXELLES.
+ * Calculer minuit à Bruxelles en instant demande de connaître le décalage du
+ * jour — une heure ou deux selon la saison. On lit donc de la veille à midi au
+ * lendemain à midi (UTC), et c'est `jourISO`, figé sur Europe/Bruxelles, qui
+ * range chaque réservation dans son jour. Aucun calcul de fuseau à la main.
+ */
+export async function lireReservationsDesJours(jours: string[]): Promise<ReservationAdmin[]> {
+  if (!baseConfiguree() || jours.length === 0) return [];
+
+  await expirerReservationsPassees();
+
+  const tries = [...jours].sort();
+  const maintenant = new Date();
+  const depuis = new Date(new Date(`${tries[0]}T12:00:00Z`).getTime() - 86_400_000);
+  const jusqua = new Date(new Date(`${tries[tries.length - 1]}T12:00:00Z`).getTime() + 86_400_000);
+
+  const [{ data, error }, options] = await Promise.all([
+    base()
+      .from("reservations_detaillees")
+      .select("*")
+      .in("statut", ["en_attente", "confirmee"])
+      .gte("debut", depuis.toISOString())
+      .lt("debut", jusqua.toISOString())
+      .order("debut"),
+    lireOptions(false),
+  ]);
+
+  if (error) throw error;
+  if (!data) return [];
+
+  const voulus = new Set(jours);
+  const lignes = data.filter((r) => r.debut && voulus.has(jourISO(new Date(r.debut))));
+  return construire(lignes, options, await lirePaiements(lignes, maintenant), maintenant);
+}
+
 type LigneReservation = Database["public"]["Views"]["reservations_detaillees"]["Row"];
 
 interface PaiementLu {

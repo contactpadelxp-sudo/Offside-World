@@ -684,12 +684,16 @@ export function auClientDevisPropose(d: DevisEmail & {
  */
 export function auComplexeNouvelleReservation(r: RecapEmail): Message {
   const paye = Boolean(r.paiement);
+  // Le lien ouvre la réservation elle-même, par sa référence : `/admin` tout
+  // court montre l'agenda du jour depuis le 27 septembre 2026, et une
+  // réservation prise pour dans trois semaines n'y serait pas.
+  const lien = urlAbsolue(`/admin?q=${encodeURIComponent(r.reference)}`);
 
   const apres = [
     paye
       ? `<strong>Rien à faire : le client a payé et sa réservation est confirmée.</strong> ` +
-        `<a href="${urlAbsolue("/admin")}" style="color:${ACCENT};font-weight:600;">Ouvrir le back-office</a> pour la consulter ou l'annuler.`
-      : `<a href="${urlAbsolue("/admin")}" style="color:${ACCENT};font-weight:600;">Ouvrir le back-office</a> pour confirmer ou annuler.`,
+        `<a href="${lien}" style="color:${ACCENT};font-weight:600;">Ouvrir la réservation</a> pour la consulter ou l'annuler.`
+      : `<a href="${lien}" style="color:${ACCENT};font-weight:600;">Ouvrir la réservation</a> pour confirmer ou annuler.`,
   ];
   if (r.allergieSignalee) {
     // On signale, on ne recopie pas : donnée de santé concernant un mineur.
