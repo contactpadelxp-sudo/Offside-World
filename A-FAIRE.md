@@ -957,8 +957,17 @@ invité à fermer la plage Sport-Finder DÈS RÉCEPTION).
       (celle qui pointait vers `cdn3.wixdns.net`), redirection 308 vers le
       domaine dans Vercel, « Valid Configuration ». ⚠️ Absent du relevé de
       zone du 23 septembre — à y ajouter avant tout transfert du domaine.
-- [ ] **Au premier vrai paiement** : vérifier en base que le webhook, passé
-      sur `offsidefootindoor.be`, a bien confirmé la réservation.
+- [x] ~~**Au premier vrai paiement** : vérifier en base que le webhook, passé
+      sur `offsidefootindoor.be`, a bien confirmé la réservation.~~ **VÉRIFIÉ
+      le 27 septembre 2026** : `OW-CQCRX6LT`, payée par Bancontact, statut
+      « confirmée », paiement « réussi », moyen `bancontact` bien relevé.
+- [x] **Statistiques remises à zéro le 27 septembre 2026** (migration 0038) :
+      six réservations d'essai et leurs paiements supprimés — dont 833 € de
+      paiements en mode test que « Encaissé » comptait —, et les visites
+      antérieures au 24 septembre 20h00. Restent la vraie réservation et une
+      tentative expirée d'une autre personne (`OW-3D5S2ABP`). Les deux
+      demandes de devis d'essai du 12 septembre sont encore là : elles
+      n'entrent dans aucune statistique.
 - [ ] **Ne rien résilier chez Wix** sans avoir demandé à leur support ce que
       devient la zone DNS : le domaine y est encore enregistré, et la
       messagerie Google de Brahim dépend de cette zone.

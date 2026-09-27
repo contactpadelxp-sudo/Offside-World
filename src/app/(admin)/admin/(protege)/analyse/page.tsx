@@ -194,9 +194,16 @@ export default async function PageAnalyse({
       ) : a.visites === 0 ? (
         <div className="mt-6 rounded-2xl border border-border bg-card p-6">
           <p className="font-medium">Aucune visite mesurée sur cette période.</p>
+          {/*
+            Cette phrase disait « c'est attendu tant que le domaine n'est pas
+            basculé ». Vrai jusqu'au 24 septembre 2026, faux depuis : lue lors
+            d'une semaine creuse, elle aurait laissé croire le site hors ligne.
+            Les mesures antérieures à la mise en ligne ont été effacées le
+            27 septembre (migration 0038) : tout ce qui s'affiche ici date
+            d'après.
+          */}
           <p className="mt-1 text-sm text-muted-foreground">
-            C&apos;est attendu tant que le domaine n&apos;est pas basculé : le site n&apos;a pas
-            encore de public. Les mesures apparaîtront d&apos;elles-mêmes ensuite.
+            Les mesures commencent le 24 septembre 2026, jour de la mise en ligne.
           </p>
         </div>
       ) : (
