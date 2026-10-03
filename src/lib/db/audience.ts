@@ -1,5 +1,6 @@
 import "server-only";
 import { base, baseConfiguree } from "@/lib/supabase/server";
+import { jourISO } from "@/lib/temps";
 
 /**
  * Mesure d'audience — écriture des événements et lectures du tableau de bord.
@@ -102,7 +103,15 @@ export interface EtapeTunnel {
   perte: number;
 }
 
+/** Une période en jours de Bruxelles, bornes incluses : « 2026-09-24 » → « 2026-10-03 ». */
+export interface PeriodeAudience {
+  du: string;
+  au: string;
+}
+
 export interface ResumeAudience {
+  periode: PeriodeAudience;
+  /** Nombre de jours de la période, bornes comprises. */
   jours: number;
   /** Visites MESURÉES, donc seulement celles qui ont accepté la mesure. */
   visites: number;
@@ -175,6 +184,20 @@ function compter(valeurs: (string | null)[], limite = 8): Comptage[] {
     .slice(0, limite);
 }
 
+/** « 2026-10-03 » → midi UTC ce jour-là : la date reste la même quel que soit le décalage. */
+function midi(jour: string): Date {
+  return new Date(`${jour}T12:00:00Z`);
+}
+
+/** Les jours de la période, du premier au dernier, en jours de Bruxelles. */
+export function joursDeLaPeriode({ du, au }: PeriodeAudience): string[] {
+  const jours: string[] = [];
+  for (let t = midi(du).getTime(); t <= midi(au).getTime(); t += 86_400_000) {
+    jours.push(jourISO(new Date(t)));
+  }
+  return jours;
+}
+
 /**
  * Tout le tableau de bord en une seule requête.
  *
@@ -184,39 +207,48 @@ function compter(valeurs: (string | null)[], limite = 8): Comptage[] {
  * lire et à faire évoluer, et la différence de vitesse est imperceptible.
  * Si le volume devenait tel que ça compte, ce sont des vues SQL qu'il faudrait
  * écrire, pas de la pagination ici.
+ *
+ * UNE PÉRIODE « DU … AU … », ET PLUS SEULEMENT « LES N DERNIERS JOURS ».
+ * Demandé par Brahim le 3 octobre 2026. Les bornes sont des jours de
+ * Bruxelles : on lit large — de la veille à midi au lendemain à midi, en UTC
+ * —, puis `jourISO` range chaque ligne dans son jour. Aucun calcul de fuseau à
+ * la main, et une visite à 0h30 le samedi compte bien pour le samedi.
  */
-export async function lireAudience(jours = 30): Promise<ResumeAudience | null> {
+export async function lireAudience(periode: PeriodeAudience): Promise<ResumeAudience | null> {
   if (!baseConfiguree()) return null;
 
-  const depuis = new Date(Date.now() - jours * 86_400_000).toISOString();
+  const jours = joursDeLaPeriode(periode);
+  const dedans = new Set(jours);
+  const depuis = new Date(midi(periode.du).getTime() - 86_400_000).toISOString();
+  const jusqua = new Date(midi(periode.au).getTime() + 86_400_000).toISOString();
+  const dansLaPeriode = (instant: string) => dedans.has(jourISO(new Date(instant)));
 
   const { data, error } = await base()
     .from("evenements_audience")
     .select("survenu_le, session, nom, chemin, provenance, appareil, pays")
     .gte("survenu_le", depuis)
+    .lt("survenu_le", jusqua)
     .order("survenu_le", { ascending: false })
     .limit(50_000);
 
   if (error || !data) return null;
-  const lignes = data as LigneBrute[];
+  const lignes = (data as LigneBrute[]).filter((l) => dansLaPeriode(l.survenu_le));
 
   const sessions = new Set(lignes.map((l) => l.session));
   const pagesVues = lignes.filter((l) => l.nom === "page");
 
   // Visites par jour, sur la période complète — y compris les jours à zéro,
-  // sans quoi une courbe plate et une courbe trouée se ressemblent.
+  // sans quoi une courbe plate et une courbe trouée se ressemblent. Le jour
+  // est celui de Bruxelles : `slice(0, 10)` sur l'instant donnait le jour
+  // UTC, et rangeait la veille une visite faite avant 2h du matin.
   const parJourMap = new Map<string, Set<string>>();
   for (const l of lignes) {
-    const jour = l.survenu_le.slice(0, 10);
+    const jour = jourISO(new Date(l.survenu_le));
     const s = parJourMap.get(jour) ?? new Set<string>();
     s.add(l.session);
     parJourMap.set(jour, s);
   }
-  const parJour: { jour: string; visites: number }[] = [];
-  for (let i = jours - 1; i >= 0; i--) {
-    const jour = new Date(Date.now() - i * 86_400_000).toISOString().slice(0, 10);
-    parJour.push({ jour, visites: parJourMap.get(jour)?.size ?? 0 });
-  }
+  const parJour = jours.map((jour) => ({ jour, visites: parJourMap.get(jour)?.size ?? 0 }));
 
   // Tunnel : on compte des VISITES distinctes par étape, pas des événements.
   // Un visiteur qui revient trois fois sur le choix du créneau ne vaut qu'une.
@@ -254,29 +286,35 @@ export async function lireAudience(jours = 30): Promise<ResumeAudience | null> {
     Ceux-ci ne dépendent d'aucun consentement : ce ne sont pas des traces de
     navigation mais l'activité du complexe, que l'exploitant possède déjà.
   */
-  const [{ count: reservations }, { data: encaissements }] = await Promise.all([
+  const [{ data: reservationsLues }, { data: paiementsLus }] = await Promise.all([
     base()
       .from("reservations")
-      .select("id", { count: "exact", head: true })
+      .select("created_at")
       .gte("created_at", depuis)
+      .lt("created_at", jusqua)
       .in("statut", ["en_attente", "confirmee"]),
     base()
       .from("paiements")
-      .select("montant_cents, montant_rembourse_cents")
+      .select("created_at, montant_cents, montant_rembourse_cents")
       .gte("created_at", depuis)
+      .lt("created_at", jusqua)
       .in("statut", ["reussi", "partiellement_rembourse"]),
   ]);
 
-  const encaisseCents = (encaissements ?? []).reduce(
+  const reservations = (reservationsLues ?? []).filter((r) => dansLaPeriode(r.created_at)).length;
+  const encaissements = (paiementsLus ?? []).filter((p) => dansLaPeriode(p.created_at));
+
+  const encaisseCents = encaissements.reduce(
     (somme, p) => somme + (p.montant_cents ?? 0) - (p.montant_rembourse_cents ?? 0),
     0
   );
 
   return {
-    jours,
+    periode,
+    jours: jours.length,
     visites: sessions.size,
     pagesVues: pagesVues.length,
-    reservations: reservations ?? 0,
+    reservations,
     encaisseCents,
     tauxConversion: depart > 0 ? (reservationsMesurees / depart) * 100 : null,
     ouvertParcours: depart,

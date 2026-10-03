@@ -1,6 +1,8 @@
 import Link from "next/link";
+import Form from "next/form";
 import { montantLisible } from "@/lib/tarification";
-import { lireAudience, type ResumeAudience } from "@/lib/db/audience";
+import { lireAudience, type PeriodeAudience, type ResumeAudience } from "@/lib/db/audience";
+import { jourISO } from "@/lib/temps";
 import { Graphique } from "@/components/icons";
 
 /**
@@ -25,6 +27,61 @@ const PERIODES = [
   { jours: 30, label: "30 jours" },
   { jours: 90, label: "90 jours" },
 ];
+
+/** Le premier jour mesuré : la mise en ligne. Rien n'existe avant (migration 0038). */
+const MISE_EN_LIGNE = "2026-09-24";
+
+/** Au-delà, le graphique jour par jour n'a plus de sens et la lecture devient lourde. */
+const JOURS_MAX = 366;
+
+const FORMAT_JOUR = /^\d{4}-\d{2}-\d{2}$/;
+
+function decaler(jour: string, jours: number): string {
+  return jourISO(new Date(new Date(`${jour}T12:00:00Z`).getTime() + jours * 86_400_000));
+}
+
+function ecart(du: string, au: string): number {
+  return Math.round(
+    (new Date(`${au}T12:00:00Z`).getTime() - new Date(`${du}T12:00:00Z`).getTime()) / 86_400_000
+  );
+}
+
+const DATE_LONGUE = new Intl.DateTimeFormat("fr-BE", {
+  day: "numeric",
+  month: "long",
+  year: "numeric",
+  timeZone: "UTC",
+});
+
+function dateLisible(jour: string): string {
+  return DATE_LONGUE.format(new Date(`${jour}T12:00:00Z`));
+}
+
+/**
+ * LA PÉRIODE CHOISIE, LUE DANS L'ADRESSE.
+ *
+ * Brahim, le 3 octobre 2026 : « j'ai besoin de pouvoir sélectionner les dates
+ * du xx au xx plutôt que 7 jours, 30 jours ». Les raccourcis restent ; deux
+ * champs de date permettent n'importe quelle période. Une adresse incohérente
+ * — dates inversées, période trop longue, fin dans le futur — est remise
+ * d'aplomb plutôt que refusée : l'écran doit toujours montrer quelque chose.
+ */
+function lirePeriode(
+  params: { jours?: string; du?: string; au?: string },
+  aujourdhui: string
+): PeriodeAudience {
+  let { du, au } = params;
+  if (du && au && FORMAT_JOUR.test(du) && FORMAT_JOUR.test(au)) {
+    if (du > au) [du, au] = [au, du];
+    if (au > aujourdhui) au = aujourdhui;
+    if (du > au) du = au;
+    if (ecart(du, au) >= JOURS_MAX) du = decaler(au, -(JOURS_MAX - 1));
+    return { du, au };
+  }
+  const demande = Number(params.jours);
+  const jours = PERIODES.some((p) => p.jours === demande) ? demande : 30;
+  return { du: decaler(aujourdhui, -(jours - 1)), au: aujourdhui };
+}
 
 const NOMBRE = new Intl.NumberFormat("fr-BE");
 
@@ -150,13 +207,16 @@ function Classement({
 export default async function PageAnalyse({
   searchParams,
 }: {
-  searchParams: Promise<{ jours?: string }>;
+  searchParams: Promise<{ jours?: string; du?: string; au?: string }>;
 }) {
-  const { jours: brut } = await searchParams;
-  const demande = Number(brut);
-  const jours = PERIODES.some((p) => p.jours === demande) ? demande : 30;
+  const aujourdhui = jourISO(new Date());
+  const periode = lirePeriode(await searchParams, aujourdhui);
+  const jours = ecart(periode.du, periode.au) + 1;
+  const raccourci =
+    periode.au === aujourdhui ? PERIODES.find((p) => p.jours === jours)?.jours ?? null : null;
+  const depuisOuverture = periode.du === MISE_EN_LIGNE && periode.au === aujourdhui;
 
-  const a = await lireAudience(jours);
+  const a = await lireAudience(periode);
 
   return (
     <div>
@@ -170,9 +230,9 @@ export default async function PageAnalyse({
             <Link
               key={p.jours}
               href={`/admin/analyse?jours=${p.jours}`}
-              aria-current={p.jours === jours ? "page" : undefined}
+              aria-current={p.jours === raccourci ? "page" : undefined}
               className={`inline-flex min-h-8 items-center rounded-lg px-3 py-1.5 text-sm font-medium transition-all duration-150 active:scale-[0.97] ${
-                p.jours === jours
+                p.jours === raccourci
                   ? "bg-field/15 text-field ring-1 ring-field/40"
                   : "border border-border text-muted-foreground hover:border-field/40 hover:text-foreground"
               }`}
@@ -180,8 +240,66 @@ export default async function PageAnalyse({
               {p.label}
             </Link>
           ))}
+          <Link
+            href={`/admin/analyse?du=${MISE_EN_LIGNE}&au=${aujourdhui}`}
+            aria-current={depuisOuverture ? "page" : undefined}
+            className={`inline-flex min-h-8 items-center rounded-lg px-3 py-1.5 text-sm font-medium transition-all duration-150 active:scale-[0.97] ${
+              depuisOuverture
+                ? "bg-field/15 text-field ring-1 ring-field/40"
+                : "border border-border text-muted-foreground hover:border-field/40 hover:text-foreground"
+            }`}
+          >
+            Depuis l&apos;ouverture
+          </Link>
         </nav>
       </div>
+
+      {/*
+        DU … AU …, SANS JAVASCRIPT À ÉCRIRE. Un formulaire en GET : valider
+        réécrit l'adresse (`?du=…&au=…`), la page se relit côté serveur, et le
+        lien se garde ou se partage tel quel.
+      */}
+      <Form
+        action="/admin/analyse"
+        className="mt-4 flex flex-wrap items-end gap-3 rounded-2xl border border-border bg-card p-4"
+      >
+        <label className="flex flex-col gap-1 text-sm text-muted-foreground">
+          Du
+          <input
+            type="date"
+            name="du"
+            defaultValue={periode.du}
+            min={MISE_EN_LIGNE}
+            max={aujourdhui}
+            required
+            className="h-9 rounded-lg border border-border bg-input/30 px-2 text-sm text-foreground outline-none focus-visible:ring-2 focus-visible:ring-field/60"
+          />
+        </label>
+        <label className="flex flex-col gap-1 text-sm text-muted-foreground">
+          Au
+          <input
+            type="date"
+            name="au"
+            defaultValue={periode.au}
+            min={MISE_EN_LIGNE}
+            max={aujourdhui}
+            required
+            className="h-9 rounded-lg border border-border bg-input/30 px-2 text-sm text-foreground outline-none focus-visible:ring-2 focus-visible:ring-field/60"
+          />
+        </label>
+        <button
+          type="submit"
+          className="inline-flex h-9 items-center rounded-lg bg-field px-4 text-sm font-semibold text-black transition-opacity hover:opacity-90"
+        >
+          Afficher
+        </button>
+        <p className="w-full text-sm text-muted-foreground sm:w-auto sm:self-center">
+          {periode.du === periode.au
+            ? `Le ${dateLisible(periode.du)}`
+            : `Du ${dateLisible(periode.du)} au ${dateLisible(periode.au)}`}{" "}
+          · {jours} jour{jours > 1 ? "s" : ""}
+        </p>
+      </Form>
       <p className="mt-1 text-sm text-muted-foreground">
         Fréquentation du site public. Seuls les visiteurs ayant accepté la mesure sont comptés :
         les chiffres sont donc un plancher, jamais un total.
@@ -230,7 +348,7 @@ export default async function PageAnalyse({
 
           <Carte
             titre="Visites par jour"
-            aide={`Sur les ${jours} derniers jours, jours sans visite compris.`}
+            aide="Sur toute la période choisie, jours sans visite compris."
           >
             <Journalier points={a.parJour} />
           </Carte>
@@ -269,11 +387,14 @@ export default async function PageAnalyse({
  */
 function Journalier({ points }: { points: { jour: string; visites: number }[] }) {
   const max = Math.max(1, ...points.map((p) => p.visites));
-  const jourCourt = new Intl.DateTimeFormat("fr-BE", { day: "numeric", month: "short" });
+  // `timeZone: "UTC"` : `p.jour` est un jour (« 2026-10-03 »), lu à minuit UTC.
+  // Sans ça, un serveur réglé à l'ouest de Greenwich afficherait la veille.
+  const jourCourt = new Intl.DateTimeFormat("fr-BE", { day: "numeric", month: "short", timeZone: "UTC" });
 
   return (
     <div>
-      <div className="flex h-32 items-end gap-[2px]" role="list">
+      {/* Au-delà de deux mois, l'écart de 2 px mangerait les barres elles-mêmes. */}
+      <div className={`flex h-32 items-end ${points.length > 60 ? "gap-0" : "gap-[2px]"}`} role="list">
         {points.map((p) => {
           const hauteur = (p.visites / max) * 100;
           const label = `${jourCourt.format(new Date(p.jour))} : ${p.visites} visite${
