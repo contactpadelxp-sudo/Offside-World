@@ -109,6 +109,16 @@ export interface PeriodeAudience {
   au: string;
 }
 
+/** Une journée du graphique : ce que montre l'infobulle quand on la survole. */
+export interface PointJour {
+  jour: string;
+  /** Visites mesurées (sessions distinctes). */
+  visites: number;
+  pagesVues: number;
+  /** Réservations réelles créées ce jour-là, mesurées ou non. */
+  reservations: number;
+}
+
 export interface ResumeAudience {
   periode: PeriodeAudience;
   /** Nombre de jours de la période, bornes comprises. */
@@ -152,7 +162,7 @@ export interface ResumeAudience {
    */
   ouvertParcours: number;
   reservationsMesurees: number;
-  parJour: { jour: string; visites: number }[];
+  parJour: PointJour[];
   pages: Comptage[];
   provenances: Comptage[];
   appareils: Comptage[];
@@ -248,7 +258,11 @@ export async function lireAudience(periode: PeriodeAudience): Promise<ResumeAudi
     s.add(l.session);
     parJourMap.set(jour, s);
   }
-  const parJour = jours.map((jour) => ({ jour, visites: parJourMap.get(jour)?.size ?? 0 }));
+  const pagesParJour = new Map<string, number>();
+  for (const l of pagesVues) {
+    const jour = jourISO(new Date(l.survenu_le));
+    pagesParJour.set(jour, (pagesParJour.get(jour) ?? 0) + 1);
+  }
 
   // Tunnel : on compte des VISITES distinctes par étape, pas des événements.
   // Un visiteur qui revient trois fois sur le choix du créneau ne vaut qu'une.
@@ -301,7 +315,19 @@ export async function lireAudience(periode: PeriodeAudience): Promise<ResumeAudi
       .in("statut", ["reussi", "partiellement_rembourse"]),
   ]);
 
-  const reservations = (reservationsLues ?? []).filter((r) => dansLaPeriode(r.created_at)).length;
+  const reservationsDeLaPeriode = (reservationsLues ?? []).filter((r) => dansLaPeriode(r.created_at));
+  const reservations = reservationsDeLaPeriode.length;
+  const reservationsParJour = new Map<string, number>();
+  for (const r of reservationsDeLaPeriode) {
+    const jour = jourISO(new Date(r.created_at));
+    reservationsParJour.set(jour, (reservationsParJour.get(jour) ?? 0) + 1);
+  }
+  const parJour: PointJour[] = jours.map((jour) => ({
+    jour,
+    visites: parJourMap.get(jour)?.size ?? 0,
+    pagesVues: pagesParJour.get(jour) ?? 0,
+    reservations: reservationsParJour.get(jour) ?? 0,
+  }));
   const encaissements = (paiementsLus ?? []).filter((p) => dansLaPeriode(p.created_at));
 
   const encaisseCents = encaissements.reduce(

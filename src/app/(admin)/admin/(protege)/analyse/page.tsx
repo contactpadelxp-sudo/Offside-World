@@ -4,6 +4,7 @@ import { montantLisible } from "@/lib/tarification";
 import { lireAudience, type PeriodeAudience, type ResumeAudience } from "@/lib/db/audience";
 import { jourISO } from "@/lib/temps";
 import { Graphique } from "@/components/icons";
+import { GraphiqueVisites } from "@/components/admin/graphique-visites";
 
 /**
  * Tableau de bord d'audience.
@@ -350,7 +351,7 @@ export default async function PageAnalyse({
             titre="Visites par jour"
             aide="Sur toute la période choisie, jours sans visite compris."
           >
-            <Journalier points={a.parJour} />
+            <GraphiqueVisites points={a.parJour} />
           </Carte>
 
           <Carte titre="Où les gens abandonnent" aide={conversionLisible(a)}>
@@ -373,56 +374,6 @@ export default async function PageAnalyse({
           </div>
         </div>
       )}
-    </div>
-  );
-}
-
-/**
- * Visites par jour.
- *
- * Barres et non courbe : une visite est un compte discret, et sur 7 jours une
- * courbe à sept points suggère une continuité qui n'existe pas. Les extrémités
- * sont arrondies et ancrées à la ligne de base ; un écart de 2 px sépare les
- * barres, ce qui suffit à les distinguer sans grille.
- */
-function Journalier({ points }: { points: { jour: string; visites: number }[] }) {
-  const max = Math.max(1, ...points.map((p) => p.visites));
-  // `timeZone: "UTC"` : `p.jour` est un jour (« 2026-10-03 »), lu à minuit UTC.
-  // Sans ça, un serveur réglé à l'ouest de Greenwich afficherait la veille.
-  const jourCourt = new Intl.DateTimeFormat("fr-BE", { day: "numeric", month: "short", timeZone: "UTC" });
-
-  return (
-    <div>
-      {/* Au-delà de deux mois, l'écart de 2 px mangerait les barres elles-mêmes. */}
-      <div className={`flex h-32 items-end ${points.length > 60 ? "gap-0" : "gap-[2px]"}`} role="list">
-        {points.map((p) => {
-          const hauteur = (p.visites / max) * 100;
-          const label = `${jourCourt.format(new Date(p.jour))} : ${p.visites} visite${
-            p.visites > 1 ? "s" : ""
-          }`;
-          return (
-            <div
-              key={p.jour}
-              role="listitem"
-              aria-label={label}
-              title={label}
-              className="group relative flex h-full flex-1 items-end"
-            >
-              {/* Zone de survol pleine hauteur : viser une barre de 3 px de
-                  haut serait impossible, surtout au doigt. */}
-              <div
-                className="w-full rounded-t bg-field transition-opacity group-hover:opacity-80"
-                style={{ height: `${Math.max(hauteur, p.visites > 0 ? 4 : 1)}%` }}
-              />
-            </div>
-          );
-        })}
-      </div>
-      <div className="mt-2 flex justify-between text-xs text-muted-foreground">
-        <span>{jourCourt.format(new Date(points[0].jour))}</span>
-        <span className="tabular-nums">max {max}</span>
-        <span>{jourCourt.format(new Date(points[points.length - 1].jour))}</span>
-      </div>
     </div>
   );
 }
