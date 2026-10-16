@@ -102,15 +102,15 @@ export const SPORTFINDER_BUBBLE_URL = "https://www.sport-finder.com/fr/center/of
 
 export const BUBBLE_PRIX_PAR_PERSONNE = 23; // €
 /**
- * Taux de TVA du Bubble Foot, pour le récapitulatif des ventes — `null` tant
- * que le comptable ne l'a pas donné.
+ * Taux de TVA du Bubble Foot, pour le récapitulatif des ventes : 6 %, comme
+ * tout le reste — communiqué par Mathis le 16 octobre 2026.
  *
  * Il vit ici, à côté du prix, parce que le tarif du Bubble vit dans le code et
  * non dans la table `formules` (voir la page Tarifs). Il ne sert que si le
  * Bubble revient en vente en ligne : depuis le 21 septembre 2026, il se vend
  * sur Sport-Finder (`BUBBLE_EN_LIGNE`).
  */
-export const BUBBLE_TVA_POURCENT: number | null = null;
+export const BUBBLE_TVA_POURCENT: number | null = 6;
 export const BUBBLE_MIN_PERSONNES = 6;
 /**
  * DIX-HUIT, COMME LA FUN ZONE — pas vingt.

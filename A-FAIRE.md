@@ -663,7 +663,12 @@ au taux commun de sa formule et de ses options.
       « Tarifs » marche comme avant, sans le champ TVA ; « Ventes » dit que la
       mise à jour est attendue. Tout s'active dès la migration appliquée, sans
       redéploiement. Le tunnel de réservation ne dépend de rien de nouveau.
-- [ ] **Faire renseigner les taux de TVA** de chaque formule et option dans
+- [x] **Taux de TVA : 6 % partout**, communiqué par Mathis le 16 octobre
+      2026. Bubble Foot réglé dans le code (`BUBBLE_TVA_POURCENT`) ; formules
+      et options à passer à 6 dans « Tarifs » ou par l'éditeur SQL. La vente
+      du 27 septembre, antérieure au réglage, prend le taux actuel et le
+      signale (« Taux actuel (Tarifs) »). Ancienne consigne : faire renseigner
+      les taux de chaque formule et option dans
       « Tarifs » — par le comptable de Brahim. Un forfait avec goûter ou
       boissons n'a pas forcément le taux de l'accès aux terrains (6 %). Tant
       qu'ils manquent, l'export compte les montants TVAC et le signale en tête.
