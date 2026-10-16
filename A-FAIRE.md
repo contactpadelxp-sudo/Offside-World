@@ -638,9 +638,19 @@ comptable). Un champ **« Taux de TVA (%) »** par formule et par option dans
 **Vérifié :** la migration sur un vrai PostgreSQL local (PGlite, 28 cas, dont
 une panne simulée qui ne bloque pas la réservation, et une double
 application) ; le calcul (TVA extraite du TVAC, remboursements au prorata,
-totaux au centime) par 43 tests ; le fichier Excel relu par deux lecteurs
+totaux au centime) par 49 tests ; le fichier Excel relu par deux lecteurs
 indépendants (exceljs, openpyxl) et généré par le serveur de production
 construit ; l'écran sur téléphone et ordinateur.
+
+**Relecture indépendante le même jour — 7 points, tous corrigés :**
+remboursements et contestations perdues désormais relus chez Stripe (un
+événement arrivé en retard ou une contestation après un remboursement partiel
+faussaient le cumul) ; remboursements en plusieurs fois ventilés sur le cumul
+(un centime de dérive) ; session vérifiée par la page Ventes elle-même ;
+totaux Excel en SOUS.TOTAL (ils suivent un filtre) ; pagination jusqu'à une
+page vide ; champ TVA en texte (« 21 % » effaçait le taux) ; taux du Bubble
+Foot réglable dans le code (`BUBBLE_TVA_POURCENT`), et ligne unique rattachée
+au taux commun de sa formule et de ses options.
 
 - [ ] **Appliquer la migration `0040_comptabilite_des_ventes.sql`.** Bloqué
       le 16 octobre : le compte Supabase relié à l'outil ne voit plus le projet

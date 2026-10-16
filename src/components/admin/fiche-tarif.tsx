@@ -82,7 +82,13 @@ function ChampTva({
   return (
     <div>
       <label className={ETIQUETTE} htmlFor={id}>Taux de TVA (%)</label>
-      <input id={id} className={CHAMP} type="number" min={0} max={25} step={1} inputMode="numeric"
+      {/*
+        UN CHAMP TEXTE, PAS `type="number"`. Saisi « 21 % », un champ numérique
+        rend une chaîne VIDE au code — qui l'aurait pris pour « pas de taux » et
+        effacé un taux déjà réglé. En texte, « 21 % » arrive tel quel, et le
+        serveur l'accepte ou le refuse en le disant.
+      */}
+      <input id={id} className={CHAMP} type="text" inputMode="numeric" maxLength={6}
         placeholder="à renseigner" value={valeur} onChange={(e) => onChange(e.target.value)} />
       <p className="mt-1 text-xs text-muted-foreground">
         {aide ? `${aide} ` : ""}Pour le récapitulatif des ventes. Vide = pas encore renseigné ; 0 = exonéré.

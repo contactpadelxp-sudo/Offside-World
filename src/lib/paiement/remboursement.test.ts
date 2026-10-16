@@ -183,3 +183,18 @@ describe("la politique d'annulation de Brahim, en euros", () => {
     }
   });
 });
+
+describe("cumul repris au client, d'après Stripe", () => {
+  it("additionne remboursements et contestations perdues", async () => {
+    const { cumulRepris } = await import("./stripe");
+    // 190 € : 95 € rendus selon le barème, puis 95 € repris par la banque.
+    expect(cumulRepris(19000, 9500, [9500])).toBe(19000);
+    expect(cumulRepris(19000, 9500, [])).toBe(9500);
+  });
+
+  it("ne dépasse jamais le montant payé, ne descend jamais sous zéro", async () => {
+    const { cumulRepris } = await import("./stripe");
+    expect(cumulRepris(19000, 19000, [19000])).toBe(19000);
+    expect(cumulRepris(19000, 0, [])).toBe(0);
+  });
+});

@@ -33,9 +33,10 @@ import {
  * DE VRAIS NOMBRES ET DE VRAIES DATES, PAS DU TEXTE. Un montant écrit
  * « 179,25 € » en texte ne s'additionne pas ; ici chaque montant est un nombre
  * au format monétaire et chaque date une date, que le comptable peut trier,
- * filtrer et totaliser. Les totaux des onglets de détail sont des formules —
- * ils suivent un filtre —, accompagnées de leur valeur calculée pour s'afficher
- * même dans un aperçu qui ne recalcule rien.
+ * filtrer et totaliser. Les totaux des onglets de détail sont des formules
+ * SOUS.TOTAL — ils ne comptent que les lignes visibles, et suivent donc un
+ * filtre —, accompagnées de leur valeur calculée pour s'afficher même dans un
+ * aperçu qui ne recalcule rien.
  *
  * LES CHIFFRES VIENNENT TOUS DE `construireRapport`. Ce fichier ne fait que les
  * poser : l'écran du back-office, le CSV et cet Excel affichent donc les mêmes
@@ -205,13 +206,24 @@ function recapitulatif(classeur: ExcelJS.Workbook, r: RapportVentes, genereLe: s
   }
 }
 
-/** Une ligne de total sous un tableau de détail : une formule, avec sa valeur. */
+/**
+ * Une ligne de total sous un tableau de détail : une formule, avec sa valeur.
+ *
+ * SOUS.TOTAL(109 ; …) et non SOMME : il ignore les lignes masquées par un
+ * filtre. Le comptable qui filtre « Taux TVA = 6 » lit donc le total du 6 %,
+ * et non celui de tout le tableau.
+ *
+ * Les lignes sans taux n'entrent pas dans les totaux HTVA et TVA — elles n'en
+ * ont pas. On l'écrit alors sous le total, au lieu de laisser croire que
+ * HTVA + TVA y redonnent le TVAC.
+ */
 function ligneDeTotal(
   f: ExcelJS.Worksheet,
   libelleColonne: number,
   colonnes: { col: number; valeur: number }[],
   premiere: number,
-  derniere: number
+  derniere: number,
+  lignesSansTaux: number
 ) {
   const l = f.addRow([]);
   l.getCell(libelleColonne).value = "Total";
@@ -219,11 +231,17 @@ function ligneDeTotal(
     const lettre = f.getColumn(col).letter;
     l.getCell(col).value =
       derniere >= premiere
-        ? { formula: `SUM(${lettre}${premiere}:${lettre}${derniere})`, result: valeur }
+        ? { formula: `SUBTOTAL(109,${lettre}${premiere}:${lettre}${derniere})`, result: valeur }
         : 0;
     l.getCell(col).numFmt = FORMAT_EUROS;
   }
   totalEnGras(l);
+  if (lignesSansTaux > 0) {
+    const note = f.addRow([]);
+    note.getCell(libelleColonne).value =
+      `${lignesSansTaux} ligne${lignesSansTaux > 1 ? "s" : ""} sans taux de TVA : comptée${lignesSansTaux > 1 ? "s" : ""} dans le TVAC, pas dans les totaux HTVA et TVA.`;
+    note.font = { italic: true };
+  }
 }
 
 function somme(lignes: LigneRapport[], champ: "ttcCents" | "htCents" | "tvaCents"): number {
@@ -288,7 +306,8 @@ function detailVentes(classeur: ExcelJS.Workbook, r: RapportVentes) {
       { col: 10, valeur: somme(r.ventes, "tvaCents") },
     ],
     2,
-    1 + r.ventes.length
+    1 + r.ventes.length,
+    r.ventes.filter((l) => l.tauxPourcent === null).length
   );
 }
 
@@ -345,7 +364,8 @@ function detailRemboursements(classeur: ExcelJS.Workbook, r: RapportVentes) {
       { col: 9, valeur: somme(r.remboursements, "tvaCents") },
     ],
     2,
-    1 + r.remboursements.length
+    1 + r.remboursements.length,
+    r.remboursements.filter((l) => l.tauxPourcent === null).length
   );
 }
 

@@ -299,8 +299,8 @@ create or replace trigger reservations_proteger_lignes
 create table if not exists remboursements (
   id            bigint       generated always as identity primary key,
   paiement_id   uuid         not null references paiements on delete restrict,
-  -- Négatif dans un seul cas : un remboursement que Stripe annule ensuite
-  -- (refund.failed), qui fait redescendre le cumul.
+  -- Négatif quand le cumul redescend : le webhook relit l'état réel chez
+  -- Stripe, et un remboursement que Stripe a annulé le fait baisser.
   montant_cents integer      not null check (montant_cents <> 0),
   survenu_le    timestamptz  not null default now(),
   -- Vrai pour les lignes reconstituées par cette migration, dont la date est

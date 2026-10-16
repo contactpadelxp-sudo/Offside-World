@@ -23,6 +23,8 @@ function ligne(p: Partial<LigneFigee> & Pick<LigneFigee, "totalCents">): LigneFi
 }
 
 const vente: PaiementVente = {
+  formuleId: "kick-off",
+  optionsIds: ["gateau"],
   paiementId: "p1",
   reference: "OW-CQCRX6LT",
   typeActivite: "anniversaire",
@@ -47,8 +49,8 @@ const rapport = construireRapport({
   du: "2026-09-01",
   au: "2026-10-31",
   paiements: [vente],
-  remboursements: [{ id: 1, jour: "2026-10-05", montantCents: 10750, repris: false, paiement: vente }],
-  actuels: { formules: {}, options: {} },
+  remboursements: [{ id: 1, jour: "2026-10-05", montantCents: 10750, rembourseAvantCents: 0, repris: false, paiement: vente }],
+  actuels: { formules: {}, options: {}, bubble: null },
 });
 
 describe("le CSV", () => {
@@ -125,7 +127,8 @@ describe("le fichier Excel", () => {
     expect(ventes.getCell("G2").numFmt).toContain("€");
     expect(ventes.getCell("H4").value).toBe(21);
     const total = ventes.getCell("G5").value as { formula: string; result: number };
-    expect(total.formula).toBe("SUM(G2:G4)");
+    // SOUS.TOTAL : le total suit un filtre posé par le comptable.
+    expect(total.formula).toBe("SUBTOTAL(109,G2:G4)");
     expect(total.result).toBeCloseTo(215, 2);
 
     // Remboursements : négatifs, avec la date de la vente d'origine.

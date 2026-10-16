@@ -446,7 +446,15 @@ export async function synchroniserRemboursement(
     .from("paiements")
     .update({
       montant_rembourse_cents: cumulRembourseCents,
-      statut: cumulRembourseCents >= paiement.montant_cents ? "rembourse" : "partiellement_rembourse",
+      // Un cumul revenu à zéro — un remboursement que Stripe a annulé — rend
+      // au paiement son état d'origine : « partiellement remboursé de 0 € »
+      // ne veut rien dire.
+      statut:
+        cumulRembourseCents <= 0
+          ? "reussi"
+          : cumulRembourseCents >= paiement.montant_cents
+            ? "rembourse"
+            : "partiellement_rembourse",
       updated_at: new Date().toISOString(),
     })
     .eq("id", paiement.id);

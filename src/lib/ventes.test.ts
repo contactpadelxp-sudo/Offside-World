@@ -10,7 +10,7 @@ import {
   type TauxActuels,
 } from "./ventes";
 
-const AUCUN_TAUX: TauxActuels = { formules: {}, options: {} };
+const AUCUN_TAUX: TauxActuels = { formules: {}, options: {}, bubble: null };
 
 function ligne(p: Partial<LigneFigee> & Pick<LigneFigee, "totalCents">): LigneFigee {
   return {
@@ -26,6 +26,8 @@ function ligne(p: Partial<LigneFigee> & Pick<LigneFigee, "totalCents">): LigneFi
 
 function paiement(p: Partial<PaiementVente> & Pick<PaiementVente, "montantCents">): PaiementVente {
   return {
+    formuleId: "kick-off",
+    optionsIds: [],
     paiementId: `p-${p.reference ?? "1"}`,
     reference: "OW-AAAA0001",
     typeActivite: "anniversaire",
@@ -35,7 +37,7 @@ function paiement(p: Partial<PaiementVente> & Pick<PaiementVente, "montantCents"
     methode: "bancontact",
     lignes: [ligne({ totalCents: p.montantCents })],
     ...p,
-  };
+  } as PaiementVente;
 }
 
 describe("TVA extraite d'un montant TVAC", () => {
@@ -140,7 +142,7 @@ describe("lecture du détail figé", () => {
 });
 
 describe("taux d'une ligne", () => {
-  const actuels: TauxActuels = { formules: { "kick-off": 6 }, options: { gateau: 21 } };
+  const actuels: TauxActuels = { formules: { "kick-off": 6 }, options: { gateau: 21 }, bubble: null };
 
   it("le taux figé à la vente l'emporte", () => {
     expect(tauxDeLaLigne(ligne({ totalCents: 1, tvaPourcent: 12 }), actuels)).toEqual({
@@ -203,7 +205,7 @@ describe("le rapport", () => {
       du: "2026-10-01",
       au: "2026-10-31",
       paiements: [],
-      remboursements: [{ id: 1, jour: "2026-10-05", montantCents: 10750, repris: false, paiement: vente }],
+      remboursements: [{ id: 1, jour: "2026-10-05", montantCents: 10750, rembourseAvantCents: 0, repris: false, paiement: vente }],
       actuels: AUCUN_TAUX,
     });
     expect(r.remboursements.map((l) => l.ttcCents)).toEqual([-9000, -500, -1250]);
@@ -221,7 +223,7 @@ describe("le rapport", () => {
       du: "2026-09-01",
       au: "2026-09-30",
       paiements: [vente],
-      remboursements: [{ id: 1, jour: "2026-09-28", montantCents: 21500, repris: false, paiement: vente }],
+      remboursements: [{ id: 1, jour: "2026-09-28", montantCents: 21500, rembourseAvantCents: 0, repris: false, paiement: vente }],
       actuels: AUCUN_TAUX,
     });
     expect(r.netTtcCents).toBe(0);
@@ -235,7 +237,7 @@ describe("le rapport", () => {
       du: "2026-10-01",
       au: "2026-10-31",
       paiements: [],
-      remboursements: [{ id: 2, jour: "2026-10-06", montantCents: -2150, repris: false, paiement: vente }],
+      remboursements: [{ id: 2, jour: "2026-10-06", montantCents: -2150, rembourseAvantCents: 0, repris: false, paiement: vente }],
       actuels: AUCUN_TAUX,
     });
     expect(r.remboursementsTtcCents).toBe(2150);
@@ -259,7 +261,7 @@ describe("le rapport", () => {
       au: "2026-09-30",
       paiements: [ancienne],
       remboursements: [],
-      actuels: { formules: { "kick-off": 6 }, options: {} },
+      actuels: { formules: { "kick-off": 6 }, options: {}, bubble: null },
     });
     expect(r.ventes[0].origineTaux).toBe("actuel");
     expect(r.netTvaCents).toBe(1075);
@@ -330,5 +332,96 @@ describe("base pas encore à jour", () => {
     expect(schemaSansMigrationVentes({ code: "57014" })).toBe(false);
     expect(schemaSansMigrationVentes({ code: null })).toBe(false);
     expect(schemaSansMigrationVentes(null)).toBe(false);
+  });
+});
+
+describe("corrections de la relecture du 16 octobre 2026", () => {
+  // 200,50 € : 180 € à 6 % et 20,50 € à 21 %.
+  const mixte = paiement({
+    montantCents: 20050,
+    lignes: [
+      ligne({ totalCents: 18000 }),
+      ligne({ nature: "option", ref: "boissons", designation: "Option — Boissons", totalCents: 2050, tvaPourcent: 21 }),
+    ],
+  });
+
+  it("une vente rendue en trois fois redonne exactement sa TVA, au centime", () => {
+    const etapes = [3333, 3333, 13384];
+    let avant = 0;
+    const mouvements = etapes.map((montantCents, i) => {
+      const m = { id: i + 1, jour: "2026-10-0" + (i + 2), montantCents, rembourseAvantCents: avant, repris: false, paiement: mixte };
+      avant += montantCents;
+      return m;
+    });
+    const r = construireRapport({
+      du: "2026-09-01",
+      au: "2026-10-31",
+      paiements: [{ ...mixte, jourPaiement: "2026-09-27" }],
+      remboursements: mouvements,
+      actuels: AUCUN_TAUX,
+    });
+    expect(r.netTtcCents).toBe(0);
+    for (const t of r.parTaux) {
+      expect([t.tauxPourcent, t.netTtcCents, t.netHtCents, t.netTvaCents]).toEqual([t.tauxPourcent, 0, 0, 0]);
+    }
+  });
+
+  it("un remboursement partiel suivant d'un autre mois tient compte de ce qui avait déjà été rendu", () => {
+    // 100,25 € déjà rendus en septembre ; octobre ne voit que le solde.
+    const r = construireRapport({
+      du: "2026-10-01",
+      au: "2026-10-31",
+      paiements: [],
+      remboursements: [{ id: 2, jour: "2026-10-04", montantCents: 10025, rembourseAvantCents: 10025, repris: false, paiement: mixte }],
+      actuels: AUCUN_TAUX,
+    });
+    expect(r.remboursementsTtcCents).toBe(-10025);
+    // Les deux moitiés réunies redonnent la vente entière : 180 € et 20,50 €.
+    const septembre = construireRapport({
+      du: "2026-09-01",
+      au: "2026-09-30",
+      paiements: [],
+      remboursements: [{ id: 1, jour: "2026-09-29", montantCents: 10025, rembourseAvantCents: 0, repris: false, paiement: mixte }],
+      actuels: AUCUN_TAUX,
+    });
+    const parLigne = (rr: typeof r) => rr.remboursements.map((l) => l.ttcCents);
+    expect(parLigne(septembre).map((x, i) => x + parLigne(r)[i])).toEqual([-18000, -2050]);
+  });
+
+  it("une ligne unique prend le taux commun de sa formule et de ses options, s'il est le même", () => {
+    const unique = paiement({ montantCents: 20500, lignes: null, optionsIds: ["gateau"] });
+    const commun = construireRapport({
+      du: "2026-09-01",
+      au: "2026-09-30",
+      paiements: [unique],
+      remboursements: [],
+      actuels: { formules: { "kick-off": 6 }, options: { gateau: 6 }, bubble: null },
+    });
+    expect(commun.ventes[0]).toMatchObject({ tauxPourcent: 6, origineTaux: "actuel" });
+    const melange = construireRapport({
+      du: "2026-09-01",
+      au: "2026-09-30",
+      paiements: [unique],
+      remboursements: [],
+      actuels: { formules: { "kick-off": 6 }, options: { gateau: 21 }, bubble: null },
+    });
+    expect(melange.ventes[0]).toMatchObject({ tauxPourcent: null, origineTaux: "inconnu" });
+  });
+
+  it("le Bubble Foot prend le taux réglé dans le code", () => {
+    const bubble = paiement({
+      montantCents: 18400,
+      typeActivite: "bubble",
+      formuleId: null,
+      lignes: [ligne({ nature: "bubble", ref: null, designation: "Bubble Foot — par personne", quantite: 8, puCents: 2300, totalCents: 18400, tvaPourcent: null })],
+    });
+    const r = construireRapport({
+      du: "2026-09-01",
+      au: "2026-09-30",
+      paiements: [bubble],
+      remboursements: [],
+      actuels: { formules: {}, options: {}, bubble: 21 },
+    });
+    expect(r.ventes[0]).toMatchObject({ tauxPourcent: 21, origineTaux: "actuel" });
   });
 });

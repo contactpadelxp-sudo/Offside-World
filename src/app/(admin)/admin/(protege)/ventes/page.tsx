@@ -1,4 +1,5 @@
 import { VentesEnAttente, VueVentes } from "@/components/admin/vue-ventes";
+import { exigerSession } from "@/lib/admin/session";
 import { MigrationVentesManquante } from "@/lib/db/migration-ventes";
 import { lireRapportVentes } from "@/lib/db/ventes";
 import { lirePeriodeVentes } from "@/lib/periode-ventes";
@@ -20,6 +21,13 @@ export default async function PageVentes({
 }: {
   searchParams: Promise<{ du?: string; au?: string; periode?: string }>;
 }) {
+  /*
+    LA SESSION EST VÉRIFIÉE ICI, ET PAS SEULEMENT DANS LE GABARIT. Un gabarit
+    ne se rejoue pas quand seuls les paramètres changent — or changer de
+    période, c'est exactement ça. Sans cette ligne, un onglet resté ouvert
+    après une déconnexion ailleurs continuait d'afficher le chiffre d'affaires.
+  */
+  await exigerSession();
   const { du, au, raccourci } = lirePeriodeVentes(await searchParams, jourISO(new Date()));
   // La lecture seule est dans le `try` : le rendu, lui, n'y a pas sa place.
   let rapport;

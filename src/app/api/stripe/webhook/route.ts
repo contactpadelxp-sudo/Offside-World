@@ -5,6 +5,7 @@ import {
   paiementConfigure,
   webhookConfigure,
   moyenDePaiementUtilise,
+  reprisSurImputation,
 } from "@/lib/paiement/stripe";
 import {
   confirmerPaiement,
@@ -284,16 +285,14 @@ export async function POST(req: Request) {
         restant à rendre restait surévalué, et le chiffre d'affaires du
         back-office trop haut.
 
-        `charge.refunded` porte le CUMUL remboursé sur l'imputation, pas le
-        montant de la dernière opération — c'est donc lui qui fait autorité.
+        L'ÉVÉNEMENT RÉVEILLE, IL NE FAIT PAS FOI. Son cumul peut être ancien
+        — Stripe ne garantit pas l'ordre de livraison — et il ignore les
+        contestations perdues. On relit donc l'imputation telle qu'elle est
+        maintenant : voir `reprisSurImputation`.
       */
       case "charge.refunded": {
-        const imputation = evenement.data.object;
-        const intention =
-          typeof imputation.payment_intent === "string" ? imputation.payment_intent : null;
-        if (intention) {
-          await synchroniserRemboursement(intention, imputation.amount_refunded);
-        }
+        const { intention, cumulCents } = await reprisSurImputation(evenement.data.object.id);
+        if (intention) await synchroniserRemboursement(intention, cumulCents);
         break;
       }
 
@@ -359,9 +358,11 @@ export async function POST(req: Request) {
         remboursement à zéro : le chiffre d'affaires du back-office comptait
         pour toujours un argent que le complexe n'a plus.
 
-        On passe par `synchroniserRemboursement`, qui COPIE le cumul plutôt que
-        de l'incrémenter : si le montant a déjà été rapatrié autrement, le
-        repasser ici ne le compte pas deux fois.
+        Le cumul écrit est relu chez Stripe — remboursements ET contestations
+        perdues — plutôt que pris dans l'événement, qui ne porte que le montant
+        contesté : recopié tel quel, il effaçait un remboursement partiel fait
+        avant la contestation. Et comme c'est un total, et non un ajout, une
+        relivraison du même événement ne compte rien deux fois.
 
         Les autres issues — `won`, `warning_closed` — ne changent rien au solde :
         l'argent revient de lui-même, et il n'y a rien à écrire.
@@ -374,7 +375,9 @@ export async function POST(req: Request) {
           console.error(
             `Contestation ${litige.id} PERDUE : ${litige.amount} centimes définitivement repris.`
           );
-          await synchroniserRemboursement(intention, litige.amount);
+          const imputation = typeof litige.charge === "string" ? litige.charge : litige.charge.id;
+          const { cumulCents } = await reprisSurImputation(imputation);
+          await synchroniserRemboursement(intention, cumulCents);
         }
         break;
       }

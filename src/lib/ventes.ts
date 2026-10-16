@@ -56,6 +56,12 @@ export interface PaiementVente {
   methode: string | null;
   /** `null` quand la réservation n'a pas de détail figé (panne à l'écriture). */
   lignes: LigneFigee[] | null;
+  /**
+   * La formule et les options de la réservation — de quoi retrouver un taux
+   * pour une vente dont le détail n'a pas pu être figé ligne par ligne.
+   */
+  formuleId: string | null;
+  optionsIds: string[];
 }
 
 /** Un mouvement de remboursement : positif quand on rend, négatif quand Stripe annule un remboursement. */
@@ -64,6 +70,12 @@ export interface MouvementRemboursement {
   /** Jour du mouvement, heure de Bruxelles. */
   jour: string;
   montantCents: number;
+  /**
+   * Ce qui avait déjà été rendu sur ce paiement AVANT ce mouvement, toutes
+   * périodes confondues. C'est ce qui permet de ventiler le cumul plutôt que
+   * chaque mouvement isolé — voir `construireRapport`.
+   */
+  rembourseAvantCents: number;
   /** Reconstitué par la migration 0040 : daté approximativement. */
   repris: boolean;
   paiement: PaiementVente;
@@ -73,6 +85,8 @@ export interface MouvementRemboursement {
 export interface TauxActuels {
   formules: Record<string, number | null>;
   options: Record<string, number | null>;
+  /** Le Bubble Foot n'a pas de ligne de tarif en base : son taux vit dans le code. */
+  bubble: number | null;
 }
 
 /**
@@ -248,23 +262,47 @@ const LIBELLE_TYPE: Record<TypeActivite, string> = {
   team_building: "Team building",
 };
 
-/** Le taux d'une ligne, et d'où il vient. */
+/** Ce qu'il faut savoir de la vente pour retrouver le taux d'une ligne de repli. */
+export interface ContexteTaux {
+  typeActivite: TypeActivite;
+  formuleId: string | null;
+  optionsIds: string[];
+}
+
+/**
+ * Le taux d'une ligne, et d'où il vient.
+ *
+ * Une ligne sans taux figé prend le taux réglé aujourd'hui pour ce qu'elle
+ * vend. Une ligne UNIQUE — le détail n'a pas pu être figé — n'en prend un que
+ * si la formule et toutes ses options ont le même : sinon, un seul taux pour
+ * un montant qui en mêle plusieurs serait faux, et on le laisse inconnu.
+ */
 export function tauxDeLaLigne(
   ligne: LigneFigee,
-  actuels: TauxActuels
+  actuels: TauxActuels,
+  contexte?: ContexteTaux
 ): { taux: number | null; origine: OrigineTaux } {
   if (ligne.tvaPourcent !== null) return { taux: ligne.tvaPourcent, origine: "vente" };
-  if (ligne.ref) {
-    const table =
-      ligne.nature === "option"
-        ? actuels.options
-        : ligne.nature === "formule" || ligne.nature === "participant_sup"
-          ? actuels.formules
-          : null;
-    const actuel = table?.[ligne.ref];
-    if (typeof actuel === "number") return { taux: actuel, origine: "actuel" };
+
+  let actuel: number | null | undefined;
+  if (ligne.nature === "option" && ligne.ref) {
+    actuel = actuels.options[ligne.ref];
+  } else if ((ligne.nature === "formule" || ligne.nature === "participant_sup") && ligne.ref) {
+    actuel = actuels.formules[ligne.ref];
+  } else if (ligne.nature === "bubble" || contexte?.typeActivite === "bubble") {
+    actuel = actuels.bubble;
+  } else if (ligne.nature === "reservation" && contexte?.formuleId) {
+    const taux = [
+      actuels.formules[contexte.formuleId],
+      ...contexte.optionsIds.map((o) => actuels.options[o]),
+    ];
+    const tousConnus = taux.every((t): t is number => typeof t === "number");
+    if (tousConnus && new Set(taux).size === 1) actuel = taux[0];
   }
-  return { taux: null, origine: "inconnu" };
+
+  return typeof actuel === "number"
+    ? { taux: actuel, origine: "actuel" }
+    : { taux: null, origine: "inconnu" };
 }
 
 /**
@@ -386,12 +424,14 @@ export function construireRapport({
     jour: string,
     p: PaiementVente,
     ligne: LigneFigee,
-    ttcCents: number
+    ttcCents: number,
+    /** Pour un remboursement : HTVA et TVA déjà calculées sur le cumul. */
+    ventile?: (taux: number | null) => { htCents: number | null; tvaCents: number | null }
   ): LigneRapport => {
-    const { taux, origine } = tauxDeLaLigne(ligne, actuels);
+    const { taux, origine } = tauxDeLaLigne(ligne, actuels, p);
     if (origine === "actuel") tauxActuelsUtilises.add(ligne.designation);
     if (origine === "inconnu") sansTaux.add(ligne.designation);
-    const { htCents, tvaCents } = ventilerTva(ttcCents, taux);
+    const { htCents, tvaCents } = ventile ? ventile(taux) : ventilerTva(ttcCents, taux);
     return {
       genre,
       jour,
@@ -421,21 +461,36 @@ export function construireRapport({
     }
   }
 
-  // Les remboursements : chaque mouvement se répartit sur les lignes de la
-  // vente qu'il rembourse, au prorata.
+  /*
+    LES REMBOURSEMENTS SE VENTILENT SUR LE CUMUL, PAS MOUVEMENT PAR MOUVEMENT.
+
+    Relevé par la relecture du 16 octobre 2026. Ventilé isolément, chaque
+    mouvement arrondissait de son côté : une vente rendue en trois fois
+    (33,33 + 33,33 + 133,84 €) laissait un centime de HTVA et de TVA en trop
+    sur un montant net nul. On répartit donc le cumul rendu APRÈS le mouvement,
+    puis celui d'AVANT, et le mouvement est la différence des deux. Un
+    remboursement total redonne ainsi exactement, ligne par ligne, la TVA de la
+    vente — quel que soit le nombre de fois où il a été fait.
+  */
   const lignesRemb: LigneRapport[] = [];
   let reprisDansLaPeriode = false;
   for (const m of [...remboursements].sort((a, b) => a.jour.localeCompare(b.jour) || a.id - b.id)) {
     if (m.repris) reprisDansLaPeriode = true;
     const composantes = lignesDuPaiement(m.paiement, signaler);
+    const poids = composantes.map((c) => c.montantCents);
     // Un remboursement (montant positif) est une recette en moins : négatif.
-    const parts = repartir(
-      -m.montantCents,
-      composantes.map((c) => c.montantCents)
-    );
+    const avant = repartir(-m.rembourseAvantCents, poids);
+    const apres = repartir(-(m.rembourseAvantCents + m.montantCents), poids);
     composantes.forEach((c, i) => {
-      if (parts[i] === 0) return;
-      const l = ligneRapport("remboursement", m.jour, m.paiement, c.ligne, parts[i]);
+      const ttc = apres[i] - avant[i];
+      if (ttc === 0) return;
+      const l = ligneRapport("remboursement", m.jour, m.paiement, c.ligne, ttc, (taux) => {
+        const va = ventilerTva(avant[i], taux);
+        const vp = ventilerTva(apres[i], taux);
+        return taux === null
+          ? { htCents: null, tvaCents: null }
+          : { htCents: vp.htCents! - va.htCents!, tvaCents: vp.tvaCents! - va.tvaCents! };
+      });
       if (m.montantCents < 0) l.designation = `Remboursement annulé — ${c.ligne.designation}`;
       lignesRemb.push(l);
     });
@@ -521,8 +576,9 @@ export function construireRapport({
   if (sansTaux.size > 0) {
     avertissements.push(
       `Taux de TVA non renseigné pour : ${[...sansTaux].join(", ")}. Le montant TVAC de ces ` +
-        "lignes est compté, mais leur HTVA et leur TVA ne sont pas calculés. Le taux se règle " +
-        "dans « Tarifs » du back-office."
+        "lignes est compté, mais leur HTVA et leur TVA ne sont pas calculés. Le taux d'une " +
+        "formule ou d'une option se règle dans « Tarifs » du back-office" +
+        ([...sansTaux].some((d) => d.startsWith("Bubble")) ? " ; celui du Bubble Foot, sur demande au site." : ".")
     );
   }
   if (tauxActuelsUtilises.size > 0) {

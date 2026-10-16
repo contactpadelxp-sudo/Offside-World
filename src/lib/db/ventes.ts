@@ -11,6 +11,7 @@ import {
 } from "@/lib/ventes";
 import type { StatutReservation, TypeActivite } from "@/lib/vues";
 import { MigrationVentesManquante, schemaSansMigrationVentes } from "@/lib/db/migration-ventes";
+import { BUBBLE_TVA_POURCENT } from "@/data/bubble-team";
 
 /**
  * Lecture des ventes en ligne d'une période, pour le récapitulatif comptable.
@@ -26,9 +27,11 @@ import { MigrationVentesManquante, schemaSansMigrationVentes } from "@/lib/db/mi
  * d'octobre remboursée en novembre apparaît donc dans les deux mois, chacune à
  * sa date — c'est ce qu'attend une comptabilité.
  *
- * TOUT EST LU, PAGE PAR PAGE. Supabase plafonne une réponse à 1 000 lignes : une
- * année de ventes peut dépasser ce seuil, et un récapitulatif tronqué sans le
- * dire serait pire que pas de récapitulatif du tout.
+ * TOUT EST LU, PAGE PAR PAGE, JUSQU'À UNE PAGE VIDE. Supabase plafonne une
+ * réponse — 1 000 lignes par défaut, moins si le projet est réglé autrement :
+ * une année de ventes peut dépasser ce seuil, et un récapitulatif tronqué sans
+ * le dire serait pire que pas de récapitulatif du tout. On ne suppose donc pas
+ * la taille d'une page pleine ; seule une page vide dit que c'est fini.
  */
 
 const PAGE = 1000;
@@ -45,12 +48,14 @@ async function toutLire<T>(
   ) => PromiseLike<{ data: T[] | null; error: { message: string; code?: string } | null }>
 ): Promise<T[]> {
   const lignes: T[] = [];
-  for (let de = 0; ; de += PAGE) {
+  for (let de = 0; ; ) {
     const { data, error } = await lire(de, de + PAGE - 1);
     if (schemaSansMigrationVentes(error)) throw new MigrationVentesManquante();
     if (error) throw new Error(error.message);
-    lignes.push(...(data ?? []));
-    if (!data || data.length < PAGE) return lignes;
+    if (!data || data.length === 0) return lignes;
+    lignes.push(...data);
+    // On avance de ce qui a été RÉELLEMENT rendu, pas de la taille demandée.
+    de += data.length;
   }
 }
 
@@ -59,6 +64,8 @@ interface ReservationLue {
   type: TypeActivite;
   statut: StatutReservation;
   lignes: unknown;
+  formule_id: string | null;
+  options_ids: string[] | null;
   creneaux: { debut: string } | null;
 }
 
@@ -71,7 +78,7 @@ interface PaiementLu {
 }
 
 const COLONNES_PAIEMENT =
-  "id, montant_cents, methode, reussi_le, reservations(reference, type, statut, lignes, creneaux(debut))";
+  "id, montant_cents, methode, reussi_le, reservations(reference, type, statut, lignes, formule_id, options_ids, creneaux(debut))";
 
 function versPaiementVente(p: PaiementLu): PaiementVente | null {
   const r = p.reservations;
@@ -86,7 +93,42 @@ function versPaiementVente(p: PaiementLu): PaiementVente | null {
     montantCents: p.montant_cents,
     methode: p.methode,
     lignes: lignesFigeesDepuisJson(r.lignes),
+    formuleId: r.formule_id,
+    optionsIds: r.options_ids ?? [],
   };
+}
+
+/**
+ * Ce qui avait déjà été rendu sur chaque paiement avant chacun de ses
+ * mouvements — y compris AVANT la période demandée.
+ *
+ * Le rapport ventile le cumul et non chaque mouvement isolé (voir
+ * `construireRapport`) : il lui faut donc l'historique complet des paiements
+ * concernés, pas seulement les mouvements de la période.
+ */
+async function cumulsAvant(paiementIds: string[]): Promise<Map<number, number>> {
+  const avant = new Map<number, number>();
+  const ids = [...new Set(paiementIds)];
+  for (let i = 0; i < ids.length; i += 100) {
+    const paquet = ids.slice(i, i + 100);
+    const mouvements = await toutLire<{ id: number; paiement_id: string; montant_cents: number; survenu_le: string }>(
+      (de, a) =>
+        base()
+          .from("remboursements")
+          .select("id, paiement_id, montant_cents, survenu_le")
+          .in("paiement_id", paquet)
+          .order("survenu_le")
+          .order("id")
+          .range(de, a)
+    );
+    const cumul = new Map<string, number>();
+    for (const m of mouvements) {
+      const deja = cumul.get(m.paiement_id) ?? 0;
+      avant.set(m.id, deja);
+      cumul.set(m.paiement_id, deja + m.montant_cents);
+    }
+  }
+  return avant;
 }
 
 export async function lireRapportVentes(du: string, au: string): Promise<RapportVentes> {
@@ -140,6 +182,7 @@ export async function lireRapportVentes(du: string, au: string): Promise<Rapport
   const actuels: TauxActuels = {
     formules: Object.fromEntries((formules.data ?? []).map((f) => [f.id, f.tva_pourcent])),
     options: Object.fromEntries((options.data ?? []).map((o) => [o.id, o.tva_pourcent])),
+    bubble: BUBBLE_TVA_POURCENT,
   };
 
   const paiements = paiementsLus
@@ -147,15 +190,18 @@ export async function lireRapportVentes(du: string, au: string): Promise<Rapport
     .map(versPaiementVente)
     .filter((p): p is PaiementVente => p !== null);
 
+  const retenus = remboursementsLus.filter((m) => dansLaPeriode(m.survenu_le) && m.paiements);
+  const avant = await cumulsAvant(retenus.map((m) => m.paiements!.id));
+
   const remboursements: MouvementRemboursement[] = [];
-  for (const m of remboursementsLus) {
-    if (!dansLaPeriode(m.survenu_le) || !m.paiements) continue;
-    const paiement = versPaiementVente(m.paiements);
+  for (const m of retenus) {
+    const paiement = versPaiementVente(m.paiements!);
     if (!paiement) continue;
     remboursements.push({
       id: m.id,
       jour: jourISO(new Date(m.survenu_le)),
       montantCents: m.montant_cents,
+      rembourseAvantCents: avant.get(m.id) ?? 0,
       repris: m.repris,
       paiement,
     });

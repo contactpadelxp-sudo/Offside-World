@@ -98,6 +98,65 @@ export async function moyenDePaiementUtilise(
   }
 }
 
+/**
+ * Ce qui a été REPRIS au client sur une imputation : les remboursements, plus
+ * les contestations bancaires perdues. Plafonné au montant payé.
+ *
+ * Fonction pure, séparée de l'appel réseau pour être testée : c'est elle qui
+ * décide du cumul que le récapitulatif comptable verra.
+ */
+export function cumulRepris(
+  montantCents: number,
+  rembourseCents: number,
+  litigesPerdusCents: number[]
+): number {
+  const total = rembourseCents + litigesPerdusCents.reduce((s, x) => s + x, 0);
+  return Math.max(0, Math.min(montantCents, total));
+}
+
+/**
+ * L'état ACTUEL d'une imputation chez Stripe, et non celui d'un événement.
+ *
+ * POURQUOI ON RELIT, AU LIEU DE CROIRE L'ÉVÉNEMENT. Relevé par la relecture du
+ * 16 octobre 2026, le jour où chaque variation du cumul remboursé est devenue
+ * une écriture comptable datée (migration 0040) :
+ *
+ *   - Stripe ne garantit pas l'ordre de livraison. Un `charge.refunded` relivré
+ *     en retard porte un cumul ANCIEN : le recopier faisait redescendre le
+ *     total, inscrivait un faux « remboursement annulé », et rendait de
+ *     nouveau remboursable une somme déjà rendue ;
+ *   - une contestation perdue ne figure pas dans `amount_refunded`, et
+ *     `charge.dispute.closed` ne porte que le montant contesté. Le recopier
+ *     comme un cumul effaçait un remboursement partiel antérieur : 95 € rendus
+ *     selon le barème, puis 95 € repris par la banque, et seuls 95 € comptés.
+ *
+ * Relire l'imputation et ses contestations donne le total vrai à l'instant
+ * présent, quel que soit l'événement qui a réveillé le webhook et l'ordre dans
+ * lequel ils arrivent. Un échec réseau lève : le webhook répond 500, Stripe
+ * réessaie.
+ */
+export async function reprisSurImputation(
+  chargeId: string
+): Promise<{ intention: string | null; cumulCents: number }> {
+  const s = stripe();
+  const [imputation, litiges] = await Promise.all([
+    s.charges.retrieve(chargeId),
+    s.disputes.list({ charge: chargeId, limit: 100 }),
+  ]);
+  const intention =
+    typeof imputation.payment_intent === "string"
+      ? imputation.payment_intent
+      : (imputation.payment_intent?.id ?? null);
+  return {
+    intention,
+    cumulCents: cumulRepris(
+      imputation.amount,
+      imputation.amount_refunded,
+      litiges.data.filter((l) => l.status === "lost").map((l) => l.amount)
+    ),
+  };
+}
+
 export function stripe(): Stripe {
   if (instance) return instance;
 
