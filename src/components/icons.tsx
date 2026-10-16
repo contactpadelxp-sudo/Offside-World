@@ -271,6 +271,17 @@ export const Graphique: IconType = (p) => (
   </Svg>
 );
 
+/** Reçu — section « Ventes » du back-office : un ticket au bas dentelé. */
+export const Recu: IconType = (p) => (
+  <Svg {...p}>
+    <path
+      fillRule="evenodd"
+      clipRule="evenodd"
+      d="M5 2h14v19.5l-2.33-1.4-2.34 1.4-2.33-1.4-2.33 1.4-2.34-1.4L5 21.5V2Zm3 4.5h8v2H8v-2Zm0 4h8v2H8v-2Zm0 4h5v2H8v-2Z"
+    />
+  </Svg>
+);
+
 /** Plume — section « Blog » du back-office. */
 export const Plume: IconType = (p) => (
   <Svg {...p}>

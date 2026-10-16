@@ -33,6 +33,12 @@ export interface TarifFormule {
  * `Math.max(0, …)` n'est pas décoratif : sans lui, une fête de 6 enfants sur
  * un forfait qui en comprend 10 produirait un supplément NÉGATIF, donc une
  * réduction que personne n'a décidée.
+ *
+ * ⚠ LA MÊME RÈGLE EXISTE EN SQL : `lignes_de_vente` (migration 0040) refait ce
+ * calcul ligne par ligne pour figer le détail de chaque vente, celui que lit
+ * le récapitulatif comptable. Changer la règle ici sans la changer là-bas ne
+ * casse aucune réservation — la base compare son détail au total et garde
+ * alors une ligne unique —, mais le comptable perdrait la ventilation par taux.
  */
 export function totalAnniversaireCents(
   formule: TarifFormule,

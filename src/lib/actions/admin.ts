@@ -1343,6 +1343,23 @@ export interface SaisieFormule {
   dureeMinutes: string | number;
   inclus: string;
   actif: boolean;
+  /** Vide ou absent = taux pas encore renseigné. */
+  tvaPourcent?: string | number | null;
+}
+
+/**
+ * LE TAUX DE TVA D'UN TARIF : VIDE N'EST PAS ZÉRO.
+ *
+ * Vide veut dire « pas encore renseigné » — le récapitulatif des ventes le
+ * signale alors au lieu de calculer. Zéro veut dire « exonéré », et se calcule.
+ * Confondre les deux, c'est déclarer exonérée une vente qui ne l'est pas.
+ *
+ * Un entier de 0 à 25 : les taux belges sont 0, 6, 12 et 21 %, et la base
+ * refuse au-delà de 25 (migration 0040).
+ */
+function tauxTva(brut: unknown): number | null {
+  if (brut === null || brut === undefined || String(brut).trim() === "") return null;
+  return entier(String(brut).trim().replace(/\s*%$/, ""), "Taux de TVA", { min: 0, max: 25 });
 }
 
 /**
@@ -1379,11 +1396,15 @@ function formuleInchangee(
     duree_minutes: number;
     inclus: string[];
     actif: boolean;
+    tva_pourcent?: number | null;
   },
-  vu: SnapshotFormule
+  vu: SnapshotFormule,
+  /** Faux quand l'écran n'avait pas le champ TVA (base sans la migration 0040). */
+  avecTva: boolean
 ): boolean {
   if (!vu || !Array.isArray(vu.inclus)) return false;
   return (
+    (!avecTva || (actuel.tva_pourcent ?? null) === (vu.tvaPourcent ?? null)) &&
     actuel.nom === vu.nom &&
     (actuel.accroche ?? "") === vu.accroche &&
     actuel.description === vu.description &&
@@ -1452,6 +1473,13 @@ export async function modifierFormule(
       : entier(ageBrut, "Âge maximum", { min: AGE_MINIMUM, max: 120 });
     const dureeMinutes = entier(saisie?.dureeMinutes, "Durée", { min: 15, max: 600 });
     const inclus = lignes(saisie?.inclus, "Ce qui est compris");
+    /*
+      LE CHAMP TVA N'EXISTE À L'ÉCRAN QUE SI LA BASE LE CONNAÎT (migration
+      0040). Absent de la saisie, la colonne n'est ni relue ni écrite : une
+      base pas encore à jour ne fait pas échouer la modification d'un prix.
+    */
+    const avecTva = saisie?.tvaPourcent !== undefined;
+    const tvaPourcent = tauxTva(saisie?.tvaPourcent);
 
     if (enfantsMax < enfantsInclus) {
       return {
@@ -1460,17 +1488,18 @@ export async function modifierFormule(
       };
     }
 
+    const colonnes =
+      "nom, accroche, description, prix_base_cents, enfants_inclus, prix_enfant_sup_cents, enfants_max, age_max, duree_minutes, inclus, actif";
     const { data: actuel, error: eLu } = await base()
       .from("formules")
-      .select(
-        "nom, accroche, description, prix_base_cents, enfants_inclus, prix_enfant_sup_cents, enfants_max, age_max, duree_minutes, inclus, actif"
-      )
+      .select(avecTva ? `${colonnes}, tva_pourcent` : colonnes)
       .eq("id", cible)
-      .maybeSingle();
+      .maybeSingle()
+      .overrideTypes<Parameters<typeof formuleInchangee>[0], { merge: false }>();
 
     if (eLu) throw eLu;
     if (!actuel) return { ok: false, message: "Formule introuvable." };
-    if (!formuleInchangee(actuel, vu)) return REFUS_TARIF_PERIME;
+    if (!formuleInchangee(actuel, vu, avecTva)) return REFUS_TARIF_PERIME;
 
     const { data, error } = await base()
       .from("formules")
@@ -1486,6 +1515,7 @@ export async function modifierFormule(
         duree_minutes: dureeMinutes,
         inclus,
         actif: booleen(saisie?.actif),
+        ...(avecTva ? { tva_pourcent: tvaPourcent } : {}),
       })
       .eq("id", cible)
       .select("id")
@@ -1498,6 +1528,7 @@ export async function modifierFormule(
       prix_base_cents: prixBase,
       prix_enfant_sup_cents: prixEnfantSup,
       actif: booleen(saisie?.actif),
+      ...(avecTva ? { tva_pourcent: tvaPourcent } : {}),
     });
     rafraichir();
     // La page d'accueil est prérendue toutes les heures : on la régénère tout
@@ -1514,17 +1545,28 @@ export interface SaisieOption {
   description: string;
   prix: string;
   actif: boolean;
+  /** Vide ou absent = taux pas encore renseigné. Voir `tauxTva`. */
+  tvaPourcent?: string | number | null;
 }
 
 /** Voir `SnapshotFormule` : même rôle, mêmes garanties, pour une option. */
 type SnapshotOption = Omit<OptionAdmin, "id">;
 
 function optionInchangee(
-  actuel: { libelle: string; description: string | null; prix_cents: number; actif: boolean },
-  vu: SnapshotOption
+  actuel: {
+    libelle: string;
+    description: string | null;
+    prix_cents: number;
+    actif: boolean;
+    tva_pourcent?: number | null;
+  },
+  vu: SnapshotOption,
+  /** Voir `formuleInchangee`. */
+  avecTva: boolean
 ): boolean {
   if (!vu) return false;
   return (
+    (!avecTva || (actuel.tva_pourcent ?? null) === (vu.tvaPourcent ?? null)) &&
     actuel.libelle === vu.libelle &&
     (actuel.description ?? "") === vu.description &&
     actuel.prix_cents === Math.round(Number(vu.prix) * 100) &&
@@ -1546,20 +1588,31 @@ export async function modifierOption(
     const libelle = texte(saisie?.libelle, "Libellé", { min: 2, max: 80 });
     const description = texteFacultatif(saisie?.description, "Description", { max: 300 });
     const prix = montantEnCents(saisie?.prix, "Prix", { max: 100_000 });
+    // Voir `modifierFormule` : la TVA n'est touchée que si l'écran l'avait.
+    const avecTva = saisie?.tvaPourcent !== undefined;
+    const tvaPourcent = tauxTva(saisie?.tvaPourcent);
 
+    const colonnes = "libelle, description, prix_cents, actif";
     const { data: actuel, error: eLu } = await base()
       .from("options")
-      .select("libelle, description, prix_cents, actif")
+      .select(avecTva ? `${colonnes}, tva_pourcent` : colonnes)
       .eq("id", cible)
-      .maybeSingle();
+      .maybeSingle()
+      .overrideTypes<Parameters<typeof optionInchangee>[0], { merge: false }>();
 
     if (eLu) throw eLu;
     if (!actuel) return { ok: false, message: "Option introuvable." };
-    if (!optionInchangee(actuel, vu)) return REFUS_TARIF_PERIME;
+    if (!optionInchangee(actuel, vu, avecTva)) return REFUS_TARIF_PERIME;
 
     const { data, error } = await base()
       .from("options")
-      .update({ libelle, description, prix_cents: prix, actif: booleen(saisie?.actif) })
+      .update({
+        libelle,
+        description,
+        prix_cents: prix,
+        actif: booleen(saisie?.actif),
+        ...(avecTva ? { tva_pourcent: tvaPourcent } : {}),
+      })
       .eq("id", cible)
       .select("id")
       .maybeSingle();
@@ -1570,6 +1623,7 @@ export async function modifierOption(
     await journaliser(session, "option.modifiee", cible, {
       prix_cents: prix,
       actif: booleen(saisie?.actif),
+      ...(avecTva ? { tva_pourcent: tvaPourcent } : {}),
     });
     rafraichir();
     revalidatePath("/");

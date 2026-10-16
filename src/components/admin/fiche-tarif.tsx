@@ -56,7 +56,49 @@ function Interrupteur({
   );
 }
 
-export function FicheFormule({ f }: { f: FormuleAdmin }) {
+/**
+ * LE TAUX DE TVA D'UN TARIF.
+ *
+ * Il ne s'affiche nulle part sur le site — les prix y sont TVAC — : il sert à
+ * ventiler les ventes dans le récapitulatif envoyé au comptable. Il est figé
+ * avec chaque vente au moment de la réservation : le changer ne réécrit pas
+ * les ventes déjà faites.
+ *
+ * VIDE N'EST PAS ZÉRO. Vide : pas encore renseigné, le récapitulatif le
+ * signale. Zéro : exonéré. Le texte d'aide le dit, parce que c'est la seule
+ * erreur de saisie qui fausserait une déclaration sans que rien ne se voie.
+ */
+function ChampTva({
+  id,
+  valeur,
+  onChange,
+  aide,
+}: {
+  id: string;
+  valeur: string;
+  onChange: (v: string) => void;
+  aide?: string;
+}) {
+  return (
+    <div>
+      <label className={ETIQUETTE} htmlFor={id}>Taux de TVA (%)</label>
+      <input id={id} className={CHAMP} type="number" min={0} max={25} step={1} inputMode="numeric"
+        placeholder="à renseigner" value={valeur} onChange={(e) => onChange(e.target.value)} />
+      <p className="mt-1 text-xs text-muted-foreground">
+        {aide ? `${aide} ` : ""}Pour le récapitulatif des ventes. Vide = pas encore renseigné ; 0 = exonéré.
+      </p>
+    </div>
+  );
+}
+
+export function FicheFormule({
+  f,
+  tvaDisponible = true,
+}: {
+  f: FormuleAdmin;
+  /** Faux tant que la base n'a pas la colonne TVA (migration 0040) : le champ est masqué. */
+  tvaDisponible?: boolean;
+}) {
   const { enCours, occupe, retour, lancer } = useAction();
   const [v, setV] = useState({
     nom: f.nom,
@@ -70,6 +112,7 @@ export function FicheFormule({ f }: { f: FormuleAdmin }) {
     dureeMinutes: String(f.dureeMinutes),
     inclus: f.inclus.join("\n"),
     actif: f.actif,
+    tvaPourcent: f.tvaPourcent === null ? "" : String(f.tvaPourcent),
   });
 
   const modifie =
@@ -83,7 +126,8 @@ export function FicheFormule({ f }: { f: FormuleAdmin }) {
     v.ageMax !== (f.ageMax === null ? "" : String(f.ageMax)) ||
     v.dureeMinutes !== String(f.dureeMinutes) ||
     v.inclus !== f.inclus.join("\n") ||
-    v.actif !== f.actif;
+    v.actif !== f.actif ||
+    v.tvaPourcent !== (f.tvaPourcent === null ? "" : String(f.tvaPourcent));
 
   return (
     <article
@@ -204,6 +248,10 @@ export function FicheFormule({ f }: { f: FormuleAdmin }) {
           <input id={`duree-${f.id}`} className={CHAMP} type="number" min={15} max={600} step={15} value={v.dureeMinutes}
             onChange={(e) => setV({ ...v, dureeMinutes: e.target.value })} />
         </div>
+        {tvaDisponible && (
+          <ChampTva id={`tva-${f.id}`} valeur={v.tvaPourcent} onChange={(tvaPourcent) => setV({ ...v, tvaPourcent })}
+            aide="S'applique au forfait et aux participants supplémentaires." />
+        )}
       </div>
 
       <div className="mt-4">
@@ -227,7 +275,12 @@ export function FicheFormule({ f }: { f: FormuleAdmin }) {
             tarif jusqu'à ce que quelqu'un s'en aperçoive. `f` est ce que cet
             écran avait chargé : le serveur refuse si la base a bougé depuis.
           */
-          onClick={() => lancer("formule", () => modifierFormule(f.id, v, f))}
+          onClick={() =>
+            lancer("formule", () =>
+              // Sans le champ à l'écran, la TVA ne part pas : le serveur n'y touche pas.
+              modifierFormule(f.id, tvaDisponible ? v : { ...v, tvaPourcent: undefined }, f)
+            )
+          }
           className={BOUTON_PRINCIPAL}
         >
           {occupe("formule") && <Rotative />}
@@ -249,6 +302,7 @@ export function FicheFormule({ f }: { f: FormuleAdmin }) {
                 dureeMinutes: String(f.dureeMinutes),
                 inclus: f.inclus.join("\n"),
                 actif: f.actif,
+                tvaPourcent: f.tvaPourcent === null ? "" : String(f.tvaPourcent),
               })
             }
             className={BOUTON_NEUTRE}
@@ -263,20 +317,29 @@ export function FicheFormule({ f }: { f: FormuleAdmin }) {
   );
 }
 
-export function FicheOption({ o }: { o: OptionAdmin }) {
+export function FicheOption({
+  o,
+  tvaDisponible = true,
+}: {
+  o: OptionAdmin;
+  /** Voir `FicheFormule`. */
+  tvaDisponible?: boolean;
+}) {
   const { enCours, occupe, retour, lancer } = useAction();
   const [v, setV] = useState({
     libelle: o.libelle,
     description: o.description,
     prix: String(o.prix),
     actif: o.actif,
+    tvaPourcent: o.tvaPourcent === null ? "" : String(o.tvaPourcent),
   });
 
   const modifie =
     v.libelle !== o.libelle ||
     v.description !== o.description ||
     v.prix !== String(o.prix) ||
-    v.actif !== o.actif;
+    v.actif !== o.actif ||
+    v.tvaPourcent !== (o.tvaPourcent === null ? "" : String(o.tvaPourcent));
 
   return (
     <article
@@ -296,7 +359,7 @@ export function FicheOption({ o }: { o: OptionAdmin }) {
         </div>
       </div>
 
-      <div className="mt-4 grid gap-4 sm:grid-cols-[2fr_1fr]">
+      <div className={`mt-4 grid gap-4 ${tvaDisponible ? "sm:grid-cols-[2fr_1fr_1fr]" : "sm:grid-cols-[2fr_1fr]"}`}>
         <div>
           <label className={ETIQUETTE} htmlFor={`lib-${o.id}`}>Libellé</label>
           <input id={`lib-${o.id}`} className={CHAMP} value={v.libelle} maxLength={80}
@@ -307,6 +370,9 @@ export function FicheOption({ o }: { o: OptionAdmin }) {
           <input id={`prixopt-${o.id}`} className={CHAMP} inputMode="decimal" value={v.prix}
             onChange={(e) => setV({ ...v, prix: e.target.value })} />
         </div>
+        {tvaDisponible && (
+          <ChampTva id={`tvaopt-${o.id}`} valeur={v.tvaPourcent} onChange={(tvaPourcent) => setV({ ...v, tvaPourcent })} />
+        )}
       </div>
 
       {/*
@@ -327,7 +393,11 @@ export function FicheOption({ o }: { o: OptionAdmin }) {
         <button
           type="button"
           disabled={enCours || !modifie}
-          onClick={() => lancer("option", () => modifierOption(o.id, v, o))}
+          onClick={() =>
+            lancer("option", () =>
+              modifierOption(o.id, tvaDisponible ? v : { ...v, tvaPourcent: undefined }, o)
+            )
+          }
           className={BOUTON_PRINCIPAL}
         >
           {occupe("option") && <Rotative />}
@@ -347,6 +417,7 @@ export function FicheOption({ o }: { o: OptionAdmin }) {
                 description: o.description,
                 prix: String(o.prix),
                 actif: o.actif,
+                tvaPourcent: o.tvaPourcent === null ? "" : String(o.tvaPourcent),
               })
             }
             className={BOUTON_NEUTRE}

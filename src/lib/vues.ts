@@ -304,6 +304,12 @@ export interface FormuleAdmin {
   dureeMinutes: number;
   inclus: string[];
   actif: boolean;
+  /**
+   * Taux de TVA du forfait et des participants supplémentaires, en pourcent ;
+   * `null` tant qu'il n'est pas renseigné. Ne s'affiche jamais au client : il
+   * sert au récapitulatif des ventes (migration 0040).
+   */
+  tvaPourcent: number | null;
 }
 
 export interface OptionAdmin {
@@ -313,4 +319,6 @@ export interface OptionAdmin {
   /** en euros */
   prix: number;
   actif: boolean;
+  /** Voir `FormuleAdmin.tvaPourcent`. */
+  tvaPourcent: number | null;
 }

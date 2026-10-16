@@ -621,6 +621,44 @@ le dépôt.
 
 # À faire côté Mathis
 
+## 🧾 Récapitulatif des ventes pour le comptable — 16 octobre 2026
+
+Demandé par Brahim le 14 octobre (« je ne suis pas censé avoir un récap de
+mes ventes pour envoyer à mon comptable ? »), puis par Mathis : un export par
+période précise, avec la TVA, « sérieux, car il va l'envoyer à son comptable ».
+
+**Construit :** une section **Ventes** au back-office — période au choix
+(mois, mois dernier, trimestre, trimestre dernier, année, ou du … au …),
+récapitulatif à l'écran, et deux fichiers : **Excel** (récapitulatif par taux
+de TVA, par mois et par moyen de paiement, détail des ventes, détail des
+remboursements, périmètre et méthode) et **CSV** (pour un logiciel
+comptable). Un champ **« Taux de TVA (%) »** par formule et par option dans
+« Tarifs ». Chaque export est inscrit au journal.
+
+**Vérifié :** la migration sur un vrai PostgreSQL local (PGlite, 28 cas, dont
+une panne simulée qui ne bloque pas la réservation, et une double
+application) ; le calcul (TVA extraite du TVAC, remboursements au prorata,
+totaux au centime) par 43 tests ; le fichier Excel relu par deux lecteurs
+indépendants (exceljs, openpyxl) et généré par le serveur de production
+construit ; l'écran sur téléphone et ordinateur.
+
+- [ ] **Appliquer la migration `0040_comptabilite_des_ventes.sql`.** Bloqué
+      le 16 octobre : le compte Supabase relié à l'outil ne voit plus le projet
+      Offside (plus membre de l'organisation de Brahim). Deux voies : réinviter
+      ce compte dans l'organisation, ou coller le fichier dans l'éditeur SQL de
+      Supabase. Elle se rejoue sans dommage.
+- [x] ~~Ne pousser le code qu'après la migration.~~ **Plus nécessaire** : le
+      code reconnaît une base pas encore à jour (`db/migration-ventes.ts`).
+      « Tarifs » marche comme avant, sans le champ TVA ; « Ventes » dit que la
+      mise à jour est attendue. Tout s'active dès la migration appliquée, sans
+      redéploiement. Le tunnel de réservation ne dépend de rien de nouveau.
+- [ ] **Faire renseigner les taux de TVA** de chaque formule et option dans
+      « Tarifs » — par le comptable de Brahim. Un forfait avec goûter ou
+      boissons n'a pas forcément le taux de l'accès aux terrains (6 %). Tant
+      qu'ils manquent, l'export compte les montants TVAC et le signale en tête.
+- [ ] **Premier export réel** une fois en ligne : vérifier que OW-CQCRX6LT
+      (190 €, 27 septembre) apparaît, avec son détail repris par la migration.
+
 ## 📅 DEMAIN — transfert des comptes, dans cet ordre
 
 Brahim a donné ses accès le 22 septembre au soir. Décidé avec Mathis : le

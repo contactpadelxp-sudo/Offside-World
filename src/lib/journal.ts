@@ -32,6 +32,21 @@ const ACTIONS: Record<
   connexion: { libelle: "Connexion", famille: "acces" },
   deconnexion: { libelle: "Déconnexion", famille: "acces" },
   "email.test": { libelle: "E-mail de test envoyé", famille: "acces" },
+  "ventes.export": {
+    libelle: "Récapitulatif des ventes téléchargé",
+    famille: "acces",
+    // Le chiffre d'affaires est sorti du site : on dit quelle période, et sous
+    // quelle forme. Les dates sont écrites comme un comptable les lit.
+    precision: (d) => {
+      const jour = (v: unknown) =>
+        typeof v === "string" && /^\d{4}-\d{2}-\d{2}$/.test(v) ? v.split("-").reverse().join("/") : null;
+      const du = jour(d.du);
+      const au = jour(d.au);
+      if (!du || !au) return null;
+      const format = d.format === "csv" ? "CSV" : "Excel";
+      return `du ${du} au ${au} · ${format}`;
+    },
+  },
 
   "reservation.confirmee": { libelle: "Réservation confirmée", famille: "reservations" },
   "reservation.annulee": {
@@ -114,6 +129,7 @@ const ACTIONS: Record<
       if (Number.isFinite(base)) bouts.push(montantLisible(base));
       if (d.actif === false) bouts.push("retirée du site");
       if (d.actif === true) bouts.push("proposée sur le site");
+      if (typeof d.tva_pourcent === "number") bouts.push(`TVA ${d.tva_pourcent} %`);
       return bouts.join(" · ") || null;
     },
   },
@@ -122,7 +138,10 @@ const ACTIONS: Record<
     famille: "catalogue",
     precision: (d) => {
       const c = Number(d.prix_cents);
-      return Number.isFinite(c) ? montantLisible(c) : null;
+      const bouts: string[] = [];
+      if (Number.isFinite(c)) bouts.push(montantLisible(c));
+      if (typeof d.tva_pourcent === "number") bouts.push(`TVA ${d.tva_pourcent} %`);
+      return bouts.join(" · ") || null;
     },
   },
   "article.cree": { libelle: "Article de blog créé", famille: "catalogue" },

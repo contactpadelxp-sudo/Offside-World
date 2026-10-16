@@ -256,6 +256,7 @@ export type Database = {
           ordre: number
           prix_base_cents: number
           prix_enfant_sup_cents: number
+          tva_pourcent: number | null
         }
         Insert: {
           accroche?: string | null
@@ -272,6 +273,7 @@ export type Database = {
           ordre?: number
           prix_base_cents: number
           prix_enfant_sup_cents: number
+          tva_pourcent?: number | null
         }
         Update: {
           accroche?: string | null
@@ -288,6 +290,7 @@ export type Database = {
           ordre?: number
           prix_base_cents?: number
           prix_enfant_sup_cents?: number
+          tva_pourcent?: number | null
         }
         Relationships: []
       }
@@ -435,6 +438,7 @@ export type Database = {
           id: string
           libelle: string
           prix_cents: number
+          tva_pourcent: number | null
         }
         Insert: {
           actif?: boolean
@@ -442,6 +446,7 @@ export type Database = {
           id: string
           libelle: string
           prix_cents: number
+          tva_pourcent?: number | null
         }
         Update: {
           actif?: boolean
@@ -449,6 +454,7 @@ export type Database = {
           id?: string
           libelle?: string
           prix_cents?: number
+          tva_pourcent?: number | null
         }
         Relationships: []
       }
@@ -462,6 +468,7 @@ export type Database = {
           montant_cents: number
           montant_rembourse_cents: number
           reservation_id: string
+          reussi_le: string | null
           statut: Database["public"]["Enums"]["statut_paiement"]
           stripe_payment_intent: string | null
           updated_at: string
@@ -475,6 +482,7 @@ export type Database = {
           montant_cents: number
           montant_rembourse_cents?: number
           reservation_id: string
+          reussi_le?: string | null
           statut?: Database["public"]["Enums"]["statut_paiement"]
           stripe_payment_intent?: string | null
           updated_at?: string
@@ -488,6 +496,7 @@ export type Database = {
           montant_cents?: number
           montant_rembourse_cents?: number
           reservation_id?: string
+          reussi_le?: string | null
           statut?: Database["public"]["Enums"]["statut_paiement"]
           stripe_payment_intent?: string | null
           updated_at?: string
@@ -498,6 +507,38 @@ export type Database = {
             columns: ["reservation_id"]
             isOneToOne: false
             referencedRelation: "reservations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      remboursements: {
+        Row: {
+          id: number
+          montant_cents: number
+          paiement_id: string
+          repris: boolean
+          survenu_le: string
+        }
+        Insert: {
+          id?: never
+          montant_cents: number
+          paiement_id: string
+          repris?: boolean
+          survenu_le?: string
+        }
+        Update: {
+          id?: never
+          montant_cents?: number
+          paiement_id?: string
+          repris?: boolean
+          survenu_le?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "remboursements_paiement_id_fkey"
+            columns: ["paiement_id"]
+            isOneToOne: false
+            referencedRelation: "paiements"
             referencedColumns: ["id"]
           },
         ]
@@ -517,6 +558,7 @@ export type Database = {
           enfant_prenom: string | null
           formule_id: string | null
           id: string
+          lignes: Json | null
           nb_enfants: number | null
           nb_personnes: number | null
           newsletter: boolean
@@ -544,6 +586,7 @@ export type Database = {
           enfant_prenom?: string | null
           formule_id?: string | null
           id?: string
+          lignes?: Json | null
           nb_enfants?: number | null
           nb_personnes?: number | null
           newsletter?: boolean
@@ -571,6 +614,7 @@ export type Database = {
           enfant_prenom?: string | null
           formule_id?: string | null
           id?: string
+          lignes?: Json | null
           nb_enfants?: number | null
           nb_personnes?: number | null
           newsletter?: boolean
@@ -654,6 +698,17 @@ export type Database = {
       }
     }
     Functions: {
+      lignes_de_vente: {
+        Args: {
+          p_type: Database["public"]["Enums"]["type_activite"]
+          p_formule_id: string
+          p_nb_enfants: number
+          p_options_ids: string[]
+          p_nb_personnes: number
+          p_total_cents: number
+        }
+        Returns: Json
+      }
       anonymiser_devis_anciens: {
         Args: { delai?: string }
         Returns: number

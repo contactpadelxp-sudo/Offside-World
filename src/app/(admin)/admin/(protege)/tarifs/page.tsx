@@ -5,7 +5,7 @@ import { Carte, Info } from "@/components/icons";
 import { euros } from "@/lib/tarification";
 
 export default async function PageTarifs() {
-  const { formules, options } = await lireTarifsAdmin();
+  const { formules, options, tvaDisponible } = await lireTarifsAdmin();
 
   return (
     <div>
@@ -24,6 +24,26 @@ export default async function PageTarifs() {
         </p>
       </div>
 
+      {/*
+        LE TAUX DE TVA SE DEMANDE AU COMPTABLE, PAS AU SITE.
+
+        Un forfait d'anniversaire mêle l'accès aux terrains, le goûter, les
+        boissons, parfois la décoration : son taux n'est pas forcément celui du
+        team building (6 %). Le dire ici évite qu'on en recopie un au hasard
+        pour faire disparaître l'avertissement de la page Ventes.
+      */}
+      {tvaDisponible && [...formules, ...options].some((t) => t.tvaPourcent === null) && (
+        <div className="mt-3 flex items-start gap-2 rounded-xl border border-kick/40 bg-kick/10 p-4 text-sm">
+          <Info className="mt-0.5 size-4 shrink-0 text-kick" />
+          <p>
+            <strong>Taux de TVA à renseigner.</strong> Ils servent au récapitulatif des ventes envoyé
+            à votre comptable (page Ventes) et ne s&apos;affichent pas aux clients. Demandez-les à votre
+            comptable : un forfait avec goûter ou boissons n&apos;a pas forcément le même taux que
+            l&apos;accès aux terrains.
+          </p>
+        </div>
+      )}
+
       <h2 className="mt-8 mb-3 text-sm font-semibold uppercase tracking-wider text-muted-foreground">
         Formules anniversaire
       </h2>
@@ -34,7 +54,7 @@ export default async function PageTarifs() {
       ) : (
         <div className="space-y-4">
           {formules.map((f) => (
-            <FicheFormule key={f.id} f={f} />
+            <FicheFormule key={f.id} f={f} tvaDisponible={tvaDisponible} />
           ))}
         </div>
       )}
@@ -49,7 +69,7 @@ export default async function PageTarifs() {
       ) : (
         <div className="space-y-4">
           {options.map((o) => (
-            <FicheOption key={o.id} o={o} />
+            <FicheOption key={o.id} o={o} tvaDisponible={tvaDisponible} />
           ))}
         </div>
       )}
