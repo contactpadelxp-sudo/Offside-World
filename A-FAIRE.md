@@ -652,11 +652,12 @@ page vide ; champ TVA en texte (« 21 % » effaçait le taux) ; taux du Bubble
 Foot réglable dans le code (`BUBBLE_TVA_POURCENT`), et ligne unique rattachée
 au taux commun de sa formule et de ses options.
 
-- [ ] **Appliquer la migration `0040_comptabilite_des_ventes.sql`.** Bloqué
-      le 16 octobre : le compte Supabase relié à l'outil ne voit plus le projet
-      Offside (plus membre de l'organisation de Brahim). Deux voies : réinviter
-      ce compte dans l'organisation, ou coller le fichier dans l'éditeur SQL de
-      Supabase. Elle se rejoue sans dommage.
+- [x] ~~**Appliquer la migration `0040_comptabilite_des_ventes.sql`.**~~
+      **APPLIQUÉE le 16 octobre 2026 par Mathis**, dans l'éditeur SQL de
+      Supabase (« Success »). L'outil n'y avait plus accès : le compte Supabase
+      qui lui est relié ne voit plus le projet Offside (plus membre de
+      l'organisation de Brahim). À réinviter pour les prochaines migrations —
+      sans quoi chacune devra passer par l'éditeur SQL.
 - [x] ~~Ne pousser le code qu'après la migration.~~ **Plus nécessaire** : le
       code reconnaît une base pas encore à jour (`db/migration-ventes.ts`).
       « Tarifs » marche comme avant, sans le champ TVA ; « Ventes » dit que la
