@@ -621,6 +621,20 @@ le dépôt.
 
 # À faire côté Mathis
 
+## 📬 Rapports DMARC dans la boîte de Brahim — 28 octobre 2026
+
+Brahim reçoit « des dizaines par semaine » de « DMARC Aggregate Report »
+(Microsoft, Google…). C'est l'effet de `rua=mailto:info@offsidefootindoor.be`
+dans l'enregistrement `_dmarc`, posé avec Resend le 12 septembre : chaque
+messagerie qui reçoit un e-mail du domaine envoie un rapport quotidien à cette
+adresse. Sans danger, mais personne ne les lit.
+
+- [ ] **Chez Wix, enregistrement TXT `_dmarc` : remplacer la valeur par
+      `v=DMARC1; p=none;`** (retirer `rua` et `fo`). Ne PAS supprimer la ligne :
+      un domaine sans DMARC est moins bien traité par Gmail et Outlook. Les
+      rapports cessent en un ou deux jours. Mettre ensuite à jour le relevé de
+      zone de `MISE-EN-LIGNE.md`.
+
 ## 🧾 Récapitulatif des ventes pour le comptable — 16 octobre 2026
 
 Demandé par Brahim le 14 octobre (« je ne suis pas censé avoir un récap de
